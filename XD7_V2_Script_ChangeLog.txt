@@ -1,0 +1,73 @@
+#webster@carlwebster.com
+#@carlwebster on Twitter
+#http://www.CarlWebster.com
+# Created on October 20, 2013
+
+#Version 2.04 released 6-Mar-2017
+#	Fixed wording of more policy names that changed from 7.13 prerelease to RTM
+#		URL Redirection -> Bidirectional Content Redirection
+#		Allow URL Redirection -> Allow Bidirectional Content Redirection
+#		Allow Client URLs -> Allowed URLs to be redirected to Client
+#		Allow VDA URLs -> Allowed URLs to be redirected to VDA
+#		UPM - Enable Default Exclusion List - directories -> Enable Default Exclusion List - directories
+#		UPM - !ctx_localappdata!\Microsoft\Application Shortcuts -> UPM - !ctx_localappdata!\Microsoft\Windows\Application Shortcuts
+#		UPM - !ctx_localappdata!\Microsoft\Burn -> UPM - !ctx_localappdata!\Microsoft\Windows\Burn
+
+#Version 2.03 released 3-Mar-2017
+#	Fixed bug reported by P. Ewing in Functions ConfigLogPreferences and OutputDatastores
+#	Fixed wording of policy setting (thanks to Esther Barthel):
+#		"Profile Management\File system\Default Exclusions\UPM - !ctx_localappdata!\Microsoft\CD Burning" to 
+#		"Profile Management\File system\Default Exclusions\UPM - !ctx_localappdata!\Microsoft\Windows\CD Burning"
+
+#Version 2.02 released 1-Mar-2017
+#	Added Application Group details
+#	Added Application Group "SingleAppPerSession" property
+#	Updated help text
+
+#Version 2.01 released 28-Feb-2017
+#	Added -Dev and -ScriptInfo parameters
+#	Fixed several undefined variables
+#	Updated help text
+
+# Version 2.0 released on 21-Feb-2017
+#	Added "Launch in user's home zone" to Delivery Group details
+#	Added AppDisks
+#	Added AppDNA and the ability to process just the AppDNA section
+#	Added Break statements to most of the Switch statements
+#	Added Chinese language support
+#	Added Configuration Logging Preferences
+#		Show correct database size, not the wrong size reported in Studio
+#	Added Description to Machine Catalog details
+#	Added Desktop Entitlement settings to Delivery Groups that are configured to deliver desktops
+#	Added new policies
+#	Added RemotePC OU and Subfolder properties to RemotePC Machine Catalog details
+#	Added "Restrict launches to machines with tag" to Random/Desktops only and RemotePC Delivery Groups
+#	Added Summary Report page
+#	Added support for VDA versions 7.8 and 7.9 (which includes 7.11/7.12/7.13)
+#	Added support for XenApp/XenDesktop 7.8, 7.9, 7.11, 7.12, 7.13
+#	Added to machine catalog information for RemotePC, "No. of Machines" and "Allocated Machines"
+#	Brought core functions up-to-date with the other scripts
+#	Fix numerous typos
+#	Fixed formatting issues with HTML headings output
+#	Fixed French wording for Table of Contents 2 (Thanks to David Rouquier)
+#	Fixed the “No. of machines” for Machine Catalogs so it is now accurate
+#	Fixed the Machine Catalog details to match what is shown in Studio
+#	For Machine Catalog details, for PVS provisioned catalogs, add the PVS Server address
+#	For Persistent machines with changes stored on the local disk, added the “VM copy mode”
+#	For Personal vDisk catalogs, added PvD size and drive letter
+#	For Random catalog types (SingleSession and MultiSession), added "Temporary memory cache size (MB)" and "Temporary disk cache size (GB)"
+#	Removed unnecessary blank lines in policy value output
+#	Removed snapin citrix.common.commands as it is removed in 7.13 and no cmdlets are used from that snapin
+#	Updated error message for missing snapins to state requires a 7.8 or later Controller
+#	Updated help text
+#	Updated Machine/Desktop details to match what is shown in Studio
+#	Updated the Delivery Group details section with the changes to how "Delivering" is determined for XenApp Delivery Groups
+#	Updated the Delivery Group "Restart Schedule" wording to match the changes in Studio
+#	Updated the Delivery Group "Restart Schedule" to include the PowerShell only setting of "Restrict to tag" for 7.12 and later
+#	Updated the Delivery Group section to match all the changes made in Studio
+#	Updated version checking
+#		Now display running version in error messages
+#	Updated version checking registry access to allow 32-bit PowerShell access to 64-bit registry
+#
+
+# Version 1.0 released to the community on June 12, 2015
