@@ -1,0 +1,39 @@
+Version 2.05 will add four new cover page properties developed from the Script_Template repository.
+
+.PARAMETER CompanyAddress
+	Company Address to use for the Cover Page, if the Cover Page has the Address field.  
+		The following Cover Pages have an Address field:
+			Banded
+			Contrast
+			Exposure
+			Filigree
+			Ion (Dark)
+			Retrospect
+			Semaphore
+			Tiles
+			ViewMaster
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CA.
+.PARAMETER CompanyEmail
+	Company Email to use for the Cover Page, if the Cover Page has the Email field.  
+		The following Cover Pages have an Email field:
+			Facet
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CE.
+.PARAMETER CompanyFax
+	Company Fax to use for the Cover Page, if the Cover Page has the Fax field.  
+		The following Cover Pages have a Fax field:
+			Contrast
+			Exposure
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CF.
+.PARAMETER CompanyPhone
+	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
+		The following Cover Pages have a Phone field:
+			Contrast
+			Exposure
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CPh.
+
+All the code verify the script parameters are set correctly will be removed. This "bug" was fixed in PowerShell V3.
+Version 7.14.1 support.
