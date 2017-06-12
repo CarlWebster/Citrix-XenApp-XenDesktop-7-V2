@@ -3,6 +3,31 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.05
+#	Add four new Cover Page properties
+#		Company Address
+#		Company Email
+#		Company Fax
+#		Company Phone
+#	Added support for version 7.14
+#	Added the following new Computer policy settings:
+#		Application Launch Wait Timeout
+#		Enable monitoring of application failures
+#		Enable monitoring of application failures on Desktop OS VDAs
+#		List of applications excluded from failure monitoring
+#		Logoff Checker Startup Delay
+#		Profile Streaming Exclusion list - directories (Enable/Disable)
+#		Profile Streaming Exclusion list - directories (Enable with list of folders/Disable)
+#	Added to Delivery Group, LicenseModel and ProductCode
+#	Added back the WorkerGroup policy filter for XenApp 6.x
+#	Fix Function Check-LoadedModule
+#	Remove code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Replace _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Update Function ProcessScriptEnd for the new Cover Page properties
+#	Update Function ShowScriptOptions for the new Cover Page properties
+#	Update Function UpdateDocumentProperties for the new Cover Page properties
+#	Update help text
+
 #Version 2.04 released 6-Mar-2017
 #	Fixed wording of more policy names that changed from 7.13 prerelease to RTM
 #		URL Redirection -> Bidirectional Content Redirection
@@ -50,10 +75,10 @@
 #	Fix numerous typos
 #	Fixed formatting issues with HTML headings output
 #	Fixed French wording for Table of Contents 2 (Thanks to David Rouquier)
-#	Fixed the ìNo. of machinesî for Machine Catalogs so it is now accurate
+#	Fixed the ‚ÄúNo. of machines‚Äù for Machine Catalogs so it is now accurate
 #	Fixed the Machine Catalog details to match what is shown in Studio
 #	For Machine Catalog details, for PVS provisioned catalogs, add the PVS Server address
-#	For Persistent machines with changes stored on the local disk, added the ìVM copy modeî
+#	For Persistent machines with changes stored on the local disk, added the ‚ÄúVM copy mode‚Äù
 #	For Personal vDisk catalogs, added PvD size and drive letter
 #	For Random catalog types (SingleSession and MultiSession), added "Temporary memory cache size (MB)" and "Temporary disk cache size (GB)"
 #	Removed unnecessary blank lines in policy value output
