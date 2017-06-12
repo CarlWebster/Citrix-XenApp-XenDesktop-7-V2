@@ -1,4 +1,4 @@
-﻿#Requires -Version 3.0
+#Requires -Version 3.0
 #This File is in Unicode format.  Do not edit in an ASCII editor.
 
 #region help text
@@ -80,6 +80,40 @@
 	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated 
 	on the computer running the script.
 	This parameter has an alias of CN.
+.PARAMETER CompanyAddress
+	Company Address to use for the Cover Page, if the Cover Page has the Address field.  
+		The following Cover Pages have an Address field:
+			Banded
+			Contrast
+			Exposure
+			Filigree
+			Ion (Dark)
+			Retrospect
+			Semaphore
+			Tiles
+			ViewMaster
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CA.
+.PARAMETER CompanyEmail
+	Company Email to use for the Cover Page, if the Cover Page has the Email field.  
+		The following Cover Pages have an Email field:
+			Facet
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CE.
+.PARAMETER CompanyFax
+	Company Fax to use for the Cover Page, if the Cover Page has the Fax field.  
+		The following Cover Pages have a Fax field:
+			Contrast
+			Exposure
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CF.
+.PARAMETER CompanyPhone
+	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
+		The following Cover Pages have a Phone field:
+			Contrast
+			Exposure
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CPh.
 .PARAMETER CoverPage
 	What Microsoft Word Cover Page to use.
 	Only Word 2010, 2013 and 2016 are supported.
@@ -628,6 +662,30 @@
 		Carl Webster for the User Name (alias UN).
 		The computer running the script for the AdminAddress.
 .EXAMPLE
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" `
+	-CoverPage Exposure -UserName "Dr. Watson" `
+	-CompanyAddress "221B Baker Street, London, England" `
+	-CompanyFax "+44 1753 276600" `
+	-CompanyPhone "+44 1753 276200"
+
+	Will use:
+		Sherlock Holmes Consulting for the Company Name.
+		Exposure for the Cover Page format.
+		Dr. Watson for the User Name.
+		221B Baker Street, London, England for the Company Address.
+		+44 1753 276600 for the Company Fax.
+		+44 1753 276200 for the Compnay Phone.
+.EXAMPLE
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" `
+	-CoverPage Facet -UserName "Dr. Watson" `
+	-CompanyEmail SuperSleuth@SherlockHolmes.com
+
+	Will use:
+		Sherlock Holmes Consulting for the Company Name.
+		Facet for the Cover Page format.
+		Dr. Watson for the User Name.
+		SuperSleuth@SherlockHolmes.com for the Compnay Email.
+.EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -AddDateTime
 	
 	Will use all Default values.
@@ -751,13 +809,13 @@
 .INPUTS
 	None.  You cannot pipe objects to this script.
 .OUTPUTS
-	No objects are output from this script.  This script creates a Word, PDF
-	plain text or HTML document.
+	No objects are output from this script.  
+	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.04
+	VERSION: 2.05
 	AUTHOR: Carl Webster
-	LASTEDIT: March 6, 2017
+	LASTEDIT: June 12, 2017
 #>
 
 #endregion
@@ -868,6 +926,34 @@ Param(
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
 	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CA")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyAddress="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CE")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyEmail="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CF")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyFax="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CPh")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyPhone="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
 	[Alias("CP")]
 	[ValidateNotNullOrEmpty()]
 	[string]$CoverPage="Sideline", 
@@ -912,6 +998,31 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.05
+#	Add four new Cover Page properties
+#		Company Address
+#		Company Email
+#		Company Fax
+#		Company Phone
+#	Added support for version 7.14
+#	Added the following new Computer policy settings:
+#		Application Launch Wait Timeout
+#		Enable monitoring of application failures
+#		Enable monitoring of application failures on Desktop OS VDAs
+#		List of applications excluded from failure monitoring
+#		Logoff Checker Startup Delay
+#		Profile Streaming Exclusion list - directories (Enable/Disable)
+#		Profile Streaming Exclusion list - directories (Enable with list of folders/Disable)
+#	Added to Delivery Group, LicenseModel and ProductCode
+#	Added back the WorkerGroup policy filter for XenApp 6.x
+#	Fix Function Check-LoadedModule
+#	Remove code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Replace _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Update Function ProcessScriptEnd for the new Cover Page properties
+#	Update Function ShowScriptOptions for the new Cover Page properties
+#	Update Function UpdateDocumentProperties for the new Cover Page properties
+#	Update help text
 
 #Version 2.04 6-Mar-2017
 #	Fixed wording of more policy names that changed from 7.13 prerelease to RTM
@@ -988,248 +1099,6 @@ Set-StrictMode -Version 2
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
-
-If($Null -eq $MSWord)
-{
-	$MSWord = $False
-}
-If($Null -eq $PDF)
-{
-	$PDF = $False
-}
-If($Null -eq $Text)
-{
-	$Text = $False
-}
-If($Null -eq $HTML)
-{
-	$HTML = $False
-}
-If($Null -eq $MachineCatalogs)
-{
-	$MachineCatalogs = $False
-}
-If($Null -eq $AppDisks)
-{
-	$AppDisks = $False
-}
-If($Null -eq $DeliveryGroups)
-{
-	$DeliveryGroups = $False
-}
-If($Null -eq $DeliveryGroupsUtilization)
-{
-	$DeliveryGroupsUtilization = $False
-}
-If($Null -eq $Applications)
-{
-	$Applications = $False
-}
-If($Null -eq $Policies)
-{
-	$Policies = $False
-}
-If($Null -eq $NoPolicies)
-{
-	$NoPolicies = $False
-}
-If($Null -eq $NoADPolicies)
-{
-	$NoADPolicies = $False
-}
-If($Null -eq $Logging)
-{
-	$Logging = $False
-}
-If($Null -eq $Administrators)
-{
-	$Administrators = $False
-}
-If($Null -eq $Hosting)
-{
-	$Hosting = $False
-}
-If($Null -eq $StoreFront)
-{
-	$StoreFront = $False
-}
-If($Null -eq $StartDate)
-{
-	$StartDate = ((Get-Date -displayhint date).AddDays(-7))
-}
-If($Null -eq $EndDate)
-{
-	$EndDate = ((Get-Date -displayhint date))
-}
-If($Null -eq $AddDateTime)
-{
-	$AddDateTime = $False
-}
-If($Null -eq $Hardware)
-{
-	$Hardware = $False
-}
-If($Null -eq $AdminAddress)
-{
-	$AdminAddress = "LocalHost"
-}
-If($Null -eq $Section)
-{
-	$Section = "All"
-}
-If($Null -eq $Folder)
-{
-	$Folder = ""
-}
-If($Null -eq $SmtpServer)
-{
-	$SmtpServer = ""
-}
-If($Null -eq $SmtpPort)
-{
-	$SmtpPort = 25
-}
-If($Null -eq $UseSSL)
-{
-	$UseSSL = $False
-}
-If($Null -eq $From)
-{
-	$From = ""
-}
-If($Null -eq $To)
-{
-	$To = ""
-}
-If($Null -eq $Dev)
-{
-	$Dev = $False
-}
-If($Null -eq $ScriptInfo)
-{
-	$ScriptInfo = $False
-}
-
-If(!(Test-Path Variable:MSWord))
-{
-	$MSWord = $False
-}
-If(!(Test-Path Variable:PDF))
-{
-	$PDF = $False
-}
-If(!(Test-Path Variable:Text))
-{
-	$Text = $False
-}
-If(!(Test-Path Variable:HTML))
-{
-	$HTML = $False
-}
-If(!(Test-Path Variable:MachineCatalogs))
-{
-	$MachineCatalogs = $False
-}
-If(!(Test-Path Variable:AppDisks))
-{
-	$AppDisks = $False
-}
-If(!(Test-Path Variable:DeliveryGroups))
-{
-	$DeliveryGroups = $False
-}
-If(!(Test-Path Variable:DeliveryGroupsUtilization))
-{
-	$DeliveryGroupsUtilization = $False
-}
-If(!(Test-Path Variable:Applications))
-{
-	$Applications = $False
-}
-If(!(Test-Path Variable:Policies))
-{
-	$Policies = $False
-}
-If(!(Test-Path Variable:NoPolicies))
-{
-	$NoPolicies = $False
-}
-If(!(Test-Path Variable:NoADPolicies))
-{
-	$NoADPolicies = $False
-}
-If(!(Test-Path Variable:Logging))
-{
-	$Logging = $False
-}
-If(!(Test-Path Variable:Administrators))
-{
-	$Administrators = $False
-}
-If(!(Test-Path Variable:Hosting))
-{
-	$Hosting = $False
-}
-If(!(Test-Path Variable:StoreFront))
-{
-	$StoreFront = $False
-}
-If(!(Test-Path Variable:StartDate))
-{
-	$StartDate = ((Get-Date -displayhint date).AddDays(-7))
-}
-If(!(Test-Path Variable:EndDate))
-{
-	$EndDate = ((Get-Date -displayhint date))
-}
-If(!(Test-Path Variable:AddDateTime))
-{
-	$AddDateTime = $False
-}
-If(!(Test-Path Variable:Hardware))
-{
-	$Hardware = $False
-}
-If(!(Test-Path Variable:AdminAddress))
-{
-	$AdminAddress = "LocalHost"
-}
-If(!(Test-Path Variable:Section))
-{
-	$Section = "All"
-}
-If(!(Test-Path Variable:Folder))
-{
-	$Folder = ""
-}
-If(!(Test-Path Variable:SmtpServer))
-{
-	$SmtpServer = ""
-}
-If(!(Test-Path Variable:SmtpPort))
-{
-	$SmtpPort = 25
-}
-If(!(Test-Path Variable:UseSSL))
-{
-	$UseSSL = $False
-}
-If(!(Test-Path Variable:From))
-{
-	$From = ""
-}
-If(!(Test-Path Variable:To))
-{
-	$To = ""
-}
-If(!(Test-Path Variable:Dev))
-{
-	$Dev = $False
-}
-If(!(Test-Path Variable:ScriptInfo))
-{
-	$ScriptInfo = $False
-}
 
 If($Dev)
 {
@@ -3292,21 +3161,44 @@ Function ValidateCompanyName
 	}
 }
 
-Function _SetDocumentProperty 
-{
-	#jeff hicks
-	Param([object]$Properties,[string]$Name,[string]$Value)
-	#get the property object
-	$prop = $properties | ForEach { 
-		$propname=$_.GetType().InvokeMember("Name","GetProperty",$Null,$_,$Null)
-		If($propname -eq $Name) 
-		{
-			Return $_
-		}
-	} #ForEach
-
-	#set the value
-	$Prop.GetType().InvokeMember("Value","SetProperty",$Null,$prop,$Value)
+Function Set-DocumentProperty {
+    <#
+	.SYNOPSIS
+	Function to set the Title Page document properties in MS Word
+	.DESCRIPTION
+	Long description
+	.PARAMETER Document
+	Current Document Object
+	.PARAMETER DocProperty
+	Parameter description
+	.PARAMETER Value
+	Parameter description
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Title -Value 'MyTitle'
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Company -Value 'MyCompany'
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Author -Value 'Jim Moyle'
+	.EXAMPLE
+	Set-DocumentProperty -Document $Script:Doc -DocProperty Subject -Value 'MySubjectTitle'
+	.NOTES
+	Function Created by Jim Moyle June 2017
+	Twitter : @JimMoyle
+	#>
+    param (
+        [object]$Document,
+        [String]$DocProperty,
+        [string]$Value
+    )
+    try {
+        $binding = "System.Reflection.BindingFlags" -as [type]
+        $builtInProperties = $Document.BuiltInDocumentProperties
+        $property = [System.__ComObject].invokemember("item", $binding::GetProperty, $null, $BuiltinProperties, $DocProperty)
+        [System.__ComObject].invokemember("value", $binding::SetProperty, $null, $property, $Value)
+    }
+    catch {
+        Write-Warning "Failed to set $DocProperty to $Value"
+    }
 }
 
 Function FindWordDocumentEnd
@@ -3669,24 +3561,24 @@ Function SetupWord
 Function UpdateDocumentProperties
 {
 	Param([string]$AbstractTitle, [string]$SubjectTitle)
+	#updated 8-Jun-2017 with additional cover page fields
 	#Update document properties
 	If($MSWORD -or $PDF)
 	{
 		If($Script:CoverPagesExist)
 		{
 			Write-Verbose "$(Get-Date): Set Cover Page Properties"
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Company" $Script:CoName
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Title" $Script:Title
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Author" $username
-
-			_SetDocumentProperty $Script:Doc.BuiltInDocumentProperties "Subject" $SubjectTitle
+			#8-Jun-2017 put these 4 items in alpha order
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Author -Value $UserName
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Company -Value $Script:CoName
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Subject -Value $SubjectTitle
+            Set-DocumentProperty -Document $Script:Doc -DocProperty Title -Value $Script:title
 
 			#Get the Coverpage XML part
 			$cp = $Script:Doc.CustomXMLParts | Where {$_.NamespaceURI -match "coverPageProps$"}
 
 			#get the abstract XML part
 			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "Abstract"}
-
 			#set the text
 			If([String]::IsNullOrEmpty($Script:CoName))
 			{
@@ -3694,9 +3586,32 @@ Function UpdateDocumentProperties
 			}
 			Else
 			{
-				[string]$abstract = "$($AbstractTitle) for $Script:CoName"
+				[string]$abstract = "$($AbstractTitle) for $($Script:CoName)"
 			}
+			$ab.Text = $abstract
 
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyAddress"}
+			#set the text
+			[string]$abstract = $CompanyAddress
+			$ab.Text = $abstract
+
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyEmail"}
+			#set the text
+			[string]$abstract = $CompanyEmail
+			$ab.Text = $abstract
+
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyFax"}
+			#set the text
+			[string]$abstract = $CompanyFax
+			$ab.Text = $abstract
+
+			#added 8-Jun-2017
+			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyPhone"}
+			#set the text
+			[string]$abstract = $CompanyPhone
 			$ab.Text = $abstract
 
 			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "PublishDate"}
@@ -4928,8 +4843,8 @@ Function Check-LoadedModule
 	#was manually loaded from a non Default folder
 	#$ModuleFound = (!$LoadedModules -like "*$ModuleName*")
 	
-	[bool]$ModuleFound = ($LoadedModules -like "*$ModuleName*")
-	If(!$ModuleFound) 
+	[string]$ModuleFound = ($LoadedModules -like "*$ModuleName*")
+	If($ModuleFound -ne $ModuleName) 
 	{
 		$module = Import-Module -Name $ModuleName -PassThru -EA 0 4>$Null
 		If($module -and $?)
@@ -5277,6 +5192,10 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): Administrators  : $($Administrators)"
 	Write-Verbose "$(Get-Date): Applications    : $($Applications)"
 	Write-Verbose "$(Get-Date): Company Name    : $($Script:CoName)"
+	Write-Verbose "$(Get-Date): Company Address : $($CompanyAddress)"
+	Write-Verbose "$(Get-Date): Company Email   : $($CompanyEmail)"
+	Write-Verbose "$(Get-Date): Company Fax     : $($CompanyFax)"
+	Write-Verbose "$(Get-Date): Company Phone   : $($CompanyPhone)"
 	Write-Verbose "$(Get-Date): Cover Page      : $($CoverPage)"
 	Write-Verbose "$(Get-Date): DeliveryGroups  : $($DeliveryGroups)"
 	If($Dev)
@@ -9370,6 +9289,28 @@ Function OutputDeliveryGroupDetails
 	{
 		$CanRestrictToTags = $False
 	}
+	
+	#added for 7.14
+	If((Get-BrokerServiceAddedCapability @XDParams1) -contains "MultiTypeLicensing")
+	{
+		If($Null -eq $Group.LicenseModel)
+		{
+			$LicenseModel = "Site Default"
+		}
+		Else
+		{
+			$LicenseModel = $Group.LicenseModel
+		}
+		
+		If($Null -eq $Group.ProductCode)
+		{
+			$ProductCode = "Site Default"
+		}
+		Else
+		{
+			$ProductCode = $Group.ProductCode
+		}
+	}
 
 	$DesktopSettings = $Null
 	If($xDeliveryType -ne "Applications")
@@ -10017,6 +9958,12 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 
+		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "MultiTypeLicensing")
+		{
+			$ScriptInformation += @{Data = "License model"; Value = $LicenseModel; }
+			$ScriptInformation += @{Data = "Product code"; Value = $ProductCode; }
+		}
+
 		If($PwrMgmt1)
 		{
 			$ScriptInformation += @{Data = "During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins"; Value = $xPeakDisconnectAction; }
@@ -10422,11 +10369,17 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
+		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "MultiTypeLicensing")
+		{
+			Line 1 "License model`t`t`t`t`t: " $LicenseModel
+			Line 1 "Product code`t`t`t`t`t: " $ProductCode
+		}
+
 		If($PwrMgmt1)
 		{
-			Line 1 "During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins`t: " $xPeakDisconnectAction
+			Line 1 "During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins`t`t: " $xPeakDisconnectAction
 			Line 1 "During peak extended hours, when disconnected $($Group.PeakExtendedDisconnectTimeout) mins`t: " $xPeakExtendedDisconnectAction
-			Line 1 "During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins: " $xOffPeakDisconnectAction
+			Line 1 "During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins`t`t: " $xOffPeakDisconnectAction
 			Line 1 "During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins: " $xOffPeakExtendedDisconnectAction
 		}
 		If($PwrMgmt2)
@@ -10475,9 +10428,9 @@ Function OutputDeliveryGroupDetails
 				Line 7 "  "  "<none>"
 			}
 
-			Line 1 "During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins`t: " $xPeakDisconnectAction
+			Line 1 "During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins`t`t: " $xPeakDisconnectAction
 			Line 1 "During peak extended hours, when disconnected $($Group.PeakExtendedDisconnectTimeout) mins`t: " $xPeakExtendedDisconnectAction
-			Line 1 "During peak hours, when logged off $($Group.PeakLogOffTimeout) mins`t: " $xPeakLogOffAction
+			Line 1 "During peak hours, when logged off $($Group.PeakLogOffTimeout) mins`t`t: " $xPeakLogOffAction
 			Line 1 "During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins`t: " $xOffPeakDisconnectAction
 			Line 1 "During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins`t: " $xOffPeakExtendedDisconnectAction
 			Line 1 "During off-peak hours, when logged off $($Group.OffPeakLogOffTimeout) mins`t: " $xOffPeakLogOffAction
@@ -10578,12 +10531,12 @@ Function OutputDeliveryGroupDetails
 			Line 1 "During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins: " $xOffPeakExtendedDisconnectAction
 		}
 
-		Line 1 "Automatic power on for assigned`t`t`t: " $xAutoPowerOnForAssigned
-		Line 1 "Automatic power on for assigned during peak`t: " $xAutoPowerOnForAssignedDuringPeak
+		Line 1 "Automatic power on for assigned`t`t`t`t: " $xAutoPowerOnForAssigned
+		Line 1 "Automatic power on for assigned during peak`t`t: " $xAutoPowerOnForAssignedDuringPeak
 		
-		Line 1 "All connections not through NetScaler Gateway`t: " $xAllConnections
-		Line 1 "Connections through NetScaler Gateway`t`t: " $xNSConnection
-		Line 1 "Connections meeting any of the following filters: " $xAGFilters[0]
+		Line 1 "All connections not through NetScaler Gateway`t`t: " $xAllConnections
+		Line 1 "Connections through NetScaler Gateway`t`t`t: " $xNSConnection
+		Line 1 "Connections meeting any of the following filters`t: " $xAGFilters[0]
 		$cnt = -1
 		ForEach($tmp in $xAGFilters)
 		{
@@ -10810,6 +10763,12 @@ Function OutputDeliveryGroupDetails
 			{
 				$rowdata += @(,('Restart machines automatically',($htmlsilver -bor $htmlbold),"No",$htmlwhite))
 			}
+		}
+		
+		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "MultiTypeLicensing")
+		{
+			$rowdata += @(,('License model',($htmlsilver -bor $htmlbold),$LicenseModel,$htmlwhite))
+			$rowdata += @(,('Product code',($htmlsilver -bor $htmlbold),$ProductCode,$htmlwhite))
 		}
 		
 		If($PwrMgmt1)
@@ -13295,6 +13254,7 @@ Function ProcessCitrixPolicies
 					ForEach($Filter in $Filters)
 					{
 						$tmp = ""
+						#5-May-2017 add back the WorkerGroup filter for xenapp 6.x
 						Switch($filter.FilterType)
 						{
 							"AccessControl"  {$tmp = "Access Control"; Break}
@@ -13306,6 +13266,7 @@ Function ProcessCitrixPolicies
 							"DesktopTag"     {$tmp = "Tag"; Break}
 							"OU"             {$tmp = "Organizational Unit (OU)"; Break}
 							"User"           {$tmp = "User or group"; Break}
+							"WorkerGroup"    {$tmp = "Worker Group"; Break}
 							Default {$tmp = "Policy Filter Type could not be determined: $($filter.FilterType)"; Break}
 						}
 						
@@ -13852,6 +13813,28 @@ Function ProcessCitrixPolicies
 					}
 					
 					Write-Verbose "$(Get-Date): `t`t`tICA"
+					If((validStateProp $Setting ApplicationLaunchWaitTimeout State ) -and ($Setting.ApplicationLaunchWaitTimeout.State -ne "NotConfigured"))
+					{
+						$txt = "ICA\Application Launch Wait Timeout (milliseconds)"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.ApplicationLaunchWaitTimeout.Value;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.ApplicationLaunchWaitTimeout.Value,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.ApplicationLaunchWaitTimeout.Value
+						}
+					}
 					If((validStateProp $Setting ClipboardRedirection State ) -and ($Setting.ClipboardRedirection.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Client clipboard redirection"
@@ -14120,6 +14103,28 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.NonPublishedProgramLaunching.Value 
+						}
+					}
+					If((validStateProp $Setting LogoffCheckerStartupDelay State ) -and ($Setting.LogoffCheckerStartupDelay.State -ne "NotConfigured"))
+					{
+						$txt = "ICA\Logoff Checker Startup Delay"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.LogoffCheckerStartupDelay.Value;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.LogoffCheckerStartupDelay.Value,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.LogoffCheckerStartupDelay.Value 
 						}
 					}
 					If((validStateProp $Setting PrimarySelectionUpdateMode State ) -and ($Setting.PrimarySelectionUpdateMode.State -ne "NotConfigured"))
@@ -23497,12 +23502,114 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.PSEnabled.State 
 						}
 					}
+					If((validStateProp $Setting StreamingExclusionList State ) -and ($Setting.StreamingExclusionList.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\Streamed user profiles\Profile Streaming Exclusion list - directories"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.StreamingExclusionList.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.StreamingExclusionList.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.StreamingExclusionList.State 
+						}
+					}
+					If((validStateProp $Setting StreamingExclusionList_Part State ) -and ($Setting.StreamingExclusionList_Part.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\Streamed user profiles\Profile Streaming Exclusion list - directories"
+						If($Setting.StreamingExclusionList_Part.State -eq "Enabled")
+						{
+							$tmpArray = $Setting.StreamingExclusionList_Part.Values.Split(",")
+							$tmp = ""
+							$cnt = 0
+							ForEach($Thing in $tmpArray)
+							{
+								$cnt++
+								$tmp = "$($Thing)"
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = $txt;
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting $txt $tmp
+									}
+								}
+								Else
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
+								}
+							}
+							$tmpArray = $Null
+							$tmp = $Null
+						}
+						Else
+						{
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $Setting.StreamingExclusionList_Part.State;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.StreamingExclusionList_Part.State,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $Setting.StreamingExclusionList_Part.State 
+							}
+						}
+					}
 					If((validStateProp $Setting PSUserGroups_Part State ) -and ($Setting.PSUserGroups_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Streamed user profiles\Streamed user profile groups"
 						If($Setting.PSUserGroups_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.PSUserGroups_Part.Values
+							$tmpArray = $Setting.PSUserGroups_Part.Values.Split(",")
 							$tmp = ""
 							$cnt = 0
 							ForEach($Thing in $tmpArray)
@@ -23883,6 +23990,59 @@ Function ProcessCitrixPolicies
 					}
 
 					Write-Verbose "$(Get-Date): `t`t`tVirtual Delivery Agent Settings\Monitoring"
+					If((validStateProp $Setting SelectedFailureLevel State ) -and ($Setting.SelectedFailureLevel.State -ne "NotConfigured"))
+					{
+						$txt = "Virtual Delivery Agent Settings\Monitoring\Enable monitoring of application failures"
+						$tmp = ""
+						Switch ($Setting.SelectedFailureLevel.Value)
+						{
+							"None"	{$tmp = "None"; Break}
+							"Both"	{$tmp = "Both application errors and faults"; Break}
+							"Fault"	{$tmp = "Application faults only"; Break}
+							"Error"	{$tmp = "Application errors only"; Break}
+							Default	{$tmp = "Enable monitoring of application failures could not be determined: $($Setting.SelectedFailureLevel.Value)"; Break}
+						}
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $tmp;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp
+						}
+					}
+					If((validStateProp $Setting EnableWorkstationVDAFaultMonitoring State ) -and ($Setting.EnableWorkstationVDAFaultMonitoring.State -ne "NotConfigured"))
+					{
+						$txt = "Virtual Delivery Agent Settings\Monitoring\Enable monitoring of application failures on Desktop OS VDAs"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.EnableWorkstationVDAFaultMonitoring.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.EnableWorkstationVDAFaultMonitoring.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.EnableWorkstationVDAFaultMonitoring.State 
+						}
+					}
 					If((validStateProp $Setting EnableProcessMonitoring State ) -and ($Setting.EnableProcessMonitoring.State -ne "NotConfigured"))
 					{
 						$txt = "Virtual Delivery Agent Settings\Monitoring\Enable process monitoring"
@@ -23927,6 +24087,86 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.EnableResourceMonitoring.State 
 						}
 					}
+					If((validStateProp $Setting AppFailureExclusionList State ) -and ($Setting.AppFailureExclusionList.State -ne "NotConfigured"))
+					{
+						$txt = "Virtual Delivery Agent Settings\Monitoring\List of applications excluded from failure monitoring"
+						If($Setting.StreamingExclusionList_Part.State -eq "Enabled")
+						{
+							$tmpArray = $Setting.AppFailureExclusionList.Values.Split(",")
+							$tmp = ""
+							$cnt = 0
+							ForEach($Thing in $tmpArray)
+							{
+								$cnt++
+								$tmp = "$($Thing)"
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = $txt;
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting $txt $tmp
+									}
+								}
+								Else
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
+								}
+							}
+							$tmpArray = $Null
+							$tmp = $Null
+						}
+						Else
+						{
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $Setting.AppFailureExclusionList.State;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.AppFailureExclusionList.State,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $Setting.AppFailureExclusionList.State 
+							}
+						}
+					}	
 					If((validStateProp $Setting OnlyUseIPv6ControllerRegistration State ) -and ($Setting.OnlyUseIPv6ControllerRegistration.State -ne "NotConfigured"))
 					{
 						#AD specific setting
@@ -29199,71 +29439,75 @@ Function ProcessScriptEnd
 	{
 		$SIFile = "$($pwd.Path)\XAXDV2InventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime   : $($AddDateTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress   : $($AdminAddress)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Administrators : $($Administrators)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Applications   : $($Applications)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime    : $($AddDateTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress    : $($AdminAddress)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Administrators  : $($Administrators)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Applications    : $($Applications)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Company Name   : $($Script:CoName)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Cover Page     : $($CoverPage)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Company Name    : $($Script:CoName)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Address : $($CompanyAddress)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Email   : $($CompanyEmail)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Fax     : $($CompanyFax)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Phone   : $($CompanyPhone)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Cover Page      : $($CoverPage)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "DeliveryGroups : $($DeliveryGroups)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Dev            : $($Dev)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "DeliveryGroups  : $($DeliveryGroups)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Dev             : $($Dev)" 4>$Null
 		If($Dev)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile   : $($Script:DevErrorFile)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile    : $($Script:DevErrorFile)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "DGUtilization  : $($DeliveryGroupsUtilization)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Filename1      : $($Script:FileName1)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "DGUtilization   : $($DeliveryGroupsUtilization)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Filename1       : $($Script:FileName1)" 4>$Null
 		If($PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Filename2      : $($Script:FileName2)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Filename2       : $($Script:FileName2)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Folder         : $($Folder)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "From           : $($From)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Hosting        : $($Hosting)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory   : $($Hardware)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Logging        : $($Logging)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Folder          : $($Folder)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "From            : $($From)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Hosting         : $($Hosting)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory    : $($Hardware)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Logging         : $($Logging)" 4>$Null
 		If($Logging)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "   Start Date   : $($StartDate)" 4>$Null
-			Out-File -FilePath $SIFile -Append -InputObject "   End Date     : $($EndDate)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "   Start Date    : $($StartDate)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "   End Date      : $($EndDate)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "MachineCatalogs: $($MachineCatalogs)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "NoADPolicies   : $($NoADPolicies)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "NoPolicies     : $($NoPolicies)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Policies       : $($Policies)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML   : $($HTML)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF    : $($PDF)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT   : $($TEXT)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD   : $($MSWORD)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script Info    : $($ScriptInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Section        : $($Section)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Site Name      : $($XDSiteName)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port      : $($SmtpPort)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server    : $($SmtpServer)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Title          : $($Script:Title)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "To             : $($To)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Use SSL        : $($UseSSL)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "MachineCatalogs : $($MachineCatalogs)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "NoADPolicies    : $($NoADPolicies)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "NoPolicies      : $($NoPolicies)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Policies        : $($Policies)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML    : $($HTML)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF     : $($PDF)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT    : $($TEXT)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD    : $($MSWORD)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script Info     : $($ScriptInfo)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Section         : $($Section)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Site Name       : $($XDSiteName)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port       : $($SmtpPort)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server     : $($SmtpServer)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Title           : $($Script:Title)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "To              : $($To)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Use SSL         : $($UseSSL)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "User Name      : $($UserName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "User Name       : $($UserName)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "XA/XD Version  : $($Script:XDSiteVersion)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "XA/XD Version   : $($Script:XDSiteVersion)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "OS Detected    : $($Script:RunningOS)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PoSH version   : $($Host.Version)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSCulture      : $($PSCulture)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture    : $($PSUICulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "OS Detected     : $($Script:RunningOS)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PoSH version    : $($Host.Version)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSCulture       : $($PSCulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture     : $($PSUICulture)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Word language  : $($Script:WordLanguageValue)" 4>$Null
-			Out-File -FilePath $SIFile -Append -InputObject "Word version   : $($Script:WordProduct)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word language   : $($Script:WordLanguageValue)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word version    : $($Script:WordProduct)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script start   : $($Script:StartTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time   : $($Str)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script start    : $($Script:StartTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time    : $($Str)" 4>$Null
 	}
 
 	$ErrorActionPreference = $SaveEAPreference
@@ -29382,4 +29626,4 @@ UpdateDocumentProperties $AbstractTitle $SubjectTitle
 ProcessDocumentOutput
 
 ProcessScriptEnd
-#endregion
+#endregionn
