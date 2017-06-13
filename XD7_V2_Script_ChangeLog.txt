@@ -9,17 +9,17 @@
 #		Company Email
 #		Company Fax
 #		Company Phone
+#	Added back the WorkerGroup policy filter for XenApp 6.x
 #	Added support for version 7.14
 #	Added the following new Computer policy settings:
 #		Application Launch Wait Timeout
 #		Enable monitoring of application failures
 #		Enable monitoring of application failures on Desktop OS VDAs
 #		List of applications excluded from failure monitoring
-#		Logoff Checker Startup Delay
-#		Profile Streaming Exclusion list - directories (Enable/Disable)
-#		Profile Streaming Exclusion list - directories (Enable with list of folders/Disable)
+#		Logoff Checker Startup Delay (seconds)
+#		Profile Streaming Exclusion list - directories
 #	Added to Delivery Group, LicenseModel and ProductCode
-#	Added back the WorkerGroup policy filter for XenApp 6.x
+#	Fix bug when retrieving Filters for a Policy that "applies to all objects in the Site"
 #	Fix Function Check-LoadedModule
 #	Remove code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
 #	Replace _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
