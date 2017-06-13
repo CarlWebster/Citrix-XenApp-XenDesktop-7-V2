@@ -83,35 +83,35 @@
 .PARAMETER CompanyAddress
 	Company Address to use for the Cover Page, if the Cover Page has the Address field.  
 		The following Cover Pages have an Address field:
-			Banded
-			Contrast
-			Exposure
-			Filigree
-			Ion (Dark)
-			Retrospect
-			Semaphore
-			Tiles
-			ViewMaster
+			Banded (Word 2013/2016)
+			Contrast (Word 2010)
+			Exposure (Word 2010)
+			Filigree (Word 2013/2016)
+			Ion (Dark) (Word 2013/2016)
+			Retrospect (Word 2013/2016)
+			Semaphore (Word 2013/2016)
+			Tiles (Word 2010)
+			ViewMaster (Word 2013/2016)
 	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CA.
 .PARAMETER CompanyEmail
 	Company Email to use for the Cover Page, if the Cover Page has the Email field.  
 		The following Cover Pages have an Email field:
-			Facet
+			Facet (Word 2013/2016)
 	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CE.
 .PARAMETER CompanyFax
 	Company Fax to use for the Cover Page, if the Cover Page has the Fax field.  
 		The following Cover Pages have a Fax field:
-			Contrast
-			Exposure
+			Contrast (Word 2010)
+			Exposure (Word 2010)
 	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CF.
 .PARAMETER CompanyPhone
 	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
 		The following Cover Pages have a Phone field:
-			Contrast
-			Exposure
+			Contrast (Word 2010)
+			Exposure (Word 2010)
 	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CPh.
 .PARAMETER CoverPage
@@ -1005,17 +1005,17 @@ Param(
 #		Company Email
 #		Company Fax
 #		Company Phone
+#	Added back the WorkerGroup policy filter for XenApp 6.x
 #	Added support for version 7.14
 #	Added the following new Computer policy settings:
 #		Application Launch Wait Timeout
 #		Enable monitoring of application failures
 #		Enable monitoring of application failures on Desktop OS VDAs
 #		List of applications excluded from failure monitoring
-#		Logoff Checker Startup Delay
-#		Profile Streaming Exclusion list - directories (Enable/Disable)
-#		Profile Streaming Exclusion list - directories (Enable with list of folders/Disable)
+#		Logoff Checker Startup Delay (seconds)
+#		Profile Streaming Exclusion list - directories
 #	Added to Delivery Group, LicenseModel and ProductCode
-#	Added back the WorkerGroup policy filter for XenApp 6.x
+#	Fix bug when retrieving Filters for a Policy that "applies to all objects in the Site"
 #	Fix Function Check-LoadedModule
 #	Remove code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
 #	Replace _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
@@ -5200,7 +5200,7 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): DeliveryGroups  : $($DeliveryGroups)"
 	If($Dev)
 	{
-		Write-Verbose "$(Get-Date): DevErrorFile  : $($Script:DevErrorFile)"
+		Write-Verbose "$(Get-Date): DevErrorFile    : $($Script:DevErrorFile)"
 	}
 	Write-Verbose "$(Get-Date): DGUtilization   : $($DeliveryGroupsUtilization)"
 	Write-Verbose "$(Get-Date): Filename1       : $($Script:filename1)"
@@ -5244,11 +5244,11 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): PSUICulture     : $($PSUICulture)"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Word language : $($Script:WordLanguageValue)"
-		Write-Verbose "$(Get-Date): Word version  : $($Script:WordProduct)"
+		Write-Verbose "$(Get-Date): Word language   : $($Script:WordLanguageValue)"
+		Write-Verbose "$(Get-Date): Word version    : $($Script:WordProduct)"
 	}
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): Script start  : $($Script:StartTime)"
+	Write-Verbose "$(Get-Date): Script start    : $($Script:StartTime)"
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
 }
@@ -13353,42 +13353,58 @@ Function ProcessCitrixPolicies
 					}
 				}
 			}
+			ElseIf($? -and $Null -eq $Filters)
+			{
+				$txt = "$($Policy.PolicyName) policy has no filter settings"
+				If($MSWord -or $PDF)
+				{
+					WriteWordLine 3 0 "Assigned to"
+					WriteWordLine 0 1 $txt
+				}
+				ElseIf($Text)
+				{
+					Line 0 "Assigned to"
+					Line 1 $txt
+				}
+				ElseIf($HTML)
+				{
+					WriteHTMLLine 3 0 "Assigned to"
+					WriteHTMLLine 0 1 $txt
+				}
+			}
+			ElseIf($? -and $Policy.PolicyName -eq "Unfiltered")
+			{
+				$txt = "Unfiltered policy has no filter settings"
+				If($MSWord -or $PDF)
+				{
+					WriteWordLine 3 0 "Assigned to"
+					WriteWordLine 0 1 $txt
+				}
+				ElseIf($Text)
+				{
+					Line 0 "Assigned to"
+					Line 1 $txt
+				}
+				ElseIf($HTML)
+				{
+					WriteHTMLLine 3 0 "Assigned to"
+					WriteHTMLLine 0 1 $txt
+				}
+			}
 			Else
 			{
-				If($Policy.PolicyName -eq "Unfiltered")
+				$txt = "Unable to retrieve Filter settings"
+				If($MSWord -or $PDF)
 				{
-					$txt = "Unfiltered policy has no filter settings"
-					If($MSWord -or $PDF)
-					{
-						WriteWordLine 3 0 "Assigned to"
-						WriteWordLine 0 1 $txt
-					}
-					ElseIf($Text)
-					{
-						Line 0 "Assigned to"
-						Line 1 $txt
-					}
-					ElseIf($HTML)
-					{
-						WriteHTMLLine 3 0 "Assigned to"
-						WriteHTMLLine 0 1 $txt
-					}
+					WriteWordLine 0 1 $txt
 				}
-				Else
+				ElseIf($Text)
 				{
-					$txt = "Unable to retrieve Filter settings"
-					If($MSWord -or $PDF)
-					{
-						WriteWordLine 0 1 $txt
-					}
-					ElseIf($Text)
-					{
-						Line 1 $txt
-					}
-					ElseIf($HTML)
-					{
-						WriteHTMLLine 0 1 $txt
-					}
+					Line 1 $txt
+				}
+				ElseIf($HTML)
+				{
+					WriteHTMLLine 0 1 $txt
 				}
 			}
 			
@@ -14041,7 +14057,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting IcaListenerTimeout State ) -and ($Setting.IcaListenerTimeout.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\ICA listener connection timeout"
+						$txt = "ICA\ICA listener connection timeout (milliseconds)"
 						If($MSWord -or $PDF)
 						{
 							$WordTableRowHash = @{
@@ -14107,7 +14123,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting LogoffCheckerStartupDelay State ) -and ($Setting.LogoffCheckerStartupDelay.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\Logoff Checker Startup Delay"
+						$txt = "ICA\Logoff Checker Startup Delay (seconds)"
 						If($MSWord -or $PDF)
 						{
 							$WordTableRowHash = @{
@@ -14972,7 +14988,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting USBBandwidthLimit State ) -and ($Setting.USBBandwidthLimit.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\Bandwidth\Client USB device redirection bandwidth limit"
+						$txt = "ICA\Bandwidth\Client USB device redirection bandwidth limit (Kbps)"
 						If($MSWord -or $PDF)
 						{
 							$WordTableRowHash = @{
@@ -15506,7 +15522,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting IcaRoundTripCalculationInterval State ) -and ($Setting.IcaRoundTripCalculationInterval.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\End User Monitoring\ICA round trip calculation interval"
+						$txt = "ICA\End User Monitoring\ICA round trip calculation interval (seconds)"
 						If($MSWord -or $PDF)
 						{
 							$WordTableRowHash = @{
@@ -18024,7 +18040,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting UpsPrintStreamInputBandwidthLimit State ) -and ($Setting.UpsPrintStreamInputBandwidthLimit.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\Printing\Universal Print Server\Universal Print Server print stream input bandwidth limit (kbps)"
+						$txt = "ICA\Printing\Universal Print Server\Universal Print Server print stream input bandwidth limit (Kbps)"
 						If($MSWord -or $PDF)
 						{
 							$WordTableRowHash = @{
@@ -18125,7 +18141,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting PrintServersOutOfServiceThreshold State ) -and ($Setting.PrintServersOutOfServiceThreshold.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\Printing\Universal Print Server\Universal Print Servers out-of-service threshold"
+						$txt = "ICA\Printing\Universal Print Server\Universal Print Servers out-of-service threshold (seconds)"
 						If($MSWord -or $PDF)
 						{
 							$WordTableRowHash = @{
@@ -22763,7 +22779,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting MaxLogSize_Part State ) -and ($Setting.MaxLogSize_Part.State -ne "NotConfigured"))
 					{
-						$txt = "Profile Management\Log settings\Maximum size of the log file"
+						$txt = "Profile Management\Log settings\Maximum size of the log file (bytes)"
 						If($MSWord -or $PDF)
 						{
 							$WordTableRowHash = @{
@@ -23500,28 +23516,6 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.PSEnabled.State 
-						}
-					}
-					If((validStateProp $Setting StreamingExclusionList State ) -and ($Setting.StreamingExclusionList.State -ne "NotConfigured"))
-					{
-						$txt = "Profile Management\Streamed user profiles\Profile Streaming Exclusion list - directories"
-						If($MSWord -or $PDF)
-						{
-							$WordTableRowHash = @{
-							Text = $txt;
-							Value = $Setting.StreamingExclusionList.State;
-							}
-							$SettingsWordTable += $WordTableRowHash;
-						}
-						ElseIf($HTML)
-						{
-							$rowdata += @(,(
-							$txt,$htmlbold,
-							$Setting.StreamingExclusionList.State,$htmlwhite))
-						}
-						ElseIf($Text)
-						{
-							OutputPolicySetting $txt $Setting.StreamingExclusionList.State 
 						}
 					}
 					If((validStateProp $Setting StreamingExclusionList_Part State ) -and ($Setting.StreamingExclusionList_Part.State -ne "NotConfigured"))
