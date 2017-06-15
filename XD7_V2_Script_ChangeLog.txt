@@ -4,12 +4,14 @@
 # Created on October 20, 2013
 
 #Version 2.05
-#	Add four new Cover Page properties
+#	Added back the WorkerGroup policy filter for XenApp 6.x
+#	Added folder name to Function OutputApplication (Thanks to Brandon Mitchell)
+#	Added four new Cover Page properties
 #		Company Address
 #		Company Email
 #		Company Fax
 #		Company Phone
-#	Added back the WorkerGroup policy filter for XenApp 6.x
+#	Added sort applications by AdminFolderName and ApplicationName to Function ProcessApplications (Thanks to Brandon Mitchell)
 #	Added support for version 7.14
 #	Added the following new Computer policy settings:
 #		Application Launch Wait Timeout
@@ -21,6 +23,8 @@
 #	Added to Delivery Group, LicenseModel and ProductCode
 #	Fix bug when retrieving Filters for a Policy that "applies to all objects in the Site"
 #	Fix Function Check-LoadedModule
+#	Fix functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
+#	Fix two calls to Get-BrokerApplication that were retrieving the default of 250 records (Thanks to Brandon Mitchell)
 #	Remove code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
 #	Replace _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
 #	Update Function ProcessScriptEnd for the new Cover Page properties
@@ -75,10 +79,10 @@
 #	Fix numerous typos
 #	Fixed formatting issues with HTML headings output
 #	Fixed French wording for Table of Contents 2 (Thanks to David Rouquier)
-#	Fixed the ‚ÄúNo. of machines‚Äù for Machine Catalogs so it is now accurate
+#	Fixed the ìNo. of machinesî for Machine Catalogs so it is now accurate
 #	Fixed the Machine Catalog details to match what is shown in Studio
 #	For Machine Catalog details, for PVS provisioned catalogs, add the PVS Server address
-#	For Persistent machines with changes stored on the local disk, added the ‚ÄúVM copy mode‚Äù
+#	For Persistent machines with changes stored on the local disk, added the ìVM copy modeî
 #	For Personal vDisk catalogs, added PvD size and drive letter
 #	For Random catalog types (SingleSession and MultiSession), added "Temporary memory cache size (MB)" and "Temporary disk cache size (GB)"
 #	Removed unnecessary blank lines in policy value output

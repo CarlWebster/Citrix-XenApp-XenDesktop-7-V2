@@ -1,39 +1,28 @@
-Version 2.05 will add four new cover page properties developed from the Script_Template repository.
-
-.PARAMETER CompanyAddress
-	Company Address to use for the Cover Page, if the Cover Page has the Address field.  
-		The following Cover Pages have an Address field:
-			Banded
-			Contrast
-			Exposure
-			Filigree
-			Ion (Dark)
-			Retrospect
-			Semaphore
-			Tiles
-			ViewMaster
-	This parameter is only valid with the MSWORD and PDF output parameters.
-	This parameter has an alias of CA.
-.PARAMETER CompanyEmail
-	Company Email to use for the Cover Page, if the Cover Page has the Email field.  
-		The following Cover Pages have an Email field:
-			Facet
-	This parameter is only valid with the MSWORD and PDF output parameters.
-	This parameter has an alias of CE.
-.PARAMETER CompanyFax
-	Company Fax to use for the Cover Page, if the Cover Page has the Fax field.  
-		The following Cover Pages have a Fax field:
-			Contrast
-			Exposure
-	This parameter is only valid with the MSWORD and PDF output parameters.
-	This parameter has an alias of CF.
-.PARAMETER CompanyPhone
-	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
-		The following Cover Pages have a Phone field:
-			Contrast
-			Exposure
-	This parameter is only valid with the MSWORD and PDF output parameters.
-	This parameter has an alias of CPh.
-
-All the code verify the script parameters are set correctly will be removed. This "bug" was fixed in PowerShell V3.
-Version 7.14.1 support.
+#Version 2.05
+#	Added back the WorkerGroup policy filter for XenApp 6.x
+#	Added folder name to Function OutputApplication (Thanks to Brandon Mitchell)
+#	Added four new Cover Page properties
+#		Company Address
+#		Company Email
+#		Company Fax
+#		Company Phone
+#	Added sort applications by AdminFolderName and ApplicationName to Function ProcessApplications (Thanks to Brandon Mitchell)
+#	Added support for version 7.14
+#	Added the following new Computer policy settings:
+#		Application Launch Wait Timeout
+#		Enable monitoring of application failures
+#		Enable monitoring of application failures on Desktop OS VDAs
+#		List of applications excluded from failure monitoring
+#		Logoff Checker Startup Delay (seconds)
+#		Profile Streaming Exclusion list - directories
+#	Added to Delivery Group, LicenseModel and ProductCode
+#	Fix bug when retrieving Filters for a Policy that "applies to all objects in the Site"
+#	Fix Function Check-LoadedModule
+#	Fix functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
+#	Fix two calls to Get-BrokerApplication that were retrieving the default of 250 records (Thanks to Brandon Mitchell)
+#	Remove code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Replace _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Update Function ProcessScriptEnd for the new Cover Page properties
+#	Update Function ShowScriptOptions for the new Cover Page properties
+#	Update Function UpdateDocumentProperties for the new Cover Page properties
+#	Update help text
