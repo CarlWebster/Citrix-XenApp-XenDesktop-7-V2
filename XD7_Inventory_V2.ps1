@@ -1001,6 +1001,13 @@ Param(
 
 #Version 2.05
 #	Added back the WorkerGroup policy filter for XenApp 6.x
+#	Added Broker registry keys that can be set on Broker servers
+#		Added Function GetControllerRegistryKeys
+#		Added Function Get-RegistryValue2
+#		Added Function Get-RegKeyToObject
+#		Added Function OutputControllerRegistryKeys
+#		There are 315 registry keys and values that are checked and listed
+#		Updated Function OutputControllers
 #	Added folder name to Function OutputApplication (Thanks to Brandon Mitchell)
 #	Added four new Cover Page properties
 #		Company Address
@@ -1017,6 +1024,7 @@ Param(
 #		Logoff Checker Startup Delay (seconds)
 #		Profile Streaming Exclusion list - directories
 #	Added to Delivery Group, LicenseModel and ProductCode
+#	Added Version information to Controllers
 #	Fix bug when retrieving Filters for a Policy that "applies to all objects in the Site"
 #	Fix Function Check-LoadedModule
 #	Fix functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
@@ -3655,6 +3663,73 @@ Function Get-RegistryValue($path, $name)
 	{
 		$Null
 	}
+}
+
+# Gets the specified registry value or $Null if it is missing
+Function Get-RegistryValue2
+{
+	[CmdletBinding()]
+	Param([string]$path, [string]$name, [string]$ComputerName)
+	If($ComputerName -eq $env:computername)
+	{
+		$key = Get-Item -LiteralPath $path -EA 0
+		If($key)
+		{
+			Return $key.GetValue($name, $Null)
+		}
+		Else
+		{
+			Return $Null
+		}
+	}
+	Else
+	{
+		#path needed here is different for remote registry access
+		$path = $path.SubString(6)
+		$path2 = $path.Replace('\','\\')
+		$Reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $ComputerName)
+		$RegKey = $Reg.OpenSubKey($path2)
+		If ($RegKey)
+		{
+			$Results = $RegKey.GetValue($name)
+
+			If($Null -ne $Results)
+			{
+				Return $Results
+			}
+			Else
+			{
+				Return $Null
+			}
+		}
+		Else
+		{
+			Return $Null
+		}
+	}
+}
+
+Function Get-RegKeyToObject 
+{
+	#function contributed by Andrew Williamson @ Fujitsu Services
+    param([string]$RegPath,
+    [string]$RegKey,
+    [string]$ComputerName)
+	
+    $val = Get-RegistryValue2 $RegPath $RegKey $ComputerName
+	
+    $obj1 = New-Object -TypeName PSObject
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey	-Value $RegPath
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue	-Value $RegKey
+    If($Null -eq $val) 
+	{
+        $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value "Not set"
+    } 
+	Else 
+	{
+	    $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value $val
+    }
+    $Script:ControllerRegistryItems +=  $obj1
 }
 #endregion
 
@@ -26907,61 +26982,65 @@ Function OutputControllers
 	
 	ForEach($Controller in $Controllers)
 	{
+		Write-Verbose "$(Get-Date): `t`tOutput Controller $($Controller.DNSName)"
 		$Global:TotalControllers++
 
 		If($MSWord -or $PDF)
 		{
 			$WordTableRowHash = @{ 
 			Name = $Controller.DNSName; 
+			Version = $Controller.ControllerVersion;
 			LastUpdated = $Controller.LastActivityTime; 
 			RegisteredDesktops = $Controller.DesktopsRegistered;
 			}
 
 			$ControllersWordTable += $WordTableRowHash;
+			[System.Collections.Hashtable[]] $ScriptInformation = @()
+			$ScriptInformation += @{Data = "Name"; Value = $Controller.DNSName; }
+			$ScriptInformation += @{Data = "Version"; Value = $Controller.ControllerVersion; }
+			$ScriptInformation += @{Data = "Last updated"; Value = $Controller.LastActivityTime; }
+			$ScriptInformation += @{Data = "Registered desktops"; Value = $Controller.DesktopsRegistered; }
+
+			$Table = AddWordTable -Hashtable $ScriptInformation `
+			-Columns Data,Value `
+			-List `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitFixed;
+
+			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Columns.Item(1).Width = 100;
+			$Table.Columns.Item(2).Width = 250;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
 		}
 		ElseIf($Text)
 		{
 			Line 1 "Name`t`t`t: " $Controller.DNSName
+			Line 1 "Version`t`t`t: " $Controller.ControllerVersion
 			Line 1 "Last updated`t`t: " $Controller.LastActivityTime
 			Line 1 "Registered desktops`t: " $Controller.DesktopsRegistered
 			Line 0 ""
 		}
 		ElseIf($HTML)
 		{
-			$rowdata += @(,(
-			$Controller.DNSName,$htmlwhite,
-			$Controller.LastActivityTime,$htmlwhite,
-			$Controller.DesktopsRegistered,$htmlwhite))
+			$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Controller.DNSName,$htmlwhite)
+			$rowdata += @(,('Version',($htmlsilver -bor $htmlbold),$Controller.ControllerVersion,$htmlwhite))
+			$rowdata += @(,('Last updated',($htmlsilver -bor $htmlbold),$Controller.LastActivityTime,$htmlwhite))
+			$rowdata += @(,('Registered desktops',($htmlsilver -bor $htmlbold),$Controller.DesktopsRegistered,$htmlwhite))
+			$msg = ""
+			$columnWidths = @("100px","250px")
+			FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
 		}
+		
+		$Script:ControllerRegistryItems = @()
+		GetControllerRegistryKeys $Controller.DNSName
+		OutputControllerRegistryKeys
 	}
 
-	If($MSWord -or $PDF)
-	{
-		$Table = AddWordTable -Hashtable $ControllersWordTable `
-		-Columns Name, LastUpdated, RegisteredDesktops `
-		-Headers "Name", "Last updated", "Registered desktops" `
-		-Format $wdTableGrid `
-		-AutoFit $wdAutoFitContent;
-
-		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-		FindWordDocumentEnd
-		$Table = $Null
-	}
-	ElseIf($HTML)
-	{
-		$columnHeaders = @(
-		'Name',($htmlsilver -bor $htmlbold),
-		'Last updated',($htmlsilver -bor $htmlbold),
-		'Registered desktops',($htmlsilver -bor $htmlbold))
-
-		$msg = ""
-		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
-	}
-	
 	If($Hardware)
 	{
 		ForEach($Controller in $Controllers)
@@ -26969,6 +27048,410 @@ Function OutputControllers
 			$Script:Selection.InsertNewPage()
 			GetComputerWMIInfo $Controller.DNSName
 		}
+	}
+}
+
+Function GetControllerRegistryKeys
+{
+	Param([string]$ComputerName)
+	
+	#look for the following registry keys and values on Controllers
+		
+	#Registry Key                                                      Registry Value                 
+	#=================================================================================================
+	
+	Write-Verbose "$(Get-Date): `t`t`tGather Registry Key data"
+	#Get-RegKeyToObject "HKLM:\Software\Policies\" "" $ComputerName
+
+	#ControllerSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ControllerStartupRetryPeriodLimitMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ControllerStartupRetryPeriodStartMaxMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MinThreadPoolThreads" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ControllerStartupRetryPeriodLimitMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ControllerStartupRetryPeriodStartMaxMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MinThreadPoolThreads" $ComputerName
+	
+	#CoreSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "AllowMultipleRemotePCAssignments" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "AutoHideNonContactableSessions" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "BrokerStartupRetryPeriodLimitMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "BrokerStartupRetryPeriodStartMaxMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "DisableActiveSessionReconnect" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "DisablePerformanceCounters" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ExtraSpinUpTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "FreeSessionThresholdForLoadEvaluation" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "HeartbeatPeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "LaunchLicenseCheckPeriodSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "LaunchRetryPeriodSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "LicensingCacheFileLocation" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "LogonToleranceIsHardLimit" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MachineSinBinStayTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxConcurrentRegistrationUpgrades" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxDisconnectWaitTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxHeartbeatIntervalMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxLogoffWaitTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxPendingSessions" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxRegistrationCompletionTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxSessionEstablishmentTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxTimeForPrepareSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxUnconfiguredMachineAgeMinutes" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxWorkers" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MinHeartbeatPeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MinimumAcceptableVdaMajorVersion" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MinRegistrationRecountIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MinVdaStatusUpdatePeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "NonContactableSessionGracePeriodSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ProtectedSessionReconnectSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SettleTimeForVdaStatusUpdateMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SiteDynamicDataRefreshPeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SupportMultipleForest" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "TestVdaCommunicationsTimeoutSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "UpdateLoadIndexThreshold" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "UseIPAddressFromWcf" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "UserDrivenResetTimeoutMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "WIRetryIntervalDuringRegistrationStateChangeSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "WIRetryIntervalDuringSessionStateChangeSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "WorkerSettingsAssessmentMinutes" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "AllowMultipleRemotePCAssignments" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "AutoHideNonContactableSessions" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "BrokerStartupRetryPeriodLimitMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "BrokerStartupRetryPeriodStartMaxMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "DisableActiveSessionReconnect" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "DisablePerformanceCounters" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ExtraSpinUpTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "FreeSessionThresholdForLoadEvaluation" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "HeartbeatPeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "LaunchLicenseCheckPeriodSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "LaunchRetryPeriodSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "LicensingCacheFileLocation" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "LogonToleranceIsHardLimit" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MachineSinBinStayTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxConcurrentRegistrationUpgrades" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxDisconnectWaitTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxHeartbeatIntervalMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxLogoffWaitTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxPendingSessions" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxRegistrationCompletionTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxSessionEstablishmentTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxTimeForPrepareSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxUnconfiguredMachineAgeMinutes" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxWorkers" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MinHeartbeatPeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MinimumAcceptableVdaMajorVersion" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MinRegistrationRecountIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MinVdaStatusUpdatePeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "NonContactableSessionGracePeriodSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ProtectedSessionReconnectSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "SettleTimeForVdaStatusUpdateMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "SiteDynamicDataRefreshPeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "SupportMultipleForest" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "TestVdaCommunicationsTimeoutSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "UpdateLoadIndexThreshold" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "UseIPAddressFromWcf" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "UserDrivenResetTimeoutMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "WIRetryIntervalDuringRegistrationStateChangeSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "WIRetryIntervalDuringSessionStateChangeSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "WorkerSettingsAssessmentMinutes" $ComputerName
+
+	#HostingManagementSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "CompletedActionRetentionPeriodSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ComplexPowerActionTimeoutSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "HostingStartupRetryPeriodLimitMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "HostingStartupRetryPeriodStartMaxMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "HypervisorConnectionPollPeriodSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "HypervisorPollForAlertsIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MachineRecreationSinBinMinutes" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MachineStartSinBinSeconds" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxFailedRegistrationsAllowed" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxRegistrationDelayMin" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxTimeBeforeStuckOnBootFaultSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxTimeBeforeUnregisteredFaultSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "PvdImageUpdateTimeoutMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SimplePowerActionTimeoutSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "StarvationBoostPeriodSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "CompletedActionRetentionPeriodSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ComplexPowerActionTimeoutSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "HostingStartupRetryPeriodLimitMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "HostingStartupRetryPeriodStartMaxMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "HypervisorConnectionPollPeriodSec" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "HypervisorPollForAlertsIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MachineRecreationSinBinMinutes" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MachineStartSinBinSeconds" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxFailedRegistrationsAllowed" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxRegistrationDelayMin" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxTimeBeforeStuckOnBootFaultSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxTimeBeforeUnregisteredFaultSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "PvdImageUpdateTimeoutMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "SimplePowerActionTimeoutSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "StarvationBoostPeriodSec" $ComputerName
+	
+	#XmsSettings (not XmlSettings)
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "DisableStaNfuseSecurityChecks" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "EnableXmlServiceSidEnumeration" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ThrottledRequestAddressMaxConcurrentTransactions" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ThrottledRequestAddressRetryIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ThrottledRequestAddressTimeoutSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "UseNetworkLogon" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlListeners" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlServicesEnableNonSsl" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlServicesEnableSsl" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlServicesPort" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlServicesSslPort" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlServicesTargetAddress" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlStaIdentity" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlStaRefreshableTicketLifetimeInSeconds" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlStaTicketLifetimeInSeconds" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmlWpnbrRequestTimeoutMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmsStartupRetryPeriodLimitMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "XmsStartupRetryPeriodStartMaxMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "DisableStaNfuseSecurityChecks" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "EnableXmlServiceSidEnumeration" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ThrottledRequestAddressMaxConcurrentTransactions" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ThrottledRequestAddressRetryIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ThrottledRequestAddressTimeoutSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "UseNetworkLogon" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlListeners" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlServicesEnableNonSsl" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlServicesEnableSsl" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlServicesPort" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlServicesSslPort" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlServicesTargetAddress" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlStaIdentity" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlStaRefreshableTicketLifetimeInSeconds" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlStaTicketLifetimeInSeconds" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmlWpnbrRequestTimeoutMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmsStartupRetryPeriodLimitMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "XmsStartupRetryPeriodStartMaxMs" $ComputerName
+	
+	#ISCMSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "InterServiceConfigRefreshPeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "MaxMsInterServiceConnectionRetryPeriod" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "InterServiceConfigRefreshPeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "MaxMsInterServiceConnectionRetryPeriod" $ComputerName
+
+	#IdleSessionsSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\IdleSessions" "MaxIdleSessionToTerminatePercent" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\IdleSessions" "MaxRetriesPerSession" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\IdleSessions" "MaxSessionOperationWaitTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\IdleSessions" "SinBinDurationSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\IdleSessions" "MaxIdleSessionToTerminatePercent" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\IdleSessions" "MaxRetriesPerSession" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\IdleSessions" "MaxSessionOperationWaitTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\IdleSessions" "SinBinDurationSecs" $ComputerName
+	
+	#RebootScheduleSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\RebootSchedule" "MaxActionThreads" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\RebootSchedule" "MaxPvDPrepareTimeMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\RebootSchedule" "MaxShutdownDelayMin" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\RebootSchedule" "RebootCycleDataLifetimeHours" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\RebootSchedule" "ShutdownTimeoutRecovery" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\RebootSchedule" "MaxActionThreads" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\RebootSchedule" "MaxPvDPrepareTimeMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\RebootSchedule" "MaxShutdownDelayMin" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\RebootSchedule" "RebootCycleDataLifetimeHours" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\RebootSchedule" "ShutdownTimeoutRecovery" $ComputerName
+
+	#DBConnectionSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "ConnectionString" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "ConnectivityRetryDelaySecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "ForceDbConnectionFailure" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "HaConnectionString" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "MaxConnectivityLossSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "MaxTxRetries" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "MaxTxRetryIntervalMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "MinTxRetryIntervalMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "ProviderName" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "ReaperDeferralPeriodSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\DataStore\Connections\Controller" "SdkSqlQueryTimeoutSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "ConnectionString" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "ConnectivityRetryDelaySecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "ForceDbConnectionFailure" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "HaConnectionString" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "MaxConnectivityLossSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "MaxTxRetries" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "MaxTxRetryIntervalMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "MinTxRetryIntervalMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "ProviderName" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "ReaperDeferralPeriodSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\DataStore\Connections\Controller" "SdkSqlQueryTimeoutSecs" $ComputerName
+	
+	#DBConnectionState
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\DatabaseConnection" "State" $ComputerName
+	
+	#SiteServicesSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\SiteServices" "ControllerKeepalivePollMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\SiteServices" "LeasePeriodSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\SiteServices" "LeaseRefreshPollAfterFailoverSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\SiteServices" "LeaseRefreshPollSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\SiteServices" "MaxControllerInactivitySecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\SiteServices" "MaxShutdownTimeSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\SiteServices" "ControllerKeepalivePollMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\SiteServices" "LeasePeriodSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\SiteServices" "LeaseRefreshPollAfterFailoverSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\SiteServices" "LeaseRefreshPollSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\SiteServices" "MaxControllerInactivitySecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\SiteServices" "MaxShutdownTimeSecs" $ComputerName
+
+	#NameCacheSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "DisableAutomaticDomainTrustSearch" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "DisableDomainCaching" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "DomainTrustMappingMaxThreads" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "DomainTrustMappingRefreshPeriodMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "MachineNameLookupTimeoutMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "NameRefreshPeriodAfterErrorMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "NameRefreshPeriodMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "OnDemandLookupCoalescePeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "RefreshDBBatchSize" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\NameCache" "UserNameLookupTimeoutMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "DisableAutomaticDomainTrustSearch" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "DisableDomainCaching" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "DomainTrustMappingMaxThreads" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "DomainTrustMappingRefreshPeriodMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "MachineNameLookupTimeoutMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "NameRefreshPeriodAfterErrorMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "NameRefreshPeriodMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "OnDemandLookupCoalescePeriodMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "RefreshDBBatchSize" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\NameCache" "UserNameLookupTimeoutMs" $ComputerName
+
+	#LoggingSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\Logging" "ConnectionLogLifetimeHours" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\Logging" "HypervisorAlertLifetimeHours" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\Logging" "LicenseConcurrencySampleIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\Logging" "LicenseUsersDataRetentionPeriodHours" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\Logging" "ConnectionLogLifetimeHours" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\Logging" "HypervisorAlertLifetimeHours" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\Logging" "LicenseConcurrencySampleIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\Logging" "LicenseUsersDataRetentionPeriodHours" $ComputerName
+
+	#MachineCommandQueuesSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\MachineCommandQueues" "MachineCommandQueueLifetimeHours" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\MachineCommandQueues" "MachineCommandQueueLifetimeHours" $ComputerName
+	
+	#ConnectionLeasingSettings
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "DeletionCheckItemLimitPerCycle" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "EnumerationLeaseKeyMask" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "LaunchRefCacheExpiryMaxMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "LeaseExpirationTimeInMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "LeaseMarkedDeletedTimeInMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "MaxItemsPerSyncCycle" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "MaxRetryDuringLocalCacheDeletion" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "MinLeaseLifetimeFractionBeforeRefresh" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "PendingFailureMaxSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "SyncCleanupDelaySecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "SyncIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "SyncLocation" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "SyncStartDelayMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "UploadQueueIdleMaxSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer\ConnectionLeasing" "UploadQueueMaxItems" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "DeletionCheckItemLimitPerCycle" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "EnumerationLeaseKeyMask" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "LaunchRefCacheExpiryMaxMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "LeaseExpirationTimeInMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "LeaseMarkedDeletedTimeInMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "MaxItemsPerSyncCycle" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "MaxRetryDuringLocalCacheDeletion" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "MinLeaseLifetimeFractionBeforeRefresh" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "PendingFailureMaxSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "SyncCleanupDelaySecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "SyncIntervalSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "SyncLocation" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "SyncStartDelayMins" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "UploadQueueIdleMaxSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\ConnectionLeasing" "UploadQueueMaxItems" $ComputerName
+	
+	#ConnectionLeasingState
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "ApplicationChangesCurrentEnumLastUidRetrieved" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "ApplicationChangesCurrentEnumStartTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "ApplicationChangesLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "ApplicationDeletionLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "DesktopDeletionLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "DnsResolutionEnabled" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "Enabled" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "IconChangesCurrentEnumLastUidRetrieved" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "IconChangesCurrentEnumStartTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "IconChangesLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "IconDeletionLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "LeaseChangesCurrentEnumLastUidRetrieved" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "LeaseChangesCurrentEnumStartTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "LeaseChangesLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "LeaseDeletionLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "PrivateDesktopChangesCurrentEnumLastUidRetrieved" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "PrivateDesktopChangesCurrentEnumStartTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "PrivateDesktopChangesLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "SharedDesktopChangesCurrentEnumLastUidRetrieved" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "SharedDesktopChangesCurrentEnumStartTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "SharedDesktopChangesLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "SiteGuid" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "WorkerChangesCurrentEnumLastUidRetrieved" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "WorkerChangesCurrentEnumStartTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "WorkerChangesLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "WorkerDeletionLastCheckTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\ConnectionLeasing" "ZoneGuid" $ComputerName
+	
+	#WorkerProxySettings
+	#nothing here
+	
+	#LhcSettings
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "BackgroundTaskIntervalMS" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ElectionAbandonTimeoutMs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ElectionHeartbeatMS" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ElectionMeanTimeBetweenMS" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ElectionTimeBeforeTakingOverMS" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ElectionTimeBetweenStdev" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ElectionWcfSendTimeoutMS" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "InitialOutageModeDetectionPeriod" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "MaximumOutageModeDetectionPeriod" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "MinimalOutageModeRecoveryPeriod" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "OutageModeDetectionResetPeriod" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "OutageModeForced" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "P2pElectionPortNumber" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "UnelectedUnregisterBatchSize" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "UnelectedUnregisterPauseMS" $ComputerName
+	
+	#LhcState
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "EarliestOutageModeEndTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "Enabled" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "LastOutageModeEndTime" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "OutageModeEntered" $ComputerName
+	
+	
+}
+
+Function OutputControllerRegistryKeys
+{
+	#sort the array by regkey and regvalue
+	Write-Verbose "$(Get-Date): `t`t`tOutput Registry Key data"
+	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort RegValue, RegKey
+	
+	If($Text)
+	{
+		Line 0 "Controller Registry Items"
+		Line 1 "Registry Key                                                                  Registry Value                                     Data            " 
+		Line 1 "================================================================================================================================================="
+	}
+	
+	If($Script:ControllerRegistryItems)
+	{
+		ForEach($Item in $Script:ControllerRegistryItems)
+		{
+			If($Text)
+			{
+				Line 1 ( "{0,-77} {1,-50} {2,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value)
+			}
+		}
+	}
+	Else
+	{
+		If($Text)
+		{
+			Line 1 "<None found>"
+		}
+	}
+
+	If($Text)
+	{
+		Line 0 ""
 	}
 }
 #endregion

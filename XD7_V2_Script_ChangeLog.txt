@@ -5,6 +5,13 @@
 
 #Version 2.05
 #	Added back the WorkerGroup policy filter for XenApp 6.x
+#	Added Broker registry keys that can be set on Broker servers
+#		Added Function GetControllerRegistryKeys
+#		Added Function Get-RegistryValue2
+#		Added Function Get-RegKeyToObject
+#		Added Function OutputControllerRegistryKeys
+#		There are 315 registry keys and values that are checked and listed
+#		Updated Function OutputControllers
 #	Added folder name to Function OutputApplication (Thanks to Brandon Mitchell)
 #	Added four new Cover Page properties
 #		Company Address
