@@ -10,14 +10,30 @@
 #		Added Function Get-RegistryValue2
 #		Added Function Get-RegKeyToObject
 #		Added Function OutputControllerRegistryKeys
+#		Added new parameter BrokerRegistryKeys
 #		There are 315 registry keys and values that are checked and listed
 #		Updated Function OutputControllers
+#	Added Controller version information to the Controllers section
 #	Added folder name to Function OutputApplication (Thanks to Brandon Mitchell)
 #	Added four new Cover Page properties
 #		Company Address
 #		Company Email
 #		Company Fax
 #		Company Phone
+#	Added missing function validObject
+#	Added new parameter MaxDetails:
+#		This is the same as using the follwoing parameters:
+#			Administrators
+#			AppDisks
+#			Applications
+#			BrokerRegistryKeys
+#			DeliveryGroups
+#			HardWare
+#			Hosting
+#			Logging
+#			MachineCatalogs
+#			Policies
+#			StoreFront
 #	Added sort applications by AdminFolderName and ApplicationName to Function ProcessApplications (Thanks to Brandon Mitchell)
 #	Added support for version 7.14
 #	Added the following new Computer policy settings:
@@ -28,16 +44,19 @@
 #		Logoff Checker Startup Delay (seconds)
 #		Profile Streaming Exclusion list - directories
 #	Added to Delivery Group, LicenseModel and ProductCode
-#	Fix bug when retrieving Filters for a Policy that "applies to all objects in the Site"
-#	Fix Function Check-LoadedModule
-#	Fix functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
-#	Fix two calls to Get-BrokerApplication that were retrieving the default of 250 records (Thanks to Brandon Mitchell)
-#	Remove code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
-#	Replace _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Update Function ProcessScriptEnd for the new Cover Page properties
-#	Update Function ShowScriptOptions for the new Cover Page properties
-#	Update Function UpdateDocumentProperties for the new Cover Page properties
-#	Update help text
+#	Added Version information to Controllers
+#	Fixed bug when retrieving Filters for a Policy that "applies to all objects in the Site"
+#	Fixed Function Check-LoadedModule
+#	Fixed functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
+#	Fixed numerous issues in the Policies section
+#	Fixed two calls to Get-BrokerApplication that were retrieving the default of 250 records (Thanks to Brandon Mitchell)
+#	Removed code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Reordered the parameters in the help text and parameter list so they match and are grouped better
+#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Updated Function ProcessScriptEnd for the new Cover Page properties
+#	Updated Function ShowScriptOptions for the new Cover Page properties
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties
+#	Updated help text
 
 #Version 2.04 released 6-Mar-2017
 #	Fixed wording of more policy names that changed from 7.13 prerelease to RTM

@@ -22,18 +22,18 @@
 	This script supports versions of XenApp/XenDesktop starting with 7.8.
 	
 	By default, only gives summary information for:
-		Machine Catalogs
-		AppDisks
-		Delivery Groups
-		Applications
-		Application Groups
-		Policies
-		Logging
 		Administrators
-		Hosting
-		StoreFront
 		App-V Publishing
+		AppDisks
 		AppDNA
+		Application Groups
+		Applications
+		Delivery Groups
+		Hosting
+		Logging
+		Machine Catalogs
+		Policies
+		StoreFront
 		Zones
 
 	The Summary information is what is shown in the top half of Citrix Studio for:
@@ -73,6 +73,45 @@
 		Spanish
 		Swedish
 		
+.PARAMETER AdminAddress
+	Specifies the address of a XenDesktop controller the PowerShell snapins will connect 
+	to. 
+	This can be provided as a host name or an IP address. 
+	This parameter defaults to LocalHost.
+	This parameter has an alias of AA.
+.PARAMETER CompanyAddress
+	Company Address to use for the Cover Page, if the Cover Page has the Address field.
+	
+	The following Cover Pages have an Address field:
+		Banded (Word 2013/2016)
+		Contrast (Word 2010)
+		Exposure (Word 2010)
+		Filigree (Word 2013/2016)
+		Ion (Dark) (Word 2013/2016)
+		Retrospect (Word 2013/2016)
+		Semaphore (Word 2013/2016)
+		Tiles (Word 2010)
+		ViewMaster (Word 2013/2016)
+		
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CA.
+.PARAMETER CompanyEmail
+	Company Email to use for the Cover Page, if the Cover Page has the Email field.  
+	
+	The following Cover Pages have an Email field:
+		Facet (Word 2013/2016)
+	
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CE.
+.PARAMETER CompanyFax
+	Company Fax to use for the Cover Page, if the Cover Page has the Fax field.  
+	
+	The following Cover Pages have a Fax field:
+		Contrast (Word 2010)
+		Exposure (Word 2010)
+	
+	This parameter is only valid with the MSWORD and PDF output parameters.
+	This parameter has an alias of CF.
 .PARAMETER CompanyName
 	Company Name to use for the Cover Page.  
 	The default value is contained in 
@@ -80,38 +119,13 @@
 	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated 
 	on the computer running the script.
 	This parameter has an alias of CN.
-.PARAMETER CompanyAddress
-	Company Address to use for the Cover Page, if the Cover Page has the Address field.  
-		The following Cover Pages have an Address field:
-			Banded (Word 2013/2016)
-			Contrast (Word 2010)
-			Exposure (Word 2010)
-			Filigree (Word 2013/2016)
-			Ion (Dark) (Word 2013/2016)
-			Retrospect (Word 2013/2016)
-			Semaphore (Word 2013/2016)
-			Tiles (Word 2010)
-			ViewMaster (Word 2013/2016)
-	This parameter is only valid with the MSWORD and PDF output parameters.
-	This parameter has an alias of CA.
-.PARAMETER CompanyEmail
-	Company Email to use for the Cover Page, if the Cover Page has the Email field.  
-		The following Cover Pages have an Email field:
-			Facet (Word 2013/2016)
-	This parameter is only valid with the MSWORD and PDF output parameters.
-	This parameter has an alias of CE.
-.PARAMETER CompanyFax
-	Company Fax to use for the Cover Page, if the Cover Page has the Fax field.  
-		The following Cover Pages have a Fax field:
-			Contrast (Word 2010)
-			Exposure (Word 2010)
-	This parameter is only valid with the MSWORD and PDF output parameters.
-	This parameter has an alias of CF.
 .PARAMETER CompanyPhone
 	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
-		The following Cover Pages have a Phone field:
-			Contrast (Word 2010)
-			Exposure (Word 2010)
+	
+	The following Cover Pages have a Phone field:
+		Contrast (Word 2010)
+		Exposure (Word 2010)
+	
 	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CPh.
 .PARAMETER CoverPage
@@ -120,44 +134,44 @@
 	(default cover pages in Word en-US)
 
 	Valid input is:
-			Alphabet (Word 2010. Works)
-			Annual (Word 2010. Doesn't work well for this report)
-			Austere (Word 2010. Works)
-			Austin (Word 2010/2013/2016. Doesn't work in 2013 or 2016, mostly 
-			works in 2010 but Subtitle/Subject & Author fields need to be moved 
-			after title box is moved up)
-			Banded (Word 2013/2016. Works)
-			Conservative (Word 2010. Works)
-			Contrast (Word 2010. Works)
-			Cubicles (Word 2010. Works)
-			Exposure (Word 2010. Works if you like looking sideways)
-			Facet (Word 2013/2016. Works)
-			Filigree (Word 2013/2016. Works)
-			Grid (Word 2010/2013/2016. Works in 2010)
-			Integral (Word 2013/2016. Works)
-			Ion (Dark) (Word 2013/2016. Top date doesn't fit; box needs to be 
-			manually resized or font changed to 8 point)
-			Ion (Light) (Word 2013/2016. Top date doesn't fit; box needs to be 
-			manually resized or font changed to 8 point)
-			Mod (Word 2010. Works)
-			Motion (Word 2010/2013/2016. Works if top date is manually changed to 
-			36 point)
-			Newsprint (Word 2010. Works but date is not populated)
-			Perspective (Word 2010. Works)
-			Pinstripes (Word 2010. Works)
-			Puzzle (Word 2010. Top date doesn't fit; box needs to be manually 
-			resized or font changed to 14 point)
-			Retrospect (Word 2013/2016. Works)
-			Semaphore (Word 2013/2016. Works)
-			Sideline (Word 2010/2013/2016. Doesn't work in 2013 or 2016, works in 
-			2010)
-			Slice (Dark) (Word 2013/2016. Doesn't work)
-			Slice (Light) (Word 2013/2016. Doesn't work)
-			Stacks (Word 2010. Works)
-			Tiles (Word 2010. Date doesn't fit unless changed to 26 point)
-			Transcend (Word 2010. Works)
-			ViewMaster (Word 2013/2016. Works)
-			Whisp (Word 2013/2016. Works)
+		Alphabet (Word 2010. Works)
+		Annual (Word 2010. Doesn't work well for this report)
+		Austere (Word 2010. Works)
+		Austin (Word 2010/2013/2016. Doesn't work in 2013 or 2016, mostly 
+		works in 2010 but Subtitle/Subject & Author fields need to be moved 
+		after title box is moved up)
+		Banded (Word 2013/2016. Works)
+		Conservative (Word 2010. Works)
+		Contrast (Word 2010. Works)
+		Cubicles (Word 2010. Works)
+		Exposure (Word 2010. Works if you like looking sideways)
+		Facet (Word 2013/2016. Works)
+		Filigree (Word 2013/2016. Works)
+		Grid (Word 2010/2013/2016. Works in 2010)
+		Integral (Word 2013/2016. Works)
+		Ion (Dark) (Word 2013/2016. Top date doesn't fit; box needs to be 
+		manually resized or font changed to 8 point)
+		Ion (Light) (Word 2013/2016. Top date doesn't fit; box needs to be 
+		manually resized or font changed to 8 point)
+		Mod (Word 2010. Works)
+		Motion (Word 2010/2013/2016. Works if top date is manually changed to 
+		36 point)
+		Newsprint (Word 2010. Works but date is not populated)
+		Perspective (Word 2010. Works)
+		Pinstripes (Word 2010. Works)
+		Puzzle (Word 2010. Top date doesn't fit; box needs to be manually 
+		resized or font changed to 14 point)
+		Retrospect (Word 2013/2016. Works)
+		Semaphore (Word 2013/2016. Works)
+		Sideline (Word 2010/2013/2016. Doesn't work in 2013 or 2016, works in 
+		2010)
+		Slice (Dark) (Word 2013/2016. Doesn't work)
+		Slice (Light) (Word 2013/2016. Doesn't work)
+		Stacks (Word 2010. Works)
+		Tiles (Word 2010. Date doesn't fit unless changed to 26 point)
+		Transcend (Word 2010. Works)
+		ViewMaster (Word 2013/2016. Works)
+		Whisp (Word 2013/2016. Works)
 
 	The default value is Sideline.
 	This parameter has an alias of CP.
@@ -167,12 +181,12 @@
 	The default value is contained in $env:username
 	This parameter has an alias of UN.
 	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER AdminAddress
-	Specifies the address of a XenDesktop controller the PowerShell snapins will connect 
-	to. 
-	This can be provided as a host name or an IP address. 
-	This parameter defaults to LocalHost.
-	This parameter has an alias of AA.
+.PARAMETER HTML
+	Creates an HTML file with an .html extension.
+	This parameter is disabled by default.
+.PARAMETER MSWord
+	SaveAs DOCX file
+	This parameter is set True if no other output format is selected.
 .PARAMETER PDF
 	SaveAs PDF file instead of DOCX file.
 	This parameter is disabled by default.
@@ -182,29 +196,25 @@
 .PARAMETER Text
 	Creates a formatted text file with a .txt extension.
 	This parameter is disabled by default.
-.PARAMETER MSWord
-	SaveAs DOCX file
-	This parameter is set True if no other output format is selected.
-.PARAMETER HTML
-	Creates an HTML file with an .html extension.
+.PARAMETER Administrators
+	Give detailed information for Administrator Scopes and Roles.
 	This parameter is disabled by default.
-.PARAMETER MachineCatalogs
-	Gives detailed information for all machines in all Machine Catalogs.
-	
-	Using the MachineCatalogs parameter can cause the report to take a very long 
-	time to complete and can generate an extremely long report.
-	
-	Using both the MachineCatalogs and DeliveryGroups parameters can cause the 
-	report to take an extremely long time to complete and generate an exceptionally 
-	long report.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of MC.
+	This parameter has an alias of Admins.
 .PARAMETER AppDisks
 	Gives detailed information for all AppDisks.
 	
 	This parameter is disabled by default.
 	This parameter has an alias of AD.
+.PARAMETER Applications
+	Gives detailed information for all applications.
+	This parameter is disabled by default.
+	This parameter has an alias of Apps.
+.PARAMETER BrokerRegistryKeys
+	Adds information on 315 registry keys to the Controller section.
+	
+	For Word and PDF output, this adds eights pages, per Controller, to the report.
+	For Text and HTML, this adds 315 lines, per Controller, to the report.
+	This parameter has an alias of BRK.
 .PARAMETER DeliveryGroups
 	Gives detailed information on all desktops in all Desktop (Delivery) Groups.
 	
@@ -229,10 +239,69 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of DGU.
-.PARAMETER Applications
-	Gives detailed information for all applications.
+.PARAMETER Hosting
+	Give detailed information for Hosts, Host Connections, and Resources.
 	This parameter is disabled by default.
-	This parameter has an alias of Apps.
+	This parameter has an alias of Host.
+.PARAMETER Logging
+	Give the Configuration Logging report with, by default, details for the previous 
+	seven days.
+	This parameter is disabled by default.
+	This parameter has an alias of Log.
+.PARAMETER StartDate
+	Start date for the Configuration Logging report.
+	
+	Format for date only is MM/DD/YYYY.
+	
+	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
+	The double quotes are needed.
+	
+	The default is today's date minus seven days.
+	This parameter has an alias of SD.
+.PARAMETER EndDate
+	End date for the Configuration Logging report.
+	
+	Format for date only is MM/DD/YYYY.
+	
+	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
+	The double quotes are needed.
+	
+	The default is today's date.
+	This parameter has an alias of ED.
+.PARAMETER MachineCatalogs
+	Gives detailed information for all machines in all Machine Catalogs.
+	
+	Using the MachineCatalogs parameter can cause the report to take a very long 
+	time to complete and can generate an extremely long report.
+	
+	Using both the MachineCatalogs and DeliveryGroups parameters can cause the 
+	report to take an extremely long time to complete and generate an exceptionally 
+	long report.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of MC.
+.PARAMETER MaxDetails
+	Adds maximum detail to the report.
+	
+	This is the same as using the following parameters:
+		Administrators
+		AppDisks
+		Applications
+		BrokerRegistryKeys
+		DeliveryGroups
+		HardWare
+		Hosting
+		Logging
+		MachineCatalogs
+		Policies
+		StoreFront
+
+	Does not change the value of NoADPolicies.
+	
+	WARNING: Using this parameter can create an extremely large report and 
+	can take a very long time to run.
+
+	This parameter has an alias of MAX.
 .PARAMETER Policies
 	Give detailed information for both Site and Citrix AD based Policies.
 	
@@ -261,39 +330,6 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of NoAD.
-.PARAMETER Logging
-	Give the Configuration Logging report with, by default, details for the previous 
-	seven days.
-	This parameter is disabled by default.
-	This parameter has an alias of Log.
-.PARAMETER Administrators
-	Give detailed information for Administrator Scopes and Roles.
-	This parameter is disabled by default.
-	This parameter has an alias of Admins.
-.PARAMETER Hosting
-	Give detailed information for Hosts, Host Connections, and Resources.
-	This parameter is disabled by default.
-	This parameter has an alias of Host.
-.PARAMETER StartDate
-	Start date for the Configuration Logging report.
-	
-	Format for date only is MM/DD/YYYY.
-	
-	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
-	The double quotes are needed.
-	
-	The default is today's date minus seven days.
-	This parameter has an alias of SD.
-.PARAMETER EndDate
-	End date for the Configuration Logging report.
-	
-	Format for date only is MM/DD/YYYY.
-	
-	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
-	The double quotes are needed.
-	
-	The default is today's date.
-	This parameter has an alias of ED.
 .PARAMETER StoreFront
 	Give detailed information for StoreFront.
 	This parameter is disabled by default.
@@ -305,6 +341,8 @@
 	Output filename will be ReportName_2017-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 	This parameter has an alias of ADT.
+.PARAMETER Folder
+	Specifies the optional output folder to save the output report. 
 .PARAMETER Hardware
 	Use WMI to gather hardware information on Computer System, Disks, Processor and 
 	Network Interface Cards
@@ -344,8 +382,6 @@
 	Using Policies will force the Policies switch to True.
 	If Policies is selected and the NoPolicies switch is used, the script will terminate.
 	
-.PARAMETER Folder
-	Specifies the optional output folder to save the output report. 
 .PARAMETER SmtpServer
 	Specifies the optional email server to send the output report. 
 .PARAMETER SmtpPort
@@ -378,7 +414,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -390,7 +427,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -AdminAddress DDC01
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -402,7 +440,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF
 	
 	Will use all default values and save the document as a PDF file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -414,7 +453,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -TEXT
 
 	Will use all default values and save the document as a formatted text file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -425,7 +465,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -HTML
 
 	Will use all default values and save the document as an HTML file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -437,7 +478,8 @@
 	
 	Creates a report with full details for all machines in all Machine Catalogs.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -449,7 +491,8 @@
 	
 	Creates a report with full details for all desktops in all Desktop (Delivery) Groups.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -461,7 +504,8 @@
 	
 	Creates a report with utilization details for all Desktop (Delivery) Groups.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -474,7 +518,8 @@
 	Creates a report with full details for all machines in all Machine Catalogs and 
 	all desktops in all Delivery Groups.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -486,7 +531,8 @@
 	
 	Creates a report with full details for all applications.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -498,7 +544,8 @@
 	
 	Creates a report with full details for Policies.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -510,7 +557,8 @@
 	
 	Creates a report with no Policy information.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -522,7 +570,8 @@
 	
 	Creates a report with no Citrix AD based Policy information.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -536,7 +585,8 @@
 	no Citrix AD based Policy information.
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -549,7 +599,8 @@
 	Creates a report with full details on Administrator Scopes and Roles.
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -557,13 +608,15 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2017 -EndDate 01/31/2017
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2017
+	-EndDate 01/31/2017	
 	
 	Creates a report with Configuration Logging details for the dates 01/01/2017 through 
 	01/31/2017.
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -571,7 +624,8 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2017 10:00:00" -EndDate "06/01/2017 14:00:00"
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2017 10:00:00"
+	-EndDate "06/01/2017 14:00:00"	
 	
 	Creates a report with Configuration Logging details for the time range 
 	06/01/2017 10:00:00AM through 06/01/2017 02:00:00PM.
@@ -579,7 +633,8 @@
 	Narrowing the report down to seconds does not work. Seconds must be either 00 or 59.
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -591,7 +646,8 @@
 	
 	Creates a report with full details for Hosts, Host Connections, and Resources.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -603,7 +659,8 @@
 	
 	Creates a report with full details for StoreFront.
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -611,7 +668,8 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs -DeliveryGroups -Applications -Policies -Hosting -StoreFront
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs -DeliveryGroups -Applications
+	-Policies -Hosting -StoreFront	
 	
 	Creates a report with full details for all:
 		Machines in all Machine Catalogs
@@ -621,7 +679,8 @@
 		Hosts, Host Connections, and Resources
 		StoreFront
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -638,7 +697,8 @@
 		Policies
 		Hosts, Host Connections, and Resources
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -646,28 +706,30 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting" -CoverPage "Mod" -UserName "Carl Webster" -AdminAddress DDC01
-
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting"
+	-CoverPage "Mod" -UserName "Carl Webster" -AdminAddress DDC01
+	
 	Will use:
 		Carl Webster Consulting for the Company Name.
 		Mod for the Cover Page format.
 		Carl Webster for the User Name.
 		Controller named DDC01 for the AdminAddress.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod" -UN "Carl Webster"
-
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod"
+	-UN "Carl Webster"
+	
 	Will use:
 		Carl Webster Consulting for the Company Name (alias CN).
 		Mod for the Cover Page format (alias CP).
 		Carl Webster for the User Name (alias UN).
 		The computer running the script for the AdminAddress.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" `
-	-CoverPage Exposure -UserName "Dr. Watson" `
-	-CompanyAddress "221B Baker Street, London, England" `
-	-CompanyFax "+44 1753 276600" `
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
+	-CoverPage Exposure -UserName "Dr. Watson"
+	-CompanyAddress "221B Baker Street, London, England"
+	-CompanyFax "+44 1753 276600"
 	-CompanyPhone "+44 1753 276200"
-
+	
 	Will use:
 		Sherlock Holmes Consulting for the Company Name.
 		Exposure for the Cover Page format.
@@ -676,8 +738,8 @@
 		+44 1753 276600 for the Company Fax.
 		+44 1753 276200 for the Compnay Phone.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" `
-	-CoverPage Facet -UserName "Dr. Watson" `
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
+	-CoverPage Facet -UserName "Dr. Watson"
 	-CompanyEmail SuperSleuth@SherlockHolmes.com
 
 	Will use:
@@ -689,7 +751,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -AddDateTime
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -705,7 +768,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF -AddDateTime
 	
 	Will use all Default values and save the document as a PDF file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -721,7 +785,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hardware
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -732,7 +797,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Folder \\FileServer\ShareName
 	
 	Will use all default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -742,10 +808,12 @@
 	
 	Output file will be saved in the path \\FileServer\ShareName
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer mail.domain.tld -From XDAdmin@domain.tld -To ITGroup@domain.tld
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer mail.domain.tld
+	-From XDAdmin@domain.tld -To ITGroup@domain.tld	
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -753,14 +821,20 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	
-	The script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, sending to ITGroup@domain.tld.
+	The script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
+	sending to ITGroup@domain.tld.
+	
 	Script will use the default SMTP port 25 and will not use SSL.
-	If the current user's credentials are not valid to send email, the user will be prompted to enter valid credentials.
+	
+	If the current user's credentials are not valid to send email, 
+	the user will be prompted to enter valid credentials.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer smtp.office365.com -SmtpPort 587 -UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer smtp.office365.com -SmtpPort 587
+	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com	
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -768,13 +842,17 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	
-	The script will use the email server smtp.office365.com on port 587 using SSL, sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
-	If the current user's credentials are not valid to send email, the user will be prompted to enter valid credentials.
+	The script will use the email server smtp.office365.com on port 587 using SSL, 
+	sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
+	
+	If the current user's credentials are not valid to send email, 
+	the user will be prompted to enter valid credentials.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Section Policies
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -786,7 +864,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Section Groups -DG
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -798,7 +877,8 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Section Groups
 	
 	Will use all Default values.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl Webster" or
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
 	$env:username = Administrator
 
@@ -806,6 +886,47 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	Processes only the Delivery Groups section of the report with no Delivery Group details.
+.EXAMPLE
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -BrokerRegistryKeys
+	
+	Will use all Default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	Adds the information on 315 Broker registry keys to the Controllers section.
+.EXAMPLE
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MaxDetails
+	
+	Will use all Default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	
+	Set the following parameter values:
+		Administrators      = True
+		AppDisks            = True
+		Applications        = True
+		BrokerRegistryKeys  = True
+		DeliveryGroups      = True
+		HardWare            = True
+		Hosting             = True
+		Logging             = True
+		MachineCatalogs     = True
+		Policies            = True
+		StoreFront          = True
+		
+		NoPolicies          = False
+		Section             = "All"
 .INPUTS
 	None.  You cannot pipe objects to this script.
 .OUTPUTS
@@ -815,7 +936,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.05
 	AUTHOR: Carl Webster
-	LASTEDIT: June 12, 2017
+	LASTEDIT: June 16, 2017
 #>
 
 #endregion
@@ -825,104 +946,11 @@
 [CmdletBinding(SupportsShouldProcess = $False, ConfirmImpact = "None", DefaultParameterSetName = "Word") ]
 
 Param(
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$MSWord=$False,
-
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$PDF=$False,
-
-	[parameter(ParameterSetName="Text",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$Text=$False,
-
-	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$HTML=$False,
-
 	[parameter(Mandatory=$False)] 
 	[ValidateNotNullOrEmpty()]
 	[Alias("AA")]
 	[string]$AdminAddress="LocalHost",
 
-	[parameter(Mandatory=$False)] 
-	[Alias("MC")]
-	[Switch]$MachineCatalogs=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("AD")]
-	[Switch]$AppDisks=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("DG")]
-	[Switch]$DeliveryGroups=$False,	
-
-	[parameter(Mandatory=$False)] 
-	[Alias("DGU")]
-	[Switch]$DeliveryGroupsUtilization=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("Apps")]
-	[Switch]$Applications=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("Pol")]
-	[Switch]$Policies=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("NP")]
-	[Switch]$NoPolicies=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("NoAD")]
-	[Switch]$NoADPolicies=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("Log")]
-	[Switch]$Logging=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("Admins")]
-	[Switch]$Administrators=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("Host")]
-	[Switch]$Hosting=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("SF")]
-	[Switch]$StoreFront=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("SD")]
-	[Datetime]$StartDate = ((Get-Date -displayhint date).AddDays(-7)),
-
-	[parameter(Mandatory=$False)] 
-	[Alias("ED")]
-	[Datetime]$EndDate = (Get-Date -displayhint date),
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("ADT")]
-	[Switch]$AddDateTime=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("HW")]
-	[Switch]$Hardware=$False,
-
-	[parameter(Mandatory=$False)] 
-	[string]$Section="All",
-	
-	[parameter(Mandatory=$False)] 
-	[string]$Folder="",
-	
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("CN")]
-	[ValidateNotNullOrEmpty()]
-	[string]$CompanyName="",
-    
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
 	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
@@ -947,6 +975,13 @@ Param(
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
 	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("CN")]
+	[ValidateNotNullOrEmpty()]
+	[string]$CompanyName="",
+    
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
 	[Alias("CPh")]
 	[ValidateNotNullOrEmpty()]
 	[string]$CompanyPhone="",
@@ -965,6 +1000,100 @@ Param(
 	[ValidateNotNullOrEmpty()]
 	[string]$UserName=$env:username,
 
+	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$HTML=$False,
+
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$MSWord=$False,
+
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$PDF=$False,
+
+	[parameter(ParameterSetName="Text",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$Text=$False,
+
+	[parameter(Mandatory=$False)] 
+	[Alias("Admins")]
+	[Switch]$Administrators=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("AD")]
+	[Switch]$AppDisks=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("Apps")]
+	[Switch]$Applications=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("BRK")]
+	[Switch]$BrokerRegistryKeys=$False,
+
+	[parameter(Mandatory=$False)] 
+	[Alias("DG")]
+	[Switch]$DeliveryGroups=$False,	
+
+	[parameter(Mandatory=$False)] 
+	[Alias("DGU")]
+	[Switch]$DeliveryGroupsUtilization=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("Host")]
+	[Switch]$Hosting=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("Log")]
+	[Switch]$Logging=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("SD")]
+	[Datetime]$StartDate = ((Get-Date -displayhint date).AddDays(-7)),
+
+	[parameter(Mandatory=$False)] 
+	[Alias("ED")]
+	[Datetime]$EndDate = (Get-Date -displayhint date),
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("MC")]
+	[Switch]$MachineCatalogs=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("MAX")]
+	[Switch]$MaxDetails=$False,
+
+	[parameter(Mandatory=$False)] 
+	[Alias("Pol")]
+	[Switch]$Policies=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("NP")]
+	[Switch]$NoPolicies=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("NoAD")]
+	[Switch]$NoADPolicies=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("SF")]
+	[Switch]$StoreFront=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("ADT")]
+	[Switch]$AddDateTime=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[string]$Folder="",
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("HW")]
+	[Switch]$Hardware=$False,
+
+	[parameter(Mandatory=$False)] 
+	[string]$Section="All",
+	
 	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
 	[string]$SmtpServer="",
 
@@ -1006,14 +1135,30 @@ Param(
 #		Added Function Get-RegistryValue2
 #		Added Function Get-RegKeyToObject
 #		Added Function OutputControllerRegistryKeys
+#		Added new parameter BrokerRegistryKeys
 #		There are 315 registry keys and values that are checked and listed
 #		Updated Function OutputControllers
+#	Added Controller version information to the Controllers section
 #	Added folder name to Function OutputApplication (Thanks to Brandon Mitchell)
 #	Added four new Cover Page properties
 #		Company Address
 #		Company Email
 #		Company Fax
 #		Company Phone
+#	Added missing function validObject
+#	Added new parameter MaxDetails:
+#		This is the same as using the follwoing parameters:
+#			Administrators
+#			AppDisks
+#			Applications
+#			BrokerRegistryKeys
+#			DeliveryGroups
+#			HardWare
+#			Hosting
+#			Logging
+#			MachineCatalogs
+#			Policies
+#			StoreFront
 #	Added sort applications by AdminFolderName and ApplicationName to Function ProcessApplications (Thanks to Brandon Mitchell)
 #	Added support for version 7.14
 #	Added the following new Computer policy settings:
@@ -1025,16 +1170,18 @@ Param(
 #		Profile Streaming Exclusion list - directories
 #	Added to Delivery Group, LicenseModel and ProductCode
 #	Added Version information to Controllers
-#	Fix bug when retrieving Filters for a Policy that "applies to all objects in the Site"
-#	Fix Function Check-LoadedModule
-#	Fix functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
-#	Fix two calls to Get-BrokerApplication that were retrieving the default of 250 records (Thanks to Brandon Mitchell)
-#	Remove code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
-#	Replace _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Update Function ProcessScriptEnd for the new Cover Page properties
-#	Update Function ShowScriptOptions for the new Cover Page properties
-#	Update Function UpdateDocumentProperties for the new Cover Page properties
-#	Update help text
+#	Fixed bug when retrieving Filters for a Policy that "applies to all objects in the Site"
+#	Fixed Function Check-LoadedModule
+#	Fixed functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
+#	Fixed numerous issues in the Policies section
+#	Fixed two calls to Get-BrokerApplication that were retrieving the default of 250 records (Thanks to Brandon Mitchell)
+#	Removed code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
+#	Reordered the parameters in the help text and parameter list so they match and are grouped better
+#	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
+#	Updated Function ProcessScriptEnd for the new Cover Page properties
+#	Updated Function ShowScriptOptions for the new Cover Page properties
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties
+#	Updated help text
 
 #Version 2.04 6-Mar-2017
 #	Fixed wording of more policy names that changed from 7.13 prerelease to RTM
@@ -1182,6 +1329,25 @@ Else
 	}
 	Write-Error "Unable to determine output parameter.  Script cannot continue"
 	Exit
+}
+
+#If the MaxDetails parameter is used, set a bunch of stuff true and some stuff false
+If($MaxDetails)
+{
+	$Administrators		= $True
+	$AppDisks			= $True
+	$Applications		= $True
+	$BrokerRegistryKeys	= $True
+	$DeliveryGroups		= $True
+	$HardWare			= $True
+	$Hosting			= $True
+	$Logging			= $True
+	$MachineCatalogs	= $True
+	$Policies			= $True
+	$StoreFront			= $True
+	
+	$NoPolicies			= $False
+	$Section			= "All"
 }
 
 If($NoPolicies)
@@ -5266,68 +5432,70 @@ Function ShowScriptOptions
 {
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): Add DateTime    : $($AddDateTime)"
-	Write-Verbose "$(Get-Date): AdminAddress    : $($AdminAddress)"
-	Write-Verbose "$(Get-Date): Administrators  : $($Administrators)"
-	Write-Verbose "$(Get-Date): Applications    : $($Applications)"
-	Write-Verbose "$(Get-Date): Company Name    : $($Script:CoName)"
-	Write-Verbose "$(Get-Date): Company Address : $($CompanyAddress)"
-	Write-Verbose "$(Get-Date): Company Email   : $($CompanyEmail)"
-	Write-Verbose "$(Get-Date): Company Fax     : $($CompanyFax)"
-	Write-Verbose "$(Get-Date): Company Phone   : $($CompanyPhone)"
-	Write-Verbose "$(Get-Date): Cover Page      : $($CoverPage)"
-	Write-Verbose "$(Get-Date): DeliveryGroups  : $($DeliveryGroups)"
+	Write-Verbose "$(Get-Date): Add DateTime       : $($AddDateTime)"
+	Write-Verbose "$(Get-Date): AdminAddress       : $($AdminAddress)"
+	Write-Verbose "$(Get-Date): Administrators     : $($Administrators)"
+	Write-Verbose "$(Get-Date): Applications       : $($Applications)"
+	Write-Verbose "$(Get-Date): BrokerRegistryKeys : $($BrokerRegistryKeys)"
+	Write-Verbose "$(Get-Date): Company Name       : $($Script:CoName)"
+	Write-Verbose "$(Get-Date): Company Address    : $($CompanyAddress)"
+	Write-Verbose "$(Get-Date): Company Email      : $($CompanyEmail)"
+	Write-Verbose "$(Get-Date): Company Fax        : $($CompanyFax)"
+	Write-Verbose "$(Get-Date): Company Phone      : $($CompanyPhone)"
+	Write-Verbose "$(Get-Date): Cover Page         : $($CoverPage)"
+	Write-Verbose "$(Get-Date): DeliveryGroups     : $($DeliveryGroups)"
 	If($Dev)
 	{
-		Write-Verbose "$(Get-Date): DevErrorFile    : $($Script:DevErrorFile)"
+		Write-Verbose "$(Get-Date): DevErrorFile       : $($Script:DevErrorFile)"
 	}
-	Write-Verbose "$(Get-Date): DGUtilization   : $($DeliveryGroupsUtilization)"
-	Write-Verbose "$(Get-Date): Filename1       : $($Script:filename1)"
+	Write-Verbose "$(Get-Date): DGUtilization      : $($DeliveryGroupsUtilization)"
+	Write-Verbose "$(Get-Date): Filename1          : $($Script:filename1)"
 	If($PDF)
 	{
-		Write-Verbose "$(Get-Date): Filename2       : $($Script:Filename2)"
+		Write-Verbose "$(Get-Date): Filename2          : $($Script:Filename2)"
 	}
-	Write-Verbose "$(Get-Date): Folder          : $($Folder)"
-	Write-Verbose "$(Get-Date): From            : $($From)"
-	Write-Verbose "$(Get-Date): Hosting         : $($Hosting)"
-	Write-Verbose "$(Get-Date): HW Inventory    : $($Hardware)"
-	Write-Verbose "$(Get-Date): Logging         : $($Logging)"
+	Write-Verbose "$(Get-Date): Folder             : $($Folder)"
+	Write-Verbose "$(Get-Date): From               : $($From)"
+	Write-Verbose "$(Get-Date): Hosting            : $($Hosting)"
+	Write-Verbose "$(Get-Date): HW Inventory       : $($Hardware)"
+	Write-Verbose "$(Get-Date): Logging            : $($Logging)"
 	If($Logging)
 	{
-		Write-Verbose "$(Get-Date):    Start Date   : $($StartDate)"
-		Write-Verbose "$(Get-Date):    End Date     : $($EndDate)"
+		Write-Verbose "$(Get-Date):    Start Date      : $($StartDate)"
+		Write-Verbose "$(Get-Date):    End Date        : $($EndDate)"
 	}
-	Write-Verbose "$(Get-Date): MachineCatalogs : $($MachineCatalogs)"
-	Write-Verbose "$(Get-Date): NoADPolicies    : $($NoADPolicies)"
-	Write-Verbose "$(Get-Date): NoPolicies      : $($NoPolicies)"
-	Write-Verbose "$(Get-Date): Policies        : $($Policies)"
-	Write-Verbose "$(Get-Date): Save As PDF     : $($PDF)"
-	Write-Verbose "$(Get-Date): Save As HTML    : $($HTML)"
-	Write-Verbose "$(Get-Date): Save As TEXT    : $($TEXT)"
-	Write-Verbose "$(Get-Date): Save As WORD    : $($MSWORD)"
-	Write-Verbose "$(Get-Date): ScriptInfo      : $($ScriptInfo)"
-	Write-Verbose "$(Get-Date): Section         : $($Section)"
-	Write-Verbose "$(Get-Date): Site Name       : $($XDSiteName)"
-	Write-Verbose "$(Get-Date): Smtp Port       : $($SmtpPort)"
-	Write-Verbose "$(Get-Date): Smtp Server     : $($SmtpServer)"
-	Write-Verbose "$(Get-Date): StoreFront      : $($StoreFront)"
-	Write-Verbose "$(Get-Date): Title           : $($Script:Title)"
-	Write-Verbose "$(Get-Date): To              : $($To)"
-	Write-Verbose "$(Get-Date): Use SSL         : $($UseSSL)"
-	Write-Verbose "$(Get-Date): User Name       : $($UserName)"
-	Write-Verbose "$(Get-Date): XA/XD Version   : $($Script:XDSiteVersion)"
+	Write-Verbose "$(Get-Date): MachineCatalogs    : $($MachineCatalogs)"
+	Write-Verbose "$(Get-Date): MaxDetail          : $($MaxDetails)"
+	Write-Verbose "$(Get-Date): NoADPolicies       : $($NoADPolicies)"
+	Write-Verbose "$(Get-Date): NoPolicies         : $($NoPolicies)"
+	Write-Verbose "$(Get-Date): Policies           : $($Policies)"
+	Write-Verbose "$(Get-Date): Save As PDF        : $($PDF)"
+	Write-Verbose "$(Get-Date): Save As HTML       : $($HTML)"
+	Write-Verbose "$(Get-Date): Save As TEXT       : $($TEXT)"
+	Write-Verbose "$(Get-Date): Save As WORD       : $($MSWORD)"
+	Write-Verbose "$(Get-Date): ScriptInfo         : $($ScriptInfo)"
+	Write-Verbose "$(Get-Date): Section            : $($Section)"
+	Write-Verbose "$(Get-Date): Site Name          : $($XDSiteName)"
+	Write-Verbose "$(Get-Date): Smtp Port          : $($SmtpPort)"
+	Write-Verbose "$(Get-Date): Smtp Server        : $($SmtpServer)"
+	Write-Verbose "$(Get-Date): StoreFront         : $($StoreFront)"
+	Write-Verbose "$(Get-Date): Title              : $($Script:Title)"
+	Write-Verbose "$(Get-Date): To                 : $($To)"
+	Write-Verbose "$(Get-Date): Use SSL            : $($UseSSL)"
+	Write-Verbose "$(Get-Date): User Name          : $($UserName)"
+	Write-Verbose "$(Get-Date): XA/XD Version      : $($Script:XDSiteVersion)"
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): OS Detected     : $($Script:RunningOS)"
-	Write-Verbose "$(Get-Date): PoSH version    : $($Host.Version)"
-	Write-Verbose "$(Get-Date): PSCulture       : $($PSCulture)"
-	Write-Verbose "$(Get-Date): PSUICulture     : $($PSUICulture)"
+	Write-Verbose "$(Get-Date): OS Detected        : $($Script:RunningOS)"
+	Write-Verbose "$(Get-Date): PoSH version       : $($Host.Version)"
+	Write-Verbose "$(Get-Date): PSCulture          : $($PSCulture)"
+	Write-Verbose "$(Get-Date): PSUICulture        : $($PSUICulture)"
 	If($MSWORD -or $PDF)
 	{
-		Write-Verbose "$(Get-Date): Word language   : $($Script:WordLanguageValue)"
-		Write-Verbose "$(Get-Date): Word version    : $($Script:WordProduct)"
+		Write-Verbose "$(Get-Date): Word language      : $($Script:WordLanguageValue)"
+		Write-Verbose "$(Get-Date): Word version       : $($Script:WordProduct)"
 	}
 	Write-Verbose "$(Get-Date): "
-	Write-Verbose "$(Get-Date): Script start    : $($Script:StartTime)"
+	Write-Verbose "$(Get-Date): Script start       : $($Script:StartTime)"
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): "
 }
@@ -6744,7 +6912,7 @@ Function ProcessAppDisks
 		{
 			$Global:TotalAppDisks++
 			
-			If($AppDisks)
+			If($AppDisk)
 			{
 				OutputAppDisk $AppDisk
 			}
@@ -9852,20 +10020,23 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		If($DGExcludedUsers.Count -gt 0)
+		If($DGExcludedUsers -is [array])
 		{
-			$ScriptInformation += @{Data = "Excluded Users"; Value = $DGExcludedUsers[0]; }
-			$cnt = -1
-			ForEach($tmp in $DGExcludedUsers)
+			If($DGExcludedUsers.Count -gt 0)
 			{
-				$cnt++
-				If($cnt -gt 0)
+				$ScriptInformation += @{Data = "Excluded Users"; Value = $DGExcludedUsers[0]; }
+				$cnt = -1
+				ForEach($tmp in $DGExcludedUsers)
 				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$ScriptInformation += @{Data = ""; Value = $tmp; }
+					}
 				}
 			}
 		}
-
+		
 		If($Group.SessionSupport -eq "MultiSession")
 		{
 			$ScriptInformation += @{Data = 'Give access to unathenticated (anonymous) users'; Value = $SFAnonymousUsers; }
@@ -11151,9 +11322,12 @@ Function OutputDeliveryGroupCatalogs
 	
 	If($? -and $Null -ne $MCs)
 	{
-		If($MCs.Count -gt 1)
+		If($MCs -is [array])
 		{
-			[array]$MCs = $MCs | Sort -Unique
+			If($MCs.Count -gt 1)
+			{
+				[array]$MCs = $MCs | Sort -Unique
+			}
 		}
 		
 		$txt = "Machine Catalogs"
@@ -13146,6 +13320,19 @@ Function validStateProp( [object] $object, [string] $topLevel, [string] $secondL
 	Return $False
 }
 
+Function validObject( [object] $object, [string] $topLevel )
+{
+	#function created 8-jan-2014 by Michael B. Smith
+	If( $object )
+	{
+		If((gm -Name $topLevel -InputObject $object))
+		{
+			Return $True
+		}
+	}
+	Return $False
+}
+
 Function ProcessCitrixPolicies
 {
 	Param([string]$xDriveName, [string]$xPolicyType)
@@ -13960,63 +14147,88 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting ClientClipboardWriteAllowedFormats State ) -and ($Setting.ClientClipboardWriteAllowedFormats.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Client clipboard write allowed formats"
-						$tmpArray = $Setting.ClientClipboardWriteAllowedFormats.Values
-						$tmp = ""
-						$cnt = 0
-						ForEach($Thing in $TmpArray)
+						If(validStateProp $Setting ClientClipboardWriteAllowedFormats Values )
 						{
-							If($Null -eq $Thing)
+							$tmpArray = $Setting.ClientClipboardWriteAllowedFormats.Values
+							$tmp = ""
+							$cnt = 0
+							ForEach($Thing in $TmpArray)
 							{
-								$Thing = ''
-							}
-							$cnt++
-							$tmp = "$($Thing) "
-							If($cnt -eq 1)
-							{
-								If($MSWord -or $PDF)
+								If($Null -eq $Thing)
 								{
-									$WordTableRowHash = @{
-									Text = $txt;
-									Value = $tmp;
+									$Thing = ''
+								}
+								$cnt++
+								$tmp = "$($Thing) "
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = $txt;
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
 									}
-									$SettingsWordTable += $WordTableRowHash;
-								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									$txt,$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting $txt $tmp
-								}
-							}
-							Else
-							{
-								If($MSWord -or $PDF)
-								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
 									}
-									$SettingsWordTable += $WordTableRowHash;
+									ElseIf($Text)
+									{
+										OutputPolicySetting $txt $tmp
+									}
 								}
-								ElseIf($HTML)
+								Else
 								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
 								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
+								$txt = ""
 							}
-							$txt = ""
+							$TmpArray = $Null
+							$tmp = $Null
 						}
-						$TmpArray = $Null
-						$tmp = $Null
+						Else
+						{
+							$tmp = "No Client clipboard write allowed formats were found"
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp
+							}
+						}
 					}
 					If((validStateProp $Setting ClipboardSelectionUpdateMode State ) -and ($Setting.ClipboardSelectionUpdateMode.State -ne "NotConfigured"))
 					{
@@ -14329,125 +14541,175 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting SessionClipboardWriteAllowedFormats State ) -and ($Setting.SessionClipboardWriteAllowedFormats.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Session clipboard write allowed formats"
-						$tmpArray = $Setting.SessionClipboardWriteAllowedFormats.Values
-						$tmp = ""
-						$cnt = 0
-						ForEach($Thing in $TmpArray)
+						If(validStateProp $Setting SessionClipboardWriteAllowedFormats Values )
 						{
-							If($Null -eq $Thing)
+							$tmpArray = $Setting.SessionClipboardWriteAllowedFormats.Values
+							$tmp = ""
+							$cnt = 0
+							ForEach($Thing in $TmpArray)
 							{
-								$Thing = ''
-							}
-							$cnt++
-							$tmp = "$($Thing) "
-							If($cnt -eq 1)
-							{
-								If($MSWord -or $PDF)
+								If($Null -eq $Thing)
 								{
-									$WordTableRowHash = @{
-									Text = $txt;
-									Value = $tmp;
+									$Thing = ''
+								}
+								$cnt++
+								$tmp = "$($Thing) "
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = $txt;
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
 									}
-									$SettingsWordTable += $WordTableRowHash;
-								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									$txt,$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting $txt $tmp
-								}
-							}
-							Else
-							{
-								If($MSWord -or $PDF)
-								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
 									}
-									$SettingsWordTable += $WordTableRowHash;
+									ElseIf($Text)
+									{
+										OutputPolicySetting $txt $tmp
+									}
 								}
-								ElseIf($HTML)
+								Else
 								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
 								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
+								$txt = ""
 							}
-							$txt = ""
+							$TmpArray = $Null
+							$tmp = $Null
 						}
-						$TmpArray = $Null
-						$tmp = $Null
+						Else
+						{
+							$tmp = "No Session clipboard write allowed formats were found"
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp
+							}
+						}
 					}
 					
 					Write-Verbose "$(Get-Date): `t`t`tICA\Adobe Flash Delivery\Flash Redirection"
 					If((validStateProp $Setting FlashUrlColorList State ) -and ($Setting.FlashUrlColorList.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Adobe Flash Delivery\Flash Redirection\Flash background color list"
-						$Values = $Setting.FlashUrlColorList.Values
-						$tmp = ""
-						$cnt = 0
-						ForEach($Value in $Values)
+						If(validStateProp $Setting FlashUrlColorList Values )
 						{
-							If($Null -eq $Value)
+							$Values = $Setting.FlashUrlColorList.Values
+							$tmp = ""
+							$cnt = 0
+							ForEach($Value in $Values)
 							{
-								$Value = ''
-							}
-							$cnt++
-							$tmp = "$($Value)"
-							If($cnt -eq 1)
-							{
-								If($MSWord -or $PDF)
+								If($Null -eq $Value)
 								{
-									$WordTableRowHash = @{
-									Text = $txt;
-									Value = $tmp;
+									$Value = ''
+								}
+								$cnt++
+								$tmp = "$($Value)"
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = $txt;
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
 									}
-									$SettingsWordTable += $WordTableRowHash;
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting $txt $tmp 
+									}
 								}
-								ElseIf($HTML)
+								Else
 								{
-									$rowdata += @(,(
-									$txt,$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting $txt $tmp 
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
 								}
 							}
-							Else
+							$tmp = $Null
+							$Values = $Null
+						}
+						Else
+						{
+							$tmp = "No Flash background color list were found"
+							If($MSWord -or $PDF)
 							{
-								If($MSWord -or $PDF)
-								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
-									}
-									$SettingsWordTable += $WordTableRowHash;
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
 								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp 
 							}
 						}
-						$tmp = $Null
-						$Values = $Null
 					}
 					If((validStateProp $Setting FlashBackwardsCompatibility State ) -and ($Setting.FlashBackwardsCompatibility.State -ne "NotConfigured"))
 					{
@@ -14550,62 +14812,87 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FlashServerSideContentFetchingWhitelist State ) -and ($Setting.FlashServerSideContentFetchingWhitelist.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Adobe Flash Delivery\Flash Redirection\Flash server-side content fetching URL list"
-						$Values = $Setting.FlashServerSideContentFetchingWhitelist.Values
-						$tmp = ""
-						$cnt = 0
-						ForEach($Value in $Values)
+						If(validStateProp $Setting FlashServerSideContentFetchingWhitelist Values )
 						{
-							If($Null -eq $Value)
+							$Values = $Setting.FlashServerSideContentFetchingWhitelist.Values
+							$tmp = ""
+							$cnt = 0
+							ForEach($Value in $Values)
 							{
-								$Value = ''
-							}
-							$cnt++
-							$tmp = "$($Value)"
-							If($cnt -eq 1)
-							{
-								If($MSWord -or $PDF)
+								If($Null -eq $Value)
 								{
-									$WordTableRowHash = @{
-									Text = $txt;
-									Value = $tmp;
+									$Value = ''
+								}
+								$cnt++
+								$tmp = "$($Value)"
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = $txt;
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
 									}
-									$SettingsWordTable += $WordTableRowHash;
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting $txt $tmp 
+									}
 								}
-								ElseIf($HTML)
+								Else
 								{
-									$rowdata += @(,(
-									$txt,$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting $txt $tmp 
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
 								}
 							}
-							Else
+							$tmp = $Null
+							$Values = $Null
+						}
+						Else
+						{
+							$tmp = "No Flash server-side content fetching URL list were found"
+							If($MSWord -or $PDF)
 							{
-								If($MSWord -or $PDF)
-								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
-									}
-									$SettingsWordTable += $WordTableRowHash;
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
 								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp 
 							}
 						}
-						$tmp = $Null
-						$Values = $Null
 					}
 					If((validStateProp $Setting FlashUrlCompatibilityList State ) -and ($Setting.FlashUrlCompatibilityList.State -ne "NotConfigured"))
 					{
@@ -14628,72 +14915,103 @@ Function ProcessCitrixPolicies
 						{
 							OutputPolicySetting $txt
 						}
-						$Values = $Setting.FlashUrlCompatibilityList.Values
-						$tmp = ""
-						ForEach($Value in $Values)
+						If(validStateProp $Setting FlashUrlCompatibilityList Values )
 						{
-							$Items = $Value.Split(' ')
-							$Action = $Items[0]
-							If($Action -eq "CLIENT")
+							$Values = $Setting.FlashUrlCompatibilityList.Values
+							$tmp = ""
+							ForEach($Value in $Values)
 							{
-								$Action = "Render On Client"
-							}
-							ElseIf($Action -eq "SERVER")
-							{
-								$Action = "Render On Server"
-							}
-							ElseIf($Action -eq "BLOCK")
-							{
-								$Action = "BLOCK           "
-							}
-							$Url = $Items[1]
-							If($Items.Count -eq 3)
-							{
-								$FlashInstance = $Items[2]
-							}
-							Else
-							{
-								$FlashInstance = "Any"
-							}
-							$tmp = "Action: $($Action)"
-							If($MSWord -or $PDF)
-							{
-								$WordTableRowHash = @{
-								Text = "";
-								Value = $tmp;
+								$Items = $Value.Split(' ')
+								$Action = $Items[0]
+								If($Action -eq "CLIENT")
+								{
+									$Action = "Render On Client"
 								}
-								$SettingsWordTable += $WordTableRowHash;
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								"",$htmlbold,
-								$tmp,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting "" $tmp
-							}
-							$tmp = "URL Pattern: $($Url)"
-							If($MSWord -or $PDF)
-							{
-								$WordTableRowHash = @{
-								Text = "";
-								Value = $tmp;
+								ElseIf($Action -eq "SERVER")
+								{
+									$Action = "Render On Server"
 								}
-								$SettingsWordTable += $WordTableRowHash;
+								ElseIf($Action -eq "BLOCK")
+								{
+									$Action = "BLOCK           "
+								}
+								$Url = $Items[1]
+								If($Items.Count -eq 3)
+								{
+									$FlashInstance = $Items[2]
+								}
+								Else
+								{
+									$FlashInstance = "Any"
+								}
+								$tmp = "Action: $($Action)"
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = "";
+									Value = $tmp;
+									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									"",$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting "" $tmp
+								}
+								$tmp = "URL Pattern: $($Url)"
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = "";
+									Value = $tmp;
+									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									"",$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting "" $tmp
+								}
+								$tmp = "Flash Instance: $($FlashInstance)"
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = "";
+									Value = $tmp;
+									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									"",$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting "" $tmp
+								}
 							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								"",$htmlbold,
-								$tmp,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting "" $tmp
-							}
-							$tmp = "Flash Instance: $($FlashInstance)"
+							$Values = $Null
+							$Action = $Null
+							$Url = $Null
+							$FlashInstance = $Null
+							$Spc = $Null
+							$tmp = $Null
+						}
+						Else
+						{
+							$tmp = "No Flash URL compatibility list were found"
 							If($MSWord -or $PDF)
 							{
 								$WordTableRowHash = @{
@@ -14713,12 +15031,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting "" $tmp
 							}
 						}
-						$Values = $Null
-						$Action = $Null
-						$Url = $Null
-						$FlashInstance = $Null
-						$Spc = $Null
-						$tmp = $Null
 					}
 					If((validStateProp $Setting HDXFlashLoadManagement State ) -and ($Setting.HDXFlashLoadManagement.State -ne "NotConfigured"))
 					{
@@ -16428,122 +16740,172 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting URLRedirectionBlackList State ) -and ($Setting.URLRedirectionBlackList.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Local App Access\URL redirection blacklist"
-						$tmpArray = $Setting.URLRedirectionBlackList.Values
-						$tmp = ""
-						$cnt = 0
-						ForEach($Thing in $TmpArray)
+						If(validStateProp $Setting URLRedirectionBlackList Values )
 						{
-							If($Null -eq $Thing)
+							$tmpArray = $Setting.URLRedirectionBlackList.Values
+							$tmp = ""
+							$cnt = 0
+							ForEach($Thing in $TmpArray)
 							{
-								$Thing = ''
-							}
-							$cnt++
-							$tmp = "$($Thing) "
-							If($cnt -eq 1)
-							{
-								If($MSWord -or $PDF)
+								If($Null -eq $Thing)
 								{
-									$WordTableRowHash = @{
-									Text = $txt;
-									Value = $tmp;
+									$Thing = ''
+								}
+								$cnt++
+								$tmp = "$($Thing) "
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = $txt;
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
 									}
-									$SettingsWordTable += $WordTableRowHash;
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting $txt $tmp
+									}
 								}
-								ElseIf($HTML)
+								Else
 								{
-									$rowdata += @(,(
-									$txt,$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting $txt $tmp
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
 								}
 							}
-							Else
+							$TmpArray = $Null
+							$tmp = $Null
+						}
+						Else
+						{
+							$tmp = "No URL redirection blacklist were found"
+							If($MSWord -or $PDF)
 							{
-								If($MSWord -or $PDF)
-								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
-									}
-									$SettingsWordTable += $WordTableRowHash;
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
 								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp
 							}
 						}
-						$TmpArray = $Null
-						$tmp = $Null
 					}
 					If((validStateProp $Setting URLRedirectionWhiteList State ) -and ($Setting.URLRedirectionWhiteList.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Local App Access\URL redirection white list"
-						$tmpArray = $Setting.URLRedirectionWhiteList.Values
-						$tmp = ""
-						$cnt = 0
-						ForEach($Thing in $TmpArray)
+						If(validStateProp $Setting URLRedirectionWhiteList Values )
 						{
-							If($Null -eq $Thing)
+							$tmpArray = $Setting.URLRedirectionWhiteList.Values
+							$tmp = ""
+							$cnt = 0
+							ForEach($Thing in $TmpArray)
 							{
-								$Thing = ''
-							}
-							$cnt++
-							$tmp = "$($Thing) "
-							If($cnt -eq 1)
-							{
-								If($MSWord -or $PDF)
+								If($Null -eq $Thing)
 								{
-									$WordTableRowHash = @{
-									Text = $txt;
-									Value = $tmp;
+									$Thing = ''
+								}
+								$cnt++
+								$tmp = "$($Thing) "
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = $txt;
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
 									}
-									$SettingsWordTable += $WordTableRowHash;
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting $txt $tmp
+									}
 								}
-								ElseIf($HTML)
+								Else
 								{
-									$rowdata += @(,(
-									$txt,$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting $txt $tmp
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
 								}
 							}
-							Else
+							$TmpArray = $Null
+							$tmp = $Null
+						}
+						Else
+						{
+							$tmp = "No URL redirection white list were found"
+							If($MSWord -or $PDF)
 							{
-								If($MSWord -or $PDF)
-								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
-									}
-									$SettingsWordTable += $WordTableRowHash;
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
 								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp
 							}
 						}
-						$TmpArray = $Null
-						$tmp = $Null
 					}
 
 					Write-Verbose "$(Get-Date): `t`t`tICA\Mobile Experience"
@@ -17455,95 +17817,120 @@ Function ProcessCitrixPolicies
 						{
 							OutputPolicySetting $txt ""
 						}
-						$valArray = $Setting.SessionPrinters.Values
-						$tmp = ""
-						ForEach($printer in $valArray)
+						If(validStateProp $Setting SessionPrinters Values )
 						{
-							$prArray = $printer.Split(',')
-							ForEach($element in $prArray)
+							$valArray = $Setting.SessionPrinters.Values
+							$tmp = ""
+							ForEach($printer in $valArray)
 							{
-								If($element.SubString(0, 2) -eq "\\")
+								$prArray = $printer.Split(',')
+								ForEach($element in $prArray)
 								{
-									$index = $element.SubString(2).IndexOf('\')
-									If($index -ge 0)
+									If($element.SubString(0, 2) -eq "\\")
 									{
-										$server = $element.SubString(0, $index + 2)
-										$share  = $element.SubString($index + 3)
-										$tmp = "Server: $($server)"
-										If($MSWord -or $PDF)
+										$index = $element.SubString(2).IndexOf('\')
+										If($index -ge 0)
 										{
-											$WordTableRowHash = @{
-											Text = "";
-											Value = $tmp;
+											$server = $element.SubString(0, $index + 2)
+											$share  = $element.SubString($index + 3)
+											$tmp = "Server: $($server)"
+											If($MSWord -or $PDF)
+											{
+												$WordTableRowHash = @{
+												Text = "";
+												Value = $tmp;
+												}
+												$SettingsWordTable += $WordTableRowHash;
 											}
-											$SettingsWordTable += $WordTableRowHash;
-										}
-										ElseIf($HTML)
-										{
-											$rowdata += @(,(
-											"",$htmlbold,
-											$tmp,$htmlwhite))
-										}
-										ElseIf($Text)
-										{
-											OutputPolicySetting "" $tmp
-										}
-										$tmp = "Shared Name: $($share)"
-										If($MSWord -or $PDF)
-										{
-											$WordTableRowHash = @{
-											Text = "";
-											Value = $tmp;
+											ElseIf($HTML)
+											{
+												$rowdata += @(,(
+												"",$htmlbold,
+												$tmp,$htmlwhite))
 											}
-											$SettingsWordTable += $WordTableRowHash;
+											ElseIf($Text)
+											{
+												OutputPolicySetting "" $tmp
+											}
+											$tmp = "Shared Name: $($share)"
+											If($MSWord -or $PDF)
+											{
+												$WordTableRowHash = @{
+												Text = "";
+												Value = $tmp;
+												}
+												$SettingsWordTable += $WordTableRowHash;
+											}
+											ElseIf($HTML)
+											{
+												$rowdata += @(,(
+												"",$htmlbold,
+												$tmp,$htmlwhite))
+											}
+											ElseIf($Text)
+											{
+												OutputPolicySetting "" $tmp
+											}
 										}
-										ElseIf($HTML)
-										{
-											$rowdata += @(,(
-											"",$htmlbold,
-											$tmp,$htmlwhite))
-										}
-										ElseIf($Text)
-										{
-											OutputPolicySetting "" $tmp
-										}
+										$index = $Null
 									}
-									$index = $Null
-								}
-								Else
-								{
-									$tmp1 = $element.SubString(0, 4)
-									$tmp = Get-PrinterModifiedSettings $tmp1 $element
-									If(![String]::IsNullOrEmpty($tmp))
+									Else
 									{
-										If($MSWord -or $PDF)
+										$tmp1 = $element.SubString(0, 4)
+										$tmp = Get-PrinterModifiedSettings $tmp1 $element
+										If(![String]::IsNullOrEmpty($tmp))
 										{
-											$WordTableRowHash = @{
-											Text = "";
-											Value = $tmp;
+											If($MSWord -or $PDF)
+											{
+												$WordTableRowHash = @{
+												Text = "";
+												Value = $tmp;
+												}
+												$SettingsWordTable += $WordTableRowHash;
 											}
-											$SettingsWordTable += $WordTableRowHash;
+											ElseIf($HTML)
+											{
+												$rowdata += @(,(
+												"",$htmlbold,
+												$tmp,$htmlwhite))
+											}
+											ElseIf($Text)
+											{
+												OutputPolicySetting "" $tmp
+											}
 										}
-										ElseIf($HTML)
-										{
-											$rowdata += @(,(
-											"",$htmlbold,
-											$tmp,$htmlwhite))
-										}
-										ElseIf($Text)
-										{
-											OutputPolicySetting "" $tmp
-										}
+										$tmp1 = $Null
+										$tmp = $Null
 									}
-									$tmp1 = $Null
-									$tmp = $Null
 								}
 							}
-						}
 
-						$valArray = $Null
-						$prArray = $Null
-						$tmp = $Null
+							$valArray = $Null
+							$prArray = $Null
+							$tmp = $Null
+						}
+						Else
+						{
+							$tmp = "No Session printers were found"
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = "";
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								"",$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting "" $tmp
+							}
+						}
 					}
 					If((validStateProp $Setting WaitForPrintersToBeCreated State ) -and ($Setting.WaitForPrintersToBeCreated.State -ne "NotConfigured"))
 					{
@@ -17700,192 +18087,217 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting PrinterDriverMappings State ) -and ($Setting.PrinterDriverMappings.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Printing\Client Printers\Printer driver mapping and compatibility"
-						$array = $Setting.PrinterDriverMappings.Values
-						$tmp = $array[0]
-						If($MSWord -or $PDF)
+						If(validStateProp $Setting PrinterDriverMappings Values )
 						{
-							$WordTableRowHash = @{
-							Text = $txt;
-							Value = $tmp;
-							}
-							$SettingsWordTable += $WordTableRowHash;
-						}
-						ElseIf($HTML)
-						{
-							$rowdata += @(,(
-							$txt,$htmlbold,
-							$tmp,$htmlwhite))
-						}
-						ElseIf($Text)
-						{
-							OutputPolicySetting $txt $tmp
-						}
-						
-						$cnt = -1
-						ForEach($element in $array)
-						{
-							$cnt++
-							
-							If($cnt -ne 0)
+							$array = $Setting.PrinterDriverMappings.Values
+							$tmp = $array[0]
+							If($MSWord -or $PDF)
 							{
-								$Items = $element.Split(',')
-								$DriverName = $Items[0]
-								$Action = $Items[1]
-								If($Action -match 'Replace=')
-								{
-									$ServerDriver = $Action.substring($Action.indexof("=")+1)
-									$Action = "Replace "
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
 								}
-								Else
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp
+							}
+							
+							$cnt = -1
+							ForEach($element in $array)
+							{
+								$cnt++
+								
+								If($cnt -ne 0)
 								{
-									$ServerDriver = ""
-									If($Action -eq "Allow")
+									$Items = $element.Split(',')
+									$DriverName = $Items[0]
+									$Action = $Items[1]
+									If($Action -match 'Replace=')
 									{
-										$Action = "Allow "
+										$ServerDriver = $Action.substring($Action.indexof("=")+1)
+										$Action = "Replace "
 									}
-									ElseIf($Action -eq "Deny")
+									Else
 									{
-										$Action = "Do not create "
-									}
-									ElseIf($Action -eq "UPD_Only")
-									{
-										$Action = "Create with universal driver "
-									}
-								}
-								$tmp = "Driver Name: $($DriverName)"
-								If($MSWord -or $PDF)
-								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
-									}
-									$SettingsWordTable += $WordTableRowHash;
-								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
-								$tmp = "Action: $($Action)"
-								If($MSWord -or $PDF)
-								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
-									}
-									$SettingsWordTable += $WordTableRowHash;
-								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
-								$tmp = "Settings: "
-								If($MSWord -or $PDF)
-								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
-									}
-									$SettingsWordTable += $WordTableRowHash;
-								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
-								If($Items.count -gt 2)
-								{
-									[int]$BeginAt = 2
-									[int]$EndAt = $Items.count
-									for ($i=$BeginAt;$i -lt $EndAt; $i++) 
-									{
-										$tmp2 = $Items[$i].SubString(0, 4)
-										$tmp = Get-PrinterModifiedSettings $tmp2 $Items[$i]
-										If(![String]::IsNullOrEmpty($tmp))
+										$ServerDriver = ""
+										If($Action -eq "Allow")
 										{
-											If($MSWord -or $PDF)
+											$Action = "Allow "
+										}
+										ElseIf($Action -eq "Deny")
+										{
+											$Action = "Do not create "
+										}
+										ElseIf($Action -eq "UPD_Only")
+										{
+											$Action = "Create with universal driver "
+										}
+									}
+									$tmp = "Driver Name: $($DriverName)"
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
+									$tmp = "Action: $($Action)"
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
+									$tmp = "Settings: "
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
+									If($Items.count -gt 2)
+									{
+										[int]$BeginAt = 2
+										[int]$EndAt = $Items.count
+										for ($i=$BeginAt;$i -lt $EndAt; $i++) 
+										{
+											$tmp2 = $Items[$i].SubString(0, 4)
+											$tmp = Get-PrinterModifiedSettings $tmp2 $Items[$i]
+											If(![String]::IsNullOrEmpty($tmp))
 											{
-												$WordTableRowHash = @{
-												Text = "";
-												Value = $tmp;
+												If($MSWord -or $PDF)
+												{
+													$WordTableRowHash = @{
+													Text = "";
+													Value = $tmp;
+													}
+													$SettingsWordTable += $WordTableRowHash;
 												}
-												$SettingsWordTable += $WordTableRowHash;
-											}
-											ElseIf($HTML)
-											{
-												$rowdata += @(,(
-												"",$htmlbold,
-												$tmp,$htmlwhite))
-											}
-											ElseIf($Text)
-											{
-												OutputPolicySetting "" $tmp
+												ElseIf($HTML)
+												{
+													$rowdata += @(,(
+													"",$htmlbold,
+													$tmp,$htmlwhite))
+												}
+												ElseIf($Text)
+												{
+													OutputPolicySetting "" $tmp
+												}
 											}
 										}
 									}
-								}
-								Else
-								{
-									$tmp = "Unmodified "
-									If($MSWord -or $PDF)
+									Else
 									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
+										$tmp = "Unmodified "
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
-								}
 
-								If(![String]::IsNullOrEmpty($ServerDriver))
-								{
-									$tmp = "Server Driver: $($ServerDriver)"
-									If($MSWord -or $PDF)
+									If(![String]::IsNullOrEmpty($ServerDriver))
 									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
+										$tmp = "Server Driver: $($ServerDriver)"
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$tmp = $Null
 								}
-								$tmp = $Null
+							}
+						}
+						Else
+						{
+							$tmp = "No Printer driver mapping and compatibility were found"
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = "";
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								"",$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting "" $tmp
 							}
 						}
 					}
@@ -18169,59 +18581,84 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting LoadBalancedPrintServers State ) -and ($Setting.LoadBalancedPrintServers.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Printing\Universal Print Server\Universal Print Servers for load balancing"
-						$array = $Setting.LoadBalancedPrintServers.Values
-						$tmp = $array[0]
-						If($MSWord -or $PDF)
+						If(validStateProp $Setting LoadBalancedPrintServers Values )
 						{
-							$WordTableRowHash = @{
-							Text = $txt;
-							Value = $tmp;
-							}
-							$SettingsWordTable += $WordTableRowHash;
-						}
-						ElseIf($HTML)
-						{
-							$rowdata += @(,(
-							$txt,$htmlbold,
-							$tmp,$htmlwhite))
-						}
-						ElseIf($Text)
-						{
-							OutputPolicySetting $txt $tmp 
-						}
-
-						$txt = ""
-						$cnt = -1
-						
-						ForEach($element in $array)
-						{
-							$cnt++
-							
-							If($cnt -ne 0)
+							$array = $Setting.LoadBalancedPrintServers.Values
+							$tmp = $array[0]
+							If($MSWord -or $PDF)
 							{
-								$tmp = "$($element) "
-								If($MSWord -or $PDF)
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp 
+							}
+
+							$txt = ""
+							$cnt = -1
+							
+							ForEach($element in $array)
+							{
+								$cnt++
+								
+								If($cnt -ne 0)
 								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
+									$tmp = "$($element) "
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
 									}
-									$SettingsWordTable += $WordTableRowHash;
-								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
 								}
 							}
+							$array = $Null
+							$tmp = $Null
 						}
-						$array = $Null
-						$tmp = $Null
+						Else
+						{
+							$tmp = "No Universal Print Servers for load balancing were found"
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp 
+							}
+						}
 					}
 					If((validStateProp $Setting PrintServersOutOfServiceThreshold State ) -and ($Setting.PrintServersOutOfServiceThreshold.State -ne "NotConfigured"))
 					{
@@ -19011,58 +19448,83 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting ClientUsbDeviceOptimizationRules State ) -and ($Setting.ClientUsbDeviceOptimizationRules.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\USB devices\Client USB device optimization rules"
-						$array = $Setting.ClientUsbDeviceOptimizationRules.Values
-						$tmp = $array[0]
-						If($MSWord -or $PDF)
+						If(validStateProp $Setting ClientUsbDeviceOptimizationRules Values )
 						{
-							$WordTableRowHash = @{
-							Text = $txt;
-							Value = $tmp;
-							}
-							$SettingsWordTable += $WordTableRowHash;
-						}
-						ElseIf($HTML)
-						{
-							$rowdata += @(,(
-							$txt,$htmlbold,
-							$tmp,$htmlwhite))
-						}
-						ElseIf($Text)
-						{
-							OutputPolicySetting $txt $tmp 
-						}
-
-						$txt = ""
-						$cnt = -1
-						ForEach($element in $array)
-						{
-							$cnt++
-							
-							If($cnt -ne 0)
+							$array = $Setting.ClientUsbDeviceOptimizationRules.Values
+							$tmp = $array[0]
+							If($MSWord -or $PDF)
 							{
-								$tmp = "$($element) "
-								If($MSWord -or $PDF)
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp 
+							}
+
+							$txt = ""
+							$cnt = -1
+							ForEach($element in $array)
+							{
+								$cnt++
+								
+								If($cnt -ne 0)
 								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
+									$tmp = "$($element) "
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
 									}
-									$SettingsWordTable += $WordTableRowHash;
-								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
 								}
 							}
+							$array = $Null
+							$tmp = $Null
 						}
-						$array = $Null
-						$tmp = $Null
+						Else
+						{
+							$tmp = "No Client USB device optimization rules were found"
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp 
+							}
+						}
 					}
 					If((validStateProp $Setting UsbDeviceRedirection State ) -and ($Setting.UsbDeviceRedirection.State -ne "NotConfigured"))
 					{
@@ -19089,58 +19551,83 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting UsbDeviceRedirectionRules State ) -and ($Setting.UsbDeviceRedirectionRules.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\USB devices\Client USB device redirection rules"
-						$array = $Setting.UsbDeviceRedirectionRules.Values
-						$tmp = $array[0]
-						If($MSWord -or $PDF)
+						If(validStateProp $Setting UsbDeviceRedirectionRules Values )
 						{
-							$WordTableRowHash = @{
-							Text = $txt;
-							Value = $tmp;
-							}
-							$SettingsWordTable += $WordTableRowHash;
-						}
-						ElseIf($HTML)
-						{
-							$rowdata += @(,(
-							$txt,$htmlbold,
-							$tmp,$htmlwhite))
-						}
-						ElseIf($Text)
-						{
-							OutputPolicySetting $txt $tmp 
-						}
-
-						$txt = ""
-						$cnt = -1
-						ForEach($element in $array)
-						{
-							$cnt++
-							
-							If($cnt -ne 0)
+							$array = $Setting.UsbDeviceRedirectionRules.Values
+							$tmp = $array[0]
+							If($MSWord -or $PDF)
 							{
-								$tmp = "$($element) "
-								If($MSWord -or $PDF)
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp 
+							}
+
+							$txt = ""
+							$cnt = -1
+							ForEach($element in $array)
+							{
+								$cnt++
+								
+								If($cnt -ne 0)
 								{
-									$WordTableRowHash = @{
-									Text = "";
-									Value = $tmp;
+									$tmp = "$($element) "
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
 									}
-									$SettingsWordTable += $WordTableRowHash;
-								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
 								}
 							}
+							$array = $Null
+							$tmp = $Null
 						}
-						$array = $Null
-						$tmp = $Null
+						Else
+						{
+							$tmp = "No Client USB device redirections rules were found"
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp 
+							}
+						}
 					}
 					If((validStateProp $Setting UsbPlugAndPlayRedirection State ) -and ($Setting.UsbPlugAndPlayRedirection.State -ne "NotConfigured"))
 					{
@@ -19149,7 +19636,7 @@ Function ProcessCitrixPolicies
 						{
 							$WordTableRowHash = @{
 							Text = $txt;
-							Value = $Setting.UsbPlugAndPlayRedirection.Value;
+							Value = $Setting.UsbPlugAndPlayRedirection.State;
 							}
 							$SettingsWordTable += $WordTableRowHash;
 						}
@@ -19157,11 +19644,11 @@ Function ProcessCitrixPolicies
 						{
 							$rowdata += @(,(
 							$txt,$htmlbold,
-							$Setting.UsbPlugAndPlayRedirection.Value,$htmlwhite))
+							$Setting.UsbPlugAndPlayRedirection.State,$htmlwhite))
 						}
 						ElseIf($Text)
 						{
-							OutputPolicySetting $txt $Setting.UsbPlugAndPlayRedirection.Value 
+							OutputPolicySetting $txt $Setting.UsbPlugAndPlayRedirection.State 
 						}
 					}
 
@@ -20091,58 +20578,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\Basic settings\Excluded groups"
 						If($Setting.ExcludedGroups_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.ExcludedGroups_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting ExcludedGroups_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.ExcludedGroups_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Excluded groups were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -20261,58 +20773,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\Basic settings\Processed groups"
 						If($Setting.ProcessedGroups_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.ProcessedGroups_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting ProcessedGroups_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.ProcessedGroups_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Processed groups were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}	
 						Else
 						{
@@ -20343,58 +20880,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\Cross-Platform settings\Cross-platform settings user groups"
 						If($Setting.CPUserGroups_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.CPUserGroups_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting CPUserGroups_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.CPUserGroups_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Cross-platform settings user groups were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -21247,58 +21809,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\File system\Exclusions\Exclusion list - directories"
 						If($Setting.ExclusionListSyncDir_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.ExclusionListSyncDir_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting ExclusionListSyncDir_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.ExclusionListSyncDir_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Exclusion list - directories were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -21327,58 +21914,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\File system\Exclusions\Exclusion list - files"
 						If($Setting.ExclusionListSyncFiles_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.ExclusionListSyncFiles_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting ExclusionListSyncFiles_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.ExclusionListSyncFiles_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Exclusion list - files were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -21409,58 +22021,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\File system\Synchronization\Directories to synchronize"
 						If($Setting.SyncDirList_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.SyncDirList_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting SyncDirList_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.SyncDirList_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Directories to synchronize were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -21489,58 +22126,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\File system\Synchronization\Files to synchronize"
 						If($Setting.SyncFileList_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.SyncFileList_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting SyncFileList_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.SyncFileList_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Files to synchronize were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -21569,58 +22231,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\File system\Synchronization\Folders to mirror"
 						If($Setting.MirrorFoldersList_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.MirrorFoldersList_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting MirrorFoldersList_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.MirrorFoldersList_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Folders to mirror were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -23243,58 +23930,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\Registry\Exclusion list"
 						If($Setting.ExclusionList_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.ExclusionList_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting ExclusionList_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.ExclusionList_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Exclusion list were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -23323,58 +24035,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\Registry\Inclusion list"
 						If($Setting.IncludeListRegistry_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.IncludeListRegistry_Part.Values
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting IncludeListRegistry_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.IncludeListRegistry_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Inclusion list were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -23536,7 +24273,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting PSAlwaysCache_Part State ) -and ($Setting.PSAlwaysCache_Part.State -ne "NotConfigured"))
 					{
-						$txt = "Profile Management\Streamed user profiles\Always cache size"
+						$txt = "Profile Management\Streamed user profiles\Always cache size (MB)"
 						If($Setting.PSAlwaysCache_Part.State -eq "Enabled")
 						{
 							If($MSWord -or $PDF)
@@ -23607,58 +24344,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\Streamed user profiles\Profile Streaming Exclusion list - directories"
 						If($Setting.StreamingExclusionList_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.StreamingExclusionList_Part.Values.Split(",")
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting StreamingExclusionList_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.StreamingExclusionList_Part.Values.Split(",")
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Profile Streaming Exclusion list - directories were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -23687,58 +24449,83 @@ Function ProcessCitrixPolicies
 						$txt = "Profile Management\Streamed user profiles\Streamed user profile groups"
 						If($Setting.PSUserGroups_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.PSUserGroups_Part.Values.Split(",")
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting PSUserGroups_Part Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.PSUserGroups_Part.Values.Split(",")
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Streamed user profile groups were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -23808,68 +24595,101 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt ""
 						}
 						$txt = ""
-						$tmpArray = $Setting.StorefrontAccountsList.Values
-						ForEach($Thing in $TmpArray)
+						If(validStateProp $Setting StorefrontAccountsList Values )
 						{
-							$cnt++
-							$xxx = """$($Thing)"""
-							[array]$tmp = $xxx.Split(";").replace('"','')
-							$tmp1 = "Name: $($tmp[0])"
-							$tmp2 = "URL: $($tmp[1])"
-							$tmp3 = "State: $($tmp[2])"
-							$tmp4 = "Desc: $($tmp[3])"
-							If($MSWord -or $PDF)
+							$tmpArray = $Setting.StorefrontAccountsList.Values
+							ForEach($Thing in $TmpArray)
 							{
-								$WordTableRowHash = @{
-								Text = $txt;
-								Value = $tmp1;
+								$cnt++
+								$xxx = """$($Thing)"""
+								[array]$tmp = $xxx.Split(";").replace('"','')
+								$tmp1 = "Name: $($tmp[0])"
+								$tmp2 = "URL: $($tmp[1])"
+								$tmp3 = "State: $($tmp[2])"
+								$tmp4 = "Desc: $($tmp[3])"
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp1;
+									}
+									$SettingsWordTable += $WordTableRowHash
+									
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp2;
+									}
+									$SettingsWordTable += $WordTableRowHash
+									
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp3;
+									}
+									$SettingsWordTable += $WordTableRowHash
+									
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp4;
+									}
+									$SettingsWordTable += $WordTableRowHash
 								}
-								$SettingsWordTable += $WordTableRowHash
-								
-								$WordTableRowHash = @{
-								Text = $txt;
-								Value = $tmp2;
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp1,$htmlwhite))
+									
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp2,$htmlwhite))
+									
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp3,$htmlwhite))
+									
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp4,$htmlwhite))
 								}
-								$SettingsWordTable += $WordTableRowHash
-								
-								$WordTableRowHash = @{
-								Text = $txt;
-								Value = $tmp3;
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp1
+									OutputPolicySetting $txt $tmp2
+									OutputPolicySetting $txt $tmp3
+									OutputPolicySetting $txt $tmp4
 								}
-								$SettingsWordTable += $WordTableRowHash
-								
-								$WordTableRowHash = @{
-								Text = $txt;
-								Value = $tmp4;
+								$tmp = " "
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = "";
+									Value = $tmp;
+									}
+									$SettingsWordTable += $WordTableRowHash;
 								}
-								$SettingsWordTable += $WordTableRowHash
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									"",$htmlbold,
+									"",$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting "" $tmp
+								}
+								$xxx = $Null
+								$tmp = $Null
+								$tmp1 = $Null
+								$tmp2 = $Null
+								$tmp3 = $Null
+								$tmp4 = $Null
 							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$tmp1,$htmlwhite))
-								
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$tmp2,$htmlwhite))
-								
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$tmp3,$htmlwhite))
-								
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$tmp4,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $tmp1
-								OutputPolicySetting $txt $tmp2
-								OutputPolicySetting $txt $tmp3
-								OutputPolicySetting $txt $tmp4
-							}
-							$tmp = " "
+							$TmpArray = $Null
+							$tmp = $Null
+						}
+						Else
+						{
+							$tmp = "No Storefront accounts list were found"
 							If($MSWord -or $PDF)
 							{
 								$WordTableRowHash = @{
@@ -23888,15 +24708,7 @@ Function ProcessCitrixPolicies
 							{
 								OutputPolicySetting "" $tmp
 							}
-							$xxx = $Null
-							$tmp = $Null
-							$tmp1 = $Null
-							$tmp2 = $Null
-							$tmp3 = $Null
-							$tmp4 = $Null
 						}
-						$TmpArray = $Null
-						$tmp = $Null
 					}
 
 					Write-Verbose "$(Get-Date): `t`t`tVirtual Delivery Agent Settings"
@@ -24170,58 +24982,83 @@ Function ProcessCitrixPolicies
 						$txt = "Virtual Delivery Agent Settings\Monitoring\List of applications excluded from failure monitoring"
 						If($Setting.StreamingExclusionList_Part.State -eq "Enabled")
 						{
-							$tmpArray = $Setting.AppFailureExclusionList.Values.Split(",")
-							$tmp = ""
-							$cnt = 0
-							ForEach($Thing in $tmpArray)
+							If(validStateProp $Setting AppFailureExclusionList Values )
 							{
-								$cnt++
-								$tmp = "$($Thing)"
-								If($cnt -eq 1)
+								$tmpArray = $Setting.AppFailureExclusionList.Values.Split(",")
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
 								{
-									If($MSWord -or $PDF)
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
 									{
-										$WordTableRowHash = @{
-										Text = $txt;
-										Value = $tmp;
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
 										}
-										$SettingsWordTable += $WordTableRowHash;
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
 									}
-									ElseIf($HTML)
+									Else
 									{
-										$rowdata += @(,(
-										$txt,$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting $txt $tmp
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
 									}
 								}
-								Else
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No List of applications excluded from failure monitoring were found"
+								If($MSWord -or $PDF)
 								{
-									If($MSWord -or $PDF)
-									{
-										$WordTableRowHash = @{
-										Text = "";
-										Value = $tmp;
-										}
-										$SettingsWordTable += $WordTableRowHash;
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
 									}
-									ElseIf($HTML)
-									{
-										$rowdata += @(,(
-										"",$htmlbold,
-										$tmp,$htmlwhite))
-									}
-									ElseIf($Text)
-									{
-										OutputPolicySetting "" $tmp
-									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
 								}
 							}
-							$tmpArray = $Null
-							$tmp = $Null
 						}
 						Else
 						{
@@ -24318,6 +25155,8 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting VirtualLoopbackPrograms State ) -and ($Setting.VirtualLoopbackPrograms.State -ne "NotConfigured"))
 					{
 						$txt = "Virtual IP\Virtual IP virtual loopback programs list"
+						If((validStateProp $Setting VirtualLoopbackPrograms State ) -and ($Setting.VirtualLoopbackPrograms.State -ne "NotConfigured"))
+						{
 						$tmpArray = $Setting.VirtualLoopbackPrograms.Values
 						$array = $Null
 						$tmp = ""
@@ -24375,6 +25214,29 @@ Function ProcessCitrixPolicies
 						}
 						$TmpArray = $Null
 						$tmp = $Null
+						}
+						Else
+						{
+							$tmp = "No Virtual IP virtual loopback programs list were found"
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $tmp
+							}
+						}
 					}
 				}
 				If($MSWord -or $PDF)
@@ -26677,65 +27539,65 @@ Function GetRolePermissions
 			"Catalog_RemoveScope"										{$Results.Add("Remove Machine Catalog from Scope", "Machine Catalogs"); Break}
 			"Catalog_SessionManagement"									{$Results.Add("Perform session management on machines via Machine Catalog membership", "Machine Catalogs"); Break}
 			"Catalog_UpdateMasterImage"									{$Results.Add("Perform Machine update", "Machine Catalogs"); Break}
-			"Configuration_Read"										{$Results.Add("Read Site Configuration", "Other permissions"); Break}
-			"Configuration_Write"										{$Results.Add("Update Site Configuration", "Other permissions"); Break}
+			"Configuration_Read"										{$Results.Add("Read Site Configuration (Configuration_Read)", "Other permissions"); Break}
+			"Configuration_Write"										{$Results.Add("Update Site Configuration (Configuration_Write)", "Other permissions"); Break}
 			"Controllers_Remove"										{$Results.Add("Remove Delivery Controller", "Controllers"); Break}
-			"DesktopGroup_AddApplication" {$Results.Add("Add Application to Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_AddMachines" {$Results.Add("Add Machines to Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_AddScope" {$Results.Add("Add Delivery Group to Scope", "Delivery Groups"); Break}
-			"DesktopGroup_ChangeMachineMaintenanceMode" {$Results.Add("Enable/disable maintenance mode of a machine via Delivery Group membership", "Delivery Groups"); Break}
-			"DesktopGroup_ChangeMaintenanceMode" {$Results.Add("Enable/disable maintenance mode of a Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_ChangeTags" {$Results.Add("Edit Delivery Group tags", "Delivery Groups"); Break}
-			"DesktopGroup_ChangeUserAssignment" {$Results.Add("Change users assigned to a desktop", "Delivery Groups"); Break}
-			"DesktopGroup_Create" {$Results.Add("Create Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_Delete" {$Results.Add("Delete Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_EditProperties" {$Results.Add("Edit Delivery Group Properties", "Delivery Groups"); Break}
-			"DesktopGroup_PowerOperations_RDS" {$Results.Add("Perform power operations on Windows Server machines via Delivery Group membership", "Delivery Groups"); Break}
-			"DesktopGroup_PowerOperations_VDI" {$Results.Add("Perform power operations on Windows Desktop machines via Delivery Group membership", "Delivery Groups"); Break}
-			"DesktopGroup_Read" {$Results.Add("View Delivery Groups", "Delivery Groups"); Break}
-			"DesktopGroup_RemoveApplication" {$Results.Add("Remove Application from Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_RemoveDesktop" {$Results.Add("Remove Desktop from Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_RemoveScope" {$Results.Add("Remove Delivery Group from Scope", "Delivery Groups"); Break}
-			"DesktopGroup_SessionManagement" {$Results.Add("Perform session management on machines via Delivery Group membership", "Delivery Groups"); Break}
-			"Director_ClientDetails_Read" {$Results.Add("View Client Details page", "Director"); Break}
-			"Director_ClientHelpDesk_Read" {$Results.Add("View Client Activity Manager page", "Director"); Break}
-			"Director_Dashboard_Read" {$Results.Add("View Dashboard page", "Director"); Break}
-			"Director_DesktopHardwareInformation_Edit" {$Results.Add("Edit Machine Hardware related Broker machine command properties", "Director"); Break}
-			"Director_HDXInformation_Edit" {$Results.Add("Edit HDX related Broker machine command properties", "Director"); Break}
-			"Director_HelpDesk_Read" {$Results.Add("View Activity Manager page", "Director"); Break}
-			"Director_KillApplication" {$Results.Add("Perform Kill Application running on a machine", "Director"); Break}
-			"Director_KillApplication_Edit" {$Results.Add("Edit Kill Application related Broker machine command properties", "Director"); Break}
-			"Director_KillProcess" {$Results.Add("Perform Kill Process running on a machine", "Director"); Break}
-			"Director_KillProcess_Edit" {$Results.Add("Edit Kill Process related Broker machine command properties", "Director"); Break}
-			"Director_LatencyInformation_Edit" {$Results.Add("Edit Latency related Broker machine command properties", "Director"); Break}
-			"Director_MachineDetails_Read" {$Results.Add("View Machine Details page", "Director"); Break}
-			"Director_MachineMetricValues_Edit" {$Results.Add("Edit Machine metric related Broker machine command properties", "Director"); Break}
-			"Director_PersonalizationInformation_Edit" {$Results.Add("Edit Personalization related Broker machine command properties", "Director"); Break}
-			"Director_PoliciesInformation_Edit" {$Results.Add("Edit Policies related Broker machine command properties", "Director"); Break}
-			"Director_ResetVDisk" {$Results.Add("Perform Reset VDisk operation", "Director"); Break}
-			"Director_ResetVDisk_Edit" {$Results.Add("Edit Reset VDisk related Broker machine command properties", "Director"); Break}
-			"Director_RoundTripInformation_Edit" {$Results.Add("Edit Roundtrip Time related Broker machine command properties", "Director"); Break}
-			"Director_ShadowSession" {$Results.Add("Perform Remote Assistance on a machine", "Director"); Break}
-			"Director_ShadowSession_Edit" {$Results.Add("Edit Remote Assistance related Broker machine command properties", "Director"); Break}
-			"Director_SliceAndDice_Read" {$Results.Add("View Filters page", "Director"); Break}
-			"Director_TaskManagerInformation_Edit" {$Results.Add("Edit Task Manager related Broker machine command properties", "Director"); Break}
-			"Director_Trends_Read" {$Results.Add("View Trends page", "Director"); Break}
-			"Director_UserDetails_Read" {$Results.Add("View User Details page", "Director"); Break}
-			"Director_WindowsSessionId_Edit" {$Results.Add("Edit Windows Sessionid related Broker machine command properties", "Director"); Break}
-			"EnvTest" {$Results.Add("Run environment tests", "Other permissions"); Break}
-			"Global_Read" {$Results.Add("Read Site Configuration", "Other permissions"); Break}
-			"Global_Write" {$Results.Add("Update Site Configuration", "Other permissions"); Break}
-			"Hosts_AddScope" {$Results.Add("Add Host Connection to Scope", "Hosts"); Break}
-			"Hosts_AddStorage" {$Results.Add("Add storage to Resources", "Hosts"); Break}
-			"Hosts_ChangeMaintenanceMode" {$Results.Add("Enable/disable maintenance mode of a Host Connection", "Hosts"); Break}
-			"Hosts_Consume" {$Results.Add("Use Host Connection or Resources to Create Catalog", "Hosts"); Break}
-			"Hosts_CreateHost" {$Results.Add("Add Host Connection or Resources", "Hosts"); Break}
-			"Hosts_DeleteConnection" {$Results.Add("Delete Host Connection", "Hosts"); Break}
-			"Hosts_DeleteHost" {$Results.Add("Delete Resources", "Hosts"); Break}
-			"Hosts_EditConnectionProperties" {$Results.Add("Edit Host Connection properties", "Hosts"); Break}
-			"Hosts_EditHostProperties" {$Results.Add("Edit Resources", "Hosts"); Break}
-			"Hosts_Read" {$Results.Add("View Host Connections and Resources", "Hosts"); Break}
-			"Hosts_RemoveScope" {$Results.Add("Remove Host Connection from Scope", "Hosts"); Break}
+			"DesktopGroup_AddApplication"								{$Results.Add("Add Application to Delivery Group", "Delivery Groups"); Break}
+			"DesktopGroup_AddMachines"									{$Results.Add("Add Machines to Delivery Group", "Delivery Groups"); Break}
+			"DesktopGroup_AddScope"										{$Results.Add("Add Delivery Group to Scope", "Delivery Groups"); Break}
+			"DesktopGroup_ChangeMachineMaintenanceMode"					{$Results.Add("Enable/disable maintenance mode of a machine via Delivery Group membership", "Delivery Groups"); Break}
+			"DesktopGroup_ChangeMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of a Delivery Group", "Delivery Groups"); Break}
+			"DesktopGroup_ChangeTags"									{$Results.Add("Edit Delivery Group tags", "Delivery Groups"); Break}
+			"DesktopGroup_ChangeUserAssignment"							{$Results.Add("Change users assigned to a desktop", "Delivery Groups"); Break}
+			"DesktopGroup_Create"										{$Results.Add("Create Delivery Group", "Delivery Groups"); Break}
+			"DesktopGroup_Delete"										{$Results.Add("Delete Delivery Group", "Delivery Groups"); Break}
+			"DesktopGroup_EditProperties"								{$Results.Add("Edit Delivery Group Properties", "Delivery Groups"); Break}
+			"DesktopGroup_PowerOperations_RDS"							{$Results.Add("Perform power operations on Windows Server machines via Delivery Group membership", "Delivery Groups"); Break}
+			"DesktopGroup_PowerOperations_VDI"							{$Results.Add("Perform power operations on Windows Desktop machines via Delivery Group membership", "Delivery Groups"); Break}
+			"DesktopGroup_Read"											{$Results.Add("View Delivery Groups", "Delivery Groups"); Break}
+			"DesktopGroup_RemoveApplication"							{$Results.Add("Remove Application from Delivery Group", "Delivery Groups"); Break}
+			"DesktopGroup_RemoveDesktop"								{$Results.Add("Remove Desktop from Delivery Group", "Delivery Groups"); Break}
+			"DesktopGroup_RemoveScope"									{$Results.Add("Remove Delivery Group from Scope", "Delivery Groups"); Break}
+			"DesktopGroup_SessionManagement"							{$Results.Add("Perform session management on machines via Delivery Group membership", "Delivery Groups"); Break}
+			"Director_ClientDetails_Read"								{$Results.Add("View Client Details page", "Director"); Break}
+			"Director_ClientHelpDesk_Read"								{$Results.Add("View Client Activity Manager page", "Director"); Break}
+			"Director_Dashboard_Read"									{$Results.Add("View Dashboard page", "Director"); Break}
+			"Director_DesktopHardwareInformation_Edit"					{$Results.Add("Edit Machine Hardware related Broker machine command properties", "Director"); Break}
+			"Director_HDXInformation_Edit"								{$Results.Add("Edit HDX related Broker machine command properties", "Director"); Break}
+			"Director_HelpDesk_Read"									{$Results.Add("View Activity Manager page", "Director"); Break}
+			"Director_KillApplication"									{$Results.Add("Perform Kill Application running on a machine", "Director"); Break}
+			"Director_KillApplication_Edit"								{$Results.Add("Edit Kill Application related Broker machine command properties", "Director"); Break}
+			"Director_KillProcess"										{$Results.Add("Perform Kill Process running on a machine", "Director"); Break}
+			"Director_KillProcess_Edit"									{$Results.Add("Edit Kill Process related Broker machine command properties", "Director"); Break}
+			"Director_LatencyInformation_Edit"							{$Results.Add("Edit Latency related Broker machine command properties", "Director"); Break}
+			"Director_MachineDetails_Read"								{$Results.Add("View Machine Details page", "Director"); Break}
+			"Director_MachineMetricValues_Edit"							{$Results.Add("Edit Machine metric related Broker machine command properties", "Director"); Break}
+			"Director_PersonalizationInformation_Edit"					{$Results.Add("Edit Personalization related Broker machine command properties", "Director"); Break}
+			"Director_PoliciesInformation_Edit"							{$Results.Add("Edit Policies related Broker machine command properties", "Director"); Break}
+			"Director_ResetVDisk"										{$Results.Add("Perform Reset VDisk operation", "Director"); Break}
+			"Director_ResetVDisk_Edit"									{$Results.Add("Edit Reset VDisk related Broker machine command properties", "Director"); Break}
+			"Director_RoundTripInformation_Edit"						{$Results.Add("Edit Roundtrip Time related Broker machine command properties", "Director"); Break}
+			"Director_ShadowSession"									{$Results.Add("Perform Remote Assistance on a machine", "Director"); Break}
+			"Director_ShadowSession_Edit"								{$Results.Add("Edit Remote Assistance related Broker machine command properties", "Director"); Break}
+			"Director_SliceAndDice_Read"								{$Results.Add("View Filters page", "Director"); Break}
+			"Director_TaskManagerInformation_Edit"						{$Results.Add("Edit Task Manager related Broker machine command properties", "Director"); Break}
+			"Director_Trends_Read"										{$Results.Add("View Trends page", "Director"); Break}
+			"Director_UserDetails_Read"									{$Results.Add("View User Details page", "Director"); Break}
+			"Director_WindowsSessionId_Edit"							{$Results.Add("Edit Windows Sessionid related Broker machine command properties", "Director"); Break}
+			"EnvTest"													{$Results.Add("Run environment tests", "Other permissions"); Break}
+			"Global_Read"												{$Results.Add("Read Site Configuration (Global_Read)", "Other permissions"); Break}
+			"Global_Write"												{$Results.Add("Update Site Configuration (Global_Write)", "Other permissions"); Break}
+			"Hosts_AddScope"											{$Results.Add("Add Host Connection to Scope", "Hosts"); Break}
+			"Hosts_AddStorage"											{$Results.Add("Add storage to Resources", "Hosts"); Break}
+			"Hosts_ChangeMaintenanceMode"								{$Results.Add("Enable/disable maintenance mode of a Host Connection", "Hosts"); Break}
+			"Hosts_Consume"												{$Results.Add("Use Host Connection or Resources to Create Catalog", "Hosts"); Break}
+			"Hosts_CreateHost"											{$Results.Add("Add Host Connection or Resources", "Hosts"); Break}
+			"Hosts_DeleteConnection"									{$Results.Add("Delete Host Connection", "Hosts"); Break}
+			"Hosts_DeleteHost"											{$Results.Add("Delete Resources", "Hosts"); Break}
+			"Hosts_EditConnectionProperties"							{$Results.Add("Edit Host Connection properties", "Hosts"); Break}
+			"Hosts_EditHostProperties"									{$Results.Add("Edit Resources", "Hosts"); Break}
+			"Hosts_Read"												{$Results.Add("View Host Connections and Resources", "Hosts"); Break}
+			"Hosts_RemoveScope"											{$Results.Add("Remove Host Connection from Scope", "Hosts"); Break}
 			"Licensing_ChangeLicenseServer"								{$Results.Add("Change licensing server", "Licensing"); Break}
 			"Licensing_EditLicensingProperties"							{$Results.Add("Edit product edition", "Licensing"); Break}
 			"Licensing_Read"											{$Results.Add("View Licensing", "Licensing"); Break}
@@ -27036,9 +27898,12 @@ Function OutputControllers
 			FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
 		}
 		
-		$Script:ControllerRegistryItems = @()
-		GetControllerRegistryKeys $Controller.DNSName
-		OutputControllerRegistryKeys
+		If($BrokerRegistryKeys)
+		{
+			$Script:ControllerRegistryItems = @()
+			GetControllerRegistryKeys $Controller.DNSName
+			OutputControllerRegistryKeys
+		}
 	}
 
 	If($Hardware)
@@ -27424,34 +28289,108 @@ Function OutputControllerRegistryKeys
 	Write-Verbose "$(Get-Date): `t`t`tOutput Registry Key data"
 	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort RegValue, RegKey
 	
-	If($Text)
+	$txt = "Controller Registry Items"
+	If($MSWord -or $PDF)
 	{
-		Line 0 "Controller Registry Items"
-		Line 1 "Registry Key                                                                  Registry Value                                     Data            " 
+		WriteWordLine 2 0 $txt
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 1 "Registry Value                                     Registry Key                                                                  Data            " 
 		Line 1 "================================================================================================================================================="
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 2 0 $txt
+	}
+
+	If($MSWord -or $PDF)
+	{
+		[System.Collections.Hashtable[]] $WordTable = @();
+	}
+	ElseIf($HTML)
+	{
+		$rowdata = @()
 	}
 	
 	If($Script:ControllerRegistryItems)
 	{
 		ForEach($Item in $Script:ControllerRegistryItems)
 		{
-			If($Text)
+			If($MSWord -or $PDF)
 			{
-				Line 1 ( "{0,-77} {1,-50} {2,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value)
+				$WordTableRowHash = @{
+				RegValue = $Item.RegValue; 
+				RegKey = $Item.RegKey; 
+				Value = $Item.Value
+				}
+				$WordTable += $WordTableRowHash;
+			}
+			ElseIf($Text)
+			{
+				Line 1 ( "{0,-50} {1,-77} {2,-15}" -f $Item.RegValue, $Item.RegKey, $Item.Value)
+			}
+			ElseIf($HTML)
+			{
+				$rowdata += @(,(
+				$Item.RegValue,$htmlwhite,
+				$Item.RegKey,$htmlwhite,
+				$Item.Value,$htmlwhite))
 			}
 		}
 	}
 	Else
 	{
-		If($Text)
+		If($MSWord -or $PDF)
+		{
+			WriteWordLine 0 1 "<None found>"
+		}
+		ElseIf($Text)
 		{
 			Line 1 "<None found>"
 		}
+		ElseIf($HTML)
+		{
+			WriteHTMLLine 0 1 "None found"
+		}
 	}
 
-	If($Text)
+	If($MSWord -or $PDF)
+	{
+		$Table = AddWordTable -Hashtable $WordTable `
+		-Columns  RegValue, RegKey, Value `
+		-Headers  "Registry Value", "Registry Key", "Value" `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 210;
+		$Table.Columns.Item(2).Width = 230;
+		$Table.Columns.Item(3).Width = 60;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
+	}
+	ElseIf($Text)
 	{
 		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		$columnHeaders = @(
+		'Registry Value',($htmlsilver -bor $htmlbold),
+		'Registry Key',($htmlsilver -bor $htmlbold),
+		'Value',($htmlsilver -bor $htmlbold)
+		)
+
+		$msg = ""
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
+		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -29960,75 +30899,77 @@ Function ProcessScriptEnd
 	{
 		$SIFile = "$($pwd.Path)\XAXDV2InventoryScriptInfo_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 		Out-File -FilePath $SIFile -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime    : $($AddDateTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress    : $($AdminAddress)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Administrators  : $($Administrators)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Applications    : $($Applications)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Add DateTime       : $($AddDateTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "AdminAddress       : $($AdminAddress)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Administrators     : $($Administrators)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Applications       : $($Applications)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "BrokerRegistryKeys : $($BrokerRegistryKeys)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Company Name    : $($Script:CoName)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Address : $($CompanyAddress)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Email   : $($CompanyEmail)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Fax     : $($CompanyFax)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Company Phone   : $($CompanyPhone)" 4>$Null		
-			Out-File -FilePath $SIFile -Append -InputObject "Cover Page      : $($CoverPage)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Company Name       : $($Script:CoName)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Address    : $($CompanyAddress)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Email      : $($CompanyEmail)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Fax        : $($CompanyFax)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Company Phone      : $($CompanyPhone)" 4>$Null		
+			Out-File -FilePath $SIFile -Append -InputObject "Cover Page         : $($CoverPage)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "DeliveryGroups  : $($DeliveryGroups)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Dev             : $($Dev)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "DeliveryGroups     : $($DeliveryGroups)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Dev                : $($Dev)" 4>$Null
 		If($Dev)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile    : $($Script:DevErrorFile)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "DevErrorFile       : $($Script:DevErrorFile)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "DGUtilization   : $($DeliveryGroupsUtilization)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Filename1       : $($Script:FileName1)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "DGUtilization      : $($DeliveryGroupsUtilization)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Filename1          : $($Script:FileName1)" 4>$Null
 		If($PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Filename2       : $($Script:FileName2)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Filename2          : $($Script:FileName2)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "Folder          : $($Folder)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "From            : $($From)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Hosting         : $($Hosting)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory    : $($Hardware)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Logging         : $($Logging)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Folder             : $($Folder)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "From               : $($From)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Hosting            : $($Hosting)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory       : $($Hardware)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Logging            : $($Logging)" 4>$Null
 		If($Logging)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "   Start Date    : $($StartDate)" 4>$Null
-			Out-File -FilePath $SIFile -Append -InputObject "   End Date      : $($EndDate)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "   Start Date      : $($StartDate)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "   End Date        : $($EndDate)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "MachineCatalogs : $($MachineCatalogs)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "NoADPolicies    : $($NoADPolicies)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "NoPolicies      : $($NoPolicies)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Policies        : $($Policies)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML    : $($HTML)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF     : $($PDF)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT    : $($TEXT)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD    : $($MSWORD)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script Info     : $($ScriptInfo)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Section         : $($Section)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Site Name       : $($XDSiteName)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port       : $($SmtpPort)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server     : $($SmtpServer)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Title           : $($Script:Title)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "To              : $($To)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Use SSL         : $($UseSSL)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "MachineCatalogs    : $($MachineCatalogs)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "MaxDetail          : $($MaxDetail)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "NoADPolicies       : $($NoADPolicies)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "NoPolicies         : $($NoPolicies)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Policies           : $($Policies)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As HTML       : $($HTML)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As PDF        : $($PDF)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As TEXT       : $($TEXT)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Save As WORD       : $($MSWORD)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script Info        : $($ScriptInfo)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Section            : $($Section)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Site Name          : $($XDSiteName)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Port          : $($SmtpPort)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Smtp Server        : $($SmtpServer)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Title              : $($Script:Title)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "To                 : $($To)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Use SSL            : $($UseSSL)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "User Name       : $($UserName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "User Name          : $($UserName)" 4>$Null
 		}
-		Out-File -FilePath $SIFile -Append -InputObject "XA/XD Version   : $($Script:XDSiteVersion)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "XA/XD Version      : $($Script:XDSiteVersion)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "OS Detected     : $($Script:RunningOS)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PoSH version    : $($Host.Version)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSCulture       : $($PSCulture)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture     : $($PSUICulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "OS Detected        : $($Script:RunningOS)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PoSH version       : $($Host.Version)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSCulture          : $($PSCulture)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "PSUICulture        : $($PSUICulture)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "Word language   : $($Script:WordLanguageValue)" 4>$Null
-			Out-File -FilePath $SIFile -Append -InputObject "Word version    : $($Script:WordProduct)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word language      : $($Script:WordLanguageValue)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Word version       : $($Script:WordProduct)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Script start    : $($Script:StartTime)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time    : $($Str)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Script start       : $($Script:StartTime)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time       : $($Str)" 4>$Null
 	}
 
 	$ErrorActionPreference = $SaveEAPreference
