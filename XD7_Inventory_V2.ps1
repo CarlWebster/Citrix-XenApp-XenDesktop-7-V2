@@ -31086,8 +31086,11 @@ Function ProcessScriptSetup
 		[int]$MajorVersion = $tmp[0]
 		[int]$MinorVersion = $tmp[1]
 	}
-
-	Write-Verbose "$(Get-Date): Found the version information on $($env:ComputerName)"
+	Else
+	{
+		Write-Verbose "$(Get-Date): Found the version information on $($env:ComputerName)"
+	}
+	
 	$value = $subKey.GetValue("DisplayVersion")
 	$Script:XDSiteVersion = $value.Substring(0,4)
 	$tmp = $Script:XDSiteVersion.Split(".")
