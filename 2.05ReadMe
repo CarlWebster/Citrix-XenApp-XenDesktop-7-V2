@@ -1,4 +1,8 @@
 #Version 2.05
+#	Added additional error checking for Site version information
+#		If "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Citrix Desktop Delivery Controller" 
+#		is not found on the computer running the script, then look on the computer specified for -AdminAddress
+#		If still not found on that computer, abort the script
 #	Added back the WorkerGroup policy filter for XenApp 6.x
 #	Added Broker registry keys that can be set on Broker servers
 #		Added Function GetControllerRegistryKeys
@@ -17,7 +21,7 @@
 #		Company Phone
 #	Added missing function validObject
 #	Added new parameter MaxDetails:
-#		This is the same as using the follwoing parameters:
+#		This is the same as using the following parameters:
 #			Administrators
 #			AppDisks
 #			Applications
@@ -42,6 +46,7 @@
 #	Added Version information to Controllers
 #	Fixed bug when retrieving Filters for a Policy that "applies to all objects in the Site"
 #	Fixed Function Check-LoadedModule
+#	Fixed function OutputPolicySetting
 #	Fixed functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
 #	Fixed numerous issues in the Policies section
 #	Fixed two calls to Get-BrokerApplication that were retrieving the default of 250 records (Thanks to Brandon Mitchell)
@@ -52,3 +57,4 @@
 #	Updated Function ShowScriptOptions for the new Cover Page properties
 #	Updated Function UpdateDocumentProperties for the new Cover Page properties
 #	Updated help text
+#	When -NoPolicies is specified, the Citrix.GroupPolicy.Commands module is no longer searched for
