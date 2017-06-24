@@ -936,7 +936,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.05
 	AUTHOR: Carl Webster
-	LASTEDIT: June 18, 2017
+	LASTEDIT: June 24, 2017
 #>
 
 #endregion
@@ -1143,6 +1143,7 @@ Param(
 #		There are 315 registry keys and values that are checked and listed
 #		Updated Function OutputControllers
 #	Added Controller version information to the Controllers section
+#	Added "Database Size" to the Datastores output
 #	Added folder name to Function OutputApplication (Thanks to Brandon Mitchell)
 #	Added four new Cover Page properties
 #		Company Address
@@ -1183,9 +1184,10 @@ Param(
 #	Removed code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
 #	Reordered the parameters in the help text and parameter list so they match and are grouped better
 #	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Updated Function ProcessScriptEnd for the new Cover Page properties
-#	Updated Function ShowScriptOptions for the new Cover Page properties
-#	Updated Function UpdateDocumentProperties for the new Cover Page properties
+#	Updated Function OutputDatastores to add database size
+#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
+#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
 #	Updated help text
 #	When -NoPolicies is specified, the Citrix.GroupPolicy.Commands module is no longer searched for
 #	
@@ -26035,11 +26037,11 @@ Function OutputConfigLogPreferences
 					$Pair = $csitem.split('=').trimstart()
 					Switch ($Pair[0])
 					{
-						"Server"					{$LogSQLServerPrincipalName = $Pair[1]}
-						"Failover Partner"			{$LogSQLServerMirrorName = $Pair[1]}
-						"MultiSubnetFailover"		{$LogSQLServerMirrorName = ""}
-						"Database"					{$LogDatabaseName = $Pair[1]}
-						{$Pair[0] -match "Initial"}	{$LogDatabaseName = $Pair[1]}
+						"Server"					{$LogSQLServerPrincipalName = $Pair[1]; Break}
+						"Failover Partner"			{$LogSQLServerMirrorName = $Pair[1]; Break}
+						"MultiSubnetFailover"		{$LogSQLServerMirrorName = ""; Break}
+						"Database"					{$LogDatabaseName = $Pair[1]; Break}
+						"Initial Catalog"			{$LogDatabaseName = $Pair[1]; Break}
 					}
 				}
 			}
@@ -26401,11 +26403,14 @@ Function OutputDatastores
 
 	#line starts with server=SQLServerName;
 	#only need what is between the = and ;
+	
+	#24-Jun-2017 add Database Size to the output
 	Write-Verbose "$(Get-Date): `tRetrieving database connection data"
 	Write-Verbose "$(Get-Date): `t`tConfiguration database"
 	$ConfigSQLServerPrincipalName = ""
 	$ConfigSQLServerMirrorName = ""
 	$ConfigDatabaseName = ""
+	[string]$ConfigDBSize = "Unable to determine"
 	$ConfigDB = Get-ConfigDBConnection @XDParams1
 
 	If($? -and ($Null -ne $ConfigDB))
@@ -26417,13 +26422,17 @@ Function OutputDatastores
 			$Pair = $csitem.split('=').trimstart()
 			Switch ($Pair[0])
 			{
-				"Server"					{$ConfigSQLServerPrincipalName = $Pair[1]}
-				"Failover Partner"			{$ConfigSQLServerMirrorName = $Pair[1]}
-				"MultiSubnetFailover"		{$ConfigSQLServerMirrorName = ""}
-				"Database"					{$ConfigDatabaseName = $Pair[1]}
-				{$Pair[0] -match "Initial"}	{$ConfigDatabaseName = $Pair[1]}
+				"Server"					{$ConfigSQLServerPrincipalName = $Pair[1]; Break}
+				"Failover Partner"			{$ConfigSQLServerMirrorName = $Pair[1]; Break}
+				"MultiSubnetFailover"		{$ConfigSQLServerMirrorName = ""; Break}
+				"Database"					{$ConfigDatabaseName = $Pair[1]; Break}
+				"Initial Catalog"			{$ConfigDatabaseName = $Pair[1]; Break}
 			}
 		}
+		$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerPrincipalName)")
+		$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+		$db = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
+		$ConfigDBSize = "{0:F2} MB" -f $db.size
 	}
 	Else
 	{
@@ -26434,6 +26443,7 @@ Function OutputDatastores
 	$LogSQLServerPrincipalName = ""
 	$LogSQLServerMirrorName = ""
 	$LogDatabaseName = ""
+	[string]$LogDBSize = "Unable to determine"
 	$LogDBs = Get-LogDataStore @XDParams1
 
 	If($? -and ($Null -ne $LogDBs))
@@ -26449,15 +26459,19 @@ Function OutputDatastores
 					$Pair = $csitem.split('=').trimstart()
 					Switch ($Pair[0])
 					{
-						"Server"					{$LogSQLServerPrincipalName = $Pair[1]}
-						"Failover Partner"			{$LogSQLServerMirrorName = $Pair[1]}
-						"MultiSubnetFailover"		{$LogSQLServerMirrorName = ""}
-						"Database"					{$LogDatabaseName = $Pair[1]}
-						{$Pair[0] -match "Initial"}	{$LogDatabaseName = $Pair[1]}
+						"Server"					{$LogSQLServerPrincipalName = $Pair[1]; Break}
+						"Failover Partner"			{$LogSQLServerMirrorName = $Pair[1]; Break}
+						"MultiSubnetFailover"		{$LogSQLServerMirrorName = ""; Break}
+						"Database"					{$LogDatabaseName = $Pair[1]; Break}
+						"Initial Catalog"			{$LogDatabaseName = $Pair[1]; Break}
 					}
 				}
 			}
 		}
+		$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
+		$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+		$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
+		$LogDBSize = "{0:F2} MB" -f $db.size
 	}
 	Else
 	{
@@ -26468,6 +26482,7 @@ Function OutputDatastores
 	$MonitorSQLServerPrincipalName = ""
 	$MonitorSQLServerMirrorName = ""
 	$MonitorDatabaseName = ""
+	[string]$MonitorDBSize = "Unable to determine"
 	$MonitorCollectHotfix = "Disabled"
 	$MonitorDataCollection = "Disabled"
 	$MonitorDetailedSQL = "Disabled"
@@ -26487,15 +26502,19 @@ Function OutputDatastores
 					$Pair = $csitem.split('=').trimstart()
 					Switch ($Pair[0])
 					{
-						"Server"					{$MonitorSQLServerPrincipalName = $Pair[1]}
-						"Failover Partner"			{$MonitorSQLServerMirrorName = $Pair[1]}
-						"MultiSubnetFailover"		{$MonitorSQLServerMirrorName = ""}
-						"Database"					{$MonitorDatabaseName = $Pair[1]}
-						{$Pair[0] -match "Initial"}	{$MonitorDatabaseName = $Pair[1]}
+						"Server"					{$MonitorSQLServerPrincipalName = $Pair[1]; Break}
+						"Failover Partner"			{$MonitorSQLServerMirrorName = $Pair[1]; Break}
+						"MultiSubnetFailover"		{$MonitorSQLServerMirrorName = ""; Break}
+						"Database"					{$MonitorDatabaseName = $Pair[1]; Break}
+						"Initial Catalog"			{$MonitorDatabaseName = $Pair[1]; Break}
 					}
 				}
 			}
 		}
+		$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerPrincipalName)")
+		$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+		$db = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
+		$MonitorDBSize = "{0:F2} MB" -f $db.size
 		
 		$MonitorConfig = $Null
 		$MonitorConfig = Get-MonitorConfiguration @XDParams1
@@ -26545,6 +26564,7 @@ Function OutputDatastores
 		DatabaseName = $ConfigDatabaseName;
 		ServerAddress = $ConfigSQLServerPrincipalName;
 		MirrorServerAddress = $ConfigSQLServerMirrorName;
+		DBSize = $ConfigDBSize;
 		}
 		$DBsWordTable += $WordTableRowHash;
 
@@ -26553,6 +26573,7 @@ Function OutputDatastores
 		DatabaseName = $LogDatabaseName;
 		ServerAddress = $LogSQLServerPrincipalName;
 		MirrorServerAddress = $LogSQLServerMirrorName;
+		DBSize = $LogDBSize;
 		}
 		$DBsWordTable += $WordTableRowHash;
 
@@ -26561,12 +26582,13 @@ Function OutputDatastores
 		DatabaseName = $MonitorDatabaseName;
 		ServerAddress = $MonitorSQLServerPrincipalName;
 		MirrorServerAddress = $MonitorSQLServerMirrorName;
+		DBSize = $MonitorDBSize;
 		}
 		$DBsWordTable += $WordTableRowHash;
 
 		$Table = AddWordTable -Hashtable $DBsWordTable `
-		-Columns DataStore, DatabaseName, ServerAddress, MirrorServerAddress `
-		-Headers "Datastore", "Database Name", "Server Address", "Mirror Server Address" `
+		-Columns DataStore, DatabaseName, ServerAddress, MirrorServerAddress, DBSize `
+		-Headers "Datastore", "Database Name", "Server Address", "Mirror Server Address", "Database Size" `
 		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitContent;
 
@@ -26635,16 +26657,19 @@ Function OutputDatastores
 		Line 1 "Database Name`t`t: " $ConfigDatabaseName
 		Line 1 "Server Address`t`t: " $ConfigSQLServerPrincipalName
 		Line 1 "Mirror Server Address`t: " $ConfigSQLServerMirrorName
+		Line 1 "Database Size`t`t: " $ConfigDBSize
 		Line 0 ""
 		Line 1 "Datastore`t`t: Logging"
 		Line 1 "Database Name`t`t: " $LogDatabaseName
 		Line 1 "Server Address`t`t: " $LogSQLServerPrincipalName
 		Line 1 "Mirror Server Address`t: " $LogSQLServerMirrorName
+		Line 1 "Database Size`t`t: " $LogDBSize
 		Line 0 ""
 		Line 1 "Datastore`t`t: Monitoring"
 		Line 1 "Database Name`t`t: " $MonitorDatabaseName
 		Line 1 "Server Address`t`t: " $MonitorSQLServerPrincipalName
 		Line 1 "Mirror Server Address`t: " $MonitorSQLServerMirrorName
+		Line 1 "Database Size`t`t: " $MonitorDBSize
 		Line 0 ""
 		Line 1 "Monitoring Database Details"
 		Line 1 "Collect Hotfix Data`t`t: " $MonitorCollectHotfix
@@ -26674,25 +26699,29 @@ Function OutputDatastores
 		'Site',$htmlwhite,
 		$ConfigDatabaseName,$htmlwhite,
 		$ConfigSQLServerPrincipalName,$htmlwhite,
-		$ConfigSQLServerMirrorName,$htmlwhite))
+		$ConfigSQLServerMirrorName,$htmlwhite,
+		$ConfigDBSize))
 
 		$rowdata += @(,(
 		'Logging',$htmlwhite,
 		$LogDatabaseName,$htmlwhite,
 		$LogSQLServerPrincipalName,$htmlwhite,
-		$LogSQLServerMirrorName,$htmlwhite))
+		$LogSQLServerMirrorName,$htmlwhite,
+		$LogDBSize))
 
 		$rowdata += @(,(
 		'Monitoring',$htmlwhite,
 		$MonitorDatabaseName,$htmlwhite,
 		$MonitorSQLServerPrincipalName,$htmlwhite,
-		$MonitorSQLServerMirrorName,$htmlwhite))
+		$MonitorSQLServerMirrorName,$htmlwhite,
+		$MonitorDBSize))
 
 		$columnHeaders = @(
 		'Datastore',($htmlsilver -bor $htmlbold),
 		'Database Name',($htmlsilver -bor $htmlbold),
 		'Server Address',($htmlsilver -bor $htmlbold),
-		'Mirror Server Address',($htmlsilver -bor $htmlbold))
+		'Mirror Server Address',($htmlsilver -bor $htmlbold),
+		'Database Size',($htmlsilver -bor $htmlbold))
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -31221,7 +31250,7 @@ Function ProcessScriptEnd
 			Out-File -FilePath $SIFile -Append -InputObject "   End Date        : $($EndDate)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "MachineCatalogs    : $($MachineCatalogs)" 4>$Null
-		Out-File -FilePath $SIFile -Append -InputObject "MaxDetail          : $($MaxDetail)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "MaxDetails         : $($MaxDetails)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "NoADPolicies       : $($NoADPolicies)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "NoPolicies         : $($NoPolicies)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Policies           : $($Policies)" 4>$Null

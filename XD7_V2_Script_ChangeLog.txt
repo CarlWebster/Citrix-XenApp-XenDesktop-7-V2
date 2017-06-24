@@ -18,6 +18,7 @@
 #		There are 315 registry keys and values that are checked and listed
 #		Updated Function OutputControllers
 #	Added Controller version information to the Controllers section
+#	Added "Database Size" to the Datastores output
 #	Added folder name to Function OutputApplication (Thanks to Brandon Mitchell)
 #	Added four new Cover Page properties
 #		Company Address
@@ -58,9 +59,10 @@
 #	Removed code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
 #	Reordered the parameters in the help text and parameter list so they match and are grouped better
 #	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Updated Function ProcessScriptEnd for the new Cover Page properties
-#	Updated Function ShowScriptOptions for the new Cover Page properties
-#	Updated Function UpdateDocumentProperties for the new Cover Page properties
+#	Updated Function OutputDatastores to add database size
+#	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
+#	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
+#	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
 #	Updated help text
 #	When -NoPolicies is specified, the Citrix.GroupPolicy.Commands module is no longer searched for
 
