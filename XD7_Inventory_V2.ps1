@@ -31157,10 +31157,10 @@ Function ProcessScriptSetup
 	Write-Verbose "$(Get-Date): Major version $($MajorVersion)"
 	Write-Verbose "$(Get-Date): Minor version $($MinorVersion)"
 
-	#first check to make sure this is a Site between 7.0 and 7.7
+	#first check to make sure this is a 7.x Site
 	If($MajorVersion -eq 7)
 	{
-		#this is a XenDesktop 7.x Site, now test to make sure it is less than 7.8
+		#this is a XenDesktop 7.x Site, now test to see if it is less than 7.8
 		If($MinorVersion -lt 8)
 		{
 			Write-Warning "You are running version $($value)"
@@ -31172,6 +31172,8 @@ Function ProcessScriptSetup
 	ElseIf($MajorVersion -eq 0 -and $MinorVersion -eq 0)
 	{
 		#something is wrong, we shouldn't be here
+		Write-Verbose "$(Get-Date): Something bad happened. We shouldn't be here. Could not find the version information.`n`nScript cannot continue`n"
+		AbortScript
 	}
 	Else
 	{
@@ -31205,7 +31207,7 @@ Function ProcessScriptSetup
 	Write-Verbose "$(Get-Date): Initial Site data has been gathered"
 	
 	#added 25-Jun-2017 with a lot of help from Michael B. Smith
-	#make sure the SQL Server assemble is loaded, if not, later on don't bother calculating the various database sizes
+	#make sure the SQL Server assembly is loaded, if not, later on don't bother calculating the various database sizes
 	Write-Verbose "$(Get-Date): Loading SQL Server Assembly"
 	[bool]$Script:SQLServerLoaded = $False
 	
@@ -31219,24 +31221,6 @@ Function ProcessScriptSetup
 	{
 		Write-Verbose "$(Get-Date): `tSQL Server Assembly successefully loaded"
 		$Script:SQLServerLoaded = $True
-		$version = ( $asm.FullName.Split( ',' ).Trim() )[1]
-		$verNum = $version.SubString( $version.IndexOf( '=' ) + 1 )
-		$objVer = $verNum –as [Version]
-		$Major = $objVer.Major
-		$Minor = $objVer.Minor
-		$SQLVer = ""
-		Switch ($Major)
-		{
-			8						{$SQLVer = "SQL Server 2000"; Break}
-			9						{$SQLVer = "SQL Server 2005"; Break}
-			{10 -and $Minor -eq 0}	{$SQLVer = "SQL Server 2008"}
-			{10 -and $Minor -eq 5}	{$SQLVer = "SQL Server 2008 R2"}
-			11						{$SQLVer = "SQL Server 2012"; Break}
-			12						{$SQLVer = "SQL Server 2014"; Break}
-			13						{$SQLVer = "SQL Server 2016"; Break}
-			Default					{$SQLVer = "Unable to determine SQL Server version"; Break}
-		}
-		Write-Verbose "$(Get-Date): `t`tRunning SQL Server version $($Major).$($Minor) $($SQLVer)"
 	}
 }
 #endregion
