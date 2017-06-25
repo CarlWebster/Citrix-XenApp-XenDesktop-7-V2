@@ -936,7 +936,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.05
 	AUTHOR: Carl Webster
-	LASTEDIT: June 24, 2017
+	LASTEDIT: June 25, 2017
 #>
 
 #endregion
@@ -1150,6 +1150,7 @@ Param(
 #		Company Email
 #		Company Fax
 #		Company Phone
+#	Added loading the SQL Server assembly so the database size calculations work consistently (thanks to Michael B. Smith)
 #	Added missing function validObject
 #	Added new parameter MaxDetails:
 #		This is the same as using the following parameters:
@@ -1180,17 +1181,21 @@ Param(
 #	Fixed function OutputPolicySetting
 #	Fixed functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
 #	Fixed numerous issues in the Policies section
+#	Fixed the "CPU Usage", "Disk Usage", and "Memory Usage" policy settings
+#		When those settings are Disabled, they are stored as Enabled with a Value of -1
 #	Fixed two calls to Get-BrokerApplication that were retrieving the default of 250 records (Thanks to Brandon Mitchell)
 #	Removed code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
 #	Reordered the parameters in the help text and parameter list so they match and are grouped better
 #	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Updated Function OutputDatastores to add database size
+#	Updated Function OutputDatastores to:
+#		Add database size
+#		Fix output for mirrored databases
+#		Check if SQL Server assembly is loaded before calculating database size
 #	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
 #	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
 #	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
 #	Updated help text
 #	When -NoPolicies is specified, the Citrix.GroupPolicy.Commands module is no longer searched for
-#	
 
 #Version 2.04 6-Mar-2017
 #	Fixed wording of more policy names that changed from 7.13 prerelease to RTM
@@ -20212,50 +20217,41 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting CPUUsage State ) -and ($Setting.CPUUsage.State -ne "NotConfigured"))
 					{
 						$txt = "Load Management\CPU usage"
+						$tmp = ""
+						If($Setting.CPUUsage.State -eq "Enabled")
+						{
+							If($Setting.CPUUsage.Value -eq -1)
+							{
+								$tmp = "Disabled"
+							}
+							Else
+							{
+								$tmp = "Report full load $($Setting.CPUUsage.Value)(%)"
+							}
+						}
+						Else
+						{
+							$tmp = "Disabled"
+						}
 						If($MSWord -or $PDF)
 						{
 							If($Setting.CPUUsage.State -eq "Enabled")
 							{
 								$WordTableRowHash = @{
 								Text = $txt;
-								Value = "Report full load $($Setting.CPUUsage.Value)(%)";
+								Value = $tmp;
 								}
-								$SettingsWordTable += $WordTableRowHash;
-							}
-							Else
-							{
-								$WordTableRowHash = @{
-								Text = $txt;
-								Value = $Setting.CPUUsage.State;
-								}
-								$SettingsWordTable += $WordTableRowHash;
 							}
 						}
 						ElseIf($HTML)
 						{
-							If($Setting.CPUUsage.State -eq "Enabled")
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								"Report full load $($Setting.CPUUsage.Value)(%)",$htmlwhite))
-							}
-							Else
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.CPUUsage.State,$htmlwhite))
-							}
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
 						}
 						ElseIf($Text)
 						{
-							If($Setting.CPUUsage.State -eq "Enabled")
-							{
-								OutputPolicySetting $txt $Setting.CPUUsage.State 
-							}
-							Else
-							{
-								OutputPolicySetting $txt "Report full load $($Setting.CPUUsage.Value)(%)" 
-							}
+							OutputPolicySetting $txt $tmp
 						}
 					}
 					If((validStateProp $Setting CPUUsageExcludedProcessPriority State ) -and ($Setting.CPUUsageExcludedProcessPriority.State -ne "NotConfigured"))
@@ -20317,7 +20313,14 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						If($Setting.DiskUsage.State -eq "Enabled")
 						{
-							$tmp = "Report 75% load (disk queue length): $($Setting.DiskUsage.Value)"
+							If($Setting.DiskUsage.Value -eq -1)
+							{
+								$tmp = "Disabled"
+							}
+							Else
+							{
+								$tmp = "Report 75% load (disk queue length): $($Setting.DiskUsage.Value)"
+							}
 						}
 						Else
 						{
@@ -20396,7 +20399,14 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						If($Setting.MemoryUsage.State -eq "Enabled")
 						{
-							$tmp = "Report full load (%): $($Setting.MemoryUsage.Value)"
+							If($Setting.MemoryUsage.Value -eq -1)
+							{
+								$tmp = "Disabled"
+							}
+							Else
+							{
+								$tmp = "Report full load (%): $($Setting.MemoryUsage.Value)"
+							}
 						}
 						Else
 						{
@@ -26022,6 +26032,7 @@ Function OutputConfigLogPreferences
 	$LogSQLServerPrincipalName = ""
 	$LogSQLServerMirrorName = ""
 	$LogDatabaseName = ""
+	[string]$dbsize = "Unable to determine database size"
 	$LogDBs = Get-LogDataStore @XDParams1
 
 	If($? -and ($Null -ne $LogDBs))
@@ -26054,10 +26065,13 @@ Function OutputConfigLogPreferences
 
 	#get database size
 	
-	$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
-	$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-	$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-	[string]$dbsize = "{0:F2} MB" -f $db.size
+	If($Script:SQLServerLoaded)
+	{
+		$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
+		$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+		$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
+		[string]$dbsize = "{0:F2} MB" -f $db.size
+	}
 	
 	If($Preferences.Enabled -eq "Enabled" -or $Preferences.Enabled -eq "Mandatory")
 	{
@@ -26405,6 +26419,7 @@ Function OutputDatastores
 	#only need what is between the = and ;
 	
 	#24-Jun-2017 add Database Size to the output
+	#25-Jun-2017 add checking if the SQL Server assembly loaded before calculating the database size
 	Write-Verbose "$(Get-Date): `tRetrieving database connection data"
 	Write-Verbose "$(Get-Date): `t`tConfiguration database"
 	$ConfigSQLServerPrincipalName = ""
@@ -26429,10 +26444,14 @@ Function OutputDatastores
 				"Initial Catalog"			{$ConfigDatabaseName = $Pair[1]; Break}
 			}
 		}
-		$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerPrincipalName)")
-		$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-		$db = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
-		$ConfigDBSize = "{0:F2} MB" -f $db.size
+
+		If($Script:SQLServerLoaded)
+		{
+			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerPrincipalName)")
+			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+			$db = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
+			$ConfigDBSize = "{0:F2} MB" -f $db.size
+		}
 	}
 	Else
 	{
@@ -26468,10 +26487,14 @@ Function OutputDatastores
 				}
 			}
 		}
-		$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
-		$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-		$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-		$LogDBSize = "{0:F2} MB" -f $db.size
+
+		If($Script:SQLServerLoaded)
+		{
+			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
+			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+			$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
+			$LogDBSize = "{0:F2} MB" -f $db.size
+		}
 	}
 	Else
 	{
@@ -26511,10 +26534,14 @@ Function OutputDatastores
 				}
 			}
 		}
-		$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerPrincipalName)")
-		$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-		$db = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
-		$MonitorDBSize = "{0:F2} MB" -f $db.size
+
+		If($Script:SQLServerLoaded)
+		{
+			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerPrincipalName)")
+			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+			$db = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
+			$MonitorDBSize = "{0:F2} MB" -f $db.size
+		}
 		
 		$MonitorConfig = $Null
 		$MonitorConfig = Get-MonitorConfiguration @XDParams1
@@ -31176,6 +31203,41 @@ Function ProcessScriptSetup
 		"All"			{[string]$Script:Title = "Inventory Report for the $($Script:XDSiteName) Site"; Break}
 	}
 	Write-Verbose "$(Get-Date): Initial Site data has been gathered"
+	
+	#added 25-Jun-2017 with a lot of help from Michael B. Smith
+	#make sure the SQL Server assemble is loaded, if not, later on don't bother calculating the various database sizes
+	Write-Verbose "$(Get-Date): Loading SQL Server Assembly"
+	[bool]$Script:SQLServerLoaded = $False
+	
+	$asm = [reflection.assembly]::loadwithpartialname('microsoft.sqlserver.smo')
+	If( $null –eq $asm )
+	{
+		Write-Verbose "$(Get-Date): `tSQL Server Assembly could not be loaded"
+		$Script:SQLServerLoaded = $False
+	}
+	Else
+	{
+		Write-Verbose "$(Get-Date): `tSQL Server Assembly successefully loaded"
+		$Script:SQLServerLoaded = $True
+		$version = ( $asm.FullName.Split( ',' ).Trim() )[1]
+		$verNum = $version.SubString( $version.IndexOf( '=' ) + 1 )
+		$objVer = $verNum –as [Version]
+		$Major = $objVer.Major
+		$Minor = $objVer.Minor
+		$SQLVer = ""
+		Switch ($Major)
+		{
+			8						{$SQLVer = "SQL Server 2000"; Break}
+			9						{$SQLVer = "SQL Server 2005"; Break}
+			{10 -and $Minor -eq 0}	{$SQLVer = "SQL Server 2008"}
+			{10 -and $Minor -eq 5}	{$SQLVer = "SQL Server 2008 R2"}
+			11						{$SQLVer = "SQL Server 2012"; Break}
+			12						{$SQLVer = "SQL Server 2014"; Break}
+			13						{$SQLVer = "SQL Server 2016"; Break}
+			Default					{$SQLVer = "Unable to determine SQL Server version"; Break}
+		}
+		Write-Verbose "$(Get-Date): `t`tRunning SQL Server version $($Major).$($Minor) $($SQLVer)"
+	}
 }
 #endregion
 
@@ -31402,4 +31464,4 @@ UpdateDocumentProperties $AbstractTitle $SubjectTitle
 ProcessDocumentOutput
 
 ProcessScriptEnd
-#endregionn
+#endregionnn

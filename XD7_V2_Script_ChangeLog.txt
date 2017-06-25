@@ -25,6 +25,7 @@
 #		Company Email
 #		Company Fax
 #		Company Phone
+#	Added loading the SQL Server assembly so the database size calculations work consistently (thanks to Michael B. Smith)
 #	Added missing function validObject
 #	Added new parameter MaxDetails:
 #		This is the same as using the following parameters:
@@ -55,11 +56,16 @@
 #	Fixed function OutputPolicySetting
 #	Fixed functions ProcessAppV and OutputAppv to handle multiple AppV servers (Thanks to Brandon Mitchell)
 #	Fixed numerous issues in the Policies section
+#	Fixed the "CPU Usage", "Disk Usage", and "Memory Usage" policy settings
+#		When those settings are Disabled, they are stored as Enabled with a Value of -1
 #	Fixed two calls to Get-BrokerApplication that were retrieving the default of 250 records (Thanks to Brandon Mitchell)
 #	Removed code (240 lines) that made sure all Parameters were set to default values if for some reason they did exist or values were $Null
 #	Reordered the parameters in the help text and parameter list so they match and are grouped better
 #	Replaced _SetDocumentProperty function with Jim Moyle's Set-DocumentProperty function
-#	Updated Function OutputDatastores to add database size
+#	Updated Function OutputDatastores to:
+#		Add database size
+#		Fix output for mirrored databases
+#		Check if SQL Server assembly is loaded before calculating database size
 #	Updated Function ProcessScriptEnd for the new Cover Page properties and Parameters
 #	Updated Function ShowScriptOptions for the new Cover Page properties and Parameters
 #	Updated Function UpdateDocumentProperties for the new Cover Page properties and Parameters
