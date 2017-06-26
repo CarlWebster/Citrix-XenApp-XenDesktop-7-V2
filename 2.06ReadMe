@@ -1,0 +1,6 @@
+#Version 2.06
+#
+#	Added three new properties from Get-MonitorConfiguration
+#		GroomMachineMetricDaySummaryDataRetentionDays
+#		GroomNotificationLogRetentionDays
+#		GroomResourceUsageDayDataRetentionDays

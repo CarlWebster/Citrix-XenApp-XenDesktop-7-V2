@@ -1263,6 +1263,13 @@ Param(
 #		Now display running version in error messages
 #	Updated version checking registry access to allow 32-bit PowerShell access to 64-bit registry
 #
+#Version 2.06
+#
+#	Added three new properties from Get-MonitorConfiguration
+#		GroomMachineMetricDaySummaryDataRetentionDays
+#		GroomNotificationLogRetentionDays
+#		GroomResourceUsageDayDataRetentionDays
+#
 #endregion
 
 #region initial variable testing and setup
@@ -26656,7 +26663,19 @@ Function OutputDatastores
 		$ScriptInformation += @{Data = "Failures"; Value = $MonitorConfig.GroomFailuresRetentionDays; }
 		$ScriptInformation += @{Data = "Load Indexes"; Value = $MonitorConfig.GroomLoadIndexesRetentionDays; }
 		$ScriptInformation += @{Data = "Machine Hotfix Log"; Value = $MonitorConfig.GroomMachineHotfixLogRetentionDays; }
+		If($MonitorConfig.ContainsKey("GroomMachineMetricDaySummaryDataRetentionDays"))
+		{
+			$ScriptInformation += @{Data = "Machine Metric"; Value = $MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays; }
+		}
 		$ScriptInformation += @{Data = "Minute"; Value = $MonitorConfig.GroomMinuteRetentionDays; }
+		If($MonitorConfig.ContainsKey("GroomNotificationLogRetentionDays"))
+		{
+			$ScriptInformation += @{Data = "Notification"; Value = $MonitorConfig.GroomNotificationLogRetentionDays; }
+		}
+		If($MonitorConfig.ContainsKey("GroomResourceUsageDayDataRetentionDays"))
+		{
+			$ScriptInformation += @{Data = "Resource Usage"; Value = $MonitorConfig.GroomResourceUsageDayDataRetentionDays; }
+		}
 		$ScriptInformation += @{Data = "Sessions"; Value = $MonitorConfig.GroomSessionsRetentionDays; }
 		$ScriptInformation += @{Data = "Summaries"; Value = $MonitorConfig.GroomSummariesRetentionDays; }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
@@ -26711,7 +26730,19 @@ Function OutputDatastores
 		Line 2 "Failures`t`t: " $MonitorConfig.GroomFailuresRetentionDays
 		Line 2 "Load Indexes`t`t: " $MonitorConfig.GroomLoadIndexesRetentionDays 
 		Line 2 "Machine Hotfix Log`t: " $MonitorConfig.GroomMachineHotfixLogRetentionDays
+		If($MonitorConfig.ContainsKey("GroomMachineMetricDaySummaryDataRetentionDays"))
+		{
+			Line 2 "Machine Metric`t`t: " $MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays
+		}
 		Line 2 "Minute`t`t`t: " $MonitorConfig.GroomMinuteRetentionDays
+		If($MonitorConfig.ContainsKey("GroomNotificationLogRetentionDays"))
+		{
+			Line 2 "Notification`t`t: " $MonitorConfig.GroomNotificationLogRetentionDays
+		}
+		If($MonitorConfig.ContainsKey("GroomResourceUsageDayDataRetentionDays"))
+		{
+			Line 2 "Resource Usage`t`t: " $MonitorConfig.GroomResourceUsageDayDataRetentionDays
+		}
 		Line 2 "Sessions`t`t: " $MonitorConfig.GroomSessionsRetentionDays
 		Line 2 "Summaries`t`t: " $MonitorConfig.GroomSummariesRetentionDays
 		Line 0 ""
@@ -26775,7 +26806,19 @@ Function OutputDatastores
 		$rowdata += @(,('Failures',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomFailuresRetentionDays,$htmlwhite))
 		$rowdata += @(,('Load Indexes',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomLoadIndexesRetentionDays,$htmlwhite))
 		$rowdata += @(,('Machine Hotfix Log',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMachineHotfixLogRetentionDays,$htmlwhite))
+		If($MonitorConfig.ContainsKey("GroomMachineMetricDaySummaryDataRetentionDays"))
+		{
+			$rowdata += @(,('Machine Metric',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays,$htmlwhite))
+		}
 		$rowdata += @(,('Minute',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMinuteRetentionDays,$htmlwhite))
+		If($MonitorConfig.ContainsKey("GroomNotificationLogRetentionDays"))
+		{
+			$rowdata += @(,('Notification',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomNotificationLogRetentionDays,$htmlwhite))
+		}
+		If($MonitorConfig.ContainsKey("GroomResourceUsageDayDataRetentionDays"))
+		{
+			$rowdata += @(,('Resource Usage',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomResourceUsageDayDataRetentionDays,$htmlwhite))
+		}
 		$rowdata += @(,('Sessions',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomSessionsRetentionDays,$htmlwhite))
 		$rowdata += @(,('Summaries',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomSummariesRetentionDays,$htmlwhite))
 

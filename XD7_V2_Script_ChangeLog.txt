@@ -3,6 +3,13 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.06
+#
+#	Added three new properties from Get-MonitorConfiguration
+#		GroomMachineMetricDaySummaryDataRetentionDays
+#		GroomNotificationLogRetentionDays
+#		GroomResourceUsageDayDataRetentionDays
+
 #Version 2.05
 #	Added additional error checking for Site version information
 #		If "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Citrix Desktop Delivery Controller" 
