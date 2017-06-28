@@ -1,6 +1,41 @@
 #Version 2.06
+#	Added all properties from Get-MonitorConfiguration to Datastore section
+#		For the Monitoring Database Details:
+#			CollectHotfixDataEnabled
+#			DataCollectionEnabled
+#			DetailedSqlOutputEnabled
+#			EnableDayLevelGranularityProcessUtilization
+#			EnableHourLevelGranularityProcessUtilization
+#			EnableMinLevelGranularityProcessUtilization
+#			FullPollStartHour
+#			MonitorQueryTimeoutSeconds
+#			ResolutionPollTimeHours
+#			SyncPollTimeHours
+#		For the Groom Retention Settings in Days:
+#			GroomApplicationErrorsRetentionDays
+#			GroomApplicationFaultsRetentionDays
+#			GroomApplicationInstanceRetentionDays
+#			GroomDeletedRetentionDays
+#			GroomFailuresRetentionDays
+#			GroomHourlyRetentionDays
+#			GroomLoadIndexesRetentionDays
+#			GroomMachineHotfixLogRetentionDays
+#			GroomMachineMetricDataRetentionDays
+#			GroomMachineMetricDaySummaryDataRetentionDays
+#			GroomMinuteRetentionDays
+#			GroomNotificationLogRetentionDays
+#			GroomProcessUsageDayDataRetentionDays
+#			GroomProcessUsageHourDataRetentionDays
+#			GroomProcessUsageMinuteDataRetentionDays
+#			GroomProcessUsageRawDataRetentionDays
+#			GroomResourceUsageDayDataRetentionDays
+#			GroomResourceUsageHourDataRetentionDays
+#			GroomResourceUsageMinuteDataRetentionDays
+#			GroomResourceUsageRawDataRetentionDays
+#			GroomSessionMetricsDataRetentionDays
+#			GroomSessionsRetentionDays
+#			GroomSummariesRetentionDays
+#	Added Read-Committed Snapshot and SQL Server version data to Datastore table
+#	Added verbiage "One or more databases report a Null size which means the database has failed over to the Mirror Server"
+#		if any of the databases are configured for mirroring and the database size is null
 #
-#	Added three new properties from Get-MonitorConfiguration
-#		GroomMachineMetricDaySummaryDataRetentionDays
-#		GroomNotificationLogRetentionDays
-#		GroomResourceUsageDayDataRetentionDays
