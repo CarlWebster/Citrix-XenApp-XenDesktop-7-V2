@@ -1,4 +1,4 @@
-#Version 2.06
+#Version 2.06 30-Jun-2017
 #	Added all properties from Get-MonitorConfiguration to Datastore section
 #		For the Monitoring Database Details:
 #			CollectHotfixDataEnabled
@@ -35,7 +35,9 @@
 #			GroomSessionMetricsDataRetentionDays
 #			GroomSessionsRetentionDays
 #			GroomSummariesRetentionDays
+#	Added Function GetSQLVersion
 #	Added Read-Committed Snapshot and SQL Server version data to Datastore table
-#	Added verbiage "One or more databases report a Null size which means the database has failed over to the Mirror Server"
-#		if any of the databases are configured for mirroring and the database size is null
-#
+#	If any of the databases are configured for mirroring and the database size is null,
+#		use the mirror server's name to calculate the size
+#		if the size is still null, report "Unable to determine"
+#	If SQL Server mirroring is not configured, in the Datastore table use "Not Configured" for the Mirror Server Address

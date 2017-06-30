@@ -936,7 +936,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.06
 	AUTHOR: Carl Webster
-	LASTEDIT: June 28, 2017
+	LASTEDIT: June 29, 2017
 #>
 
 #endregion
@@ -1128,7 +1128,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.06
+#Version 2.06 29-Jun-2017
 #	Added all properties from Get-MonitorConfiguration to Datastore section
 #		For the Monitoring Database Details:
 #			CollectHotfixDataEnabled
@@ -1165,9 +1165,11 @@ Param(
 #			GroomSessionMetricsDataRetentionDays
 #			GroomSessionsRetentionDays
 #			GroomSummariesRetentionDays
+#	Added Function GetSQLVersion
 #	Added Read-Committed Snapshot and SQL Server version data to Datastore table
 #	Added verbiage "One or more databases report a Null size which means the database has failed over to the Mirror Server"
 #		if any of the databases are configured for mirroring and the database size is null
+#	If SQL Server mirroring is not configured, in the Datastore table use "Not Configured" for the Mirror Server Address
 #
 #Version 2.05 26-Jun-2017
 #	Added additional error checking for Site version information
@@ -26071,7 +26073,7 @@ Function OutputConfigLogPreferences
 	Write-Verbose "$(Get-Date): `t`tOutput Configuration Logging Preferences"
 	
 	$LogSQLServerPrincipalName = ""
-	$LogSQLServerMirrorName = ""
+	$LogSQLServerMirrorName = "Not Configured"
 	$LogDatabaseName = ""
 	[string]$dbsize = "Unable to determine database size"
 	$LogDBs = Get-LogDataStore @XDParams1
@@ -26111,7 +26113,21 @@ Function OutputConfigLogPreferences
 		$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
 		$db = New-Object Microsoft.SqlServer.Management.Smo.Database
 		$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-		[string]$dbsize = "{0:F2} MB" -f $db.size
+		[string]$dbsize = "Unable to determine" -f $db.size
+		If($Null -ne $db.size)
+		{
+			[string]$dbsize = "{0:F2} MB" -f $db.size
+		}
+		ElseIf($Null -eq $db.size -and $LogSQLServerMirrorName -ne "Not Configured")
+		{
+			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerMirrorName)")
+			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+			$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
+			If($Null -ne $db.size)
+			{
+				[string]$dbsize = "{0:F2} MB" -f $db.size
+			}
+		}
 	}
 	
 	If($Preferences.Enabled -eq "Enabled" -or $Preferences.Enabled -eq "Mandatory")
@@ -26524,8 +26540,22 @@ Function OutputDatastores
 			{
 				$ConfigDBReadCommittedSnapshot = "Disabled"
 			}
-			$ConfigDBSize = "{0:F2} MB" -f $db.size
 			$ConfigDBSQLVersion = GetSQLVersion $SQLsrv
+			[string]$Configdbsize = "Unable to determine" -f $db.size
+			If($Null -ne $db.size)
+			{
+				[string]$Configdbsize = "{0:F2} MB" -f $db.size
+			}
+			ElseIf($Null -eq $db.size -and $ConfigSQLServerMirrorName -ne "Not Configured")
+			{
+				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerMirrorName)")
+				$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+				$db = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
+				If($Null -ne $db.size)
+				{
+					[string]$Configdbsize = "{0:F2} MB" -f $db.size
+				}
+			}
 		}
 	}
 	Else
@@ -26578,8 +26608,22 @@ Function OutputDatastores
 			{
 				$LogDBReadCommittedSnapshot = "Disabled"
 			}
-			$LogDBSize = "{0:F2} MB" -f $db.size
 			$LogDBSQLVersion = GetSQLVersion $SQLsrv
+			[string]$Logdbsize = "Unable to determine" -f $db.size
+			If($Null -ne $db.size)
+			{
+				[string]$Logdbsize = "{0:F2} MB" -f $db.size
+			}
+			ElseIf($Null -eq $db.size -and $LogSQLServerMirrorName -ne "Not Configured")
+			{
+				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerMirrorName)")
+				$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+				$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
+				If($Null -ne $db.size)
+				{
+					[string]$Logdbsize = "{0:F2} MB" -f $db.size
+				}
+			}
 		}
 	}
 	Else
@@ -26636,8 +26680,22 @@ Function OutputDatastores
 			{
 				$MonitorDBReadCommittedSnapshot = "Disabled"
 			}
-			$MonitorDBSize = "{0:F2} MB" -f $db.size
 			$MonitorDBSQLVersion = GetSQLVersion $SQLsrv
+			[string]$Monitordbsize = "Unable to determine" -f $db.size
+			If($Null -ne $db.size)
+			{
+				[string]$Monitordbsize = "{0:F2} MB" -f $db.size
+			}
+			ElseIf($Null -eq $db.size -and $MonitorSQLServerMirrorName -ne "Not Configured")
+			{
+				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerMirrorName)")
+				$db = New-Object Microsoft.SqlServer.Management.Smo.Database
+				$db = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
+				If($Null -ne $db.size)
+				{
+					[string]$Monitordbsize = "{0:F2} MB" -f $db.size
+				}
+			}
 		}
 		
 		$MonitorConfig = $Null
@@ -26689,7 +26747,7 @@ Function OutputDatastores
 		ServerAddress = $ConfigSQLServerPrincipalName;
 		MirrorServerAddress = $ConfigSQLServerMirrorName;
 		DBSize = $ConfigDBSize;
-		ReadCommittedSnapshot = $ConfigDBReadCommittedSnapshop;
+		ReadCommittedSnapshot = $ConfigDBReadCommittedSnapshot;
 		SQLVersion = $ConfigDBSQLVersion;
 		}
 		$DBsWordTable += $WordTableRowHash;
@@ -26700,7 +26758,7 @@ Function OutputDatastores
 		ServerAddress = $LogSQLServerPrincipalName;
 		MirrorServerAddress = $LogSQLServerMirrorName;
 		DBSize = $LogDBSize;
-		ReadCommittedSnapshot = $LogDBReadCommittedSnapshop;
+		ReadCommittedSnapshot = $LogDBReadCommittedSnapshot;
 		SQLVersion = $LogDBSQLVersion;
 		}
 		$DBsWordTable += $WordTableRowHash;
@@ -26711,7 +26769,7 @@ Function OutputDatastores
 		ServerAddress = $MonitorSQLServerPrincipalName;
 		MirrorServerAddress = $MonitorSQLServerMirrorName;
 		DBSize = $MonitorDBSize;
-		ReadCommittedSnapshot = $MonitorDBReadCommittedSnapshop;
+		ReadCommittedSnapshot = $MonitorDBReadCommittedSnapshot;
 		SQLVersion = $MonitorDBSQLVersion;
 		}
 		$DBsWordTable += $WordTableRowHash;
@@ -26722,6 +26780,7 @@ Function OutputDatastores
 		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitContent;
 
+		SetWordCellFormat -Collection $Table -Size 9
 		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
@@ -26729,13 +26788,6 @@ Function OutputDatastores
 		FindWordDocumentEnd
 		$Table = $Null
 		
-		If(($ConfigSQLServerMirrorName -ne "Not Configured" -and $ConfigDBSize -eq " MB") -or 
-		($LogSQLServerMirrorName -ne "Not Configured" -and $LogDBSize -eq " MB") -or 
-		($MonitorSQLServerMirrorName -ne "Not Configured" -and $MonitorDBSize -eq " MB"))
-		{
-			WriteWordLine 0 0 "One or more databases report a Null size which means the database has failed over to the Mirror Server" "" $Null 8 $False $True
-		}
-
 		WriteWordLine 3 0 "Monitoring Database Details"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{Data = "Collect Hotfix Data"; Value = $MonitorCollectHotfix; }
@@ -26769,7 +26821,7 @@ Function OutputDatastores
 		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 		$Table.Columns.Item(1).Width = 200;
-		$Table.Columns.Item(2).Width = 200;
+		$Table.Columns.Item(2).Width = 50;
 
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -26855,7 +26907,7 @@ Function OutputDatastores
 		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 		$Table.Columns.Item(1).Width = 200;
-		$Table.Columns.Item(2).Width = 200;
+		$Table.Columns.Item(2).Width = 50;
 
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -26891,14 +26943,6 @@ Function OutputDatastores
 		Line 2 "Read-Committed Snapshot`t: " $MonitorDBReadCommittedSnapshot
 		Line 2 "SQL Server Version`t: " $MonitorDBSQLVersion
 		Line 0 ""
-
-		If(($ConfigSQLServerMirrorName -ne "Not Configured" -and $ConfigDBSize -eq " MB") -or 
-		($LogSQLServerMirrorName -ne "Not Configured" -and $LogDBSize -eq " MB") -or 
-		($MonitorSQLServerMirrorName -ne "Not Configured" -and $MonitorDBSize -eq " MB"))
-		{
-			Line 0 "One or more databases report a Null size which means the database has failed over to the Mirror Server"
-			Line 0 ""
-		}
 
 		Line 1 "Monitoring Database Details"
 		Line 2 "Collect Hotfix Data`t`t: " $MonitorCollectHotfix
@@ -27040,13 +27084,6 @@ Function OutputDatastores
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-
-		If(($ConfigSQLServerMirrorName -ne "Not Configured" -and $ConfigDBSize -eq " MB") -or 
-		($LogSQLServerMirrorName -ne "Not Configured" -and $LogDBSize -eq " MB") -or 
-		($MonitorSQLServerMirrorName -ne "Not Configured" -and $MonitorDBSize -eq " MB"))
-		{
-			WriteHTMLLine 0 0 "One or more databases report a Null size which means the database has failed over to the Mirror Server"
-		}
 		WriteHTMLLine 0 0 " "
 
 		WriteHTMLLine 3 0 "Monitoring Database Details"
