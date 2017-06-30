@@ -934,9 +934,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.06
+	VERSION: 2.05
 	AUTHOR: Carl Webster
-	LASTEDIT: June 29, 2017
+	LASTEDIT: June 25, 2017
 #>
 
 #endregion
@@ -1128,50 +1128,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.06 29-Jun-2017
-#	Added all properties from Get-MonitorConfiguration to Datastore section
-#		For the Monitoring Database Details:
-#			CollectHotfixDataEnabled
-#			DataCollectionEnabled
-#			DetailedSqlOutputEnabled
-#			EnableDayLevelGranularityProcessUtilization
-#			EnableHourLevelGranularityProcessUtilization
-#			EnableMinLevelGranularityProcessUtilization
-#			FullPollStartHour
-#			MonitorQueryTimeoutSeconds
-#			ResolutionPollTimeHours
-#			SyncPollTimeHours
-#		For the Groom Retention Settings in Days:
-#			GroomApplicationErrorsRetentionDays
-#			GroomApplicationFaultsRetentionDays
-#			GroomApplicationInstanceRetentionDays
-#			GroomDeletedRetentionDays
-#			GroomFailuresRetentionDays
-#			GroomHourlyRetentionDays
-#			GroomLoadIndexesRetentionDays
-#			GroomMachineHotfixLogRetentionDays
-#			GroomMachineMetricDataRetentionDays
-#			GroomMachineMetricDaySummaryDataRetentionDays
-#			GroomMinuteRetentionDays
-#			GroomNotificationLogRetentionDays
-#			GroomProcessUsageDayDataRetentionDays
-#			GroomProcessUsageHourDataRetentionDays
-#			GroomProcessUsageMinuteDataRetentionDays
-#			GroomProcessUsageRawDataRetentionDays
-#			GroomResourceUsageDayDataRetentionDays
-#			GroomResourceUsageHourDataRetentionDays
-#			GroomResourceUsageMinuteDataRetentionDays
-#			GroomResourceUsageRawDataRetentionDays
-#			GroomSessionMetricsDataRetentionDays
-#			GroomSessionsRetentionDays
-#			GroomSummariesRetentionDays
-#	Added Function GetSQLVersion
-#	Added Read-Committed Snapshot and SQL Server version data to Datastore table
-#	Added verbiage "One or more databases report a Null size which means the database has failed over to the Mirror Server"
-#		if any of the databases are configured for mirroring and the database size is null
-#	If SQL Server mirroring is not configured, in the Datastore table use "Not Configured" for the Mirror Server Address
-#
-#Version 2.05 26-Jun-2017
+#Version 2.05
 #	Added additional error checking for Site version information
 #		If "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Citrix Desktop Delivery Controller" 
 #		is not found on the computer running the script, then look on the computer specified for -AdminAddress
@@ -26073,7 +26030,7 @@ Function OutputConfigLogPreferences
 	Write-Verbose "$(Get-Date): `t`tOutput Configuration Logging Preferences"
 	
 	$LogSQLServerPrincipalName = ""
-	$LogSQLServerMirrorName = "Not Configured"
+	$LogSQLServerMirrorName = ""
 	$LogDatabaseName = ""
 	[string]$dbsize = "Unable to determine database size"
 	$LogDBs = Get-LogDataStore @XDParams1
@@ -26113,21 +26070,7 @@ Function OutputConfigLogPreferences
 		$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
 		$db = New-Object Microsoft.SqlServer.Management.Smo.Database
 		$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-		[string]$dbsize = "Unable to determine" -f $db.size
-		If($Null -ne $db.size)
-		{
-			[string]$dbsize = "{0:F2} MB" -f $db.size
-		}
-		ElseIf($Null -eq $db.size -and $LogSQLServerMirrorName -ne "Not Configured")
-		{
-			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerMirrorName)")
-			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-			$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-			If($Null -ne $db.size)
-			{
-				[string]$dbsize = "{0:F2} MB" -f $db.size
-			}
-		}
+		[string]$dbsize = "{0:F2} MB" -f $db.size
 	}
 	
 	If($Preferences.Enabled -eq "Enabled" -or $Preferences.Enabled -eq "Mandatory")
@@ -26468,29 +26411,6 @@ Function OutputCEIPSetting
 	}
 }
 
-Function GetSQLVersion
-{
-	Param([object]$SQLsrv)
-	
-	$Major = $SQLsrv.VersionMajor
-	$Minor = $SQLsrv.VersionMinor
-	$SQLVer = ""
-	$SQLEdition = $SQLsrv.EngineEdition
-	Switch ($Major)
-	{
-		8                          {$SQLVer = "SQL Server 2000"; Break}
-		9                          {$SQLVer = "SQL Server 2005"; Break}
-		{10 -and $Minor -eq 0}     {$SQLVer = "SQL Server 2008"} #can't do break here
-		{10 -and $Minor -eq 5}     {$SQLVer = "SQL Server 2008 R2"} #can't do break here
-		11                         {$SQLVer = "SQL Server 2012"; Break}
-		12                         {$SQLVer = "SQL Server 2014"; Break}
-		13                         {$SQLVer = "SQL Server 2016"; Break}
-		Default                    {$SQLVer = "Unable to determine SQL Server version"; Break}
-	}
-
-	Return $SQLVersion = "$($SQLVer) $($SQLEdition)"
-}
-
 Function OutputDatastores
 {
 	#2-Mar-2017 Fix bug reported by P. Ewing
@@ -26503,11 +26423,9 @@ Function OutputDatastores
 	Write-Verbose "$(Get-Date): `tRetrieving database connection data"
 	Write-Verbose "$(Get-Date): `t`tConfiguration database"
 	$ConfigSQLServerPrincipalName = ""
-	$ConfigSQLServerMirrorName = "Not Configured"
+	$ConfigSQLServerMirrorName = ""
 	$ConfigDatabaseName = ""
 	[string]$ConfigDBSize = "Unable to determine"
-	[string]$ConfigDBReadCommittedSnapshot = "Unable to determine"
-	[string]$ConfigDBSQLVersion = "Unable to determine"
 	$ConfigDB = Get-ConfigDBConnection @XDParams1
 
 	If($? -and ($Null -ne $ConfigDB))
@@ -26532,30 +26450,7 @@ Function OutputDatastores
 			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerPrincipalName)")
 			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
 			$db = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
-			If($db.IsReadCommittedSnapshotOn)
-			{
-				$ConfigDBReadCommittedSnapshot = "Enabled"
-			}
-			Else
-			{
-				$ConfigDBReadCommittedSnapshot = "Disabled"
-			}
-			$ConfigDBSQLVersion = GetSQLVersion $SQLsrv
-			[string]$Configdbsize = "Unable to determine" -f $db.size
-			If($Null -ne $db.size)
-			{
-				[string]$Configdbsize = "{0:F2} MB" -f $db.size
-			}
-			ElseIf($Null -eq $db.size -and $ConfigSQLServerMirrorName -ne "Not Configured")
-			{
-				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerMirrorName)")
-				$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-				$db = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
-				If($Null -ne $db.size)
-				{
-					[string]$Configdbsize = "{0:F2} MB" -f $db.size
-				}
-			}
+			$ConfigDBSize = "{0:F2} MB" -f $db.size
 		}
 	}
 	Else
@@ -26565,11 +26460,9 @@ Function OutputDatastores
 
 	Write-Verbose "$(Get-Date): `t`tConfiguration Logging database"
 	$LogSQLServerPrincipalName = ""
-	$LogSQLServerMirrorName = "Not Configured"
+	$LogSQLServerMirrorName = ""
 	$LogDatabaseName = ""
 	[string]$LogDBSize = "Unable to determine"
-	[string]$LogDBReadCommittedSnapshot = "Unable to determine"
-	[string]$LogDBSQLVersion = "Unable to determine"
 	$LogDBs = Get-LogDataStore @XDParams1
 
 	If($? -and ($Null -ne $LogDBs))
@@ -26600,30 +26493,7 @@ Function OutputDatastores
 			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
 			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
 			$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-			If($db.IsReadCommittedSnapshotOn)
-			{
-				$LogDBReadCommittedSnapshot = "Enabled"
-			}
-			Else
-			{
-				$LogDBReadCommittedSnapshot = "Disabled"
-			}
-			$LogDBSQLVersion = GetSQLVersion $SQLsrv
-			[string]$Logdbsize = "Unable to determine" -f $db.size
-			If($Null -ne $db.size)
-			{
-				[string]$Logdbsize = "{0:F2} MB" -f $db.size
-			}
-			ElseIf($Null -eq $db.size -and $LogSQLServerMirrorName -ne "Not Configured")
-			{
-				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerMirrorName)")
-				$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-				$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-				If($Null -ne $db.size)
-				{
-					[string]$Logdbsize = "{0:F2} MB" -f $db.size
-				}
-			}
+			$LogDBSize = "{0:F2} MB" -f $db.size
 		}
 	}
 	Else
@@ -26633,11 +26503,9 @@ Function OutputDatastores
 
 	Write-Verbose "$(Get-Date): `t`tMonitoring database"
 	$MonitorSQLServerPrincipalName = ""
-	$MonitorSQLServerMirrorName = "Not Configured"
+	$MonitorSQLServerMirrorName = ""
 	$MonitorDatabaseName = ""
 	[string]$MonitorDBSize = "Unable to determine"
-	[string]$MonitorDBReadCommittedSnapshot = "Unable to determine"
-	[string]$MonitorDBSQLVersion = "Unable to determine"
 	$MonitorCollectHotfix = "Disabled"
 	$MonitorDataCollection = "Disabled"
 	$MonitorDetailedSQL = "Disabled"
@@ -26672,30 +26540,7 @@ Function OutputDatastores
 			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerPrincipalName)")
 			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
 			$db = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
-			If($db.IsReadCommittedSnapshotOn)
-			{
-				$MonitorDBReadCommittedSnapshot = "Enabled"
-			}
-			Else
-			{
-				$MonitorDBReadCommittedSnapshot = "Disabled"
-			}
-			$MonitorDBSQLVersion = GetSQLVersion $SQLsrv
-			[string]$Monitordbsize = "Unable to determine" -f $db.size
-			If($Null -ne $db.size)
-			{
-				[string]$Monitordbsize = "{0:F2} MB" -f $db.size
-			}
-			ElseIf($Null -eq $db.size -and $MonitorSQLServerMirrorName -ne "Not Configured")
-			{
-				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerMirrorName)")
-				$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-				$db = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
-				If($Null -ne $db.size)
-				{
-					[string]$Monitordbsize = "{0:F2} MB" -f $db.size
-				}
-			}
+			$MonitorDBSize = "{0:F2} MB" -f $db.size
 		}
 		
 		$MonitorConfig = $Null
@@ -26747,8 +26592,6 @@ Function OutputDatastores
 		ServerAddress = $ConfigSQLServerPrincipalName;
 		MirrorServerAddress = $ConfigSQLServerMirrorName;
 		DBSize = $ConfigDBSize;
-		ReadCommittedSnapshot = $ConfigDBReadCommittedSnapshot;
-		SQLVersion = $ConfigDBSQLVersion;
 		}
 		$DBsWordTable += $WordTableRowHash;
 
@@ -26758,8 +26601,6 @@ Function OutputDatastores
 		ServerAddress = $LogSQLServerPrincipalName;
 		MirrorServerAddress = $LogSQLServerMirrorName;
 		DBSize = $LogDBSize;
-		ReadCommittedSnapshot = $LogDBReadCommittedSnapshot;
-		SQLVersion = $LogDBSQLVersion;
 		}
 		$DBsWordTable += $WordTableRowHash;
 
@@ -26769,47 +26610,28 @@ Function OutputDatastores
 		ServerAddress = $MonitorSQLServerPrincipalName;
 		MirrorServerAddress = $MonitorSQLServerMirrorName;
 		DBSize = $MonitorDBSize;
-		ReadCommittedSnapshot = $MonitorDBReadCommittedSnapshot;
-		SQLVersion = $MonitorDBSQLVersion;
 		}
 		$DBsWordTable += $WordTableRowHash;
 
 		$Table = AddWordTable -Hashtable $DBsWordTable `
-		-Columns DataStore, DatabaseName, ServerAddress, MirrorServerAddress, DBSize, ReadCommittedSnapshot, SQLVersion `
-		-Headers "Datastore", "Database Name", "Server Address", "Mirror Server Address", "Database Size", "Read-Committed Snapshot", "SQL Server Version" `
+		-Columns DataStore, DatabaseName, ServerAddress, MirrorServerAddress, DBSize `
+		-Headers "Datastore", "Database Name", "Server Address", "Mirror Server Address", "Database Size" `
 		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitContent;
 
-		SetWordCellFormat -Collection $Table -Size 9
 		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 		FindWordDocumentEnd
 		$Table = $Null
-		
+
 		WriteWordLine 3 0 "Monitoring Database Details"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{Data = "Collect Hotfix Data"; Value = $MonitorCollectHotfix; }
 		$ScriptInformation += @{Data = "Data Collection"; Value = $MonitorDataCollection; }
 		$ScriptInformation += @{Data = "Detail SQL Output"; Value = $MonitorDetailedSQL; }
-		If($MonitorConfig.ContainsKey("EnableDayLevelGranularityProcessUtilization"))
-		{
-			$ScriptInformation += @{Data = "Enable Day Level Granularity"; Value = $MonitorConfig.EnableDayLevelGranularityProcessUtilization; }
-		}
-		If($MonitorConfig.ContainsKey("EnableHourLevelGranularityProcessUtilization"))
-		{
-			$ScriptInformation += @{Data = "Enable Hour Level Granularity"; Value = $MonitorConfig.EnableHourLevelGranularityProcessUtilization; }
-		}
-		If($MonitorConfig.ContainsKey("EnableMinLevelGranularityProcessUtilization"))
-		{
-			$ScriptInformation += @{Data = "Enable Minute Level Granularity"; Value = $MonitorConfig.EnableMinLevelGranularityProcessUtilization; }
-		}
 		$ScriptInformation += @{Data = "Full Poll Start Hour"; Value = $MonitorConfig.FullPollStartHour; }
-		If($MonitorConfig.ContainsKey("MonitorQueryTimeoutSeconds"))
-		{
-			$ScriptInformation += @{Data = "Monitor Query Timeout Seconds"; Value = $MonitorConfig.MonitorQueryTimeoutSeconds; }
-		}
 		$ScriptInformation += @{Data = "Resolution Poll Time Hours"; Value = $MonitorConfig.FullPollStartHour; }
 		$ScriptInformation += @{Data = "Sync Poll Time Hours"; Value = $MonitorConfig.SyncPollTimeHours; }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
@@ -26820,8 +26642,8 @@ Function OutputDatastores
 
 		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Columns.Item(1).Width = 200;
-		$Table.Columns.Item(2).Width = 50;
+		$Table.Columns.Item(1).Width = 150;
+		$Table.Columns.Item(2).Width = 200;
 
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -26829,73 +26651,12 @@ Function OutputDatastores
 		$Table = $Null
 		WriteWordLine 3 0 "Groom Retention Settings in Days"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
-
-		If($MonitorConfig.ContainsKey("GroomApplicationErrorsRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Application Errors"; Value = $MonitorConfig.GroomApplicationErrorsRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomApplicationFaultsRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Application Faults"; Value = $MonitorConfig.GroomApplicationFaultsRetentionDays; }
-		}
 		$ScriptInformation += @{Data = "Application Instance"; Value = $MonitorConfig.GroomApplicationInstanceRetentionDays; }
 		$ScriptInformation += @{Data = "Deleted"; Value = $MonitorConfig.GroomDeletedRetentionDays; }
 		$ScriptInformation += @{Data = "Failures"; Value = $MonitorConfig.GroomFailuresRetentionDays; }
-		If($MonitorConfig.ContainsKey("GroomHourlyRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Hourly Retention"; Value = $MonitorConfig.GroomHourlyRetentionDays; }
-		}
 		$ScriptInformation += @{Data = "Load Indexes"; Value = $MonitorConfig.GroomLoadIndexesRetentionDays; }
 		$ScriptInformation += @{Data = "Machine Hotfix Log"; Value = $MonitorConfig.GroomMachineHotfixLogRetentionDays; }
-		If($MonitorConfig.ContainsKey("GroomMachineMetricDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Machine Metric Data"; Value = $MonitorConfig.GroomMachineMetricDataRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomMachineMetricDaySummaryDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Machine Metric Day Summary"; Value = $MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays; }
-		}
 		$ScriptInformation += @{Data = "Minute"; Value = $MonitorConfig.GroomMinuteRetentionDays; }
-		If($MonitorConfig.ContainsKey("GroomNotificationLogRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Notification"; Value = $MonitorConfig.GroomNotificationLogRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageDayDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Process Usage Day Data"; Value = $MonitorConfig.GroomProcessUsageDayDataRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageHourDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Process Usage Hour Data"; Value = $MonitorConfig.GroomProcessUsageHourDataRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageMinuteDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Process Usage Minute Data"; Value = $MonitorConfig.GroomProcessUsageMinuteDataRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageRawDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Process Usage Raw Data"; Value = $MonitorConfig.GroomProcessUsageRawDataRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageDayDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Resource Usage Day Data"; Value = $MonitorConfig.GroomResourceUsageDayDataRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageHourDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Resource Usage Hour Data"; Value = $MonitorConfig.GroomResourceUsageHourDataRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageMinuteDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Resource Usage Minute Data"; Value = $MonitorConfig.GroomResourceUsageMinuteDataRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageRawDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Resource Usage Raw Data"; Value = $MonitorConfig.GroomResourceUsageRawDataRetentionDays; }
-		}
-		If($MonitorConfig.ContainsKey("GroomSessionMetricsDataRetentionDays"))
-		{
-			$ScriptInformation += @{Data = "Session Metrics"; Value = $MonitorConfig.GroomSessionMetricsDataRetentionDays; }
-		}
 		$ScriptInformation += @{Data = "Sessions"; Value = $MonitorConfig.GroomSessionsRetentionDays; }
 		$ScriptInformation += @{Data = "Summaries"; Value = $MonitorConfig.GroomSummariesRetentionDays; }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
@@ -26906,8 +26667,8 @@ Function OutputDatastores
 
 		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Columns.Item(1).Width = 200;
-		$Table.Columns.Item(2).Width = 50;
+		$Table.Columns.Item(1).Width = 150;
+		$Table.Columns.Item(2).Width = 200;
 
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -26919,124 +26680,40 @@ Function OutputDatastores
 	{
 		Line 0 "Datastores"
 		Line 0 ""
-		Line 1 "Datastore: Site"
-		Line 2 "Database Name`t`t: " $ConfigDatabaseName
-		Line 2 "Server Address`t`t: " $ConfigSQLServerPrincipalName
-		Line 2 "Mirror Server Address`t: " $ConfigSQLServerMirrorName
-		Line 2 "Database Size`t`t: " $ConfigDBSize
-		Line 2 "Read-Committed Snapshot`t: " $ConfigDBReadCommittedSnapshot
-		Line 2 "SQL Server Version`t: " $ConfigDBSQLVersion
+		Line 1 "Datastore`t`t: Site"
+		Line 1 "Database Name`t`t: " $ConfigDatabaseName
+		Line 1 "Server Address`t`t: " $ConfigSQLServerPrincipalName
+		Line 1 "Mirror Server Address`t: " $ConfigSQLServerMirrorName
+		Line 1 "Database Size`t`t: " $ConfigDBSize
 		Line 0 ""
-		Line 1 "Datastore: Logging"
-		Line 2 "Database Name`t`t: " $LogDatabaseName
-		Line 2 "Server Address`t`t: " $LogSQLServerPrincipalName
-		Line 2 "Mirror Server Address`t: " $LogSQLServerMirrorName
-		Line 2 "Database Size`t`t: " $LogDBSize
-		Line 2 "Read-Committed Snapshot`t: " $LogDBReadCommittedSnapshot
-		Line 2 "SQL Server Version`t: " $LogDBSQLVersion
+		Line 1 "Datastore`t`t: Logging"
+		Line 1 "Database Name`t`t: " $LogDatabaseName
+		Line 1 "Server Address`t`t: " $LogSQLServerPrincipalName
+		Line 1 "Mirror Server Address`t: " $LogSQLServerMirrorName
+		Line 1 "Database Size`t`t: " $LogDBSize
 		Line 0 ""
-		Line 1 "Datastore: Monitoring"
-		Line 2 "Database Name`t`t: " $MonitorDatabaseName
-		Line 2 "Server Address`t`t: " $MonitorSQLServerPrincipalName
-		Line 2 "Mirror Server Address`t: " $MonitorSQLServerMirrorName
-		Line 2 "Database Size`t`t: " $MonitorDBSize
-		Line 2 "Read-Committed Snapshot`t: " $MonitorDBReadCommittedSnapshot
-		Line 2 "SQL Server Version`t: " $MonitorDBSQLVersion
+		Line 1 "Datastore`t`t: Monitoring"
+		Line 1 "Database Name`t`t: " $MonitorDatabaseName
+		Line 1 "Server Address`t`t: " $MonitorSQLServerPrincipalName
+		Line 1 "Mirror Server Address`t: " $MonitorSQLServerMirrorName
+		Line 1 "Database Size`t`t: " $MonitorDBSize
 		Line 0 ""
-
 		Line 1 "Monitoring Database Details"
-		Line 2 "Collect Hotfix Data`t`t: " $MonitorCollectHotfix
-		Line 2 "Data Collection`t`t`t: " $MonitorDataCollection
-		Line 2 "Detail SQL Output`t`t: " $MonitorDetailedSQL
-		If($MonitorConfig.ContainsKey("EnableDayLevelGranularityProcessUtilization"))
-		{
-			Line 2 "Enable Day Level Granularity`t: " $MonitorConfig.EnableDayLevelGranularityProcessUtilization
-		}
-		If($MonitorConfig.ContainsKey("EnableHourLevelGranularityProcessUtilization"))
-		{
-			Line 2 "Enable Hour Level Granularity`t: " $MonitorConfig.EnableHourLevelGranularityProcessUtilization
-		}
-		If($MonitorConfig.ContainsKey("EnableMinLevelGranularityProcessUtilization"))
-		{
-			Line 2 "Enable Minute Level Granularity`t: " $MonitorConfig.EnableMinLevelGranularityProcessUtilization
-		}
-		Line 2 "Full Poll Start Hour`t`t: " $MonitorConfig.FullPollStartHour
-		If($MonitorConfig.ContainsKey("MonitorQueryTimeoutSeconds"))
-		{
-			Line 2 "Monitor Query Timeout Seconds`t: " $MonitorConfig.MonitorQueryTimeoutSeconds
-		}
-		Line 2 "Resolution Poll Time Hours`t: " $MonitorConfig.FullPollStartHour
-		Line 2 "Sync Poll Time Hours`t`t: " $MonitorConfig.SyncPollTimeHours
-		Line 0 ""
+		Line 1 "Collect Hotfix Data`t`t: " $MonitorCollectHotfix
+		Line 1 "Data Collection`t`t`t: " $MonitorDataCollection
+		Line 1 "Detail SQL Output`t`t: " $MonitorDetailedSQL
+		Line 1 "Full Poll Start Hour`t`t: " $MonitorConfig.FullPollStartHour
+		Line 1 "Resolution Poll Time Hours`t: " $MonitorConfig.FullPollStartHour
+		Line 1 "Sync Poll Time Hours`t`t: " $MonitorConfig.SyncPollTimeHours
 		Line 1 "Groom Retention Settings in Days" 
-		If($MonitorConfig.ContainsKey("GroomApplicationErrorsRetentionDays"))
-		{
-			Line 2 "Application Errors`t`t: " $MonitorConfig.GroomApplicationErrorsRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomApplicationFaultsRetentionDays"))
-		{
-			Line 2 "Application Faults`t`t: " $MonitorConfig.GroomApplicationFaultsRetentionDays
-		}
-		Line 2 "Application Instance`t`t: " $MonitorConfig.GroomApplicationInstanceRetentionDays
-		Line 2 "Deleted`t`t`t`t: " $MonitorConfig.GroomDeletedRetentionDays
-		Line 2 "Failures`t`t`t: " $MonitorConfig.GroomFailuresRetentionDays
-		If($MonitorConfig.ContainsKey("GroomHourlyRetentionDays"))
-		{
-			Line 2 "Hourly Retention`t`t: " $MonitorConfig.GroomHourlyRetentionDays
-		}
-		Line 2 "Load Indexes`t`t`t: " $MonitorConfig.GroomLoadIndexesRetentionDays
-		Line 2 "Machine Hotfix Log`t`t: " $MonitorConfig.GroomMachineHotfixLogRetentionDays
-		If($MonitorConfig.ContainsKey("GroomMachineMetricDataRetentionDays"))
-		{
-			Line 2 "Machine Metric Data`t`t: " $MonitorConfig.GroomMachineMetricDataRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomMachineMetricDaySummaryDataRetentionDays"))
-		{
-			Line 2 "Machine Metric Day Summary`t: " $MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays
-		}
-		Line 2 "Minute`t`t`t`t: " $MonitorConfig.GroomMinuteRetentionDays
-		If($MonitorConfig.ContainsKey("GroomNotificationLogRetentionDays"))
-		{
-			Line 2 "Notification`t`t`t: " $MonitorConfig.GroomNotificationLogRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageDayDataRetentionDays"))
-		{
-			Line 2 "Process Usage Day Data`t`t: " $MonitorConfig.GroomProcessUsageDayDataRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageHourDataRetentionDays"))
-		{
-			Line 2 "Process Usage Hour Data`t`t: " $MonitorConfig.GroomProcessUsageHourDataRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageMinuteDataRetentionDays"))
-		{
-			Line 2 "Process Usage Minute Data`t: " $MonitorConfig.GroomProcessUsageMinuteDataRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageRawDataRetentionDays"))
-		{
-			Line 2 "Process Usage Raw Data`t`t: " $MonitorConfig.GroomProcessUsageRawDataRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageDayDataRetentionDays"))
-		{
-			Line 2 "Resource Usage Day Data`t`t: " $MonitorConfig.GroomResourceUsageDayDataRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageHourDataRetentionDays"))
-		{
-			Line 2 "Resource Usage Hour Data`t: " $MonitorConfig.GroomResourceUsageHourDataRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageMinuteDataRetentionDays"))
-		{
-			Line 2 "Resource Usage Minute Data`t: " $MonitorConfig.GroomResourceUsageMinuteDataRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageRawDataRetentionDays"))
-		{
-			Line 2 "Resource Usage Raw Data`t`t: " $MonitorConfig.GroomResourceUsageRawDataRetentionDays
-		}
-		If($MonitorConfig.ContainsKey("GroomSessionMetricsDataRetentionDays"))
-		{
-			Line 2 "Session Metrics`t`t`t: " $MonitorConfig.GroomSessionMetricsDataRetentionDays
-		}
-		Line 2 "Sessions`t`t`t: " $MonitorConfig.GroomSessionsRetentionDays
-		Line 2 "Summaries`t`t`t: " $MonitorConfig.GroomSummariesRetentionDays
+		Line 2 "Application Instance`t: " $MonitorConfig.GroomApplicationInstanceRetentionDays
+		Line 2 "Deleted`t`t`t: " $MonitorConfig.GroomDeletedRetentionDays
+		Line 2 "Failures`t`t: " $MonitorConfig.GroomFailuresRetentionDays
+		Line 2 "Load Indexes`t`t: " $MonitorConfig.GroomLoadIndexesRetentionDays 
+		Line 2 "Machine Hotfix Log`t: " $MonitorConfig.GroomMachineHotfixLogRetentionDays
+		Line 2 "Minute`t`t`t: " $MonitorConfig.GroomMinuteRetentionDays
+		Line 2 "Sessions`t`t: " $MonitorConfig.GroomSessionsRetentionDays
+		Line 2 "Summaries`t`t: " $MonitorConfig.GroomSummariesRetentionDays
 		Line 0 ""
 	}
 	ElseIf($HTML)
@@ -27050,37 +26727,28 @@ Function OutputDatastores
 		$ConfigDatabaseName,$htmlwhite,
 		$ConfigSQLServerPrincipalName,$htmlwhite,
 		$ConfigSQLServerMirrorName,$htmlwhite,
-		$ConfigDBSize,$htmlwhite,
-		$ConfigDBReadCommittedSnapshot,$htmlwhite,
-		$ConfigDBSQLVersion,$htmlwhite))
+		$ConfigDBSize))
 
 		$rowdata += @(,(
 		'Logging',$htmlwhite,
 		$LogDatabaseName,$htmlwhite,
 		$LogSQLServerPrincipalName,$htmlwhite,
 		$LogSQLServerMirrorName,$htmlwhite,
-		$LogDBSize,$htmlwhite,
-		$LogDBReadCommittedSnapshot,$htmlwhite,
-		$LogDBSQLVersion,$htmlwhite))
-		
+		$LogDBSize))
 
 		$rowdata += @(,(
 		'Monitoring',$htmlwhite,
 		$MonitorDatabaseName,$htmlwhite,
 		$MonitorSQLServerPrincipalName,$htmlwhite,
 		$MonitorSQLServerMirrorName,$htmlwhite,
-		$MonitorDBSize,$htmlwhite,
-		$MonitorDBReadCommittedSnapshot,$htmlwhite,
-		$MonitorDBSQLVersion,$htmlwhite))
+		$MonitorDBSize))
 
 		$columnHeaders = @(
 		'Datastore',($htmlsilver -bor $htmlbold),
 		'Database Name',($htmlsilver -bor $htmlbold),
 		'Server Address',($htmlsilver -bor $htmlbold),
 		'Mirror Server Address',($htmlsilver -bor $htmlbold),
-		'Database Size',($htmlsilver -bor $htmlbold),
-		'Read-Committed Snapshot',($htmlsilver -bor $htmlbold),
-		'SQL Server Version',($htmlsilver -bor $htmlbold))
+		'Database Size',($htmlsilver -bor $htmlbold))
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -27096,85 +26764,24 @@ Function OutputDatastores
 		$rowdata += @(,('Sync Poll Time Hours',($htmlsilver -bor $htmlbold),$MonitorConfig.SyncPollTimeHours,$htmlwhite))
 
 		$msg = ""
-		$columnWidths = @("200","50")
-		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "250"
+		$columnWidths = @("150","200")
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
 		WriteHTMLLine 0 0 " "
 		
 		WriteHTMLLine 3 0 "Groom Retention Settings in Days"
 		$rowdata = @()
-		$columnHeaders = @("",($htmlsilver -bor $htmlbold),"",$htmlwhite)
-		If($MonitorConfig.ContainsKey("GroomApplicationErrorsRetentionDays"))
-		{
-			$rowdata += @(,('Application Errors',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationErrorsRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomApplicationFaultsRetentionDays"))
-		{
-			$rowdata += @(,('Application Faults',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationFaultsRetentionDays,$htmlwhite))
-		}
-		$rowdata += @(,('Application Instance',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationInstanceRetentionDays,$htmlwhite))
+		$columnHeaders = @("Application Instance",($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationInstanceRetentionDays,$htmlwhite)
 		$rowdata += @(,('Deleted',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomDeletedRetentionDays,$htmlwhite))
 		$rowdata += @(,('Failures',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomFailuresRetentionDays,$htmlwhite))
-		If($MonitorConfig.ContainsKey("GroomHourlyRetentionDays"))
-		{
-			$rowdata += @(,('Hourly Retention',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomHourlyRetentionDays,$htmlwhite))
-		}
 		$rowdata += @(,('Load Indexes',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomLoadIndexesRetentionDays,$htmlwhite))
 		$rowdata += @(,('Machine Hotfix Log',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMachineHotfixLogRetentionDays,$htmlwhite))
-		If($MonitorConfig.ContainsKey("GroomMachineMetricDataRetentionDays"))
-		{
-			$rowdata += @(,('Machine Metric Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMachineMetricDataRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomMachineMetricDaySummaryDataRetentionDays"))
-		{
-			$rowdata += @(,('Machine Metric Day Summary',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays,$htmlwhite))
-		}
 		$rowdata += @(,('Minute',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMinuteRetentionDays,$htmlwhite))
-		If($MonitorConfig.ContainsKey("GroomNotificationLogRetentionDays"))
-		{
-			$rowdata += @(,('Notification',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomNotificationLogRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageDayDataRetentionDays"))
-		{
-			$rowdata += @(,('Process Usage Day Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomProcessUsageDayDataRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageHourDataRetentionDays"))
-		{
-			$rowdata += @(,('Process Usage Hour Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomProcessUsageHourDataRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageMinuteDataRetentionDays"))
-		{
-			$rowdata += @(,('Process Usage Minute Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomProcessUsageMinuteDataRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomProcessUsageRawDataRetentionDays"))
-		{
-			$rowdata += @(,('Process Usage Raw Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomProcessUsageRawDataRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageDayDataRetentionDays"))
-		{
-			$rowdata += @(,('Resource Usage Day Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomResourceUsageDayDataRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageHourDataRetentionDays"))
-		{
-			$rowdata += @(,('Resource Usage Hour Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomResourceUsageHourDataRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageMinuteDataRetentionDays"))
-		{
-			$rowdata += @(,('Resource Usage Minute Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomResourceUsageMinuteDataRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomResourceUsageRawDataRetentionDays"))
-		{
-			$rowdata += @(,('Resource Usage Raw Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomResourceUsageRawDataRetentionDays,$htmlwhite))
-		}
-		If($MonitorConfig.ContainsKey("GroomSessionMetricsDataRetentionDays"))
-		{
-			$rowdata += @(,('Session Metrics',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomSessionMetricsDataRetentionDays,$htmlwhite))
-		}
 		$rowdata += @(,('Sessions',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomSessionsRetentionDays,$htmlwhite))
 		$rowdata += @(,('Summaries',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomSummariesRetentionDays,$htmlwhite))
 
 		$msg = ""
-		$columnWidths = @("200","50")
-		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "250"
+		$columnWidths = @("150","200")
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
 		WriteHTMLLine 0 0 " "
 	}
 }

@@ -3,51 +3,7 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
-#Version 2.06 30-Jun-2017
-#	Added all properties from Get-MonitorConfiguration to Datastore section
-#		For the Monitoring Database Details:
-#			CollectHotfixDataEnabled
-#			DataCollectionEnabled
-#			DetailedSqlOutputEnabled
-#			EnableDayLevelGranularityProcessUtilization
-#			EnableHourLevelGranularityProcessUtilization
-#			EnableMinLevelGranularityProcessUtilization
-#			FullPollStartHour
-#			MonitorQueryTimeoutSeconds
-#			ResolutionPollTimeHours
-#			SyncPollTimeHours
-#		For the Groom Retention Settings in Days:
-#			GroomApplicationErrorsRetentionDays
-#			GroomApplicationFaultsRetentionDays
-#			GroomApplicationInstanceRetentionDays
-#			GroomDeletedRetentionDays
-#			GroomFailuresRetentionDays
-#			GroomHourlyRetentionDays
-#			GroomLoadIndexesRetentionDays
-#			GroomMachineHotfixLogRetentionDays
-#			GroomMachineMetricDataRetentionDays
-#			GroomMachineMetricDaySummaryDataRetentionDays
-#			GroomMinuteRetentionDays
-#			GroomNotificationLogRetentionDays
-#			GroomProcessUsageDayDataRetentionDays
-#			GroomProcessUsageHourDataRetentionDays
-#			GroomProcessUsageMinuteDataRetentionDays
-#			GroomProcessUsageRawDataRetentionDays
-#			GroomResourceUsageDayDataRetentionDays
-#			GroomResourceUsageHourDataRetentionDays
-#			GroomResourceUsageMinuteDataRetentionDays
-#			GroomResourceUsageRawDataRetentionDays
-#			GroomSessionMetricsDataRetentionDays
-#			GroomSessionsRetentionDays
-#			GroomSummariesRetentionDays
-#	Added Function GetSQLVersion
-#	Added Read-Committed Snapshot and SQL Server version data to Datastore table
-#	If any of the databases are configured for mirroring and the database size is null,
-#		use the mirror server's name to calculate the size
-#		if the size is still null, report "Unable to determine"
-#	If SQL Server mirroring is not configured, in the Datastore table use "Not Configured" for the Mirror Server Address
-
-#Version 2.05 26-Jun-2017
+#Version 2.05
 #	Added additional error checking for Site version information
 #		If "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Citrix Desktop Delivery Controller" 
 #		is not found on the computer running the script, then look on the computer specified for -AdminAddress
