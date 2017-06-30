@@ -1128,7 +1128,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.06 29-Jun-2017
+#Version 2.06 30-Jun-2017
 #	Added all properties from Get-MonitorConfiguration to Datastore section
 #		For the Monitoring Database Details:
 #			CollectHotfixDataEnabled
@@ -1167,8 +1167,9 @@ Param(
 #			GroomSummariesRetentionDays
 #	Added Function GetSQLVersion
 #	Added Read-Committed Snapshot and SQL Server version data to Datastore table
-#	Added verbiage "One or more databases report a Null size which means the database has failed over to the Mirror Server"
-#		if any of the databases are configured for mirroring and the database size is null
+#	If any of the databases are configured for mirroring and the database size is null,
+#		use the mirror server's name to calculate the size
+#		if the size is still null, report "Unable to determine"
 #	If SQL Server mirroring is not configured, in the Datastore table use "Not Configured" for the Mirror Server Address
 #
 #Version 2.05 26-Jun-2017
@@ -27091,7 +27092,23 @@ Function OutputDatastores
 		$columnHeaders = @("Collect Hotfix Data",($htmlsilver -bor $htmlbold),$MonitorCollectHotfix,$htmlwhite)
 		$rowdata += @(,('Data Collection',($htmlsilver -bor $htmlbold),$MonitorDataCollection,$htmlwhite))
 		$rowdata += @(,('Detail SQL Output',($htmlsilver -bor $htmlbold),$MonitorDetailedSQL,$htmlwhite))
+		If($MonitorConfig.ContainsKey("EnableDayLevelGranularityProcessUtilization"))
+		{
+			$rowdata += @(,('Enable Day Level Granularity',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+		}
+		If($MonitorConfig.ContainsKey("EnableHourLevelGranularityProcessUtilization"))
+		{
+			$rowdata += @(,('Enable Hour Level Granularity',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+		}
+		If($MonitorConfig.ContainsKey("EnableMinLevelGranularityProcessUtilization"))
+		{
+			$rowdata += @(,('Enable Minute Level Granularity',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+		}
 		$rowdata += @(,('Full Poll Start Hour',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+		If($MonitorConfig.ContainsKey("MonitorQueryTimeoutSeconds"))
+		{
+			$rowdata += @(,('Monitor Query Timeout Seconds',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+		}
 		$rowdata += @(,('Resolution Poll Time Hours',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
 		$rowdata += @(,('Sync Poll Time Hours',($htmlsilver -bor $htmlbold),$MonitorConfig.SyncPollTimeHours,$htmlwhite))
 
