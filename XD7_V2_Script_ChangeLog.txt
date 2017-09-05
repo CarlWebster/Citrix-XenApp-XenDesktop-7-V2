@@ -3,6 +3,11 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.07 5-Sep-2017
+#	Added the following new Computer policy setting:
+#		Logon Exclusion Check
+#	Tested with XenApp/XenDesktop 7.15
+
 #Version 2.06 30-Jun-2017
 #	Added all properties from Get-MonitorConfiguration to Datastore section
 #		For the Monitoring Database Details:

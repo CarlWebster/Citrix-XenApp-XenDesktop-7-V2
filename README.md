@@ -892,9 +892,9 @@ The help text explains all the parameters the script accepts.
 	
 	NOTES
 	        NAME: XD7_Inventory_V2.ps1
-	        VERSION: 2.06
+	        VERSION: 2.07
 	        AUTHOR: Carl Webster
-	        LASTEDIT: June 30, 2017
+	        LASTEDIT: September 5, 2017
 	
 	    -------------------------- EXAMPLE 1 --------------------------
 	
