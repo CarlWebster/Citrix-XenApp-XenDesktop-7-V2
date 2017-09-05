@@ -934,9 +934,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.06
+	VERSION: 2.07
 	AUTHOR: Carl Webster
-	LASTEDIT: June 29, 2017
+	LASTEDIT: September 5, 2017
 #>
 
 #endregion
@@ -1127,6 +1127,11 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.07 5-Sep-2017
+#	Added the following new Computer policy setting:
+#		Logon Exclusion Check
+#	Tested with XenApp/XenDesktop 7.15
 
 #Version 2.06 30-Jun-2017
 #	Added all properties from Get-MonitorConfiguration to Datastore section
@@ -21234,6 +21239,37 @@ Function ProcessCitrixPolicies
 					}
 
 					Write-Verbose "$(Get-Date): `t`t`tProfile Management\File system"
+					#added for version 7.15
+					If((validStateProp $Setting LogonExclusionCheck_Part State ) -and ($Setting.LogonExclusionCheck_Part.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\File system\Logon Exclusion Check"
+						$tmp = ""
+						Switch ($Setting.LogonExclusionCheck_Part.Value)
+						{
+							"Disable"	{$tmp = "Synchronize excluded files or folders"; Break}
+							"Ignore"	{$tmp = "Ignore excluded files or folders"; Break}
+							"Delete"	{$tmp = "Delete excluded files or folders"; Break}
+							Default		{$tmp = "Logon exclusion check could not be determined: $($Setting.LogonExclusionCheck_Part.Value)"; Break}
+						}
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $tmp;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp 
+						}
+					}
 					Write-Verbose "$(Get-Date): `t`t`tProfile Management\File system\Default Exclusions"
 					If((validStateProp $Setting DefaultExclusionListSyncDir State ) -and ($Setting.DefaultExclusionListSyncDir.State -ne "NotConfigured"))
 					{
