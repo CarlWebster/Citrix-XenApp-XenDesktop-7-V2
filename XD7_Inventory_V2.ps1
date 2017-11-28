@@ -76,7 +76,7 @@
 .PARAMETER AdminAddress
 	Specifies the address of a XenDesktop controller the PowerShell snapins will connect 
 	to. 
-	This can be provided as a host name or an IP address. 
+	This can be provided as a hostname or an IP address. 
 	This parameter defaults to LocalHost.
 	This parameter has an alias of AA.
 .PARAMETER CompanyAddress
@@ -120,7 +120,7 @@
 	on the computer running the script.
 	This parameter has an alias of CN.
 .PARAMETER CompanyPhone
-	Company Phone to use for the Cover Page, if the Cover Page has the Phone field.  
+	Company Phone to use for the Cover Page if the Cover Page has the Phone field.  
 	
 	The following Cover Pages have a Phone field:
 		Contrast (Word 2010)
@@ -177,7 +177,7 @@
 	This parameter has an alias of CP.
 	This parameter is only valid with the MSWORD and PDF output parameters.
 .PARAMETER UserName
-	User name to use for the Cover Page and Footer.
+	Username to use for the Cover Page and Footer.
 	The default value is contained in $env:username
 	This parameter has an alias of UN.
 	This parameter is only valid with the MSWORD and PDF output parameters.
@@ -249,9 +249,9 @@
 	This parameter is disabled by default.
 	This parameter has an alias of Log.
 .PARAMETER StartDate
-	Start date for the Configuration Logging report.
+	The start date for the Configuration Logging report.
 	
-	Format for date only is MM/DD/YYYY.
+	The format for date only is MM/DD/YYYY.
 	
 	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
 	The double quotes are needed.
@@ -259,9 +259,9 @@
 	The default is today's date minus seven days.
 	This parameter has an alias of SD.
 .PARAMETER EndDate
-	End date for the Configuration Logging report.
+	The end date for the Configuration Logging report.
 	
-	Format for date only is MM/DD/YYYY.
+	The format for date only is MM/DD/YYYY.
 	
 	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
 	The double quotes are needed.
@@ -308,7 +308,7 @@
 	Using the Policies parameter can cause the report to take a very long time 
 	to complete and can generate an extremely long report.
 	
-	There are three related parameters: Policies, NoPolicies and NoADPolicies.
+	There are three related parameters: Policies, NoPolicies, and NoADPolicies.
 	
 	Policies and NoPolicies are mutually exclusive and priority is given to NoPolicies.
 	
@@ -335,16 +335,16 @@
 	This parameter is disabled by default.
 	This parameter has an alias of SF.
 .PARAMETER AddDateTime
-	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2017 at 6PM is 2017-06-01_1800.
-	Output filename will be ReportName_2017-06-01_1800.docx (or .pdf).
+	Adds a date timestamp to the end of the file name.
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be ReportName_2018-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 	This parameter has an alias of ADT.
 .PARAMETER Folder
 	Specifies the optional output folder to save the output report. 
 .PARAMETER Hardware
-	Use WMI to gather hardware information on Computer System, Disks, Processor and 
+	Use WMI to gather hardware information on Computer System, Disks, Processor, and 
 	Network Interface Cards
 
 	This parameter may require the script be run from an elevated PowerShell session 
@@ -401,12 +401,12 @@
 	Outputs all errors to a text file at the end of the script.
 	
 	This is used when the script developer requests more troubleshooting data.
-	Text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
 .PARAMETER ScriptInfo
 	Outputs information about the script to a text file.
-	Text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
 	This parameter has an alias of SI.
@@ -608,11 +608,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2017
-	-EndDate 01/31/2017	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2018
+	-EndDate 01/31/2018	
 	
-	Creates a report with Configuration Logging details for the dates 01/01/2017 through 
-	01/31/2017.
+	Creates a report with Configuration Logging details for the dates 01/01/2018 through 
+	01/31/2018.
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
@@ -624,11 +624,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2017 10:00:00"
-	-EndDate "06/01/2017 14:00:00"	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2018 10:00:00"
+	-EndDate "06/01/2018 14:00:00"	
 	
 	Creates a report with Configuration Logging details for the time range 
-	06/01/2017 10:00:00AM through 06/01/2017 02:00:00PM.
+	06/01/2018 10:00:00AM through 06/01/2018 02:00:00PM.
 	
 	Narrowing the report down to seconds does not work. Seconds must be either 00 or 59.
 	
@@ -668,8 +668,8 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs -DeliveryGroups -Applications
-	-Policies -Hosting -StoreFront	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs -DeliveryGroups 
+	-Applications -Policies -Hosting -StoreFront	
 	
 	Creates a report with full details for all:
 		Machines in all Machine Catalogs
@@ -678,6 +678,7 @@
 		Policies
 		Hosts, Host Connections, and Resources
 		StoreFront
+		
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
@@ -696,6 +697,7 @@
 		Applications
 		Policies
 		Hosts, Host Connections, and Resources
+		
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
@@ -736,7 +738,7 @@
 		Dr. Watson for the User Name.
 		221B Baker Street, London, England for the Company Address.
 		+44 1753 276600 for the Company Fax.
-		+44 1753 276200 for the Compnay Phone.
+		+44 1753 276200 for the Company Phone.
 .EXAMPLE
 	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
 	-CoverPage Facet -UserName "Dr. Watson"
@@ -746,7 +748,7 @@
 		Sherlock Holmes Consulting for the Company Name.
 		Facet for the Cover Page format.
 		Dr. Watson for the User Name.
-		SuperSleuth@SherlockHolmes.com for the Compnay Email.
+		SuperSleuth@SherlockHolmes.com for the Company Email.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -AddDateTime
 	
@@ -761,9 +763,9 @@
 	Administrator for the User Name.
 
 	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2017 at 6PM is 2017-06-01_1800.
-	Output filename will be XD7SiteName_2017-06-01_1800.docx
+	Timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be XD7SiteName_2018-06-01_1800.docx
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF -AddDateTime
 	
@@ -778,9 +780,9 @@
 	Administrator for the User Name.
 
 	Adds a date time stamp to the end of the file name.
-	Time stamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2017 at 6PM is 2017-06-01_1800.
-	Output filename will be XD7SiteName_2017-06-01_1800.pdf
+	Timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be XD7SiteName_2018-06-01_1800.pdf
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hardware
 	
@@ -824,7 +826,7 @@
 	The script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
 	sending to ITGroup@domain.tld.
 	
-	Script will use the default SMTP port 25 and will not use SSL.
+	The script will use the default SMTP port 25 and will not use SSL.
 	
 	If the current user's credentials are not valid to send email, 
 	the user will be prompted to enter valid credentials.
@@ -934,9 +936,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.07
+	VERSION: 2.08
 	AUTHOR: Carl Webster
-	LASTEDIT: September 5, 2017
+	LASTEDIT: November 28, 2017
 #>
 
 #endregion
@@ -1127,6 +1129,20 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.08 28-Nov-2017
+#	Added the following new Computer policy setting:
+#		Browser Content Redirection
+#		Enable XenApp Optimization
+#		Path to XenApp optimization definitions
+#	Added the following new User policy settings:
+#		Browser Content Redirection ACL Configuration
+#		Browser Content Redirection Proxy Configuration
+#		Display lossless indicator
+#		Optimize for 3D graphics workload
+#		Tablet Mode Toggle
+#	Tested with XenApp/XenDesktop 7.16
+#	Update help text
 
 #Version 2.07 5-Sep-2017
 #	Added the following new Computer policy setting:
@@ -4241,13 +4257,6 @@ Function WriteHTMLLine
 		} 
 	}
 	
-	#added by webster 12-oct-2016
-	#if a heading, don't add the <br />
-	#If($HTMLStyle1 -eq "")
-	#{
-	#	$HTMLBody += "<br />"
-	#}
-
 	out-file -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null
 }
 #endregion
@@ -7758,7 +7767,8 @@ Function OutputMachineDetails
 	Else
 	{
 		$xSessionLaunchedViaHostName = $Machine.SessionLaunchedViaHostName
-	}
+	}G1
+	
 	
 	If($Null -eq $Machine.SessionLaunchedViaIP)
 	{
@@ -13047,7 +13057,7 @@ Function ProcessPolicies
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 1 0 $txt
-		WriteHTMLLine 0 0 $txt1
+		WriteHTMLLine 0 0 $txt1 "" "Calibri" 1
 		WriteHTMLLine 0 0 $txt2
 	}
 	Write-Verbose "$(Get-Date): Processing XenDesktop Policies"
@@ -16470,6 +16480,29 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.AllowVisuallyLosslessCompression.State 
 						}
 					}
+					If((validStateProp $Setting DisplayLosslessIndicator State ) -and ($Setting.DisplayLosslessIndicator.State -ne "NotConfigured"))
+					{
+						#new in 7.16
+						$txt = "ICA\Graphics\Display lossless indicator"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.DisplayLosslessIndicator.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.DisplayLosslessIndicator.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.DisplayLosslessIndicator.State 
+						}
+					}
 					If((validStateProp $Setting DisplayMemoryLimit State ) -and ($Setting.DisplayMemoryLimit.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Graphics\Display memory limit (KB)"
@@ -16642,6 +16675,29 @@ Function ProcessCitrixPolicies
 						{
 							OutputPolicySetting $txt $Setting.DisplayDegradeUserNotification.State 
 						}	
+					}
+					If((validStateProp $Setting OptimizeFor3dWorkload State ) -and ($Setting.OptimizeFor3dWorkload.State -ne "NotConfigured"))
+					{
+						#new in 7.16
+						$txt = "ICA\Graphics\Optimize for 3D graphics workload"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.OptimizeFor3dWorkload.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.OptimizeFor3dWorkload.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.OptimizeFor3dWorkload.State 
+						}
 					}
 					If((validStateProp $Setting QueueingAndTossing State ) -and ($Setting.QueueingAndTossing.State -ne "NotConfigured"))
 					{
@@ -17105,8 +17161,158 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.ComboboxRemoting.State 
 						}
 					}
+					If((validStateProp $Setting TabletModeToggle State ) -and ($Setting.TabletModeToggle.State -ne "NotConfigured"))
+					{
+						#new in 7.16
+						$txt = "ICA\Mobile Experience\Tablet Mode Toggle"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.TabletModeToggle.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.TabletModeToggle.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.TabletModeToggle.State 
+						}
+					}
 					
 					Write-Verbose "$(Get-Date): `t`t`tICA\Multimedia"
+					If((validStateProp $Setting WebBrowserRedirection State ) -and ($Setting.WebBrowserRedirection.State -ne "NotConfigured"))
+					{
+						#new in 7.16
+						$txt = "ICA\Multimedia\Browser Content Redirection"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WebBrowserRedirection.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WebBrowserRedirection.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WebBrowserRedirection.State
+						}
+					}
+					If((validStateProp $Setting BRUrlWhitelist State ) -and ($Setting.BRUrlWhitelist.State -ne "NotConfigured"))
+					{
+						#new in 7.16
+						$txt = "ICA\Multimedia\Browser Content Redirection ACL Configuration"
+						$array = $Setting.BRUrlWhitelist.Values.Split(';')
+						$tmp = $array[0]
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $tmp;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp 
+						}
+
+						$txt = ""
+						$cnt = -1
+						ForEach($element in $array)
+						{
+							$cnt++
+							
+							If($cnt -ne 0)
+							{
+								$tmp = "$($element) "
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = "";
+									Value = $tmp;
+									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									"",$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting "" $tmp
+								}
+							}
+						}
+						$array = $Null
+						$tmp = $Null
+					}
+					If((validStateProp $Setting WebBrowserRedirectionProxy State ) -and ($Setting.WebBrowserRedirectionProxy.State -ne "NotConfigured"))
+					{
+						#new in 7.16
+						$txt = "ICA\Multimedia\Browser Content Redirection Proxy Configuration"
+						If($Setting.WebBrowserRedirectionProxy.State -eq "Enabled")
+						{
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $Setting.WebBrowserRedirectionProxy.Value;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.WebBrowserRedirectionProxy.Value,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $Setting.WebBrowserRedirectionProxy.Value 
+							}
+						}
+						Else
+						{
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $Setting.WebBrowserRedirectionProxy.State;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.WebBrowserRedirectionProxy.State,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $Setting.WebBrowserRedirectionProxy.State 
+							}
+						}
+					}
 					If((validStateProp $Setting HTML5VideoRedirection State ) -and ($Setting.HTML5VideoRedirection.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Multimedia\HTML5 video redirection"
@@ -24721,6 +24927,77 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.PSPendingLockTimeout.Value 
+						}
+					}
+					Write-Verbose "$(Get-Date): `t`t`tProfile Management\XenApp Optimization settings"
+					If((validStateProp $Setting XenAppOptimizationEnable State ) -and ($Setting.XenAppOptimizationEnable.State -ne "NotConfigured"))
+					{
+						#new in 7.16
+						$txt = "Profile Management\XenApp Optimization settings\Enable XenApp Optimization"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.XenAppOptimizationEnable.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.XenAppOptimizationEnable.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.XenAppOptimizationEnable.State
+						}
+					}
+					If((validStateProp $Setting XenAppOptimizationDefinitionPathData State ) -and ($Setting.XenAppOptimizationDefinitionPathData.State -ne "NotConfigured"))
+					{
+						#new in 7.16
+						$txt = "Profile Management\XenApp Optimization settings\Path to XenApp optimization definitions:"
+						If($Setting.XenAppOptimizationDefinitionPathData.State -eq "Enabled")
+						{
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $Setting.XenAppOptimizationDefinitionPathData.Value;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.XenAppOptimizationDefinitionPathData.Value,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $Setting.XenAppOptimizationDefinitionPathData.Value 
+							}
+						}
+						Else
+						{
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $Setting.XenAppOptimizationDefinitionPathData.State;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.XenAppOptimizationDefinitionPathData.State,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $Setting.XenAppOptimizationDefinitionPathData.State 
+							}
 						}
 					}
 

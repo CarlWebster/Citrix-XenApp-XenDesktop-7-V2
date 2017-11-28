@@ -3,6 +3,20 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.08 28-Nov-2017
+#	Added the following new Computer policy setting:
+#		Browser Content Redirection
+#		Enable XenApp Optimization
+#		Path to XenApp optimization definitions
+#	Added the following new User policy settings:
+#		Browser Content Redirection ACL Configuration
+#		Browser Content Redirection Proxy Configuration
+#		Display lossless indicator
+#		Optimize for 3D graphics workload
+#		Tablet Mode Toggle
+#	Tested with XenApp/XenDesktop 7.16
+#	Update help text
+
 #Version 2.07 5-Sep-2017
 #	Added the following new Computer policy setting:
 #		Logon Exclusion Check
