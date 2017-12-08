@@ -3,6 +3,9 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.09 8-Dec-2017
+#	Updated Function WriteHTMLLine with fixes from the script template
+
 #Version 2.08 28-Nov-2017
 #	Added the following new Computer policy setting:
 #		Browser Content Redirection
