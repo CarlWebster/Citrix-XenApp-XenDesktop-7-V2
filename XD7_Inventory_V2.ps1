@@ -247,7 +247,6 @@
 	Give the Configuration Logging report with, by default, details for the previous 
 	seven days.
 	This parameter is disabled by default.
-	This parameter has an alias of Log.
 .PARAMETER StartDate
 	The start date for the Configuration Logging report.
 	
@@ -410,6 +409,8 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of SI.
+.PARAMETER Log
+	Generates a log file for the purpose of troubleshooting.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1
 	
@@ -936,9 +937,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.09
+	VERSION: 2.10
 	AUTHOR: Carl Webster
-	LASTEDIT: December 8, 2017
+	LASTEDIT: January 25, 2017
 #>
 
 #endregion
@@ -1047,7 +1048,6 @@ Param(
 	[Switch]$Hosting=$False,	
 	
 	[parameter(Mandatory=$False)] 
-	[Alias("Log")]
 	[Switch]$Logging=$False,	
 	
 	[parameter(Mandatory=$False)] 
@@ -1116,7 +1116,10 @@ Param(
 	
 	[parameter(Mandatory=$False)] 
 	[Alias("SI")]
-	[Switch]$ScriptInfo=$False
+	[Switch]$ScriptInfo=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[Switch]$Log=$False
 	
 	)
 #endregion
@@ -1130,6 +1133,12 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.10
+#	Added Log switch to create a transcript log
+#		Removed the Log Alias from the Logging parameter
+#	In the Summary page, Policies section, added a space before (AD Policies can contain multiple Citrix policies)
+#	Most of the calls to Get-Broker* were changed from @XDParams1 to @XDParams2 to add the MaxRecordCount switch
+# 
 #Version 2.09 8-Dec-2017
 #	Updated Function WriteHTMLLine with fixes from the script template
 #
@@ -1340,6 +1349,32 @@ Set-StrictMode -Version 2
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
+
+#V2.10 added
+$Script:ThisScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+If($PSBoundParameters.ContainsKey('Log')) 
+{
+    $Script:LogPath = "$Script:ThisScriptPath\XDV2DocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+    If((Test-Path $Script:LogPath) -eq $true) 
+	{
+        Write-Verbose "$(Get-Date): Transcript/Log $Script:LogPath already exists"
+        $Script:StartLog = $false
+    } 
+	Else 
+	{
+        try 
+		{
+            Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
+            Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
+            $Script:StartLog = $true
+        } 
+		catch 
+		{
+            Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
+            $Script:StartLog = $false
+        }
+    }
+}
 
 If($Dev)
 {
@@ -5540,6 +5575,7 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): From               : $($From)"
 	Write-Verbose "$(Get-Date): Hosting            : $($Hosting)"
 	Write-Verbose "$(Get-Date): HW Inventory       : $($Hardware)"
+	Write-Verbose "$(Get-Date): Log                : $($Log)"
 	Write-Verbose "$(Get-Date): Logging            : $($Logging)"
 	If($Logging)
 	{
@@ -6211,52 +6247,61 @@ Function OutputMachines
 				$NumberOfMachines = 1
 			}
 			
-			$MachineData = Get-ProvScheme -ProvisioningSchemeUid $Catalog.ProvisioningSchemeId @XDParams1
-			If($? -and $Null -ne $MachineData)
+			#V2.10 don't process Manually provisioned
+			#there is no $Catalog.ProvisioningSchemeId for manually provisioned catalogs
+			If($xProvisioningType -ne "Manual")
 			{
-				$tmp1 = $MachineData.MasterImageVM.Split("\")
-				$tmp2 = $tmp1[$tmp1.count -1]
-				$tmp3 = $tmp2.Split(".")
-				$xDiskImage = $tmp3[0]
+				$MachineData = Get-ProvScheme -ProvisioningSchemeUid $Catalog.ProvisioningSchemeId @XDParams1
+				If($? -and $Null -ne $MachineData)
+				{
+					$tmp1 = $MachineData.MasterImageVM.Split("\")
+					$tmp2 = $tmp1[$tmp1.count -1]
+					$tmp3 = $tmp2.Split(".")
+					$xDiskImage = $tmp3[0]
 
-				#28-sep-2016 add the VM the catalog is based on
-				$MasterVM = ""
-				ForEach($Item in $tmp1)
-				{
-					If($Item.EndsWith(".vm"))
+					#28-sep-2016 add the VM the catalog is based on
+					$MasterVM = ""
+					ForEach($Item in $tmp1)
 					{
-						$MasterVM = $Item
+						If($Item.EndsWith(".vm"))
+						{
+							$MasterVM = $Item
+						}
 					}
-				}
-				
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
-				{
-					$TempDiskCacheSize = $MachineData.WriteBackCacheDiskSize
-					$TempMemoryCacheSize = $MachineData.WriteBackCacheMemorySize
-				}
-				
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
-				{
-					If($MachineData.UseFullDiskCloneProvisioning -eq $True)
+					
+					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 					{
-						$VMCopyMode = "Full Copy"
+						$TempDiskCacheSize = $MachineData.WriteBackCacheDiskSize
+						$TempMemoryCacheSize = $MachineData.WriteBackCacheMemorySize
 					}
-					Else
+					
+					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 					{
-						$VMCopyMode = "Fast Clone"
+						If($MachineData.UseFullDiskCloneProvisioning -eq $True)
+						{
+							$VMCopyMode = "Full Copy"
+						}
+						Else
+						{
+							$VMCopyMode = "Fast Clone"
+						}
 					}
-				}
-				
-				If($xAllocationType -eq "Permanent" -and $xPersistType -eq "On personal vDisk" )
-				{
-					$xPvDDriveLetter = $MachineData.PersonalVDiskDriveLetter
-					$xPvDSize = $MachineData.PersonalVDiskDriveSize
-				}
+					
+					If($xAllocationType -eq "Permanent" -and $xPersistType -eq "On personal vDisk" )
+					{
+						$xPvDDriveLetter = $MachineData.PersonalVDiskDriveLetter
+						$xPvDSize = $MachineData.PersonalVDiskDriveSize
+					}
 
+				}
+				Else
+				{
+					$xDiskImage = "Unable to retrieve details"
+				}
 			}
 			Else
 			{
-				$xDiskImage = "Unable to retrieve details"
+				$xDiskImage = "No details for manually provisioned machines"
 			}
 		}
 		Else
@@ -7555,7 +7600,19 @@ Function OutputMachineDetails
 {
 	Param([object] $Machine)
 	
-	Write-Verbose "$(Get-Date): `t`tOutput Machine $($Machine.HostedMachineName)"
+	#V2.10 22-Jan-2018, if HostedMachineName is empty (like for RemotePC), use PublishedName if is it available
+	If([String]::IsNullOrEmpty($Machine.HostedMachineName) -and ![String]::IsNullOrEmpty($Machine.PublishedName))
+	{
+		Write-Verbose "$(Get-Date): `t`tOutput Machine $($Machine.PublishedName)"
+	}
+	ElseIf(![String]::IsNullOrEmpty($Machine.HostedMachineName))
+	{
+		Write-Verbose "$(Get-Date): `t`tOutput Machine $($Machine.HostedMachineName)"
+	}
+	Else
+	{
+		Write-Verbose "$(Get-Date): `t`tOutput Machine $($Machine.DNSName)"
+	}
 	
 	$xAssociatedUserFullNames = @()
 	ForEach($Value in $Machine.AssociatedUserFullNames)
@@ -9830,11 +9887,13 @@ Function OutputDeliveryGroupDetails
 	}
 	
 	#get a desktop in an associated delivery group to get the catalog
-	$Desktop = Get-BrokerDesktop @XDParams1 -DesktopGroupUid $Group.Uid -Property CatalogName
+	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	$Desktop = Get-BrokerDesktop @XDParams2 -DesktopGroupUid $Group.Uid -Property CatalogName
 	
 	If($? -and $Null -ne $Desktop)
 	{
-		$Catalog = Get-BrokerCatalog @XDParams1 -Name $Desktop[0].CatalogName
+		#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		$Catalog = Get-BrokerCatalog @XDParams2 -Name $Desktop[0].CatalogName
 		
 		If($? -and $Null -ne $Catalog)
 		{
@@ -9861,7 +9920,8 @@ Function OutputDeliveryGroupDetails
 
 	If($PwrMgmt2 -or $PwrMgmt3)
 	{
-		$PwrMgmts = Get-BrokerPowerTimeScheme @XDParams1 -DesktopGroupUid $Group.Uid 
+		#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		$PwrMgmts = Get-BrokerPowerTimeScheme @XDParams2 -DesktopGroupUid $Group.Uid 
 	}
 	
 	$xOffPeakBufferSizePercent = $Group.OffPeakBufferSizePercent
@@ -9954,7 +10014,8 @@ Function OutputDeliveryGroupDetails
 	}
 
 	$SFAnonymousUsers = $False
-	$Results = Get-BrokerAccessPolicyRule -DesktopGroupUid $Group.Uid @XDParams1
+	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	$Results = Get-BrokerAccessPolicyRule -DesktopGroupUid $Group.Uid @XDParams2
 	
 	If($? -and $Null -ne $Results)
 	{
@@ -10051,7 +10112,8 @@ Function OutputDeliveryGroupDetails
 		{
 			#static desktops have a maxdesktops count stored as a property
 			$xMaxDesktops = 0
-			$MaxDesktops = Get-BrokerAssignmentPolicyRule @XDParams1 -DesktopGroupUid $Group.Uid
+			#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			$MaxDesktops = Get-BrokerAssignmentPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid
 			
 			If($? -and $Null -ne $MaxDesktops)
 			{
@@ -10062,7 +10124,8 @@ Function OutputDeliveryGroupDetails
 		{
 			#random desktops are a count of the number of entitlement policy rules
 			$xMaxDesktops = 0
-			$MaxDesktops = Get-BrokerEntitlementPolicyRule @XDParams1 -DesktopGroupUid $Group.Uid
+			#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			$MaxDesktops = Get-BrokerEntitlementPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid
 			
 			If($? -and $Null -ne $MaxDesktops)
 			{
@@ -11401,7 +11464,8 @@ Function OutputDeliveryGroupCatalogs
 {
 	Param([object] $Group)
 	
-	$MCs = Get-BrokerDesktop @XDParams1 -DesktopGroupUid $Group.Uid -Property CatalogName
+	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	$MCs = Get-BrokerDesktop @XDParams2 -DesktopGroupUid $Group.Uid -Property CatalogName
 	
 	If($? -and $Null -ne $MCs)
 	{
@@ -11434,7 +11498,8 @@ Function OutputDeliveryGroupCatalogs
 		{
 			Write-Verbose "$(Get-Date): `t`t`tAdding catalog $($MC.CatalogName)"
 
-			$Catalog = Get-BrokerCatalog @XDParams1 -Name $MC.CatalogName
+			#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			$Catalog = Get-BrokerCatalog @XDParams2 -Name $MC.CatalogName
 			If($? -and $Null -ne $Catalog)
 			{
 				Switch ($Catalog.AllocationType)
@@ -11830,7 +11895,8 @@ Function OutputDeliveryGroupTags
 		$Tags = @()
 		ForEach($Tag in $GroupTags)
 		{
-			$Result = Get-BrokerTag @XDParams1 -Name $Tag
+			#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			$Result = Get-BrokerTag @XDParams2 -Name $Tag
 			
 			If($? -and $Null -ne $Result)
 			{
@@ -11935,7 +12001,8 @@ Function OutputDeliveryGroupApplicationGroups
 		$rowdata = @()
 	}
 	
-	$ApplicationGroups = Get-BrokerApplicationGroup @XDParams1 -AssociatedDesktopGroupUid $Group.Uid | Sort Name
+	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	$ApplicationGroups = Get-BrokerApplicationGroup @XDParams2 -AssociatedDesktopGroupUid $Group.Uid | Sort Name
 	
 	If($? -and $Null -ne $ApplicationGroups)
 	{
@@ -12257,7 +12324,8 @@ Function OutputApplicationDetails
 	}
 	
 	$RedirectedFileTypes = @()
-	$Results = Get-BrokerConfiguredFTA -ApplicationUid $Application.Uid
+	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	$Results = Get-BrokerConfiguredFTA -ApplicationUid $Application.Uid @XDParams2
 	If($? -and $Null -ne $Results)
 	{
 		ForEach($Result in $Results)
@@ -12554,7 +12622,8 @@ Function OutputApplicationSessions
 		WriteHTMLLine 3 0 $txt
 	}
 
-	$Sessions = Get-BrokerSession -ApplicationUid $Application.Uid @XDParams1 -SortBy UserName
+	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	$Sessions = Get-BrokerSession -ApplicationUid $Application.Uid @XDParams2 -SortBy UserName
 	
 	If($? -and $Null -ne $Sessions)
 	{
@@ -12572,7 +12641,8 @@ Function OutputApplicationSessions
 		{
 			#get desktop by Session Uid
 			$xMachineName = ""
-			$Desktop = Get-BrokerDesktop -SessionUid $Session.Uid @XDParams1
+			#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			$Desktop = Get-BrokerDesktop -SessionUid $Session.Uid @XDParams2
 			
 			If($? -and $Null -ne $Desktop)
 			{
@@ -12824,7 +12894,8 @@ Function ProcessApplicationGroupDetails
 		WriteHTMLLine 1 0 $txt
 	}
 
-	$ApplicationGroups = Get-BrokerApplicationGroup @XDParams1 -SortBy Name
+	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	$ApplicationGroups = Get-BrokerApplicationGroup @XDParams2 -SortBy Name
 	
 	If($? -and $Null -ne $ApplicationGroups)
 	{
@@ -26728,6 +26799,7 @@ Function OutputSiteSettings
 Function OutputCEIPSetting
 {
 	Write-Verbose "$(Get-Date): `tProcessing Customer Experience Improvement Program"
+	$CEIP = "Unable to retrieve CEIP information"
 	$Results = Get-AnalyticsSite @XDParams1
 	If($? -and ($Null -ne $Results))
 	{
@@ -27932,6 +28004,8 @@ Function OutputScopeObjects
 					$Result.Description,$htmlwhite))
 				}
 				$msg = ""
+				#V2.10 added $columnHeaders
+				$columnHeaders = @('Name',($htmlsilver -bor $htmlbold),'Description',($htmlsilver -bor $htmlbold))
 				$ColumnWidths = @("250","250")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $ColumnWidths -tablewidth "500"
 				WriteHTMLLine 0 0 " "
@@ -27951,6 +28025,8 @@ Function OutputScopeObjects
 					$Result.Description,$htmlwhite))
 				}
 				$msg = ""
+				#V2.10 added $columnHeaders
+				$columnHeaders = @('Name',($htmlsilver -bor $htmlbold),'Description',($htmlsilver -bor $htmlbold))
 				$ColumnWidths = @("250","250")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $ColumnWidths -tablewidth "500"
 				WriteHTMLLine 0 0 " "
@@ -27970,6 +28046,8 @@ Function OutputScopeObjects
 					$Result.Description,$htmlwhite))
 				}
 				$msg = ""
+				#V2.10 added $columnHeaders
+				$columnHeaders = @('Name',($htmlsilver -bor $htmlbold),'Description',($htmlsilver -bor $htmlbold))
 				$ColumnWidths = @("250","250")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $ColumnWidths -tablewidth "500"
 				WriteHTMLLine 0 0 " "
@@ -28947,7 +29025,10 @@ Function OutputControllers
 	{
 		ForEach($Controller in $Controllers)
 		{
-			$Script:Selection.InsertNewPage()
+			If($MSWord -or $PDF)
+			{
+				$Script:Selection.InsertNewPage()
+			}
 			GetComputerWMIInfo $Controller.DNSName
 		}
 	}
@@ -29492,7 +29573,8 @@ Function ProcessHosting
 	}
 
 	Write-Verbose "$(Get-Date): `tProcessing Hypervisors"
-	$Hypervisors = Get-BrokerHypervisorConnection @XDParams1
+	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	$Hypervisors = Get-BrokerHypervisorConnection @XDParams2
 	If($? -and $Null -ne $Hypervisors)
 	{
 		ForEach($Hypervisor in $Hypervisors)
@@ -29922,7 +30004,8 @@ Function OutputHosting
 		}
 
 		Write-Verbose "$(Get-Date): `tProcessing Sessions Data"
-		$Sessions = Get-BrokerSession @XDParams1 -hypervisorconnectionname $Hypervisor.Name -SortBy UserName
+		#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		$Sessions = Get-BrokerSession @XDParams2 -hypervisorconnectionname $Hypervisor.Name -SortBy UserName
 		If($? -and ($Null -ne $Sessions))
 		{
 			If($Sessions -is [array])
@@ -30286,7 +30369,8 @@ Function OutputHostingSessions
 		#get the private desktop
 		#get desktop by Session Uid
 		$xMachineName = ""
-		$Desktop = Get-BrokerDesktop -SessionUid $Session.Uid @XDParams1
+		#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		$Desktop = Get-BrokerDesktop -SessionUid $Session.Uid @XDParams2
 		
 		If($? -and $Null -ne $Desktop)
 		{
@@ -31105,7 +31189,7 @@ Function OutputAppV
 }
 #endregion
 
-#region AppDNA functiions
+#region AppDNA functions
 Function ProcessAppDNA
 {
 	Write-Verbose "$(Get-Date): Processing AppDNA"
@@ -31526,7 +31610,8 @@ Function ProcessSummaryPage
 			
 			If($NoADPolicies -eq $False)
 			{
-				WriteWordLine 0 1 "Citrix AD Policies Processed`t: $($Global:TotalADPolicies)`t(AD Policies can contain multiple Citrix policies)"
+				#V2.10 add a space 
+				WriteWordLine 0 1 "Citrix AD Policies Processed`t: $($Global:TotalADPolicies)`t (AD Policies can contain multiple Citrix policies)"
 				WriteWordLine 0 1 "Citrix AD Policies not Processed`t: " $Global:TotalADPoliciesNotProcessed
 			}
 			WriteWordLine 0 0 ""
@@ -31607,7 +31692,8 @@ Function ProcessSummaryPage
 			
 			If($NoADPolicies -eq $False)
 			{
-				Line 1 "Citrix AD Policies Processed`t: $($Global:TotalADPolicies)`t(AD Policies can contain multiple Citrix policies)"
+				#V2.10 add a space 
+				Line 1 "Citrix AD Policies Processed`t: $($Global:TotalADPolicies)`t (AD Policies can contain multiple Citrix policies)"
 				Line 1 "Citrix AD Policies not Processed: " $Global:TotalADPoliciesNotProcessed
 			}
 			Line 0 ""
@@ -31688,7 +31774,8 @@ Function ProcessSummaryPage
 			
 			If($NoADPolicies -eq $False)
 			{
-				WriteHTMLLine 0 1 "Citrix AD Policies Processed: $($Global:TotalADPolicies)(AD Policies can contain multiple Citrix policies)"
+				#V2.10 add a space 
+				WriteHTMLLine 0 1 "Citrix AD Policies Processed: $($Global:TotalADPolicies) (AD Policies can contain multiple Citrix policies)"
 				WriteHTMLLine 0 1 "Citrix AD Policies not Processed: " $Global:TotalADPoliciesNotProcessed
 			}
 			WriteHTMLLine 0 0 ""
@@ -32022,6 +32109,7 @@ Function ProcessScriptEnd
 		Out-File -FilePath $SIFile -Append -InputObject "From               : $($From)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Hosting            : $($Hosting)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "HW Inventory       : $($Hardware)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "Log                : $($Log)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Logging            : $($Logging)" 4>$Null
 		If($Logging)
 		{
@@ -32065,6 +32153,22 @@ Function ProcessScriptEnd
 		Out-File -FilePath $SIFile -Append -InputObject "Elapsed time       : $($Str)" 4>$Null
 	}
 
+	#V2.10 added
+	If($Log -eq $True) 
+	{
+		If($Script:StartLog -eq $true) 
+		{
+			try 
+			{
+				Stop-Transcript | Out-Null
+				Write-Verbose "$(Get-Date): $Script:LogPath is ready for use"
+			} 
+			catch 
+			{
+				Write-Verbose "$(Get-Date): Transcript/log stop failed"
+			}
+		}
+	}
 	$ErrorActionPreference = $SaveEAPreference
 }
 #endregion
