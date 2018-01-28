@@ -1146,6 +1146,7 @@ Param(
 #	In the OutputMachineDetails function, change the variable used for the Write-Verbose "Output Machine" line
 #		RemotePC and machines not registered have a $Null HostMachineName property
 #		Use the first part of the DNSName property value
+#	In the Policies Word output, if there are no policy settings, add line stating that and skip the Word table functions
 #	In the Summary page, Policies section, added a space before "(AD Policies can contain multiple Citrix policies)"
 #	Most of the calls to Get-Broker* were changed from @XDParams1 to @XDParams2 to add the MaxRecordCount switch
 #		This is to handle entities with more than 250 items (Machine Catalogs, Delivery Groups, Machines/Desktops, Sessions, etc.)
@@ -25990,7 +25991,7 @@ Function ProcessCitrixPolicies
 				}
 				If($MSWord -or $PDF)
 				{
-					If($SettingsWordTable.Count -gt 0)
+					If($SettingsWordTable.Count -gt 0) #V2.10 don't process if array is empty
 					{
 						$Table = AddWordTable -Hashtable $SettingsWordTable `
 						-Columns  Text,Value `
@@ -26007,6 +26008,11 @@ Function ProcessCitrixPolicies
 						$Table.Columns.Item(2).Width = 200;
 
 						$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+					}
+					Else
+					{
+						#V2.10 state there are no policy settings
+						WriteWordLine 0 1 "There are no policy settings"
 					}
 					FindWordDocumentEnd
 					$Table = $Null
