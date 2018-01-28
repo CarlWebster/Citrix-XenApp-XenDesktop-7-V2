@@ -21,6 +21,7 @@
 #	Most of the calls to Get-Broker* were changed from @XDParams1 to @XDParams2 to add the MaxRecordCount switch
 #		This is to handle entities with more than 250 items (Machine Catalogs, Delivery Groups, Machines/Desktops, Sessions, etc.)
 #	Update functions ShowScriptOutput and ProcessScriptEnd for new Log parameter
+#	Updated help text
 
 #Version 2.09 8-Dec-2017
 #	Updated Function WriteHTMLLine with fixes from the script template

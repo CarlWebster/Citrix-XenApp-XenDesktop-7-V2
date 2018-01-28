@@ -7,8 +7,8 @@
 .SYNOPSIS
 	Creates an inventory of a Citrix XenDesktop 7.8+ Site.
 .DESCRIPTION
-	Creates an inventory of a Citrix XenDesktop 7.8+ Site using Microsoft PowerShell, Word,
-	plain text or HTML.
+	Creates an inventory of a Citrix XenDesktop 7.8+ Site using Microsoft PowerShell, Word, 
+	plain text, or HTML.
 	
 	This Script requires at least PowerShell version 3 but runs best in version 5.
 
@@ -77,7 +77,7 @@
 	Specifies the address of a XenDesktop controller the PowerShell snapins will connect 
 	to. 
 	This can be provided as a hostname or an IP address. 
-	This parameter defaults to LocalHost.
+	This parameter defaults to Localhost.
 	This parameter has an alias of AA.
 .PARAMETER CompanyAddress
 	Company Address to use for the Cover Page, if the Cover Page has the Address field.
@@ -410,7 +410,7 @@
 	This parameter is disabled by default.
 	This parameter has an alias of SI.
 .PARAMETER Log
-	Generates a log file for the purpose of troubleshooting.
+	Generates a log file for troubleshooting.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1
 	
@@ -764,7 +764,7 @@
 	Administrator for the User Name.
 
 	Adds a date time stamp to the end of the file name.
-	Timestamp is in the format of yyyy-MM-dd_HHmm.
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
 	June 1, 2018 at 6PM is 2018-06-01_1800.
 	Output filename will be XD7SiteName_2018-06-01_1800.docx
 .EXAMPLE
@@ -781,7 +781,7 @@
 	Administrator for the User Name.
 
 	Adds a date time stamp to the end of the file name.
-	Timestamp is in the format of yyyy-MM-dd_HHmm.
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
 	June 1, 2018 at 6PM is 2018-06-01_1800.
 	Output filename will be XD7SiteName_2018-06-01_1800.pdf
 .EXAMPLE
@@ -930,6 +930,27 @@
 		
 		NoPolicies          = False
 		Section             = "All"
+.EXAMPLE
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Dev -ScriptInfo -Log
+	
+	Will use all Default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	
+	Creates a text file named XAXDV2InventoryScriptErrors_yyyy-MM-dd_HHmm.txt that 
+	contains up to the last 250 errors reported by the script.
+	
+	Creates a text file named XAXDV2InventoryScriptInfo_yyyy-MM-dd_HHmm.txt that 
+	contains all the script parameters and other basic information.
+	
+	Creates a text file for transcript logging named 
+	XDV2DocScriptTranscript_yyyy-MM-dd_HHmm.txt.
 .INPUTS
 	None.  You cannot pipe objects to this script.
 .OUTPUTS
@@ -939,7 +960,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.10
 	AUTHOR: Carl Webster
-	LASTEDIT: January 25, 2017
+	LASTEDIT: January 28, 2017
 #>
 
 #endregion
@@ -952,7 +973,7 @@ Param(
 	[parameter(Mandatory=$False)] 
 	[ValidateNotNullOrEmpty()]
 	[Alias("AA")]
-	[string]$AdminAddress="LocalHost",
+	[string]$AdminAddress="Localhost",
 
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
@@ -1151,6 +1172,7 @@ Param(
 #	Most of the calls to Get-Broker* were changed from @XDParams1 to @XDParams2 to add the MaxRecordCount switch
 #		This is to handle entities with more than 250 items (Machine Catalogs, Delivery Groups, Machines/Desktops, Sessions, etc.)
 #	Update functions ShowScriptOutput and ProcessScriptEnd for new Log parameter
+#	Updated help text
 # 
 #Version 2.09 8-Dec-2017
 #	Updated Function WriteHTMLLine with fixes from the script template
@@ -31962,7 +31984,7 @@ Function ProcessScriptSetup
 
 	If([String]::IsNullOrEmpty($AdminAddress))
 	{
-		$AdminAddress = "LocalHost"
+		$AdminAddress = "Localhost"
 	}
 
 	$Script:XDParams1 = @{
