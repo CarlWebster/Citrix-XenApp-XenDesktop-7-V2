@@ -1135,9 +1135,21 @@ Param(
 
 #Version 2.10
 #	Added Log switch to create a transcript log
+#		Added function TranscriptLogging
+#		Citrix.GroupPolicy.Commands and New-PSDrive break transcript logging so restart logging after each New-PSDrive call
 #		Removed the Log Alias from the Logging parameter
-#	In the Summary page, Policies section, added a space before (AD Policies can contain multiple Citrix policies)
+#	Added variable $xLastConnectionTime in Function OutputMachineDetails to handle the Nullable DateTime property LastConnectionTime
+#	Fixed HTML output for Administrative Scopes
+#	In Function OutputCEIPSetting, initialize the $CEIP variable in case of error with Get-AnalyticsSite
+#	In the OutputMachines functions, don't process manually provisioned catalogs
+#		There is no $Catalog.ProvisioningSchemeId for manually provisioned catalogs
+#	In the OutputMachineDetails function, change the variable used for the Write-Verbose "Output Machine" line
+#		RemotePC and machines not registered have a $Null HostMachineName property
+#		Use the first part of the DNSName property value
+#	In the Summary page, Policies section, added a space before "(AD Policies can contain multiple Citrix policies)"
 #	Most of the calls to Get-Broker* were changed from @XDParams1 to @XDParams2 to add the MaxRecordCount switch
+#		This is to handle entities with more than 250 items (Machine Catalogs, Delivery Groups, Machines/Desktops, Sessions, etc.)
+#	Update functions ShowScriptOutput and ProcessScriptEnd for new Log parameter
 # 
 #Version 2.09 8-Dec-2017
 #	Updated Function WriteHTMLLine with fixes from the script template
@@ -1351,29 +1363,23 @@ $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
 
 #V2.10 added
-$Script:ThisScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-If($PSBoundParameters.ContainsKey('Log')) 
+If($Log) 
 {
-    $Script:LogPath = "$Script:ThisScriptPath\XDV2DocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
-    If((Test-Path $Script:LogPath) -eq $true) 
+	#start transcript logging
+	$Script:ThisScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
+	$Script:LogPath = "$Script:ThisScriptPath\XDV2DocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+	
+	try 
 	{
-        Write-Verbose "$(Get-Date): Transcript/Log $Script:LogPath already exists"
-        $Script:StartLog = $false
-    } 
-	Else 
+		Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
+		Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
+		$Script:StartLog = $true
+	} 
+	catch 
 	{
-        try 
-		{
-            Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
-            Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
-            $Script:StartLog = $true
-        } 
-		catch 
-		{
-            Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
-            $Script:StartLog = $false
-        }
-    }
+		Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
+		$Script:StartLog = $false
+	}
 }
 
 If($Dev)
@@ -5750,6 +5756,32 @@ Function OutputAdminsForDetails
 		WriteHTMLLine 0 0 " "
 	}
 }
+
+Function TranscriptLogging
+{
+	If($Log) 
+	{
+		try 
+		{
+			If($Script:StartLog -eq $false)
+			{
+				Start-Transcript -Path $Script:LogPath -Force -Verbose:$false | Out-Null
+			}
+			Else
+			{
+				Start-Transcript -Path $Script:LogPath -Append -Verbose:$false | Out-Null
+			}
+			Write-Verbose "$(Get-Date): Transcript/log started at $Script:LogPath"
+			$Script:StartLog = $true
+		} 
+		catch 
+		{
+			Write-Verbose "$(Get-Date): Transcript/log failed at $Script:LogPath"
+			$Script:StartLog = $false
+		}
+	}
+}
+
 #endregion
 
 #region email function
@@ -7600,19 +7632,11 @@ Function OutputMachineDetails
 {
 	Param([object] $Machine)
 	
-	#V2.10 22-Jan-2018, if HostedMachineName is empty (like for RemotePC), use PublishedName if is it available
-	If([String]::IsNullOrEmpty($Machine.HostedMachineName) -and ![String]::IsNullOrEmpty($Machine.PublishedName))
-	{
-		Write-Verbose "$(Get-Date): `t`tOutput Machine $($Machine.PublishedName)"
-	}
-	ElseIf(![String]::IsNullOrEmpty($Machine.HostedMachineName))
-	{
-		Write-Verbose "$(Get-Date): `t`tOutput Machine $($Machine.HostedMachineName)"
-	}
-	Else
-	{
-		Write-Verbose "$(Get-Date): `t`tOutput Machine $($Machine.DNSName)"
-	}
+	#V2.10 22-Jan-2018, if HostedMachineName is empty, like for RemotePC and unregistered machines, use the first part of DNSName
+	$tmp = $Machine.DNSName.Split(".")
+	$xMachineName = $tmp[0]
+	$tmp = $Null
+	Write-Verbose "$(Get-Date): `t`tOutput Machine $xMachineName"
 	
 	$xAssociatedUserFullNames = @()
 	ForEach($Value in $Machine.AssociatedUserFullNames)
@@ -7834,7 +7858,7 @@ Function OutputMachineDetails
 	Else
 	{
 		$xSessionLaunchedViaHostName = $Machine.SessionLaunchedViaHostName
-	}G1
+	}
 	
 	
 	If($Null -eq $Machine.SessionLaunchedViaIP)
@@ -7925,6 +7949,15 @@ Function OutputMachineDetails
 	Else
 	{
 		$xSessionUserName = $Machine.SessionUserName
+	}
+	
+	If($Null -eq $Machine.LastConnectionTime)
+	{
+		$xLastConnectionTime = "-"
+	}
+	Else
+	{
+		$xLastConnectionTime = $Machine.LastConnectionTime.ToString()
 	}
 	
 	If($MSWord -or $PDF)
@@ -8138,7 +8171,7 @@ Function OutputMachineDetails
 
 			WriteWordLine 4 0 "Connection"
 			[System.Collections.Hashtable[]] $ScriptInformation = @()
-			$ScriptInformation += @{Data = "Last Connection Time"; Value = $Machine.LastConnectionTime.ToString() ; }
+			$ScriptInformation += @{Data = "Last Connection Time"; Value = $xLastConnectionTime ; }
 			$ScriptInformation += @{Data = "Last Connection User"; Value = $Machine.LastConnectionUser; }
 			$ScriptInformation += @{Data = "Secure ICA Active"; Value = $xSessionSecureIcaActive ; }
 
@@ -8370,7 +8403,7 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Plug-in Version"; Value = $xSessionClientVersion; }
 			$ScriptInformation += @{Data = "Connected Via"; Value = $xSessionConnectedViaHostName; }
 			$ScriptInformation += @{Data = "Connected Via (IP)"; Value = $xSessionConnectedViaIP; }
-			$ScriptInformation += @{Data = "Last Connection Time"; Value = $Machine.LastConnectionTime.ToString() ; }
+			$ScriptInformation += @{Data = "Last Connection Time"; Value = $xLastConnectionTime ; }
 			$ScriptInformation += @{Data = "Last Connection User"; Value = $Machine.LastConnectionUser; }
 			$ScriptInformation += @{Data = "Connection Type"; Value = $xSessionProtocol; }
 			$ScriptInformation += @{Data = "Secure ICA Active"; Value = $xSessionSecureIcaActive ; }
@@ -8625,7 +8658,7 @@ Function OutputMachineDetails
 			Line 0 ""
 			
 			Line 1 "Connection"
-			Line 2 "Last Connection Time`t`t: " $Machine.LastConnectionTime.ToString() 
+			Line 2 "Last Connection Time`t`t: " $xLastConnectionTime 
 			Line 2 "Last Connection User`t`t: " $Machine.LastConnectionUser
 			Line 2 "Secure ICA Active`t`t: " $xSessionSecureIcaActive 
 			Line 0 ""
@@ -8755,7 +8788,7 @@ Function OutputMachineDetails
 			Line 2 "Plug-in Version`t`t`t: " $xSessionClientVersion
 			Line 2 "Connected Via`t`t`t: " $xSessionConnectedViaHostName
 			Line 2 "Connect Via (IP)`t`t: " $xSessionConnectedViaIP
-			Line 2 "Last Connection Time`t`t: " $Machine.LastConnectionTime.ToString() 
+			Line 2 "Last Connection Time`t`t: " $xLastConnectionTime 
 			Line 2 "Last Connection User`t`t: " $Machine.LastConnectionUser
 			Line 2 "Connection Type`t`t`t: " $xSessionProtocol
 			Line 2 "Secure ICA Active`t`t: " $xSessionSecureIcaActive 
@@ -8952,7 +8985,7 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Connection"
 			$rowdata = @()
-			$columnHeaders = @("Last Connection Time",($htmlsilver -bor $htmlbold),$Machine.LastConnectionTime.ToString(),$htmlwhite)
+			$columnHeaders = @("Last Connection Time",($htmlsilver -bor $htmlbold),$xLastConnectionTime,$htmlwhite)
 			$rowdata += @(,('Last Connection User',($htmlsilver -bor $htmlbold),$Machine.LastConnectionUser,$htmlwhite))
 			$rowdata += @(,('Secure ICA Active',($htmlsilver -bor $htmlbold),$xSessionSecureIcaActive,$htmlwhite))
 
@@ -9113,7 +9146,7 @@ Function OutputMachineDetails
 			$rowdata += @(,('Plug-in Version',($htmlsilver -bor $htmlbold),$xSessionClientVersion,$htmlwhite))
 			$rowdata += @(,('Connected Via',($htmlsilver -bor $htmlbold),$xSessionConnectedViaHostName,$htmlwhite))
 			$rowdata += @(,('Connect Via (IP)',($htmlsilver -bor $htmlbold),$xSessionConnectedViaIP,$htmlwhite))
-			$rowdata += @(,('Last Connection Time',($htmlsilver -bor $htmlbold),$Machine.LastConnectionTime.ToString(),$htmlwhite))
+			$rowdata += @(,('Last Connection Time',($htmlsilver -bor $htmlbold),$xLastConnectionTime,$htmlwhite))
 			$rowdata += @(,('Last Connection User',($htmlsilver -bor $htmlbold),$Machine.LastConnectionUser,$htmlwhite))
 			$rowdata += @(,('Connection Type',($htmlsilver -bor $htmlbold),$xSessionProtocol,$htmlwhite))
 			$rowdata += @(,('Secure ICA Active',($htmlsilver -bor $htmlbold),$xSessionSecureIcaActive,$htmlwhite))
@@ -13157,6 +13190,9 @@ Function ProcessPolicies
 		
 		Write-Verbose "$(Get-Date): Creating localfarmgpo PSDrive for Computer policies"
 		New-PSDrive localfarmgpo -psprovider citrixgrouppolicy -root \ -controller $AdminAddress -Scope Global *>$Null
+		
+		#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
+		TranscriptLogging
 		If(Get-PSDrive localfarmgpo -EA 0)
 		{
 			ProcessCitrixPolicies "localfarmgpo" "Computer"
@@ -13170,6 +13206,9 @@ Function ProcessPolicies
 
 		Write-Verbose "$(Get-Date): Creating localfarmgpo PSDrive for User policies"
 		New-PSDrive localfarmgpo -psprovider citrixgrouppolicy -root \ -controller $AdminAddress -Scope Global *>$Null
+		
+		#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
+		TranscriptLogging
 		If(Get-PSDrive localfarmgpo -EA 0)
 		{
 			ProcessCitrixPolicies "localfarmgpo" "User"
@@ -13204,6 +13243,9 @@ Function ProcessPolicies
 				{
 					Write-Verbose "$(Get-Date): `tCreating ADGpoDrv PSDrive for Computer Policies"
 					New-PSDrive -Name ADGpoDrv -PSProvider CitrixGroupPolicy -Root \ -DomainGpo $($CtxGPO) -Scope Global *>$Null
+		
+					#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
+					TranscriptLogging
 					If(Get-PSDrive ADGpoDrv -EA 0)
 					{
 						Write-Verbose "$(Get-Date): `tProcessing Citrix AD Policy $($CtxGPO)"
@@ -13221,6 +13263,9 @@ Function ProcessPolicies
 
 					Write-Verbose "$(Get-Date): `tCreating ADGpoDrv PSDrive for UserPolicies"
 					New-PSDrive -Name ADGpoDrv -PSProvider CitrixGroupPolicy -Root \ -DomainGpo $($CtxGPO) -Scope Global *>$Null
+		
+					#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
+					TranscriptLogging
 					If(Get-PSDrive ADGpoDrv -EA 0)
 					{
 						Write-Verbose "$(Get-Date): `tProcessing Citrix AD Policy $($CtxGPO)"
@@ -13261,6 +13306,9 @@ Function ProcessPolicySummary
 	Write-Verbose "$(Get-Date): `tRetrieving Site Policies"
 	Write-Verbose "$(Get-Date): `t`tCreating localfarmgpo PSDrive"
 	New-PSDrive localfarmgpo -psprovider citrixgrouppolicy -root \ -controller $AdminAddress -Scope Global *>$Null
+		
+	#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
+	TranscriptLogging
 
 	If(Get-PSDrive localfarmgpo -EA 0)
 	{
@@ -13296,6 +13344,9 @@ Function ProcessPolicySummary
 			{
 				Write-Verbose "$(Get-Date): `tCreating ADGpoDrv PSDrive"
 				New-PSDrive -Name ADGpoDrv -PSProvider CitrixGroupPolicy -Root \ -DomainGpo $($CtxGPO) -Scope "Global" *>$Null
+		
+				#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
+				TranscriptLogging
 				If(Get-PSDrive ADGpoDrv -EA 0)
 				{
 					Write-Verbose "$(Get-Date): `tProcessing Citrix AD Policy $($CtxGPO)"
@@ -25939,22 +25990,24 @@ Function ProcessCitrixPolicies
 				}
 				If($MSWord -or $PDF)
 				{
-					$Table = AddWordTable -Hashtable $SettingsWordTable `
-					-Columns  Text,Value `
-					-Headers  "Setting Key","Value"`
-					-Format $wdTableLightListAccent3 `
-					-NoInternalGridLines `
-					-AutoFit $wdAutoFitFixed;
+					If($SettingsWordTable.Count -gt 0)
+					{
+						$Table = AddWordTable -Hashtable $SettingsWordTable `
+						-Columns  Text,Value `
+						-Headers  "Setting Key","Value"`
+						-Format $wdTableLightListAccent3 `
+						-NoInternalGridLines `
+						-AutoFit $wdAutoFitFixed;
 
-					SetWordCellFormat -Collection $Table -Size 9
-					
-					SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+						SetWordCellFormat -Collection $Table -Size 9
+						
+						SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-					$Table.Columns.Item(1).Width = 300;
-					$Table.Columns.Item(2).Width = 200;
+						$Table.Columns.Item(1).Width = 300;
+						$Table.Columns.Item(2).Width = 200;
 
-					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
+						$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+					}
 					FindWordDocumentEnd
 					$Table = $Null
 				}
@@ -26799,6 +26852,8 @@ Function OutputSiteSettings
 Function OutputCEIPSetting
 {
 	Write-Verbose "$(Get-Date): `tProcessing Customer Experience Improvement Program"
+	
+	#V2.10 initialize $CEIP in case of error with Get-AnalyticsSite
 	$CEIP = "Unable to retrieve CEIP information"
 	$Results = Get-AnalyticsSite @XDParams1
 	If($? -and ($Null -ne $Results))
@@ -30004,7 +30059,7 @@ Function OutputHosting
 		}
 
 		Write-Verbose "$(Get-Date): `tProcessing Sessions Data"
-		#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 		$Sessions = Get-BrokerSession @XDParams2 -hypervisorconnectionname $Hypervisor.Name -SortBy UserName
 		If($? -and ($Null -ne $Sessions))
 		{
@@ -30369,7 +30424,7 @@ Function OutputHostingSessions
 		#get the private desktop
 		#get desktop by Session Uid
 		$xMachineName = ""
-		#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 		$Desktop = Get-BrokerDesktop -SessionUid $Session.Uid @XDParams2
 		
 		If($? -and $Null -ne $Desktop)
@@ -31570,7 +31625,6 @@ Function ProcessSummaryPage
 		WriteHTMLLine 1 0 "XenDesktop $($Script:XDSiteVersion) $($XDSiteName) Summary Page"
 	}
 
-	Write-Verbose "$(Get-Date): `tAdd administrator summary info"
 	If($MSWord -or $PDF)
 	{
 		Write-Verbose "$(Get-Date): `tAdd Machine Catalog summary info"
@@ -31617,6 +31671,7 @@ Function ProcessSummaryPage
 			WriteWordLine 0 0 ""
 		}
 		
+		Write-Verbose "$(Get-Date): `tAdd administrator summary info"
 		WriteWordLine 0 0 "Administrators"
 		WriteWordLine 0 1 "Total Delivery Group Admins`t: " $Global:TotalDeliveryGroupAdmins
 		WriteWordLine 0 1 "Total Full Admins`t`t: " $Global:TotalFullAdmins
@@ -31699,6 +31754,7 @@ Function ProcessSummaryPage
 			Line 0 ""
 		}
 		
+		Write-Verbose "$(Get-Date): `tAdd administrator summary info"
 		Line 0 "Administrators"
 		Line 1 "Total Delivery Group Admins`t: " $Global:TotalDeliveryGroupAdmins
 		Line 1 "Total Full Admins`t`t: " $Global:TotalFullAdmins
@@ -31744,18 +31800,18 @@ Function ProcessSummaryPage
 		WriteHTMLLine 0 1 "Total RemotePC Catalogs: " $Global:TotalRemotePCCatalogs
 		WriteHTMLLine 0 2 "Total Machine Catalogs: " ($Global:TotalServerOSCatalogs+$Global:TotalDesktopOSCatalogs+$Global:TotalRemotePCCatalogs)
 		WriteHTMLLine 0 0 ""
-		Write-Verbose "$(Get-Date): Add AppDisks summary info"
+		Write-Verbose "$(Get-Date): `tAdd AppDisks summary info"
 		WriteHTMLLine 0 0 "AppDisks"
 		WriteHTMLLine 0 1 "Total AppDisks: " $Global:TotalAppDisks
 		WriteHTMLLine 0 0 ""
-		Write-Verbose "$(Get-Date): Add Delivery Group summary info"
+		Write-Verbose "$(Get-Date): `tAdd Delivery Group summary info"
 		WriteHTMLLine 0 0 "Delivery Groups"
 		WriteHTMLLine 0 1 "Total Application Groups: " $Global:TotalApplicationGroups
 		WriteHTMLLine 0 1 "Total Desktop Groups: " $Global:TotalDesktopGroups
 		WriteHTMLLine 0 1 "Total Apps & Desktop Groups: " $Global:TotalAppsAndDesktopGroups
 		WriteHTMLLine 0 2 "Total Delivery Groups: " ($Global:TotalApplicationGroups+$Global:TotalDesktopGroups+$Global:TotalAppsAndDesktopGroups)
 		WriteHTMLLine 0 0 ""
-		Write-Verbose "$(Get-Date): Add Application summary info"
+		Write-Verbose "$(Get-Date): `tAdd Application summary info"
 		WriteHTMLLine 0 0 "Applications"
 		WriteHTMLLine 0 1 "Total Published Applications: " $Global:TotalPublishedApplications
 		WriteHTMLLine 0 1 "Total App-V Applications: " $Global:TotalAppvApplications
@@ -31764,7 +31820,7 @@ Function ProcessSummaryPage
 		
 		If($Policies -eq $True)
 		{
-			Write-Verbose "$(Get-Date): Add Policy summary info"
+			Write-Verbose "$(Get-Date): `tAdd Policy summary info"
 			WriteHTMLLine 0 0 "Policies"
 			WriteHTMLLine 0 1 "Total Computer Policies: " $Global:TotalComputerPolicies
 			WriteHTMLLine 0 1 "Total User Policies: " $Global:TotalUserPolicies
@@ -31781,6 +31837,7 @@ Function ProcessSummaryPage
 			WriteHTMLLine 0 0 ""
 		}
 		
+		Write-Verbose "$(Get-Date): `tAdd administrator summary info"
 		WriteHTMLLine 0 0 "Administrators"
 		WriteHTMLLine 0 1 "Total Delivery Group Admins: " $Global:TotalDeliveryGroupAdmins
 		WriteHTMLLine 0 1 "Total Full Admins: " $Global:TotalFullAdmins
@@ -31791,15 +31848,15 @@ Function ProcessSummaryPage
 		WriteHTMLLine 0 1 "Total Custom Admins: " $Global:TotalCustomAdmins
 		WriteHTMLLine 0 2 "Total Administrators: " ($Global:TotalDeliveryGroupAdmins+$Global:TotalFullAdmins+$Global:TotalHelpDeskAdmins+$Global:TotalHostAdmins+$Global:TotalMachineCatalogAdmins+$Global:TotalReadOnlyAdmins+$Global:TotalCustomAdmins)
 		WriteHTMLLine 0 0 ""
-		Write-Verbose "$(Get-Date): Add Controller summary info"
+		Write-Verbose "$(Get-Date): `tAdd Controller summary info"
 		WriteHTMLLine 0 0 "Controllers"
 		WriteHTMLLine 0 1 "Total Controllers: " $Global:TotalControllers
 		WriteHTMLLine 0 0 ""
-		Write-Verbose "$(Get-Date): Add Hosting Connection summary info"
+		Write-Verbose "$(Get-Date): `tAdd Hosting Connection summary info"
 		WriteHTMLLine 0 0 "Hosting Connections"
 		WriteHTMLLine 0 1 "Total Hosting Connections: " $Global:TotalHostingConnections
 		WriteHTMLLine 0 0 ""
-		Write-Verbose "$(Get-Date): Add Licensing summary info"
+		Write-Verbose "$(Get-Date): `tAdd Licensing summary info"
 		WriteHTMLLine 0 0 "Licensing"
 		$TotalLicenses = 0
 		ForEach($License in $Global:Licenses)
@@ -31809,11 +31866,11 @@ Function ProcessSummaryPage
 		}
 		WriteHTMLLine 0 2 "Total Licenses: " $TotalLicenses
 		WriteHTMLLine 0 0 ""
-		Write-Verbose "$(Get-Date): Add StoreFront summary info"
+		Write-Verbose "$(Get-Date): `tAdd StoreFront summary info"
 		WriteHTMLLine 0 0 "StoreFront"
 		WriteHTMLLine 0 1 "Total StoreFront Servers: " $Global:TotalStoreFrontServers
 		WriteHTMLLine 0 0 ""
-		Write-Verbose "$(Get-Date): Add Zone summary info"
+		Write-Verbose "$(Get-Date): `tAdd Zone summary info"
 		WriteHTMLLine 0 0 "Zones"
 		WriteHTMLLine 0 1 "Total Zones: " $Global:TotalZones
 	}
@@ -32154,6 +32211,7 @@ Function ProcessScriptEnd
 	}
 
 	#V2.10 added
+	#stop transcript logging
 	If($Log -eq $True) 
 	{
 		If($Script:StartLog -eq $true) 
