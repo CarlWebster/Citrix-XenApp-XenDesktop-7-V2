@@ -1,5 +1,5 @@
 ﻿#Requires -Version 3.0
-#This File is in Unicode format.  Do not edit in an ASCII editor.
+#This File is in Unicode format.  Do not edit in an ASCII editor. Notepad++ UTF-8-BOM
 
 #region help text
 
@@ -960,7 +960,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.10
 	AUTHOR: Carl Webster
-	LASTEDIT: January 28, 2017
+	LASTEDIT: February 10, 2018
 #>
 
 #endregion
@@ -1154,7 +1154,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.10
+#Version 2.10 10-Feb-2018
 #	Added Log switch to create a transcript log
 #		Added function TranscriptLogging
 #		Citrix.GroupPolicy.Commands and New-PSDrive break transcript logging so restart logging after each New-PSDrive call
