@@ -3,6 +3,14 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.11
+#	Added additional SQL database information to the Configuration section
+#	Added new function GetDBCompatibilityLevel
+#	Updated function GetSQLVersion to add support for SQL Server 2017
+#	Updated function OutputDatastores for the additional SQL Server and Database information
+#		Changed Word/PDF and HTML output from a horizontal table to three vertical tables
+#	Updated the "Default" message in function GetSQLVersion
+
 #Version 2.10 10-Feb-2018
 #	Added Log switch to create a transcript log
 #		Added function TranscriptLogging
