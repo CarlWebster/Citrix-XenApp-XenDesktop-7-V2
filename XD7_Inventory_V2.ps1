@@ -960,7 +960,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.11
 	AUTHOR: Carl Webster
-	LASTEDIT: February 25, 2018
+	LASTEDIT: February 27, 2018
 #>
 
 #endregion
@@ -1157,6 +1157,16 @@ Param(
 #Version 2.11
 #	Added additional SQL database information to the Configuration section
 #	Added new function GetDBCompatibilityLevel
+#	Added new User policy settings
+#		ICA\Multimedia\Browser Content Redirection Blacklist Configuration
+#		ICA\Session Watermark\Enable session watermark
+#		ICA\Session Watermark\Watermark Content\Include client IP address
+#		ICA\Session Watermark\Watermark Content\Include connection time
+#		ICA\Session Watermark\Watermark Content\Include logon user name
+#		ICA\Session Watermark\Watermark Content\Include VDA host name
+#		ICA\Session Watermark\Watermark Content\Include VDA IP address
+#		ICA\Session Watermark\Watermark Content\Watermark custom text
+#		ICA\Session Watermark\Watermark Style\Session watermark style
 #	Updated function GetSQLVersion to add support for SQL Server 2017
 #	Updated function OutputDatastores for the additional SQL Server and Database information
 #		Changed Word/PDF and HTML output from a horizontal table to three vertical tables
@@ -5812,7 +5822,6 @@ Function TranscriptLogging
 		}
 	}
 }
-
 #endregion
 
 #region email function
@@ -17429,6 +17438,63 @@ Function ProcessCitrixPolicies
 						$array = $Null
 						$tmp = $Null
 					}
+					If((validStateProp $Setting WebBrowserRedirectionBlacklist State ) -and ($Setting.WebBrowserRedirectionBlacklist.State -ne "NotConfigured"))
+					{
+						#new in 7.17
+						$txt = "ICA\Multimedia\Browser Content Redirection Blacklist Configuration"
+						$array = $Setting.WebBrowserRedirectionBlacklist.Values.Split(';')
+						$tmp = $array[0]
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $tmp;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp 
+						}
+
+						$txt = ""
+						$cnt = -1
+						ForEach($element in $array)
+						{
+							$cnt++
+							
+							If($cnt -ne 0)
+							{
+								$tmp = "$($element) "
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = "";
+									Value = $tmp;
+									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									"",$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting "" $tmp
+								}
+							}
+						}
+						$array = $Null
+						$tmp = $Null
+					}
 					If((validStateProp $Setting WebBrowserRedirectionProxy State ) -and ($Setting.WebBrowserRedirectionProxy.State -ne "NotConfigured"))
 					{
 						#new in 7.16
@@ -19611,6 +19677,227 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.SessionIdleTimerInterval.Value 
+						}
+					}
+
+					Write-Verbose "$(Get-Date): `t`t`tICA\Session Watermark"
+					If((validStateProp $Setting EnableSessionWatermark State ) -and ($Setting.EnableSessionWatermark.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Enable session watermark"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.EnableSessionWatermark.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.EnableSessionWatermark.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.EnableSessionWatermark.State 
+						}
+					}
+
+					Write-Verbose "$(Get-Date): `t`t`tICA\Session Watermark\Watermark Content"
+					If((validStateProp $Setting WatermarkIncludeClientIPAddress State ) -and ($Setting.WatermarkIncludeClientIPAddress.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include client IP address"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeClientIPAddress.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeClientIPAddress.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeClientIPAddress.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkIncludeConnectTime State ) -and ($Setting.WatermarkIncludeConnectTime.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include connection time"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeConnectTime.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeConnectTime.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeConnectTime.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkIncludeLogonUsername State ) -and ($Setting.WatermarkIncludeLogonUsername.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include logon user name"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeLogonUsername.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeLogonUsername.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeLogonUsername.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkIncludeVDAHostName State ) -and ($Setting.WatermarkIncludeVDAHostName.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include VDA host name"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeVDAHostName.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeVDAHostName.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeVDAHostName.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkIncludeVDAIPAddress State ) -and ($Setting.WatermarkIncludeVDAIPAddress.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include VDA IP address"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeVDAIPAddress.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeVDAIPAddress.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeVDAIPAddress.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkCustomText State ) -and ($Setting.WatermarkCustomText.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Watermark custom text"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkCustomText.Value;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkCustomText.Value,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkCustomText.Value 
+						}
+					}
+
+					Write-Verbose "$(Get-Date): `t`t`tICA\Session Watermark\Watermark Style"
+					If((validStateProp $Setting WatermarkStyle State ) -and ($Setting.WatermarkStyle.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Style\Session watermark style"
+						$tmp = ""
+						Switch ($Setting.WatermarkStyle.Value)
+						{
+							"StyleMutiple" {$tmp = "Multiple"; Break}
+							"StyleSingle"   {$tmp = "Single"; Break}
+							Default {$tmp = "Session watermark style could not be determined: $($Setting.WatermarkStyle.Value)"; Break}
+						}
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $tmp;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp
+						}
+						$tmp = $Null
+					}
+					If((validStateProp $Setting WatermarkTransparency State ) -and ($Setting.WatermarkTransparency.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Style\Watermark transparency"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkTransparency.Value;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkTransparency.Value,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkTransparency.Value 
 						}
 					}
 

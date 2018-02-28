@@ -6,6 +6,16 @@
 #Version 2.11
 #	Added additional SQL database information to the Configuration section
 #	Added new function GetDBCompatibilityLevel
+#	Added new User policy settings
+#		ICA\Multimedia\Browser Content Redirection Blacklist Configuration
+#		ICA\Session Watermark\Enable session watermark
+#		ICA\Session Watermark\Watermark Content\Include client IP address
+#		ICA\Session Watermark\Watermark Content\Include connection time
+#		ICA\Session Watermark\Watermark Content\Include logon user name
+#		ICA\Session Watermark\Watermark Content\Include VDA host name
+#		ICA\Session Watermark\Watermark Content\Include VDA IP address
+#		ICA\Session Watermark\Watermark Content\Watermark custom text
+#		ICA\Session Watermark\Watermark Style\Session watermark style
 #	Updated function GetSQLVersion to add support for SQL Server 2017
 #	Updated function OutputDatastores for the additional SQL Server and Database information
 #		Changed Word/PDF and HTML output from a horizontal table to three vertical tables
