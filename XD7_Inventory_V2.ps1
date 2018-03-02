@@ -960,7 +960,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.11
 	AUTHOR: Carl Webster
-	LASTEDIT: February 27, 2018
+	LASTEDIT: March 2, 2018
 #>
 
 #endregion
@@ -1167,10 +1167,16 @@ Param(
 #		ICA\Session Watermark\Watermark Content\Include VDA IP address
 #		ICA\Session Watermark\Watermark Content\Watermark custom text
 #		ICA\Session Watermark\Watermark Style\Session watermark style
+#	Change the Broker Registry Keys to sort by RegKey and then RegValue and change output to match
+#	Change the Broker Registry Keys heading from "2" to "3"
+#	Move section headings for Machine Catalogs, AppDisks, Delivery Groups, and Applications to their respective "Process" functions.
+#		This allows the "There are no Machine Catalogs/AppDisks/Delivery Groups/Applications" messages to appear in their own sections, 
+#		and for Word/PDF output, not directly under the Table of Contents
 #	Updated function GetSQLVersion to add support for SQL Server 2017
 #	Updated function OutputDatastores for the additional SQL Server and Database information
 #		Changed Word/PDF and HTML output from a horizontal table to three vertical tables
 #	Updated the "Default" message in function GetSQLVersion
+#	When there are no Machine Catalogs, change the message from "There are no Machines" to "There are no Machine Catalogs"
 #
 #Version 2.10 10-Feb-2018
 #	Added Log switch to create a transcript log
@@ -6019,35 +6025,6 @@ Function ProcessMachineCatalogs
 {
 	Write-Verbose "$(Get-Date): Retrieving Machine Catalogs"
 
-	$Global:TotalServerOSCatalogs = 0
-	$Global:TotalDesktopOSCatalogs = 0
-	$Global:TotalRemotePCCatalogs = 0
-
-	$AllMachineCatalogs = Get-BrokerCatalog @XDParams2 -SortBy Name 
-
-	If($? -and $Null -ne $AllMachineCatalogs)
-	{
-		OutputMachines $AllMachineCatalogs
-	}
-	ElseIf($? -and ($Null -eq $AllMachineCatalogs))
-	{
-		$txt = "There are no Machines"
-		OutputWarning $txt
-	}
-	Else
-	{
-		$txt = "Unable to retrieve Machines"
-		OutputWarning $txt
-	}
-	Write-Verbose "$(Get-Date): "
-}
-
-Function OutputMachines
-{
-	Param([object]$Catalogs)
-	
-	Write-Verbose "$(Get-Date): `tProcessing Machine Catalogs"
-	
 	$txt = "Machine Catalogs"
 	If($MSWord -or $PDF)
 	{
@@ -6064,6 +6041,35 @@ Function OutputMachines
 		WriteHTMLLine 1 0 $txt
 	}
 
+	$Global:TotalServerOSCatalogs = 0
+	$Global:TotalDesktopOSCatalogs = 0
+	$Global:TotalRemotePCCatalogs = 0
+
+	$AllMachineCatalogs = Get-BrokerCatalog @XDParams2 -SortBy Name 
+
+	If($? -and $Null -ne $AllMachineCatalogs)
+	{
+		OutputMachines $AllMachineCatalogs
+	}
+	ElseIf($? -and ($Null -eq $AllMachineCatalogs))
+	{
+		$txt = "There are no Machine Catalogs"
+		OutputWarning $txt
+	}
+	Else
+	{
+		$txt = "Unable to retrieve Machine Catalogs"
+		OutputWarning $txt
+	}
+	Write-Verbose "$(Get-Date): "
+}
+
+Function OutputMachines
+{
+	Param([object]$Catalogs)
+	
+	Write-Verbose "$(Get-Date): `tProcessing Machine Catalogs"
+	
 	#add 16-jun-2015, summary table of catalogs to match what is shown in Studio
 	If($MSWord -or $PDF)
 	{
@@ -7097,6 +7103,23 @@ Function OutputMachines
 Function ProcessAppDisks
 {
 	Write-Verbose "$(Get-Date): Retrieving AppDisks"
+
+	$txt = "AppDisks"
+	If($MSWord -or $PDF)
+	{
+		$Selection.InsertNewPage()
+		WriteWordLine 1 0 $txt
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 $txt
+	}
+
 	$Global:TotalAppDisks = 0
 
 	$AllAppDisks = Get-AppLibAppDisk @XDParams2 -SortBy AppDiskName 
@@ -7133,22 +7156,6 @@ Function ProcessAppDisks
 Function OutputAppDiskTable
 {
 	Param([object] $AllAppDisks)
-
-	$txt = "AppDisks"
-	If($MSWord -or $PDF)
-	{
-		$Selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
-	}
-	ElseIf($Text)
-	{
-		Line 0 $txt
-		Line 0 ""
-	}
-	ElseIf($HTML)
-	{
-		WriteHTMLLine 1 0 $txt
-	}
 
 	If($MSWord -or $PDF)
 	{
@@ -9266,6 +9273,22 @@ Function ProcessDeliveryGroups
 {
 	Write-Verbose "$(Get-Date): Retrieving Delivery Groups"
 	
+	$txt = "Delivery Groups"
+	If($MSWord -or $PDF)
+	{
+		$Selection.InsertNewPage()
+		WriteWordLine 1 0 $txt
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 $txt
+	}
+
 	$Global:TotalApplicationGroups = 0
 	$Global:TotalDesktopGroups = 0
 	$Global:TotalAppsAndDesktopGroups = 0
@@ -9301,22 +9324,6 @@ Function OutputDeliveryGroupTable
 {
 	Param([object] $AllDeliveryGroups)
 	
-	$txt = "Delivery Groups"
-	If($MSWord -or $PDF)
-	{
-		$Selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
-	}
-	ElseIf($Text)
-	{
-		Line 0 $txt
-		Line 0 ""
-	}
-	ElseIf($HTML)
-	{
-		WriteHTMLLine 1 0 $txt
-	}
-
 	If($MSWord -or $PDF)
 	{
 		[System.Collections.Hashtable[]] $WordTable = @();
@@ -12159,6 +12166,22 @@ Function ProcessApplications
 {
 	Write-Verbose "$(Get-Date): Retrieving Applications"
 	
+	$txt = "Applications"
+	If($MSWord -or $PDF)
+	{
+		$Selection.InsertNewPage()
+		WriteWordLine 1 0 $txt
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 $txt
+	}
+
 	$Global:TotalPublishedApplications = 0
 	$Global:TotalAppvApplications = 0
 	
@@ -12185,22 +12208,6 @@ Function OutputApplications
 	Param([object]$AllApplications)
 	
 	Write-Verbose "$(Get-Date): `tProcessing Applications"
-
-	$txt = "Applications"
-	If($MSWord -or $PDF)
-	{
-		$Selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
-	}
-	ElseIf($Text)
-	{
-		Line 0 $txt
-		Line 0 ""
-	}
-	ElseIf($HTML)
-	{
-		WriteHTMLLine 1 0 $txt
-	}
 
 	If($MSWord -or $PDF)
 	{
@@ -27416,6 +27423,28 @@ Function OutputDatastores
 				$ConfigDBMirroringWitness			= "-"
 				$ConfigDBMirroringWitnessStatus		= "-"
 			}
+			
+			#check for log backup status
+			If($ConfigDBRecoveryModel -eq "Simple")
+			{
+				If($ConfigDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$ConfigDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
+				}
+			}
+			ElseIf($ConfigDBRecoveryModel -eq "Full")
+			{
+				If($ConfigDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$ConfigDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+				}
+			}
+			
+			#check for database backup
+			If($ConfigDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+			{
+				$ConfigDBLastBackupDate = "Database backup not detected"
+			}
 		}
 	}
 	Else
@@ -27523,6 +27552,28 @@ Function OutputDatastores
 				$LogDBMirroringStatus			= "-"
 				$LogDBMirroringWitness			= "-"
 				$LogDBMirroringWitnessStatus	= "-"
+			}
+
+			#check for log backup status
+			If($LogDBRecoveryModel -eq "Simple")
+			{
+				If($LogDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$LogDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
+				}
+			}
+			ElseIf($LogDBRecoveryModel -eq "Full")
+			{
+				If($LogDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$LogDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+				}
+			}
+			
+			#check for database backup
+			If($LogDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+			{
+				$LogDBLastBackupDate = "Database backup not detected"
 			}
 		}
 	}
@@ -27635,6 +27686,28 @@ Function OutputDatastores
 				$MonitorDBMirroringStatus			= "-"
 				$MonitorDBMirroringWitness			= "-"
 				$MonitorDBMirroringWitnessStatus	= "-"
+			}
+
+			#check for log backup status
+			If($MonitorDBRecoveryModel -eq "Simple")
+			{
+				If($MonitorDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$MonitorDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
+				}
+			}
+			ElseIf($MonitorDBRecoveryModel -eq "Full")
+			{
+				If($MonitorDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$MonitorDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+				}
+			}
+			
+			#check for database backup
+			If($MonitorDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+			{
+				$MonitorDBLastBackupDate = "Database backup not detected"
 			}
 		}
 		
@@ -30105,24 +30178,25 @@ Function GetControllerRegistryKeys
 
 Function OutputControllerRegistryKeys
 {
-	#sort the array by regkey and regvalue
+	#V2.11 sort the array by regkey and regvalue and change the output to match
 	Write-Verbose "$(Get-Date): `t`t`tOutput Registry Key data"
 	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort RegValue, RegKey
 	
 	$txt = "Controller Registry Items"
+	#v2.11 change heading from "2" to "3"
 	If($MSWord -or $PDF)
 	{
-		WriteWordLine 2 0 $txt
+		WriteWordLine 3 0 $txt
 	}
 	ElseIf($Text)
 	{
 		Line 0 $txt
-		Line 1 "Registry Value                                     Registry Key                                                                  Data            " 
+		Line 1 "Registry Key                                                                  Registry Value                                     Data            " 
 		Line 1 "================================================================================================================================================="
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 2 0 $txt
+		WriteHTMLLine 3 0 $txt
 	}
 
 	If($MSWord -or $PDF)
@@ -30141,21 +30215,21 @@ Function OutputControllerRegistryKeys
 			If($MSWord -or $PDF)
 			{
 				$WordTableRowHash = @{
-				RegValue = $Item.RegValue; 
 				RegKey = $Item.RegKey; 
+				RegValue = $Item.RegValue; 
 				Value = $Item.Value
 				}
 				$WordTable += $WordTableRowHash;
 			}
 			ElseIf($Text)
 			{
-				Line 1 ( "{0,-50} {1,-77} {2,-15}" -f $Item.RegValue, $Item.RegKey, $Item.Value)
+				Line 1 ( "{0,-50} {1,-77} {2,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value)
 			}
 			ElseIf($HTML)
 			{
 				$rowdata += @(,(
-				$Item.RegValue,$htmlwhite,
 				$Item.RegKey,$htmlwhite,
+				$Item.RegValue,$htmlwhite,
 				$Item.Value,$htmlwhite))
 			}
 		}
@@ -30179,16 +30253,16 @@ Function OutputControllerRegistryKeys
 	If($MSWord -or $PDF)
 	{
 		$Table = AddWordTable -Hashtable $WordTable `
-		-Columns  RegValue, RegKey, Value `
-		-Headers  "Registry Value", "Registry Key", "Value" `
+		-Columns  RegKey, RegValue, Value `
+		-Headers  "Registry Key", "Registry Value", "Value" `
 		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitFixed;
 
 		SetWordCellFormat -Collection $Table -Size 9
 		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Columns.Item(1).Width = 210;
-		$Table.Columns.Item(2).Width = 230;
+		$Table.Columns.Item(1).Width = 230;
+		$Table.Columns.Item(2).Width = 210;
 		$Table.Columns.Item(3).Width = 60;
 
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
@@ -30203,8 +30277,8 @@ Function OutputControllerRegistryKeys
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'Registry Value',($htmlsilver -bor $htmlbold),
 		'Registry Key',($htmlsilver -bor $htmlbold),
+		'Registry Value',($htmlsilver -bor $htmlbold),
 		'Value',($htmlsilver -bor $htmlbold)
 		)
 
