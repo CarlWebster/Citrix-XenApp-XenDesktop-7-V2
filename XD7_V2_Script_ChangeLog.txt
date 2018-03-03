@@ -3,7 +3,7 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
-#Version 2.11
+#Version 2.11 2-Mar-2018
 #	Added additional SQL database information to the Configuration section
 #	Added new function GetDBCompatibilityLevel
 #	Added new User policy settings
@@ -26,7 +26,6 @@
 #		Changed Word/PDF and HTML output from a horizontal table to three vertical tables
 #	Updated the "Default" message in function GetSQLVersion
 #	When there are no Machine Catalogs, change the message from "There are no Machines" to "There are no Machine Catalogs"
-
 
 #Version 2.10 10-Feb-2018
 #	Added Log switch to create a transcript log

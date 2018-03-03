@@ -118,6 +118,8 @@
 	HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
 	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated 
 	on the computer running the script.
+
+	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CN.
 .PARAMETER CompanyPhone
 	Company Phone to use for the Cover Page if the Cover Page has the Phone field.  
@@ -1154,7 +1156,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.11
+#Version 2.11 2-Mar-2018
 #	Added additional SQL database information to the Configuration section
 #	Added new function GetDBCompatibilityLevel
 #	Added new User policy settings
