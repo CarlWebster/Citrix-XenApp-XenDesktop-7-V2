@@ -118,6 +118,8 @@
 	HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
 	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated 
 	on the computer running the script.
+
+	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CN.
 .PARAMETER CompanyPhone
 	Company Phone to use for the Cover Page if the Cover Page has the Phone field.  
@@ -958,9 +960,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.10
+	VERSION: 2.11
 	AUTHOR: Carl Webster
-	LASTEDIT: February 10, 2018
+	LASTEDIT: March 2, 2018
 #>
 
 #endregion
@@ -1154,6 +1156,30 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.11 2-Mar-2018
+#	Added additional SQL database information to the Configuration section
+#	Added new function GetDBCompatibilityLevel
+#	Added new User policy settings
+#		ICA\Multimedia\Browser Content Redirection Blacklist Configuration
+#		ICA\Session Watermark\Enable session watermark
+#		ICA\Session Watermark\Watermark Content\Include client IP address
+#		ICA\Session Watermark\Watermark Content\Include connection time
+#		ICA\Session Watermark\Watermark Content\Include logon user name
+#		ICA\Session Watermark\Watermark Content\Include VDA host name
+#		ICA\Session Watermark\Watermark Content\Include VDA IP address
+#		ICA\Session Watermark\Watermark Content\Watermark custom text
+#		ICA\Session Watermark\Watermark Style\Session watermark style
+#	Change the Broker Registry Keys to sort by RegKey and then RegValue and change output to match
+#	Change the Broker Registry Keys heading from "2" to "3"
+#	Move section headings for Machine Catalogs, AppDisks, Delivery Groups, and Applications to their respective "Process" functions.
+#		This allows the "There are no Machine Catalogs/AppDisks/Delivery Groups/Applications" messages to appear in their own sections, 
+#		and for Word/PDF output, not directly under the Table of Contents
+#	Updated function GetSQLVersion to add support for SQL Server 2017
+#	Updated function OutputDatastores for the additional SQL Server and Database information
+#		Changed Word/PDF and HTML output from a horizontal table to three vertical tables
+#	Updated the "Default" message in function GetSQLVersion
+#	When there are no Machine Catalogs, change the message from "There are no Machines" to "There are no Machine Catalogs"
+#
 #Version 2.10 10-Feb-2018
 #	Added Log switch to create a transcript log
 #		Added function TranscriptLogging
@@ -5804,7 +5830,6 @@ Function TranscriptLogging
 		}
 	}
 }
-
 #endregion
 
 #region email function
@@ -6002,35 +6027,6 @@ Function ProcessMachineCatalogs
 {
 	Write-Verbose "$(Get-Date): Retrieving Machine Catalogs"
 
-	$Global:TotalServerOSCatalogs = 0
-	$Global:TotalDesktopOSCatalogs = 0
-	$Global:TotalRemotePCCatalogs = 0
-
-	$AllMachineCatalogs = Get-BrokerCatalog @XDParams2 -SortBy Name 
-
-	If($? -and $Null -ne $AllMachineCatalogs)
-	{
-		OutputMachines $AllMachineCatalogs
-	}
-	ElseIf($? -and ($Null -eq $AllMachineCatalogs))
-	{
-		$txt = "There are no Machines"
-		OutputWarning $txt
-	}
-	Else
-	{
-		$txt = "Unable to retrieve Machines"
-		OutputWarning $txt
-	}
-	Write-Verbose "$(Get-Date): "
-}
-
-Function OutputMachines
-{
-	Param([object]$Catalogs)
-	
-	Write-Verbose "$(Get-Date): `tProcessing Machine Catalogs"
-	
 	$txt = "Machine Catalogs"
 	If($MSWord -or $PDF)
 	{
@@ -6047,6 +6043,35 @@ Function OutputMachines
 		WriteHTMLLine 1 0 $txt
 	}
 
+	$Global:TotalServerOSCatalogs = 0
+	$Global:TotalDesktopOSCatalogs = 0
+	$Global:TotalRemotePCCatalogs = 0
+
+	$AllMachineCatalogs = Get-BrokerCatalog @XDParams2 -SortBy Name 
+
+	If($? -and $Null -ne $AllMachineCatalogs)
+	{
+		OutputMachines $AllMachineCatalogs
+	}
+	ElseIf($? -and ($Null -eq $AllMachineCatalogs))
+	{
+		$txt = "There are no Machine Catalogs"
+		OutputWarning $txt
+	}
+	Else
+	{
+		$txt = "Unable to retrieve Machine Catalogs"
+		OutputWarning $txt
+	}
+	Write-Verbose "$(Get-Date): "
+}
+
+Function OutputMachines
+{
+	Param([object]$Catalogs)
+	
+	Write-Verbose "$(Get-Date): `tProcessing Machine Catalogs"
+	
 	#add 16-jun-2015, summary table of catalogs to match what is shown in Studio
 	If($MSWord -or $PDF)
 	{
@@ -7080,6 +7105,23 @@ Function OutputMachines
 Function ProcessAppDisks
 {
 	Write-Verbose "$(Get-Date): Retrieving AppDisks"
+
+	$txt = "AppDisks"
+	If($MSWord -or $PDF)
+	{
+		$Selection.InsertNewPage()
+		WriteWordLine 1 0 $txt
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 $txt
+	}
+
 	$Global:TotalAppDisks = 0
 
 	$AllAppDisks = Get-AppLibAppDisk @XDParams2 -SortBy AppDiskName 
@@ -7116,22 +7158,6 @@ Function ProcessAppDisks
 Function OutputAppDiskTable
 {
 	Param([object] $AllAppDisks)
-
-	$txt = "AppDisks"
-	If($MSWord -or $PDF)
-	{
-		$Selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
-	}
-	ElseIf($Text)
-	{
-		Line 0 $txt
-		Line 0 ""
-	}
-	ElseIf($HTML)
-	{
-		WriteHTMLLine 1 0 $txt
-	}
 
 	If($MSWord -or $PDF)
 	{
@@ -9249,6 +9275,22 @@ Function ProcessDeliveryGroups
 {
 	Write-Verbose "$(Get-Date): Retrieving Delivery Groups"
 	
+	$txt = "Delivery Groups"
+	If($MSWord -or $PDF)
+	{
+		$Selection.InsertNewPage()
+		WriteWordLine 1 0 $txt
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 $txt
+	}
+
 	$Global:TotalApplicationGroups = 0
 	$Global:TotalDesktopGroups = 0
 	$Global:TotalAppsAndDesktopGroups = 0
@@ -9284,22 +9326,6 @@ Function OutputDeliveryGroupTable
 {
 	Param([object] $AllDeliveryGroups)
 	
-	$txt = "Delivery Groups"
-	If($MSWord -or $PDF)
-	{
-		$Selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
-	}
-	ElseIf($Text)
-	{
-		Line 0 $txt
-		Line 0 ""
-	}
-	ElseIf($HTML)
-	{
-		WriteHTMLLine 1 0 $txt
-	}
-
 	If($MSWord -or $PDF)
 	{
 		[System.Collections.Hashtable[]] $WordTable = @();
@@ -12142,6 +12168,22 @@ Function ProcessApplications
 {
 	Write-Verbose "$(Get-Date): Retrieving Applications"
 	
+	$txt = "Applications"
+	If($MSWord -or $PDF)
+	{
+		$Selection.InsertNewPage()
+		WriteWordLine 1 0 $txt
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 $txt
+	}
+
 	$Global:TotalPublishedApplications = 0
 	$Global:TotalAppvApplications = 0
 	
@@ -12168,22 +12210,6 @@ Function OutputApplications
 	Param([object]$AllApplications)
 	
 	Write-Verbose "$(Get-Date): `tProcessing Applications"
-
-	$txt = "Applications"
-	If($MSWord -or $PDF)
-	{
-		$Selection.InsertNewPage()
-		WriteWordLine 1 0 $txt
-	}
-	ElseIf($Text)
-	{
-		Line 0 $txt
-		Line 0 ""
-	}
-	ElseIf($HTML)
-	{
-		WriteHTMLLine 1 0 $txt
-	}
 
 	If($MSWord -or $PDF)
 	{
@@ -17421,6 +17447,63 @@ Function ProcessCitrixPolicies
 						$array = $Null
 						$tmp = $Null
 					}
+					If((validStateProp $Setting WebBrowserRedirectionBlacklist State ) -and ($Setting.WebBrowserRedirectionBlacklist.State -ne "NotConfigured"))
+					{
+						#new in 7.17
+						$txt = "ICA\Multimedia\Browser Content Redirection Blacklist Configuration"
+						$array = $Setting.WebBrowserRedirectionBlacklist.Values.Split(';')
+						$tmp = $array[0]
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $tmp;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp 
+						}
+
+						$txt = ""
+						$cnt = -1
+						ForEach($element in $array)
+						{
+							$cnt++
+							
+							If($cnt -ne 0)
+							{
+								$tmp = "$($element) "
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = "";
+									Value = $tmp;
+									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									"",$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting "" $tmp
+								}
+							}
+						}
+						$array = $Null
+						$tmp = $Null
+					}
 					If((validStateProp $Setting WebBrowserRedirectionProxy State ) -and ($Setting.WebBrowserRedirectionProxy.State -ne "NotConfigured"))
 					{
 						#new in 7.16
@@ -19603,6 +19686,227 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.SessionIdleTimerInterval.Value 
+						}
+					}
+
+					Write-Verbose "$(Get-Date): `t`t`tICA\Session Watermark"
+					If((validStateProp $Setting EnableSessionWatermark State ) -and ($Setting.EnableSessionWatermark.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Enable session watermark"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.EnableSessionWatermark.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.EnableSessionWatermark.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.EnableSessionWatermark.State 
+						}
+					}
+
+					Write-Verbose "$(Get-Date): `t`t`tICA\Session Watermark\Watermark Content"
+					If((validStateProp $Setting WatermarkIncludeClientIPAddress State ) -and ($Setting.WatermarkIncludeClientIPAddress.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include client IP address"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeClientIPAddress.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeClientIPAddress.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeClientIPAddress.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkIncludeConnectTime State ) -and ($Setting.WatermarkIncludeConnectTime.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include connection time"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeConnectTime.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeConnectTime.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeConnectTime.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkIncludeLogonUsername State ) -and ($Setting.WatermarkIncludeLogonUsername.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include logon user name"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeLogonUsername.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeLogonUsername.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeLogonUsername.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkIncludeVDAHostName State ) -and ($Setting.WatermarkIncludeVDAHostName.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include VDA host name"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeVDAHostName.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeVDAHostName.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeVDAHostName.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkIncludeVDAIPAddress State ) -and ($Setting.WatermarkIncludeVDAIPAddress.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Include VDA IP address"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkIncludeVDAIPAddress.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkIncludeVDAIPAddress.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkIncludeVDAIPAddress.State 
+						}
+					}
+					If((validStateProp $Setting WatermarkCustomText State ) -and ($Setting.WatermarkCustomText.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Content\Watermark custom text"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkCustomText.Value;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkCustomText.Value,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkCustomText.Value 
+						}
+					}
+
+					Write-Verbose "$(Get-Date): `t`t`tICA\Session Watermark\Watermark Style"
+					If((validStateProp $Setting WatermarkStyle State ) -and ($Setting.WatermarkStyle.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Style\Session watermark style"
+						$tmp = ""
+						Switch ($Setting.WatermarkStyle.Value)
+						{
+							"StyleMutiple" {$tmp = "Multiple"; Break}
+							"StyleSingle"   {$tmp = "Single"; Break}
+							Default {$tmp = "Session watermark style could not be determined: $($Setting.WatermarkStyle.Value)"; Break}
+						}
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $tmp;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp
+						}
+						$tmp = $Null
+					}
+					If((validStateProp $Setting WatermarkTransparency State ) -and ($Setting.WatermarkTransparency.State -ne "NotConfigured"))
+					{
+						#New in 7.17
+						$txt = "ICA\Session Watermark\Watermark Style\Watermark transparency"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WatermarkTransparency.Value;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WatermarkTransparency.Value,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.WatermarkTransparency.Value 
 						}
 					}
 
@@ -26950,7 +27254,9 @@ Function OutputCEIPSetting
 Function GetSQLVersion
 {
 	Param([object]$SQLsrv)
-	
+
+	#V2.11 add SQL 2017
+	#V2.11 add more info to the Default message
 	$Major = $SQLsrv.VersionMajor
 	$Minor = $SQLsrv.VersionMinor
 	$SQLVer = ""
@@ -26964,16 +27270,60 @@ Function GetSQLVersion
 		11                         {$SQLVer = "SQL Server 2012"; Break}
 		12                         {$SQLVer = "SQL Server 2014"; Break}
 		13                         {$SQLVer = "SQL Server 2016"; Break}
-		Default                    {$SQLVer = "Unable to determine SQL Server version"; Break}
+		14                         {$SQLVer = "SQL Server 2017"; Break}
+		Default                    {$SQLVer = "Unable to determine SQL Server version. Major: $($Major) Minor: $($Minor) Edition: $($SQLEdition)"; Break}
 	}
 
 	Return $SQLVersion = "$($SQLVer) $($SQLEdition)"
 }
 
+Function GetDBCompatibilityLevel
+{
+	Param([string]$DBCompat)
+
+	#Added in version V2.11
+	<#
+		https://www.spiria.com/en/blog/web-applications/understanding-sql-server-compatibility-levels
+		
+		Database Compatibility Level	Description
+		140								SQL Server 2017
+		130								SQL Server 2016	
+		120								SQL Server 2014	
+		110								SQL Server 2012	
+		100								SQL Server 2008 
+		90								SQL Server 2005	
+		80								SQL Server 2000	
+	#>
+
+	$tmp = ""
+	Switch($DBCompat)
+	{
+		"140"			{$tmp = "SQL Server 2017"}
+		"130"			{$tmp = "SQL Server 2016"}
+		"120"			{$tmp = "SQL Server 2014"}
+		"110"			{$tmp = "SQL Server 2012"}
+		"100"			{$tmp = "SQL Server 2008"}
+		"90"			{$tmp = "SQL Server 2005"}
+		"80"			{$tmp = "SQL Server 2000"}
+		"Version140"	{$tmp = "SQL Server 2017"}
+		"Version130"	{$tmp = "SQL Server 2016"}
+		"Version120"	{$tmp = "SQL Server 2014"}
+		"Version110"	{$tmp = "SQL Server 2012"}
+		"Version100"	{$tmp = "SQL Server 2008"}
+		"Version90"		{$tmp = "SQL Server 2005"}
+		"Version80"		{$tmp = "SQL Server 2000"}
+		Default			{$tmp = "Unable to determine Database Compatibility Level: $DBCompat"}
+	}
+	
+	Return $tmp
+}
+
 Function OutputDatastores
 {
 	#2-Mar-2017 Fix bug reported by P. Ewing
-
+	
+	#V2.11 add additional database details and change from a horizontal table to a vertical table
+	
 	#line starts with server=SQLServerName;
 	#only need what is between the = and ;
 	
@@ -26987,11 +27337,11 @@ Function OutputDatastores
 	[string]$ConfigDBSize = "Unable to determine"
 	[string]$ConfigDBReadCommittedSnapshot = "Unable to determine"
 	[string]$ConfigDBSQLVersion = "Unable to determine"
-	$ConfigDB = Get-ConfigDBConnection @XDParams1
+	$ConfigDBs = Get-ConfigDBConnection @XDParams1
 
-	If($? -and ($Null -ne $ConfigDB))
+	If($? -and ($Null -ne $ConfigDBs))
 	{
-		$tmp = $ConfigDB
+		$tmp = $ConfigDBs
 		$csitems = $tmp.Split(';')
 		ForEach($csitem in $csitems)
 		{
@@ -27009,9 +27359,31 @@ Function OutputDatastores
 		If($Script:SQLServerLoaded)
 		{
 			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerPrincipalName)")
-			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-			$db = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
-			If($db.IsReadCommittedSnapshotOn)
+			$Configdb = New-Object Microsoft.SqlServer.Management.Smo.Database
+			$Configdb = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
+			[string]$Configdbsize = "Unable to determine" -f $Configdb.size
+			If($Null -ne $Configdb.size)
+			{
+				[string]$Configdbsize = "{0:F2} MB" -f $Configdb.size
+			}
+			ElseIf($Null -eq $Configdb.size -and $ConfigSQLServerMirrorName -ne "Not Configured")
+			{
+				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerMirrorName)")
+				$Configdb = New-Object Microsoft.SqlServer.Management.Smo.Database
+				$Configdb = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
+				If($Null -ne $Configdb.size)
+				{
+					[string]$Configdbsize = "{0:F2} MB" -f $Configdb.size
+				}
+			}
+			
+			$ConfigDBParent 									= $Configdb.Parent
+			$ConfigDBCollation 									= $Configdb.Collation
+			$ConfigDBSQLVersion 								= GetSQLVersion $SQLsrv
+			$ConfigDBCompatibilityLevel 						= GetDBCompatibilityLevel $Configdb.CompatibilityLevel
+			$ConfigDBCreateDate 								= $Configdb.CreateDate.ToString()
+
+			If($Configdb.IsReadCommittedSnapshotOn)
 			{
 				$ConfigDBReadCommittedSnapshot = "Enabled"
 			}
@@ -27019,21 +27391,61 @@ Function OutputDatastores
 			{
 				$ConfigDBReadCommittedSnapshot = "Disabled"
 			}
-			$ConfigDBSQLVersion = GetSQLVersion $SQLsrv
-			[string]$Configdbsize = "Unable to determine" -f $db.size
-			If($Null -ne $db.size)
+
+			$ConfigDBLastBackupDate 	= $Configdb.LastBackupDate.ToString()
+			$ConfigDBLastLogBackupDate 	= $Configdb.LastLogBackupDate.ToString()
+			$ConfigDBRecoveryModel 		= $Configdb.RecoveryModel
+
+			If(![String]::IsNullOrEmpty($Configdb.AvailabilityGroupName))
 			{
-				[string]$Configdbsize = "{0:F2} MB" -f $db.size
+				$ConfigDBAvailabilityGroupName 						= $Configdb.AvailabilityGroupName
+				$ConfigDBAvailabilityDatabaseSynchronizationState 	= $Configdb.AvailabilityDatabaseSynchronizationState
 			}
-			ElseIf($Null -eq $db.size -and $ConfigSQLServerMirrorName -ne "Not Configured")
+			Else
 			{
-				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerMirrorName)")
-				$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-				$db = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
-				If($Null -ne $db.size)
+				$ConfigDBAvailabilityGroupName 						= "-"
+				$ConfigDBAvailabilityDatabaseSynchronizationState 	= "-"
+			}
+			
+			If($Configdb.IsMirroringEnabled)
+			{
+				$ConfigDBMirroringPartner			= $Configdb.MirroringPartner
+				$ConfigDBMirroringPartnerInstance	= $Configdb.MirroringPartnerInstance
+				$ConfigDBMirroringSafetyLevel		= $Configdb.MirroringSafetyLevel
+				$ConfigDBMirroringStatus			= $Configdb.MirroringStatus
+				$ConfigDBMirroringWitness			= $Configdb.MirroringWitness
+				$ConfigDBMirroringWitnessStatus		= $Configdb.MirroringWitnessStatus
+			}
+			Else
+			{
+				$ConfigDBMirroringPartner			= "-"
+				$ConfigDBMirroringPartnerInstance	= "-"
+				$ConfigDBMirroringSafetyLevel		= "-"
+				$ConfigDBMirroringStatus			= "-"
+				$ConfigDBMirroringWitness			= "-"
+				$ConfigDBMirroringWitnessStatus		= "-"
+			}
+			
+			#check for log backup status
+			If($ConfigDBRecoveryModel -eq "Simple")
+			{
+				If($ConfigDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
 				{
-					[string]$Configdbsize = "{0:F2} MB" -f $db.size
+					$ConfigDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
 				}
+			}
+			ElseIf($ConfigDBRecoveryModel -eq "Full")
+			{
+				If($ConfigDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$ConfigDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+				}
+			}
+			
+			#check for database backup
+			If($ConfigDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+			{
+				$ConfigDBLastBackupDate = "Database backup not detected"
 			}
 		}
 	}
@@ -27077,9 +27489,31 @@ Function OutputDatastores
 		If($Script:SQLServerLoaded)
 		{
 			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
-			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-			$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-			If($db.IsReadCommittedSnapshotOn)
+			$Logdb = New-Object Microsoft.SqlServer.Management.Smo.Database
+			$Logdb = $SQLsrv.Databases.Item("$($LogDatabaseName)")
+			[string]$Logdbsize = "Unable to determine" -f $Logdb.size
+			If($Null -ne $Logdb.size)
+			{
+				[string]$Logdbsize = "{0:F2} MB" -f $Logdb.size
+			}
+			ElseIf($Null -eq $Logdb.size -and $LogSQLServerMirrorName -ne "Not Configured")
+			{
+				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerMirrorName)")
+				$Logdb = New-Object Microsoft.SqlServer.Management.Smo.Database
+				$Logdb = $SQLsrv.Databases.Item("$($LogDatabaseName)")
+				If($Null -ne $Logdb.size)
+				{
+					[string]$Logdbsize = "{0:F2} MB" -f $Logdb.size
+				}
+			}
+
+			$LogDBParent 									= $LogDB.Parent
+			$LogDBCollation 								= $LogDB.Collation
+			$LogDBSQLVersion 								= GetSQLVersion $SQLsrv
+			$LogDBCompatibilityLevel 						= GetDBCompatibilityLevel $LogDB.CompatibilityLevel
+			$LogDBCreateDate 								= $LogDB.CreateDate.ToString()
+
+			If($LogDB.IsReadCommittedSnapshotOn)
 			{
 				$LogDBReadCommittedSnapshot = "Enabled"
 			}
@@ -27087,21 +27521,61 @@ Function OutputDatastores
 			{
 				$LogDBReadCommittedSnapshot = "Disabled"
 			}
-			$LogDBSQLVersion = GetSQLVersion $SQLsrv
-			[string]$Logdbsize = "Unable to determine" -f $db.size
-			If($Null -ne $db.size)
+
+			$LogDBLastBackupDate 	= $LogDB.LastBackupDate.ToString()
+			$LogDBLastLogBackupDate	= $LogDB.LastLogBackupDate.ToString()
+			$LogDBRecoveryModel 	= $LogDB.RecoveryModel
+
+			If(![String]::IsNullOrEmpty($LogDB.AvailabilityGroupName))
 			{
-				[string]$Logdbsize = "{0:F2} MB" -f $db.size
+				$LogDBAvailabilityGroupName 					= $LogDB.AvailabilityGroupName
+				$LogDBAvailabilityDatabaseSynchronizationState 	= $LogDB.AvailabilityDatabaseSynchronizationState
 			}
-			ElseIf($Null -eq $db.size -and $LogSQLServerMirrorName -ne "Not Configured")
+			Else
 			{
-				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerMirrorName)")
-				$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-				$db = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-				If($Null -ne $db.size)
+				$LogDBAvailabilityGroupName 					= "-"
+				$LogDBAvailabilityDatabaseSynchronizationState 	= "-"
+			}
+			
+			If($LogDB.IsMirroringEnabled)
+			{
+				$LogDBMirroringPartner			= $LogDB.MirroringPartner
+				$LogDBMirroringPartnerInstance	= $LogDB.MirroringPartnerInstance
+				$LogDBMirroringSafetyLevel		= $LogDB.MirroringSafetyLevel
+				$LogDBMirroringStatus			= $LogDB.MirroringStatus
+				$LogDBMirroringWitness			= $LogDB.MirroringWitness
+				$LogDBMirroringWitnessStatus	= $LogDB.MirroringWitnessStatus
+			}
+			Else
+			{
+				$LogDBMirroringPartner			= "-"
+				$LogDBMirroringPartnerInstance	= "-"
+				$LogDBMirroringSafetyLevel		= "-"
+				$LogDBMirroringStatus			= "-"
+				$LogDBMirroringWitness			= "-"
+				$LogDBMirroringWitnessStatus	= "-"
+			}
+
+			#check for log backup status
+			If($LogDBRecoveryModel -eq "Simple")
+			{
+				If($LogDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
 				{
-					[string]$Logdbsize = "{0:F2} MB" -f $db.size
+					$LogDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
 				}
+			}
+			ElseIf($LogDBRecoveryModel -eq "Full")
+			{
+				If($LogDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$LogDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+				}
+			}
+			
+			#check for database backup
+			If($LogDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+			{
+				$LogDBLastBackupDate = "Database backup not detected"
 			}
 		}
 	}
@@ -27149,9 +27623,31 @@ Function OutputDatastores
 		If($Script:SQLServerLoaded)
 		{
 			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerPrincipalName)")
-			$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-			$db = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
-			If($db.IsReadCommittedSnapshotOn)
+			$Monitordb = New-Object Microsoft.SqlServer.Management.Smo.Database
+			$Monitordb = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
+			[string]$Monitordbsize = "Unable to determine" -f $Monitordb.size
+			If($Null -ne $Monitordb.size)
+			{
+				[string]$Monitordbsize = "{0:F2} MB" -f $Monitordb.size
+			}
+			ElseIf($Null -eq $Monitordb.size -and $MonitorSQLServerMirrorName -ne "Not Configured")
+			{
+				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerMirrorName)")
+				$Monitordb = New-Object Microsoft.SqlServer.Management.Smo.Database
+				$Monitordb = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
+				If($Null -ne $Monitordb.size)
+				{
+					[string]$Monitordbsize = "{0:F2} MB" -f $Monitordb.size
+				}
+			}
+
+			$MonitorDBParent 				= $MonitorDB.Parent
+			$MonitorDBCollation 			= $MonitorDB.Collation
+			$MonitorDBSQLVersion 			= GetSQLVersion $SQLsrv
+			$MonitorDBCompatibilityLevel	= GetDBCompatibilityLevel $MonitorDB.CompatibilityLevel
+			$MonitorDBCreateDate 			= $MonitorDB.CreateDate.ToString()
+
+			If($MonitorDB.IsReadCommittedSnapshotOn)
 			{
 				$MonitorDBReadCommittedSnapshot = "Enabled"
 			}
@@ -27159,21 +27655,61 @@ Function OutputDatastores
 			{
 				$MonitorDBReadCommittedSnapshot = "Disabled"
 			}
-			$MonitorDBSQLVersion = GetSQLVersion $SQLsrv
-			[string]$Monitordbsize = "Unable to determine" -f $db.size
-			If($Null -ne $db.size)
+
+			$MonitorDBLastBackupDate 	= $MonitorDB.LastBackupDate.ToString()
+			$MonitorDBLastLogBackupDate	= $MonitorDB.LastLogBackupDate.ToString()
+			$MonitorDBRecoveryModel 	= $MonitorDB.RecoveryModel
+
+			If(![String]::IsNullOrEmpty($MonitorDB.AvailabilityGroupName))
 			{
-				[string]$Monitordbsize = "{0:F2} MB" -f $db.size
+				$MonitorDBAvailabilityGroupName 					= $MonitorDB.AvailabilityGroupName
+				$MonitorDBAvailabilityDatabaseSynchronizationState 	= $MonitorDB.AvailabilityDatabaseSynchronizationState
 			}
-			ElseIf($Null -eq $db.size -and $MonitorSQLServerMirrorName -ne "Not Configured")
+			Else
 			{
-				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerMirrorName)")
-				$db = New-Object Microsoft.SqlServer.Management.Smo.Database
-				$db = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
-				If($Null -ne $db.size)
+				$MonitorDBAvailabilityGroupName 					= "-"
+				$MonitorDBAvailabilityDatabaseSynchronizationState 	= "-"
+			}
+			
+			If($MonitorDB.IsMirroringEnabled)
+			{
+				$MonitorDBMirroringPartner			= $MonitorDB.MirroringPartner
+				$MonitorDBMirroringPartnerInstance	= $MonitorDB.MirroringPartnerInstance
+				$MonitorDBMirroringSafetyLevel		= $MonitorDB.MirroringSafetyLevel
+				$MonitorDBMirroringStatus			= $MonitorDB.MirroringStatus
+				$MonitorDBMirroringWitness			= $MonitorDB.MirroringWitness
+				$MonitorDBMirroringWitnessStatus	= $MonitorDB.MirroringWitnessStatus
+			}
+			Else
+			{
+				$MonitorDBMirroringPartner			= "-"
+				$MonitorDBMirroringPartnerInstance	= "-"
+				$MonitorDBMirroringSafetyLevel		= "-"
+				$MonitorDBMirroringStatus			= "-"
+				$MonitorDBMirroringWitness			= "-"
+				$MonitorDBMirroringWitnessStatus	= "-"
+			}
+
+			#check for log backup status
+			If($MonitorDBRecoveryModel -eq "Simple")
+			{
+				If($MonitorDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
 				{
-					[string]$Monitordbsize = "{0:F2} MB" -f $db.size
+					$MonitorDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
 				}
+			}
+			ElseIf($MonitorDBRecoveryModel -eq "Full")
+			{
+				If($MonitorDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$MonitorDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+				}
+			}
+			
+			#check for database backup
+			If($MonitorDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+			{
+				$MonitorDBLastBackupDate = "Database backup not detected"
 			}
 		}
 		
@@ -27219,54 +27755,126 @@ Function OutputDatastores
 	If($MSWord -or $PDF)
 	{
 		WriteWordLine 2 0 "Datastores"
-		[System.Collections.Hashtable[]] $DBsWordTable = @();
-		$WordTableRowHash = @{ 
-		DataStore = "Site";
-		DatabaseName = $ConfigDatabaseName;
-		ServerAddress = $ConfigSQLServerPrincipalName;
-		MirrorServerAddress = $ConfigSQLServerMirrorName;
-		DBSize = $ConfigDBSize;
-		ReadCommittedSnapshot = $ConfigDBReadCommittedSnapshot;
-		SQLVersion = $ConfigDBSQLVersion;
-		}
-		$DBsWordTable += $WordTableRowHash;
-
-		$WordTableRowHash = @{ 
-		DataStore = "Logging";
-		DatabaseName = $LogDatabaseName;
-		ServerAddress = $LogSQLServerPrincipalName;
-		MirrorServerAddress = $LogSQLServerMirrorName;
-		DBSize = $LogDBSize;
-		ReadCommittedSnapshot = $LogDBReadCommittedSnapshot;
-		SQLVersion = $LogDBSQLVersion;
-		}
-		$DBsWordTable += $WordTableRowHash;
-
-		$WordTableRowHash = @{ 
-		DataStore = "Monitoring";
-		DatabaseName = $MonitorDatabaseName;
-		ServerAddress = $MonitorSQLServerPrincipalName;
-		MirrorServerAddress = $MonitorSQLServerMirrorName;
-		DBSize = $MonitorDBSize;
-		ReadCommittedSnapshot = $MonitorDBReadCommittedSnapshot;
-		SQLVersion = $MonitorDBSQLVersion;
-		}
-		$DBsWordTable += $WordTableRowHash;
-
-		$Table = AddWordTable -Hashtable $DBsWordTable `
-		-Columns DataStore, DatabaseName, ServerAddress, MirrorServerAddress, DBSize, ReadCommittedSnapshot, SQLVersion `
-		-Headers "Datastore", "Database Name", "Server Address", "Mirror Server Address", "Database Size", "Read-Committed Snapshot", "SQL Server Version" `
+		[System.Collections.Hashtable[]] $ScriptInformation = @()
+		$ScriptInformation += @{Data = "Datastore"; Value = "Site"; }
+		$ScriptInformation += @{Data = "Database Name"; Value = $ConfigDatabaseName; }
+		$ScriptInformation += @{Data = "Availability Database Synchronization State"; Value = $ConfigDBAvailabilityDatabaseSynchronizationState; }
+		$ScriptInformation += @{Data = "Availability Group Name"; Value = $ConfigDBAvailabilityGroupName; }
+		$ScriptInformation += @{Data = "Collation"; Value = $ConfigDBCollation; }
+		$ScriptInformation += @{Data = "Compatibility Level"; Value = $ConfigDBCompatibilityLevel; }
+		$ScriptInformation += @{Data = "Create Date"; Value = $ConfigDBCreateDate; }
+		$ScriptInformation += @{Data = "Database Size"; Value = $ConfigDBSize; }
+		$ScriptInformation += @{Data = "Last Backup Date"; Value = $ConfigDBLastBackupDate; }
+		$ScriptInformation += @{Data = "Last Log Backup Date"; Value = $ConfigDBLastLogBackupDate; }
+		$ScriptInformation += @{Data = "Mirror Server Address"; Value = $ConfigSQLServerMirrorName; }
+		$ScriptInformation += @{Data = "Mirroring Partner"; Value = $ConfigDBMirroringPartner; }
+		$ScriptInformation += @{Data = "Mirroring Partner Instance"; Value = $ConfigDBMirroringPartnerInstance; }
+		$ScriptInformation += @{Data = "Mirroring Safety Level"; Value = $ConfigDBMirroringSafetyLevel; }
+		$ScriptInformation += @{Data = "Mirroring Status"; Value = $ConfigDBMirroringStatus; }
+		$ScriptInformation += @{Data = "Mirroring Witness"; Value = $ConfigDBMirroringWitness; }
+		$ScriptInformation += @{Data = "Mirroring Witness Status"; Value = $ConfigDBMirroringWitnessStatus; }
+		$ScriptInformation += @{Data = "Parent"; Value = $ConfigDBParent; }
+		$ScriptInformation += @{Data = "Read-Committed Snapshot"; Value = $ConfigDBReadCommittedSnapshot; }
+		$ScriptInformation += @{Data = "Recovery Model"; Value = $ConfigDBRecoveryModel; }
+		$ScriptInformation += @{Data = "Server Address"; Value = $ConfigSQLServerPrincipalName; }
+		$ScriptInformation += @{Data = "SQL Server Version"; Value = $ConfigDBSQLVersion; }
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
 		-Format $wdTableGrid `
-		-AutoFit $wdAutoFitContent;
+		-AutoFit $wdAutoFitFixed;
 
-		SetWordCellFormat -Collection $Table -Size 9
-		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 200;
 
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
 		FindWordDocumentEnd
 		$Table = $Null
-		
+		WriteWordLine 0 0 ""
+
+		[System.Collections.Hashtable[]] $ScriptInformation = @()
+		$ScriptInformation += @{Data = "Datastore"; Value = "Logging"; }
+		$ScriptInformation += @{Data = "Database Name"; Value = $LogDatabaseName; }
+		$ScriptInformation += @{Data = "Availability Database Synchronization State"; Value = $LogDBAvailabilityDatabaseSynchronizationState; }
+		$ScriptInformation += @{Data = "Availability Group Name"; Value = $LogDBAvailabilityGroupName; }
+		$ScriptInformation += @{Data = "Collation"; Value = $LogDBCollation; }
+		$ScriptInformation += @{Data = "Compatibility Level"; Value = $LogDBCompatibilityLevel; }
+		$ScriptInformation += @{Data = "Create Date"; Value = $LogDBCreateDate; }
+		$ScriptInformation += @{Data = "Database Size"; Value = $LogDBSize; }
+		$ScriptInformation += @{Data = "Last Backup Date"; Value = $LogDBLastBackupDate; }
+		$ScriptInformation += @{Data = "Last Log Backup Date"; Value = $LogDBLastLogBackupDate; }
+		$ScriptInformation += @{Data = "Mirror Server Address"; Value = $ConfigSQLServerMirrorName; }
+		$ScriptInformation += @{Data = "Mirroring Partner"; Value = $LogDBMirroringPartner; }
+		$ScriptInformation += @{Data = "Mirroring Partner Instance"; Value = $LogDBMirroringPartnerInstance; }
+		$ScriptInformation += @{Data = "Mirroring Safety Level"; Value = $LogDBMirroringSafetyLevel; }
+		$ScriptInformation += @{Data = "Mirroring Status"; Value = $LogDBMirroringStatus; }
+		$ScriptInformation += @{Data = "Mirroring Witness"; Value = $LogDBMirroringWitness; }
+		$ScriptInformation += @{Data = "Mirroring Witness Status"; Value = $LogDBMirroringWitnessStatus; }
+		$ScriptInformation += @{Data = "Parent"; Value = $LogDBParent; }
+		$ScriptInformation += @{Data = "Read-Committed Snapshot"; Value = $LogDBReadCommittedSnapshot; }
+		$ScriptInformation += @{Data = "Recovery Model"; Value = $LogDBRecoveryModel; }
+		$ScriptInformation += @{Data = "Server Address"; Value = $LogSQLServerPrincipalName; }
+		$ScriptInformation += @{Data = "SQL Server Version"; Value = $LogDBSQLVersion; }
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 200;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
+		WriteWordLine 0 0 ""
+
+		[System.Collections.Hashtable[]] $ScriptInformation = @()
+		$ScriptInformation += @{Data = "Datastore"; Value = "Monitoring"; }
+		$ScriptInformation += @{Data = "Database Name"; Value = $MonitorDatabaseName; }
+		$ScriptInformation += @{Data = "Availability Database Synchronization State"; Value = $MonitorDBAvailabilityDatabaseSynchronizationState; }
+		$ScriptInformation += @{Data = "Availability Group Name"; Value = $MonitorDBAvailabilityGroupName; }
+		$ScriptInformation += @{Data = "Collation"; Value = $MonitorDBCollation; }
+		$ScriptInformation += @{Data = "Compatibility Level"; Value = $MonitorDBCompatibilityLevel; }
+		$ScriptInformation += @{Data = "Create Date"; Value = $MonitorDBCreateDate; }
+		$ScriptInformation += @{Data = "Database Size"; Value = $MonitorDBSize; }
+		$ScriptInformation += @{Data = "Last Backup Date"; Value = $MonitorDBLastBackupDate; }
+		$ScriptInformation += @{Data = "Last Log Backup Date"; Value = $MonitorDBLastLogBackupDate; }
+		$ScriptInformation += @{Data = "Mirror Server Address"; Value = $ConfigSQLServerMirrorName; }
+		$ScriptInformation += @{Data = "Mirroring Partner"; Value = $MonitorDBMirroringPartner; }
+		$ScriptInformation += @{Data = "Mirroring Partner Instance"; Value = $MonitorDBMirroringPartnerInstance; }
+		$ScriptInformation += @{Data = "Mirroring Safety Level"; Value = $MonitorDBMirroringSafetyLevel; }
+		$ScriptInformation += @{Data = "Mirroring Status"; Value = $MonitorDBMirroringStatus; }
+		$ScriptInformation += @{Data = "Mirroring Witness"; Value = $MonitorDBMirroringWitness; }
+		$ScriptInformation += @{Data = "Mirroring Witness Status"; Value = $MonitorDBMirroringWitnessStatus; }
+		$ScriptInformation += @{Data = "Parent"; Value = $MonitorDBParent; }
+		$ScriptInformation += @{Data = "Read-Committed Snapshot"; Value = $MonitorDBReadCommittedSnapshot; }
+		$ScriptInformation += @{Data = "Recovery Model"; Value = $MonitorDBRecoveryModel; }
+		$ScriptInformation += @{Data = "Server Address"; Value = $MonitorSQLServerPrincipalName; }
+		$ScriptInformation += @{Data = "SQL Server Version"; Value = $MonitorDBSQLVersion; }
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 200;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
+		WriteWordLine 0 0 ""
+
 		WriteWordLine 3 0 "Monitoring Database Details"
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{Data = "Collect Hotfix Data"; Value = $MonitorCollectHotfix; }
@@ -27399,28 +28007,73 @@ Function OutputDatastores
 		Line 0 "Datastores"
 		Line 0 ""
 		Line 1 "Datastore: Site"
-		Line 2 "Database Name`t`t: " $ConfigDatabaseName
-		Line 2 "Server Address`t`t: " $ConfigSQLServerPrincipalName
-		Line 2 "Mirror Server Address`t: " $ConfigSQLServerMirrorName
-		Line 2 "Database Size`t`t: " $ConfigDBSize
-		Line 2 "Read-Committed Snapshot`t: " $ConfigDBReadCommittedSnapshot
-		Line 2 "SQL Server Version`t: " $ConfigDBSQLVersion
+		Line 2 "Database Name`t`t`t`t`t: " $ConfigDatabaseName
+		Line 2 "Availability Database Synchronization State`t: " $ConfigDBAvailabilityDatabaseSynchronizationState
+		Line 2 "Availability Group Name`t`t`t`t: " $ConfigDBAvailabilityGroupName
+		Line 2 "Collation`t`t`t`t`t: " $ConfigDBCollation
+		Line 2 "Compatibility Level`t`t`t`t: " $ConfigDBCompatibilityLevel
+		Line 2 "Create Date`t`t`t`t`t: " $ConfigDBCreateDate
+		Line 2 "Database Size`t`t`t`t`t: " $ConfigDBSize
+		Line 2 "Last Backup Date`t`t`t`t: " $ConfigDBLastBackupDate
+		Line 2 "Last Log Backup Date`t`t`t`t: " $ConfigDBLastLogBackupDate
+		Line 2 "Mirror Server Address`t`t`t`t: " $ConfigSQLServerMirrorName
+		Line 2 "Mirroring Partner`t`t`t`t: " $ConfigDBMirroringPartner
+		Line 2 "Mirroring Partner Instance`t`t`t: " $ConfigDBMirroringPartnerInstance
+		Line 2 "Mirroring Safety Level`t`t`t`t: " $ConfigDBMirroringSafetyLevel
+		Line 2 "Mirroring Status`t`t`t`t: " $ConfigDBMirroringStatus
+		Line 2 "Mirroring Witness`t`t`t`t: " $ConfigDBMirroringWitness
+		Line 2 "Mirroring Witness Status`t`t`t: " $ConfigDBMirroringWitnessStatus
+		Line 2 "Parent`t`t`t`t`t`t: " $ConfigDBParent
+		Line 2 "Read-Committed Snapshot`t`t`t`t: " $ConfigDBReadCommittedSnapshot
+		Line 2 "Recovery Model`t`t`t`t`t: " $ConfigDBRecoveryModel
+		Line 2 "Server Address`t`t`t`t`t: " $ConfigSQLServerPrincipalName
+		Line 2 "SQL Server Version`t`t`t`t: " $ConfigDBSQLVersion
 		Line 0 ""
 		Line 1 "Datastore: Logging"
-		Line 2 "Database Name`t`t: " $LogDatabaseName
-		Line 2 "Server Address`t`t: " $LogSQLServerPrincipalName
-		Line 2 "Mirror Server Address`t: " $LogSQLServerMirrorName
-		Line 2 "Database Size`t`t: " $LogDBSize
-		Line 2 "Read-Committed Snapshot`t: " $LogDBReadCommittedSnapshot
-		Line 2 "SQL Server Version`t: " $LogDBSQLVersion
+		Line 2 "Database Name`t`t`t`t`t: " $LogDatabaseName
+		Line 2 "Availability Database Synchronization State`t: " $LogDBAvailabilityDatabaseSynchronizationState
+		Line 2 "Availability Group Name`t`t`t`t: " $LogDBAvailabilityGroupName
+		Line 2 "Collation`t`t`t`t`t: " $LogDBCollation
+		Line 2 "Compatibility Level`t`t`t`t: " $LogDBCompatibilityLevel
+		Line 2 "Create Date`t`t`t`t`t: " $LogDBCreateDate
+		Line 2 "Database Size`t`t`t`t`t: " $LogDBSize
+		Line 2 "Last Backup Date`t`t`t`t: " $LogDBLastBackupDate
+		Line 2 "Last Log Backup Date`t`t`t`t: " $LogDBLastLogBackupDate
+		Line 2 "Mirror Server Address`t`t`t`t: " $LogSQLServerMirrorName
+		Line 2 "Mirroring Partner`t`t`t`t: " $LogDBMirroringPartner
+		Line 2 "Mirroring Partner Instance`t`t`t: " $LogDBMirroringPartnerInstance
+		Line 2 "Mirroring Safety Level`t`t`t`t: " $LogDBMirroringSafetyLevel
+		Line 2 "Mirroring Status`t`t`t`t: " $LogDBMirroringStatus
+		Line 2 "Mirroring Witness`t`t`t`t: " $LogDBMirroringWitness
+		Line 2 "Mirroring Witness Status`t`t`t: " $LogDBMirroringWitnessStatus
+		Line 2 "Parent`t`t`t`t`t`t: " $LogDBParent
+		Line 2 "Read-Committed Snapshot`t`t`t`t: " $LogDBReadCommittedSnapshot
+		Line 2 "Recovery Model`t`t`t`t`t: " $LogDBRecoveryModel
+		Line 2 "Server Address`t`t`t`t`t: " $LogSQLServerPrincipalName
+		Line 2 "SQL Server Version`t`t`t`t: " $LogDBSQLVersion
 		Line 0 ""
 		Line 1 "Datastore: Monitoring"
-		Line 2 "Database Name`t`t: " $MonitorDatabaseName
-		Line 2 "Server Address`t`t: " $MonitorSQLServerPrincipalName
-		Line 2 "Mirror Server Address`t: " $MonitorSQLServerMirrorName
-		Line 2 "Database Size`t`t: " $MonitorDBSize
-		Line 2 "Read-Committed Snapshot`t: " $MonitorDBReadCommittedSnapshot
-		Line 2 "SQL Server Version`t: " $MonitorDBSQLVersion
+		Line 2 "Database Name`t`t`t`t`t: " $MonitorDatabaseName
+		Line 2 "Availability Database Synchronization State`t: " $MonitorDBAvailabilityDatabaseSynchronizationState
+		Line 2 "Availability Group Name`t`t`t`t: " $MonitorDBAvailabilityGroupName
+		Line 2 "Collation`t`t`t`t`t: " $MonitorDBCollation
+		Line 2 "Compatibility Level`t`t`t`t: " $MonitorDBCompatibilityLevel
+		Line 2 "Create Date`t`t`t`t`t: " $MonitorDBCreateDate
+		Line 2 "Database Size`t`t`t`t`t: " $MonitorDBSize
+		Line 2 "Last Backup Date`t`t`t`t: " $MonitorDBLastBackupDate
+		Line 2 "Last Log Backup Date`t`t`t`t: " $MonitorDBLastLogBackupDate
+		Line 2 "Mirror Server Address`t`t`t`t: " $MonitorSQLServerMirrorName
+		Line 2 "Mirroring Partner`t`t`t`t: " $MonitorDBMirroringPartner
+		Line 2 "Mirroring Partner Instance`t`t`t: " $MonitorDBMirroringPartnerInstance
+		Line 2 "Mirroring Safety Level`t`t`t`t: " $MonitorDBMirroringSafetyLevel
+		Line 2 "Mirroring Status`t`t`t`t: " $MonitorDBMirroringStatus
+		Line 2 "Mirroring Witness`t`t`t`t: " $MonitorDBMirroringWitness
+		Line 2 "Mirroring Witness Status`t`t`t: " $MonitorDBMirroringWitnessStatus
+		Line 2 "Parent`t`t`t`t`t`t: " $MonitorDBParent
+		Line 2 "Read-Committed Snapshot`t`t`t`t: " $MonitorDBReadCommittedSnapshot
+		Line 2 "Recovery Model`t`t`t`t`t: " $MonitorDBRecoveryModel
+		Line 2 "Server Address`t`t`t`t`t: " $MonitorSQLServerPrincipalName
+		Line 2 "SQL Server Version`t`t`t`t: " $MonitorDBSQLVersion
 		Line 0 ""
 
 		Line 1 "Monitoring Database Details"
@@ -27523,46 +28176,87 @@ Function OutputDatastores
 		WriteHTMLLine 2 0 "Datastores"
 		
 		$rowdata = @()
-
-		$rowdata += @(,(
-		'Site',$htmlwhite,
-		$ConfigDatabaseName,$htmlwhite,
-		$ConfigSQLServerPrincipalName,$htmlwhite,
-		$ConfigSQLServerMirrorName,$htmlwhite,
-		$ConfigDBSize,$htmlwhite,
-		$ConfigDBReadCommittedSnapshot,$htmlwhite,
-		$ConfigDBSQLVersion,$htmlwhite))
-
-		$rowdata += @(,(
-		'Logging',$htmlwhite,
-		$LogDatabaseName,$htmlwhite,
-		$LogSQLServerPrincipalName,$htmlwhite,
-		$LogSQLServerMirrorName,$htmlwhite,
-		$LogDBSize,$htmlwhite,
-		$LogDBReadCommittedSnapshot,$htmlwhite,
-		$LogDBSQLVersion,$htmlwhite))
-		
-
-		$rowdata += @(,(
-		'Monitoring',$htmlwhite,
-		$MonitorDatabaseName,$htmlwhite,
-		$MonitorSQLServerPrincipalName,$htmlwhite,
-		$MonitorSQLServerMirrorName,$htmlwhite,
-		$MonitorDBSize,$htmlwhite,
-		$MonitorDBReadCommittedSnapshot,$htmlwhite,
-		$MonitorDBSQLVersion,$htmlwhite))
-
-		$columnHeaders = @(
-		'Datastore',($htmlsilver -bor $htmlbold),
-		'Database Name',($htmlsilver -bor $htmlbold),
-		'Server Address',($htmlsilver -bor $htmlbold),
-		'Mirror Server Address',($htmlsilver -bor $htmlbold),
-		'Database Size',($htmlsilver -bor $htmlbold),
-		'Read-Committed Snapshot',($htmlsilver -bor $htmlbold),
-		'SQL Server Version',($htmlsilver -bor $htmlbold))
-
+		$columnHeaders = @("Datastore",($htmlsilver -bor $htmlbold),"Site",$htmlwhite)
+		$rowdata += @(,("Database Name",($htmlsilver -bor $htmlbold),$ConfigDatabaseName,$htmlwhite))
+		$rowdata += @(,("Availability Database Synchronization State",($htmlsilver -bor $htmlbold),$ConfigDBAvailabilityDatabaseSynchronizationState,$htmlwhite))
+		$rowdata += @(,("Availability Group Name",($htmlsilver -bor $htmlbold),$ConfigDBAvailabilityGroupName,$htmlwhite))
+		$rowdata += @(,("Collation",($htmlsilver -bor $htmlbold),$ConfigDBCollation,$htmlwhite))
+		$rowdata += @(,("Compatibility Level",($htmlsilver -bor $htmlbold),$ConfigDBCompatibilityLevel,$htmlwhite))
+		$rowdata += @(,("Create Date",($htmlsilver -bor $htmlbold),$ConfigDBCreateDate,$htmlwhite))
+		$rowdata += @(,("Database Size",($htmlsilver -bor $htmlbold),$ConfigDBSize,$htmlwhite))
+		$rowdata += @(,("Last Backup Date",($htmlsilver -bor $htmlbold),$ConfigDBLastBackupDate,$htmlwhite))
+		$rowdata += @(,("Last Log Backup Date",($htmlsilver -bor $htmlbold),$ConfigDBLastLogBackupDate,$htmlwhite))
+		$rowdata += @(,("Mirror Server Address",($htmlsilver -bor $htmlbold),$ConfigSQLServerMirrorName,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner",($htmlsilver -bor $htmlbold),$ConfigDBMirroringPartner,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner Instance",($htmlsilver -bor $htmlbold),$ConfigDBMirroringPartnerInstance,$htmlwhite))
+		$rowdata += @(,("Mirroring Safety Level",($htmlsilver -bor $htmlbold),$ConfigDBMirroringSafetyLevel,$htmlwhite))
+		$rowdata += @(,("Mirroring Status",($htmlsilver -bor $htmlbold),$ConfigDBMirroringStatus,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness",($htmlsilver -bor $htmlbold),$ConfigDBMirroringWitness,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness Status",($htmlsilver -bor $htmlbold),$ConfigDBMirroringWitnessStatus,$htmlwhite))
+		$rowdata += @(,("Parent",($htmlsilver -bor $htmlbold),$ConfigDBParent,$htmlwhite))
+		$rowdata += @(,("Read-Committed Snapshot",($htmlsilver -bor $htmlbold),$ConfigDBReadCommittedSnapshot,$htmlwhite))
+		$rowdata += @(,("Recovery Model",($htmlsilver -bor $htmlbold),$ConfigDBRecoveryModel,$htmlwhite))
+		$rowdata += @(,("Server Address",($htmlsilver -bor $htmlbold),$ConfigSQLServerPrincipalName,$htmlwhite))
+		$rowdata += @(,("SQL Server Version",($htmlsilver -bor $htmlbold),$ConfigDBSQLVersion,$htmlwhite))
 		$msg = ""
-		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		$columnWidths = @("250","200")
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+		WriteHTMLLine 0 0 ""
+
+		$rowdata = @()
+		$columnHeaders = @("Datastore",($htmlsilver -bor $htmlbold),"Logging",$htmlwhite)
+		$rowdata += @(,("Database Name",($htmlsilver -bor $htmlbold),$LogDatabaseName,$htmlwhite))
+		$rowdata += @(,("Availability Database Synchronization State",($htmlsilver -bor $htmlbold),$LogDBAvailabilityDatabaseSynchronizationState,$htmlwhite))
+		$rowdata += @(,("Availability Group Name",($htmlsilver -bor $htmlbold),$LogDBAvailabilityGroupName,$htmlwhite))
+		$rowdata += @(,("Collation",($htmlsilver -bor $htmlbold),$LogDBCollation,$htmlwhite))
+		$rowdata += @(,("Compatibility Level",($htmlsilver -bor $htmlbold),$LogDBCompatibilityLevel,$htmlwhite))
+		$rowdata += @(,("Create Date",($htmlsilver -bor $htmlbold),$LogDBCreateDate,$htmlwhite))
+		$rowdata += @(,("Database Size",($htmlsilver -bor $htmlbold),$LogDBSize,$htmlwhite))
+		$rowdata += @(,("Last Backup Date",($htmlsilver -bor $htmlbold),$LogDBLastBackupDate,$htmlwhite))
+		$rowdata += @(,("Last Log Backup Date",($htmlsilver -bor $htmlbold),$LogDBLastLogBackupDate,$htmlwhite))
+		$rowdata += @(,("Mirror Server Address",($htmlsilver -bor $htmlbold),$ConfigSQLServerMirrorName,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner",($htmlsilver -bor $htmlbold),$LogDBMirroringPartner,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner Instance",($htmlsilver -bor $htmlbold),$LogDBMirroringPartnerInstance,$htmlwhite))
+		$rowdata += @(,("Mirroring Safety Level",($htmlsilver -bor $htmlbold),$LogDBMirroringSafetyLevel,$htmlwhite))
+		$rowdata += @(,("Mirroring Status",($htmlsilver -bor $htmlbold),$LogDBMirroringStatus,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness",($htmlsilver -bor $htmlbold),$LogDBMirroringWitness,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness Status",($htmlsilver -bor $htmlbold),$LogDBMirroringWitnessStatus,$htmlwhite))
+		$rowdata += @(,("Parent",($htmlsilver -bor $htmlbold),$LogDBParent,$htmlwhite))
+		$rowdata += @(,("Read-Committed Snapshot",($htmlsilver -bor $htmlbold),$LogDBReadCommittedSnapshot,$htmlwhite))
+		$rowdata += @(,("Recovery Model",($htmlsilver -bor $htmlbold),$LogDBRecoveryModel,$htmlwhite))
+		$rowdata += @(,("Server Address",($htmlsilver -bor $htmlbold),$LogSQLServerPrincipalName,$htmlwhite))
+		$rowdata += @(,("SQL Server Version",($htmlsilver -bor $htmlbold),$LogDBSQLVersion,$htmlwhite))
+		$msg = ""
+		$columnWidths = @("250","200")
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+		WriteHTMLLine 0 0 ""
+
+		$rowdata = @()
+		$columnHeaders = @("Datastore",($htmlsilver -bor $htmlbold),"Monitoring",$htmlwhite)
+		$rowdata += @(,("Database Name",($htmlsilver -bor $htmlbold),$MonitorDatabaseName,$htmlwhite))
+		$rowdata += @(,("Availability Database Synchronization State",($htmlsilver -bor $htmlbold),$MonitorDBAvailabilityDatabaseSynchronizationState,$htmlwhite))
+		$rowdata += @(,("Availability Group Name",($htmlsilver -bor $htmlbold),$MonitorDBAvailabilityGroupName,$htmlwhite))
+		$rowdata += @(,("Collation",($htmlsilver -bor $htmlbold),$MonitorDBCollation,$htmlwhite))
+		$rowdata += @(,("Compatibility Level",($htmlsilver -bor $htmlbold),$MonitorDBCompatibilityLevel,$htmlwhite))
+		$rowdata += @(,("Create Date",($htmlsilver -bor $htmlbold),$MonitorDBCreateDate,$htmlwhite))
+		$rowdata += @(,("Database Size",($htmlsilver -bor $htmlbold),$MonitorDBSize,$htmlwhite))
+		$rowdata += @(,("Last Backup Date",($htmlsilver -bor $htmlbold),$MonitorDBLastBackupDate,$htmlwhite))
+		$rowdata += @(,("Last Log Backup Date",($htmlsilver -bor $htmlbold),$MonitorDBLastLogBackupDate,$htmlwhite))
+		$rowdata += @(,("Mirror Server Address",($htmlsilver -bor $htmlbold),$ConfigSQLServerMirrorName,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner",($htmlsilver -bor $htmlbold),$MonitorDBMirroringPartner,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner Instance",($htmlsilver -bor $htmlbold),$MonitorDBMirroringPartnerInstance,$htmlwhite))
+		$rowdata += @(,("Mirroring Safety Level",($htmlsilver -bor $htmlbold),$MonitorDBMirroringSafetyLevel,$htmlwhite))
+		$rowdata += @(,("Mirroring Status",($htmlsilver -bor $htmlbold),$MonitorDBMirroringStatus,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness",($htmlsilver -bor $htmlbold),$MonitorDBMirroringWitness,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness Status",($htmlsilver -bor $htmlbold),$MonitorDBMirroringWitnessStatus,$htmlwhite))
+		$rowdata += @(,("Parent",($htmlsilver -bor $htmlbold),$MonitorDBParent,$htmlwhite))
+		$rowdata += @(,("Read-Committed Snapshot",($htmlsilver -bor $htmlbold),$MonitorDBReadCommittedSnapshot,$htmlwhite))
+		$rowdata += @(,("Recovery Model",($htmlsilver -bor $htmlbold),$MonitorDBRecoveryModel,$htmlwhite))
+		$rowdata += @(,("Server Address",($htmlsilver -bor $htmlbold),$MonitorSQLServerPrincipalName,$htmlwhite))
+		$rowdata += @(,("SQL Server Version",($htmlsilver -bor $htmlbold),$MonitorDBSQLVersion,$htmlwhite))
+		$msg = ""
+		$columnWidths = @("250","200")
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 		WriteHTMLLine 0 0 " "
 
 		WriteHTMLLine 3 0 "Monitoring Database Details"
@@ -29486,24 +30180,25 @@ Function GetControllerRegistryKeys
 
 Function OutputControllerRegistryKeys
 {
-	#sort the array by regkey and regvalue
+	#V2.11 sort the array by regkey and regvalue and change the output to match
 	Write-Verbose "$(Get-Date): `t`t`tOutput Registry Key data"
 	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort RegValue, RegKey
 	
 	$txt = "Controller Registry Items"
+	#v2.11 change heading from "2" to "3"
 	If($MSWord -or $PDF)
 	{
-		WriteWordLine 2 0 $txt
+		WriteWordLine 3 0 $txt
 	}
 	ElseIf($Text)
 	{
 		Line 0 $txt
-		Line 1 "Registry Value                                     Registry Key                                                                  Data            " 
+		Line 1 "Registry Key                                                                  Registry Value                                     Data            " 
 		Line 1 "================================================================================================================================================="
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 2 0 $txt
+		WriteHTMLLine 3 0 $txt
 	}
 
 	If($MSWord -or $PDF)
@@ -29522,21 +30217,21 @@ Function OutputControllerRegistryKeys
 			If($MSWord -or $PDF)
 			{
 				$WordTableRowHash = @{
-				RegValue = $Item.RegValue; 
 				RegKey = $Item.RegKey; 
+				RegValue = $Item.RegValue; 
 				Value = $Item.Value
 				}
 				$WordTable += $WordTableRowHash;
 			}
 			ElseIf($Text)
 			{
-				Line 1 ( "{0,-50} {1,-77} {2,-15}" -f $Item.RegValue, $Item.RegKey, $Item.Value)
+				Line 1 ( "{0,-50} {1,-77} {2,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value)
 			}
 			ElseIf($HTML)
 			{
 				$rowdata += @(,(
-				$Item.RegValue,$htmlwhite,
 				$Item.RegKey,$htmlwhite,
+				$Item.RegValue,$htmlwhite,
 				$Item.Value,$htmlwhite))
 			}
 		}
@@ -29560,16 +30255,16 @@ Function OutputControllerRegistryKeys
 	If($MSWord -or $PDF)
 	{
 		$Table = AddWordTable -Hashtable $WordTable `
-		-Columns  RegValue, RegKey, Value `
-		-Headers  "Registry Value", "Registry Key", "Value" `
+		-Columns  RegKey, RegValue, Value `
+		-Headers  "Registry Key", "Registry Value", "Value" `
 		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitFixed;
 
 		SetWordCellFormat -Collection $Table -Size 9
 		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-		$Table.Columns.Item(1).Width = 210;
-		$Table.Columns.Item(2).Width = 230;
+		$Table.Columns.Item(1).Width = 230;
+		$Table.Columns.Item(2).Width = 210;
 		$Table.Columns.Item(3).Width = 60;
 
 		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
@@ -29584,8 +30279,8 @@ Function OutputControllerRegistryKeys
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'Registry Value',($htmlsilver -bor $htmlbold),
 		'Registry Key',($htmlsilver -bor $htmlbold),
+		'Registry Value',($htmlsilver -bor $htmlbold),
 		'Value',($htmlsilver -bor $htmlbold)
 		)
 
@@ -32124,7 +32819,7 @@ Function ProcessScriptSetup
 	}
 	Else
 	{
-		Write-Verbose "$(Get-Date): `tSQL Server Assembly successefully loaded"
+		Write-Verbose "$(Get-Date): `tSQL Server Assembly successfully loaded"
 		$Script:SQLServerLoaded = $True
 	}
 }
