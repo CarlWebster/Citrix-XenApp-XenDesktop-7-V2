@@ -3,6 +3,25 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.13 7-Apr-2018
+#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
+#	Code clean-up for most recommendations made by Visual Studio Code
+#	During the code clean up, I came across some "unused" variables. I had just
+#		forgotten to add them to the output. OOPS! They are now added.
+#			Off Peak Buffer Size Percent
+#			Off Peak Disconnect Timeout (Minutes)
+#			Off Peak Extended Disconnect Timeout (Minutes)
+#			Off Peak LogOff Timeout (Minutes)
+#			Peak Buffer Size Percent
+#			Peak Disconnect Timeout (Minutes)
+#			Peak Extended Disconnect Timeout (Minutes)
+#			Peak LogOff Timeout (Minutes)
+#			Settlement Period Before Auto Shutdown (HH:MM:SS)
+#			Settlement Period Before Use (HH:MM:SS)
+#		Code clean up also found a copy and paste error with Session Linger
+#			The "end session linger" value was still using the "end session prelaunch" variable
+#			OOPS, sorry about that. Fixed.
+
 #Version 2.12 10-Mar-2018
 #	Fix $SQLVersion for SQL 2008 R2. Minor version is 50, not 5.
 #	In application details, change from "Folder (for user)" to "Application category (optional)". 

@@ -960,9 +960,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.12
+	VERSION: 2.13
 	AUTHOR: Carl Webster
-	LASTEDIT: March 10, 2018
+	LASTEDIT: April 7, 2018
 #>
 
 #endregion
@@ -1155,6 +1155,25 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.13 7-Apr-2018
+#	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
+#	Code clean-up for most recommendations made by Visual Studio Code
+#	During the code clean up, I came across some "unused" variables. I had just
+#		forgotten to add them to the output. OOPS! They are now added.
+#			Off Peak Buffer Size Percent
+#			Off Peak Disconnect Timeout (Minutes)
+#			Off Peak Extended Disconnect Timeout (Minutes)
+#			Off Peak LogOff Timeout (Minutes)
+#			Peak Buffer Size Percent
+#			Peak Disconnect Timeout (Minutes)
+#			Peak Extended Disconnect Timeout (Minutes)
+#			Peak LogOff Timeout (Minutes)
+#			Settlement Period Before Auto Shutdown (HH:MM:SS)
+#			Settlement Period Before Use (HH:MM:SS)
+#		Code clean up also found a copy and paste error with Session Linger
+#			The "end session linger" value was still using the "end session prelaunch" variable
+#			OOPS, sorry about that. Fixed.
 
 #Version 2.12 10-Mar-2018
 #	Fix $SQLVersion for SQL 2008 R2. Minor version is 50, not 5.
@@ -1695,48 +1714,48 @@ Else
 
 If($HTML)
 {
-    Set htmlredmask         -Option AllScope -Value "#FF0000" 4>$Null
-    Set htmlcyanmask        -Option AllScope -Value "#00FFFF" 4>$Null
-    Set htmlbluemask        -Option AllScope -Value "#0000FF" 4>$Null
-    Set htmldarkbluemask    -Option AllScope -Value "#0000A0" 4>$Null
-    Set htmllightbluemask   -Option AllScope -Value "#ADD8E6" 4>$Null
-    Set htmlpurplemask      -Option AllScope -Value "#800080" 4>$Null
-    Set htmlyellowmask      -Option AllScope -Value "#FFFF00" 4>$Null
-    Set htmllimemask        -Option AllScope -Value "#00FF00" 4>$Null
-    Set htmlmagentamask     -Option AllScope -Value "#FF00FF" 4>$Null
-    Set htmlwhitemask       -Option AllScope -Value "#FFFFFF" 4>$Null
-    Set htmlsilvermask      -Option AllScope -Value "#C0C0C0" 4>$Null
-    Set htmlgraymask        -Option AllScope -Value "#808080" 4>$Null
-    Set htmlblackmask       -Option AllScope -Value "#000000" 4>$Null
-    Set htmlorangemask      -Option AllScope -Value "#FFA500" 4>$Null
-    Set htmlmaroonmask      -Option AllScope -Value "#800000" 4>$Null
-    Set htmlgreenmask       -Option AllScope -Value "#008000" 4>$Null
-    Set htmlolivemask       -Option AllScope -Value "#808000" 4>$Null
+    Set-Variable htmlredmask         -Option AllScope -Value "#FF0000" 4>$Null
+    Set-Variable htmlcyanmask        -Option AllScope -Value "#00FFFF" 4>$Null
+    Set-Variable htmlbluemask        -Option AllScope -Value "#0000FF" 4>$Null
+    Set-Variable htmldarkbluemask    -Option AllScope -Value "#0000A0" 4>$Null
+    Set-Variable htmllightbluemask   -Option AllScope -Value "#ADD8E6" 4>$Null
+    Set-Variable htmlpurplemask      -Option AllScope -Value "#800080" 4>$Null
+    Set-Variable htmlyellowmask      -Option AllScope -Value "#FFFF00" 4>$Null
+    Set-Variable htmllimemask        -Option AllScope -Value "#00FF00" 4>$Null
+    Set-Variable htmlmagentamask     -Option AllScope -Value "#FF00FF" 4>$Null
+    Set-Variable htmlwhitemask       -Option AllScope -Value "#FFFFFF" 4>$Null
+    Set-Variable htmlsilvermask      -Option AllScope -Value "#C0C0C0" 4>$Null
+    Set-Variable htmlgraymask        -Option AllScope -Value "#808080" 4>$Null
+    Set-Variable htmlblackmask       -Option AllScope -Value "#000000" 4>$Null
+    Set-Variable htmlorangemask      -Option AllScope -Value "#FFA500" 4>$Null
+    Set-Variable htmlmaroonmask      -Option AllScope -Value "#800000" 4>$Null
+    Set-Variable htmlgreenmask       -Option AllScope -Value "#008000" 4>$Null
+    Set-Variable htmlolivemask       -Option AllScope -Value "#808000" 4>$Null
 
-    Set htmlbold        -Option AllScope -Value 1 4>$Null
-    Set htmlitalics     -Option AllScope -Value 2 4>$Null
-    Set htmlred         -Option AllScope -Value 4 4>$Null
-    Set htmlcyan        -Option AllScope -Value 8 4>$Null
-    Set htmlblue        -Option AllScope -Value 16 4>$Null
-    Set htmldarkblue    -Option AllScope -Value 32 4>$Null
-    Set htmllightblue   -Option AllScope -Value 64 4>$Null
-    Set htmlpurple      -Option AllScope -Value 128 4>$Null
-    Set htmlyellow      -Option AllScope -Value 256 4>$Null
-    Set htmllime        -Option AllScope -Value 512 4>$Null
-    Set htmlmagenta     -Option AllScope -Value 1024 4>$Null
-    Set htmlwhite       -Option AllScope -Value 2048 4>$Null
-    Set htmlsilver      -Option AllScope -Value 4096 4>$Null
-    Set htmlgray        -Option AllScope -Value 8192 4>$Null
-    Set htmlolive       -Option AllScope -Value 16384 4>$Null
-    Set htmlorange      -Option AllScope -Value 32768 4>$Null
-    Set htmlmaroon      -Option AllScope -Value 65536 4>$Null
-    Set htmlgreen       -Option AllScope -Value 131072 4>$Null
-    Set htmlblack       -Option AllScope -Value 262144 4>$Null
+    Set-Variable htmlbold        -Option AllScope -Value 1 4>$Null
+    Set-Variable htmlitalics     -Option AllScope -Value 2 4>$Null
+    Set-Variable htmlred         -Option AllScope -Value 4 4>$Null
+    Set-Variable htmlcyan        -Option AllScope -Value 8 4>$Null
+    Set-Variable htmlblue        -Option AllScope -Value 16 4>$Null
+    Set-Variable htmldarkblue    -Option AllScope -Value 32 4>$Null
+    Set-Variable htmllightblue   -Option AllScope -Value 64 4>$Null
+    Set-Variable htmlpurple      -Option AllScope -Value 128 4>$Null
+    Set-Variable htmlyellow      -Option AllScope -Value 256 4>$Null
+    Set-Variable htmllime        -Option AllScope -Value 512 4>$Null
+    Set-Variable htmlmagenta     -Option AllScope -Value 1024 4>$Null
+    Set-Variable htmlwhite       -Option AllScope -Value 2048 4>$Null
+    Set-Variable htmlsilver      -Option AllScope -Value 4096 4>$Null
+    Set-Variable htmlgray        -Option AllScope -Value 8192 4>$Null
+    Set-Variable htmlolive       -Option AllScope -Value 16384 4>$Null
+    Set-Variable htmlorange      -Option AllScope -Value 32768 4>$Null
+    Set-Variable htmlmaroon      -Option AllScope -Value 65536 4>$Null
+    Set-Variable htmlgreen       -Option AllScope -Value 131072 4>$Null
+    Set-Variable htmlblack       -Option AllScope -Value 262144 4>$Null
 }
 
 If($TEXT)
 {
-	$global:output = ""
+	$Script:output = ""
 }
 #endregion
 
@@ -1752,6 +1771,7 @@ Function GetComputerWMIInfo
 	# http://blog.myvirtualvision.com
 	# modified 1-May-2014 to work in trusted AD Forests and using different domain admin credentials	
 	# modified 17-Aug-2016 to fix a few issues with Text and HTML output
+	# modified 2-Apr-2018 to add ComputerOS information
 
 	#Get Computer info
 	Write-Verbose "$(Get-Date): `t`tProcessing WMI Computer information"
@@ -1786,14 +1806,15 @@ Function GetComputerWMIInfo
 	
 	If($? -and $Null -ne $Results)
 	{
-		$ComputerItems = $Results | Select Manufacturer, Model, Domain, `
+		$ComputerItems = $Results | Select-Object Manufacturer, Model, Domain, `
 		@{N="TotalPhysicalRam"; E={[math]::round(($_.TotalPhysicalMemory / 1GB),0)}}, `
 		NumberOfProcessors, NumberOfLogicalProcessors
 		$Results = $Null
+		[string]$ComputerOS = (Get-WmiObject -class Win32_OperatingSystem -computername $RemoteComputerName -EA 0).Caption
 
 		ForEach($Item in $ComputerItems)
 		{
-			OutputComputerItem $Item
+			OutputComputerItem $Item $ComputerOS
 		}
 	}
 	ElseIf(!$?)
@@ -1870,7 +1891,7 @@ Function GetComputerWMIInfo
 
 	If($? -and $Null -ne $Results)
 	{
-		$drives = $Results | Select caption, @{N="drivesize"; E={[math]::round(($_.size / 1GB),0)}}, 
+		$drives = $Results | Select-Object caption, @{N="drivesize"; E={[math]::round(($_.size / 1GB),0)}}, 
 		filesystem, @{N="drivefreespace"; E={[math]::round(($_.freespace / 1GB),0)}}, 
 		volumename, drivetype, volumedirty, volumeserialnumber
 		$Results = $Null
@@ -1956,7 +1977,7 @@ Function GetComputerWMIInfo
 
 	If($? -and $Null -ne $Results)
 	{
-		$Processors = $Results | Select availability, name, description, maxclockspeed, 
+		$Processors = $Results | Select-Object availability, name, description, maxclockspeed, 
 		l2cachesize, l3cachesize, numberofcores, numberoflogicalprocessors
 		$Results = $Null
 		ForEach($processor in $processors)
@@ -2037,7 +2058,7 @@ Function GetComputerWMIInfo
 
 	If($? -and $Null -ne $Results)
 	{
-		$Nics = $Results | Where {$Null -ne $_.ipaddress}
+		$Nics = $Results | Where-Object {$Null -ne $_.ipaddress}
 		$Results = $Null
 
 		If($Nics -eq $Null ) 
@@ -2055,7 +2076,7 @@ Function GetComputerWMIInfo
 			{
 				Try
 				{
-					$ThisNic = Get-WmiObject -computername $RemoteComputerName win32_networkadapter | Where {$_.index -eq $nic.index}
+					$ThisNic = Get-WmiObject -computername $RemoteComputerName win32_networkadapter | Where-Object {$_.index -eq $nic.index}
 				}
 				
 				Catch 
@@ -2173,22 +2194,25 @@ Function GetComputerWMIInfo
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 0 0 " "
+		WriteHTMLLine 0 0 ""
 	}
 }
 
 Function OutputComputerItem
 {
-	Param([object]$Item)
+	Param([object]$Item, [string]$OS)
+	# modified 2-Apr-2018 to add Operating System information
+	
 	If($MSWord -or $PDF)
 	{
 		[System.Collections.Hashtable[]] $ItemInformation = @()
-		$ItemInformation += @{Data = "Manufacturer"; Value = $Item.manufacturer; }
-		$ItemInformation += @{Data = "Model"; Value = $Item.model; }
-		$ItemInformation += @{Data = "Domain"; Value = $Item.domain; }
-		$ItemInformation += @{Data = "Total Ram"; Value = "$($Item.totalphysicalram) GB"; }
-		$ItemInformation += @{Data = "Physical Processors (sockets)"; Value = $Item.NumberOfProcessors; }
-		$ItemInformation += @{Data = "Logical Processors (cores w/HT)"; Value = $Item.NumberOfLogicalProcessors; }
+		$ItemInformation += @{ Data = "Manufacturer"; Value = $Item.manufacturer; }
+		$ItemInformation += @{ Data = "Model"; Value = $Item.model; }
+		$ItemInformation += @{ Data = "Domain"; Value = $Item.domain; }
+		$ItemInformation += @{ Data = "Operating System"; Value = $OS; }
+		$ItemInformation += @{ Data = "Total Ram"; Value = "$($Item.totalphysicalram) GB"; }
+		$ItemInformation += @{ Data = "Physical Processors (sockets)"; Value = $Item.NumberOfProcessors; }
+		$ItemInformation += @{ Data = "Logical Processors (cores w/HT)"; Value = $Item.NumberOfLogicalProcessors; }
 		$Table = AddWordTable -Hashtable $ItemInformation `
 		-Columns Data,Value `
 		-List `
@@ -2212,6 +2236,7 @@ Function OutputComputerItem
 		Line 2 "Manufacturer`t`t`t: " $Item.manufacturer
 		Line 2 "Model`t`t`t`t: " $Item.model
 		Line 2 "Domain`t`t`t`t: " $Item.domain
+		Line 2 "Operating System`t`t: " $OS
 		Line 2 "Total Ram`t`t`t: $($Item.totalphysicalram) GB"
 		Line 2 "Physical Processors (sockets)`t: " $Item.NumberOfProcessors
 		Line 2 "Logical Processors (cores w/HT)`t: " $Item.NumberOfLogicalProcessors
@@ -2223,14 +2248,15 @@ Function OutputComputerItem
 		$columnHeaders = @("Manufacturer",($htmlsilver -bor $htmlbold),$Item.manufacturer,$htmlwhite)
 		$rowdata += @(,('Model',($htmlsilver -bor $htmlbold),$Item.model,$htmlwhite))
 		$rowdata += @(,('Domain',($htmlsilver -bor $htmlbold),$Item.domain,$htmlwhite))
+		$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),$OS,$htmlwhite))
 		$rowdata += @(,('Total Ram',($htmlsilver -bor $htmlbold),"$($Item.totalphysicalram) GB",$htmlwhite))
 		$rowdata += @(,('Physical Processors (sockets)',($htmlsilver -bor $htmlbold),$Item.NumberOfProcessors,$htmlwhite))
 		$rowdata += @(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Item.NumberOfLogicalProcessors,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -2491,7 +2517,7 @@ Function OutputNicItem
 {
 	Param([object]$Nic, [object]$ThisNic)
 	
-	$powerMgmt = Get-WmiObject MSPower_DeviceEnable -Namespace root\wmi | where {$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
+	$powerMgmt = Get-WmiObject MSPower_DeviceEnable -Namespace root\wmi | Where-Object{$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
 
 	If($? -and $Null -ne $powerMgmt)
 	{
@@ -2932,7 +2958,7 @@ Function GetComputerServices
 		#Replaced with a single call to retrieve services via WMI. The repeated
 		## "Get-WMIObject Win32_Service -Filter" calls were the major delays in the script.
 		## If we need to retrieve the StartUp type might as well just use WMI.
-		$Services = Get-WMIObject Win32_Service -ComputerName $RemoteComputerName | Sort DisplayName
+		$Services = Get-WMIObject Win32_Service -ComputerName $RemoteComputerName | Sort-Object DisplayName
 	}
 	
 	Catch
@@ -3487,7 +3513,7 @@ Function CheckWordPrereq
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
 	#Find out if winword is running in our session
-	[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0)|?{$_.SessionId -eq $SessionID}) -ne $Null
+	[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
 	If($wordrunning)
 	{
 		$ErrorActionPreference = $SaveEAPreference
@@ -3784,13 +3810,13 @@ Function SetupWord
 
 	$Script:Word.Templates.LoadBuildingBlocks()
 	#word 2010/2013/2016
-	$BuildingBlocksCollection = $Script:Word.Templates | Where {$_.name -eq "Built-In Building Blocks.dotx"}
+	$BuildingBlocksCollection = $Script:Word.Templates | Where-Object{$_.name -eq "Built-In Building Blocks.dotx"}
 
 	Write-Verbose "$(Get-Date): Attempt to load cover page $($CoverPage)"
 	$part = $Null
 
 	$BuildingBlocksCollection | 
-	ForEach{
+	ForEach-Object {
 		If ($_.BuildingBlockEntries.Item($CoverPage).Name -eq $CoverPage) 
 		{
 			$BuildingBlocks = $_
@@ -3931,10 +3957,10 @@ Function UpdateDocumentProperties
             Set-DocumentProperty -Document $Script:Doc -DocProperty Title -Value $Script:title
 
 			#Get the Coverpage XML part
-			$cp = $Script:Doc.CustomXMLParts | Where {$_.NamespaceURI -match "coverPageProps$"}
+			$cp = $Script:Doc.CustomXMLParts | Where-Object{$_.NamespaceURI -match "coverPageProps$"}
 
 			#get the abstract XML part
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "Abstract"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object{$_.basename -eq "Abstract"}
 			#set the text
 			If([String]::IsNullOrEmpty($Script:CoName))
 			{
@@ -3947,30 +3973,30 @@ Function UpdateDocumentProperties
 			$ab.Text = $abstract
 
 			#added 8-Jun-2017
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyAddress"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object{$_.basename -eq "CompanyAddress"}
 			#set the text
 			[string]$abstract = $CompanyAddress
 			$ab.Text = $abstract
 
 			#added 8-Jun-2017
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyEmail"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object{$_.basename -eq "CompanyEmail"}
 			#set the text
 			[string]$abstract = $CompanyEmail
 			$ab.Text = $abstract
 
 			#added 8-Jun-2017
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyFax"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object{$_.basename -eq "CompanyFax"}
 			#set the text
 			[string]$abstract = $CompanyFax
 			$ab.Text = $abstract
 
 			#added 8-Jun-2017
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "CompanyPhone"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object{$_.basename -eq "CompanyPhone"}
 			#set the text
 			[string]$abstract = $CompanyPhone
 			$ab.Text = $abstract
 
-			$ab = $cp.documentelement.ChildNodes | Where {$_.basename -eq "PublishDate"}
+			$ab = $cp.documentelement.ChildNodes | Where-Object{$_.basename -eq "PublishDate"}
 			#set the text
 			[string]$abstract = (Get-Date -Format d).ToString()
 			$ab.Text = $abstract
@@ -4087,14 +4113,14 @@ Function line
 #updated March 2014
 {
 	Param( [int]$tabs = 0, [string]$name = '', [string]$value = '', [string]$newline = "`r`n", [switch]$nonewline )
-	While( $tabs -gt 0 ) { $Global:Output += "`t"; $tabs--; }
+	While( $tabs -gt 0 ) { $Script:Output += "`t"; $tabs--; }
 	If( $nonewline )
 	{
-		$Global:Output += $name + $value
+		$Script:Output += $name + $value
 	}
 	Else
 	{
-		$Global:Output += $name + $value + $newline
+		$Script:Output += $name + $value + $newline
 	}
 }
 	
@@ -4388,8 +4414,6 @@ Function AddHTMLTable
 		$htmlbody = $htmlbody + "<tr>"
 		For($columnIndex = 0; $columnIndex -lt $colCount; $columnindex+=2)
 		{
-			$fontitalics = $False
-			$fontbold = $false
 			$tmp = CheckHTMLColor $rd[$columnIndex+1]
 
 			If($fixedInfo.Length -eq 0)
@@ -4631,7 +4655,6 @@ Function FormatHTMLTable
 				}
 				Else
 				{
-					$found = $false
 					For($i=0;$i -lt $columnArray[$columnIndex].length;$i+=2)
 					{
 						If($columnArray[$columnIndex][$i] -eq " ")
@@ -5234,7 +5257,7 @@ Function CheckExcelPrereq
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
 	#Find out if excel is running in our session
-	[bool]$excelrunning = ((Get-Process 'Excel' -ea 0)|?{$_.SessionId -eq $SessionID}) -ne $Null
+	[bool]$excelrunning = ((Get-Process 'Excel' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
 	If($excelrunning)
 	{
 		$ErrorActionPreference = $SaveEAPreference
@@ -5258,9 +5281,9 @@ Function Check-LoadedModule
 
 {
 	Param([parameter(Mandatory = $True)][alias("Module")][string]$ModuleName)
-	#$LoadedModules = Get-Module | Select Name
+	#$LoadedModules = Get-Module | Select-Object Name
 	#following line changed at the recommendation of @andyjmorgan
-	$LoadedModules = Get-Module |% { $_.Name.ToString() }
+	$LoadedModules = Get-Module | ForEach-Object { $_.Name.ToString() }
 	#bug reported on 21-JAN-2013 by @schose 
 	#the following line did not work if the citrix.grouppolicy.commands.psm1 module
 	#was manually loaded from a non Default folder
@@ -5299,8 +5322,8 @@ Function Check-NeededPSSnapins
 	$RegisteredSnapins = @()
 
 	#Creates arrays of strings, rather than objects, we're passing strings so this will be more robust.
-	$loadedSnapins += get-pssnapin | % {$_.name}
-	$registeredSnapins += get-pssnapin -Registered | % {$_.name}
+	$loadedSnapins += get-pssnapin | ForEach-Object {$_.name}
+	$registeredSnapins += get-pssnapin -Registered | ForEach-Object {$_.name}
 
 	ForEach($Snapin in $Snapins)
 	{
@@ -5329,7 +5352,7 @@ Function Check-NeededPSSnapins
 	If($FoundMissingSnapin)
 	{
 		Write-Warning "Missing Windows PowerShell snap-ins Detected:"
-		$missingSnapins | % {Write-Warning "($_)"}
+		$missingSnapins | ForEach-Object {Write-Warning "($_)"}
 		Return $False
 	}
 	Else
@@ -5427,7 +5450,7 @@ Function SaveandCloseDocumentandShutdownWord
 					$SessionID = (Get-Process -PID $PID).SessionId
 					
 					#Find out if winword is running in our session
-					$wordprocess = ((Get-Process 'WinWord' -ea 0)|?{$_.SessionId -eq $SessionID}).Id
+					$wordprocess = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}).Id
 					If($wordprocess -gt 0)
 					{
 						Write-Verbose "$(Get-Date): Attempting to stop WinWord process # $($wordprocess)"
@@ -5456,7 +5479,7 @@ Function SaveandCloseDocumentandShutdownWord
 
 	#Find out if winword is running in our session
 	$wordprocess = $Null
-	$wordprocess = ((Get-Process 'WinWord' -ea 0)|?{$_.SessionId -eq $SessionID}).Id
+	$wordprocess = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}).Id
 	If($null -ne $wordprocess -and $wordprocess -gt 0)
 	{
 		Write-Verbose "$(Get-Date): WinWord process is still running. Attempting to stop WinWord process # $($wordprocess)"
@@ -5471,7 +5494,7 @@ Function SaveandCloseTextDocument
 		$Script:FileName1 += "_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 	}
 
-	Write-Output $Global:Output | Out-File $Script:Filename1 4>$Null
+	Write-Output $Script:Output | Out-File $Script:Filename1 4>$Null
 }
 
 Function SaveandCloseHTMLDocument
@@ -6023,7 +6046,7 @@ Function GetAdmins
 	#}
 	#$Admins = Get-AdminAdministrator @XDParams2 | Where-Object {$_.Rights | Where-Object {($_.ScopeId -eq [guid]::Empty -or $scopes -contains $_.ScopeId) -and	$roles -contains $_.RoleId}}
 
-	$Admins = $Admins | Sort Name
+	$Admins = $Admins | Sort-Object Name
 	Return ,$Admins
 }
 #endregion
@@ -6049,9 +6072,9 @@ Function ProcessMachineCatalogs
 		WriteHTMLLine 1 0 $txt
 	}
 
-	$Global:TotalServerOSCatalogs = 0
-	$Global:TotalDesktopOSCatalogs = 0
-	$Global:TotalRemotePCCatalogs = 0
+	$Script:TotalServerOSCatalogs = 0
+	$Script:TotalDesktopOSCatalogs = 0
+	$Script:TotalRemotePCCatalogs = 0
 
 	$AllMachineCatalogs = Get-BrokerCatalog @XDParams2 -SortBy Name 
 
@@ -6098,27 +6121,27 @@ Function OutputMachines
 		If($Catalog.MachinesArePhysical -eq $True -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "SingleSession")
 		{
 			$xCatalogType = "Desktop OS"
-			$Global:TotalDesktopOSCatalogs++
+			$Script:TotalDesktopOSCatalogs++
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $True -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "MultiSession")
 		{
 			$xCatalogType = "Server OS"
-			$Global:TotalServerOSCatalogs++
+			$Script:TotalServerOSCatalogs++
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $False -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "SingleSession")
 		{
 			$xCatalogType = "Desktop OS (Virtual)"
-			$Global:TotalDesktopOSCatalogs++
+			$Script:TotalDesktopOSCatalogs++
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $False -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "MultiSession")
 		{
 			$xCatalogType = "Server OS (Virtual)"
-			$Global:TotalServerOSCatalogs++
+			$Script:TotalServerOSCatalogs++
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $True -and $Catalog.IsRemotePC -eq $True)
 		{
 			$xCatalogType = "Desktop OS (Remote PC Access)"
-			$Global:TotalRemotePCCatalogs++
+			$Script:TotalRemotePCCatalogs++
 		}
 		
 		Switch ($Catalog.AllocationType)
@@ -6447,8 +6470,8 @@ Function OutputMachines
 			
 				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
-					$CatalogInformation += @{Data = "Temporary memory cache size"; Value = "$($MachineData.WriteBackCacheMemorySize) MB"; }
-					$CatalogInformation += @{Data = "Temporary disk cache size"; Value = "$($MachineData.WriteBackCacheDiskSize) GB"; }
+					$CatalogInformation += @{Data = "Temporary memory cache size"; Value = "$($TempMemoryCacheSize) MB"; }
+					$CatalogInformation += @{Data = "Temporary disk cache size"; Value = "$($TempDiskCacheSize) GB"; }
 				}
 
 				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
@@ -6611,7 +6634,7 @@ Function OutputMachines
 				
 				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
-					Line 1 "Temporary memory cache size`t: " "$($MachineData.WriteBackCacheMemorySize) MB"
+					Line 1 "Temporary memory cache size`t: " "$($TempMemoryCacheSize) MB"
 					Line 1 "Temporary disk cache size`t: " "$($MachineData.WriteBackCacheDiskSize) GB"
 				}
 
@@ -6761,8 +6784,8 @@ Function OutputMachines
 				
 				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
-					$rowdata += @(,('Temporary memory cache size',($htmlsilver -bor $htmlbold),"$($MachineData.WriteBackCacheMemorySize) MB",$htmlwhite))
-					$rowdata += @(,('Temporary disk cache size',($htmlsilver -bor $htmlbold), "$($MachineData.WriteBackCacheDiskSize) GB",$htmlwhite))
+					$rowdata += @(,('Temporary memory cache size',($htmlsilver -bor $htmlbold),"$($TempMemoryCacheSize) MB",$htmlwhite))
+					$rowdata += @(,('Temporary disk cache size',($htmlsilver -bor $htmlbold), "$($TempDiskCacheSize) GB",$htmlwhite))
 				}
 
 				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
@@ -7128,7 +7151,7 @@ Function ProcessAppDisks
 		WriteHTMLLine 1 0 $txt
 	}
 
-	$Global:TotalAppDisks = 0
+	$Script:TotalAppDisks = 0
 
 	$AllAppDisks = Get-AppLibAppDisk @XDParams2 -SortBy AppDiskName 
 
@@ -7140,7 +7163,7 @@ Function ProcessAppDisks
 		
 		ForEach($AppDisk in $AllAppDisks)
 		{
-			$Global:TotalAppDisks++
+			$Script:TotalAppDisks++
 			
 			If($AppDisk)
 			{
@@ -7433,7 +7456,7 @@ Function OutputAppDiskApplications
 	
 	If($Null -ne $Apps)
 	{
-		$Apps = $Apps | Sort Name
+		$Apps = $Apps | Sort-Object Name
 		
 		OutputApplicationsOnStartMenu $Apps
 		OutputInstalledPackages $Apps
@@ -7582,7 +7605,7 @@ Function OutputAppDiskDeliveryGroups
 	
 	If($? -and $Null -ne $DGs)
 	{
-		[array]$DeliveryGroups = $DGs | Sort Name
+		[array]$DeliveryGroups = $DGs | Sort-Object Name
 		
 		If($MSWord -or $PDF)
 		{
@@ -9297,9 +9320,9 @@ Function ProcessDeliveryGroups
 		WriteHTMLLine 1 0 $txt
 	}
 
-	$Global:TotalApplicationGroups = 0
-	$Global:TotalDesktopGroups = 0
-	$Global:TotalAppsAndDesktopGroups = 0
+	$Script:TotalApplicationGroups = 0
+	$Script:TotalDesktopGroups = 0
+	$Script:TotalAppsAndDesktopGroups = 0
 
 	$AllDeliveryGroups = Get-BrokerDesktopGroup @XDParams2 -SortBy Name 
 
@@ -9379,17 +9402,17 @@ Function OutputDeliveryGroupTable
 		If($NumApps -gt 0 -or $NumAppGroups -gt 0 -and $NumDesktops -eq 0)
 		{
 			$xDeliveryType = "Applications"
-			$Global:TotalApplicationGroups++
+			$Script:TotalApplicationGroups++
 		}
 		ElseIf($NumApps -eq 0 -and $NumAppGroups -eq 0 -and $NumDesktops -gt 0)
 		{
 			$xDeliveryType = "Desktops"
-			$Global:TotalDesktopGroups++
+			$Script:TotalDesktopGroups++
 		}
 		ElseIf($NumApps -gt 0 -or $NumAppGroups -gt 0 -and $NumDesktops -gt 0)
 		{
 			$xDeliveryType = "Applications and Desktops"
-			$Global:TotalAppsAndDesktopGroups++
+			$Script:TotalAppsAndDesktopGroups++
 		}
 		Else
 		{
@@ -9812,7 +9835,7 @@ Function OutputDeliveryGroupDetails
 					$DesktopSettingsIncludedUsers += $User.Name
 				}
 				
-				[array]$DesktopSettingsIncludedUsers = $DesktopSettingsIncludedUsers | Sort -unique
+				[array]$DesktopSettingsIncludedUsers = $DesktopSettingsIncludedUsers | Sort-Object -unique
 			}
 			ElseIf($DesktopSettings.IncludedUserFilterEnabled -eq $False)
 			{
@@ -9826,7 +9849,7 @@ Function OutputDeliveryGroupDetails
 					$DesktopSettingsExcludedUsers += $User.Name
 				}
 
-				[array]$DesktopSettingsExcludedUsers = $DesktopSettingsExcludedUsers | Sort -unique
+				[array]$DesktopSettingsExcludedUsers = $DesktopSettingsExcludedUsers | Sort-Object -unique
 			}
 		}
 		ElseIf($? -and $Null -eq $DesktopSettings)
@@ -9957,15 +9980,15 @@ Function OutputDeliveryGroupDetails
 		$Days = $Results.MaxTimeBeforeTerminate.Days
 		If($Mins -gt 0)
 		{
-			$xEndPrelaunchSession = "$($Mins) Minutes"
+			$xEndLinger = "$($Mins) Minutes"
 		}
 		If($Hours -gt 0)
 		{
-			$xEndPrelaunchSession = "$($Hours) Hours"
+			$xEndLinger = "$($Hours) Hours"
 		}
 		ElseIf($Days -gt 0)
 		{
-			$xEndPrelaunchSession = "$($Days) Days"
+			$xEndLinger = "$($Days) Days"
 		}
 	}
 
@@ -10020,6 +10043,8 @@ Function OutputDeliveryGroupDetails
 	$xPeakDisconnectTimeout = $Group.PeakDisconnectTimeout
 	$xPeakExtendedDisconnectTimeout = $Group.PeakExtendedDisconnectTimeout
 	$xPeakLogOffTimeout = $Group.PeakLogOffTimeout
+	$xSettlementPeriodBeforeAutoShutdown = $Group.SettlementPeriodBeforeAutoShutdown
+	$xSettlementPeriodBeforeUse = $Group.SettlementPeriodBeforeUse
 
 	$xOffPeakDisconnectAction = ""
 	$xOffPeakExtendedDisconnectAction = ""
@@ -10189,8 +10214,8 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		[array]$DGIncludedUsers = $DGIncludedUsers | Sort -unique
-		[array]$DGExcludedUsers = $DGExcludedUsers | Sort -unique
+		[array]$DGIncludedUsers = $DGIncludedUsers | Sort-Object -unique
+		[array]$DGExcludedUsers = $DGExcludedUsers | Sort-Object -unique
 	}
 	
 	#desktops per user for singlesession OS
@@ -10353,7 +10378,7 @@ Function OutputDeliveryGroupDetails
 			$ScriptInformation += @{Data = "Session lingering"; Value = $xSessionLinger; }
 			If($xSessionLinger -ne "Off")
 			{
-				$ScriptInformation += @{Data = "Keep sessions active until after"; Value = $xEndPrelaunchSession; }
+				$ScriptInformation += @{Data = "Keep sessions active until after"; Value = $xEndLinger; }
 				
 				If($xSessionLingerAvgLoad -gt 0)
 				{
@@ -10447,6 +10472,19 @@ Function OutputDeliveryGroupDetails
 			$ScriptInformation += @{Data = "License model"; Value = $LicenseModel; }
 			$ScriptInformation += @{Data = "Product code"; Value = $ProductCode; }
 		}
+
+		#added in V2.13
+		#this data has been collected for a long time, I simple forgot to add it to the output
+		$ScriptInformation += @{ Data = "Off Peak Buffer Size Percent"; Value = $xOffPeakBufferSizePercent; }
+		$ScriptInformation += @{ Data = "Off Peak Disconnect Timeout (Minutes)"; Value = $xOffPeakDisconnectTimeout; }
+		$ScriptInformation += @{ Data = "Off Peak Extended Disconnect Timeout (Minutes)"; Value = $xOffPeakExtendedDisconnectTimeout; }
+		$ScriptInformation += @{ Data = "Off Peak LogOff Timeout (Minutes)"; Value = $xOffPeakLogOffTimeout; }
+		$ScriptInformation += @{ Data = "Peak Buffer Size Percent"; Value = $xPeakBufferSizePercent; }
+		$ScriptInformation += @{ Data = "Peak Disconnect Timeout (Minutes)"; Value = $xPeakDisconnectTimeout; }
+		$ScriptInformation += @{ Data = "Peak Extended Disconnect Timeout (Minutes)"; Value = $xPeakExtendedDisconnectTimeout; }
+		$ScriptInformation += @{ Data = "Peak LogOff Timeout (Minutes)"; Value = $xPeakLogOffTimeout; }
+		$ScriptInformation += @{ Data = "Settlement Period Before Autoshutdown (HH:MM:SS)"; Value = $xSettlementPeriodBeforeAutoShutdown; }
+		$ScriptInformation += @{ Data = "Settlement Period Before Use (HH:MM:SS)"; Value = $xSettlementPeriodBeforeUse; }
 
 		If($PwrMgmt1)
 		{
@@ -10764,7 +10802,7 @@ Function OutputDeliveryGroupDetails
 			Line 1 "Session lingering`t`t`t`t: " $xSessionLinger
 			If($xSessionLinger -ne "Off")
 			{
-				Line 1 "Keep sessions active until after`t`t: " $xEndPrelaunchSession
+				Line 1 "Keep sessions active until after`t`t: " $xEndLinger
 				
 				If($xSessionLingerAvgLoad -gt 0)
 				{
@@ -10859,6 +10897,19 @@ Function OutputDeliveryGroupDetails
 			Line 1 "Product code`t`t`t`t`t: " $ProductCode
 		}
 
+		#added in V2.13
+		#this data has been collected for a long time, I simple forgot to add it to the output
+		Line 1 "Off Peak Buffer Size Percent`t`t`t: " $xOffPeakBufferSizePercent
+		Line 1 "Off Peak Disconnect Timeout (Minutes)`t`t: " $xOffPeakDisconnectTimeout
+		Line 1 "Off Peak Extended Disconnect Timeout (Minutes)`t: " $xOffPeakExtendedDisconnectTimeout
+		Line 1 "Off Peak LogOff Timeout (Minutes)`t`t: " $xOffPeakLogOffTimeout
+		Line 1 "Peak Buffer Size Percent`t`t`t: " $xPeakBufferSizePercent
+		Line 1 "Peak Disconnect Timeout (Minutes)`t`t: " $xPeakDisconnectTimeout
+		Line 1 "Peak Extended Disconnect Timeout (Minutes)`t: " $xPeakExtendedDisconnectTimeout
+		Line 1 "Peak LogOff Timeout (Minutes)`t`t`t: " $xPeakLogOffTimeout
+		Line 1 "Settlement Period Before Autoshutdown (HH:MM:SS): " $xSettlementPeriodBeforeAutoShutdown
+		Line 1 "Settlement Period Before Use (HH:MM:SS)`t`t: " $xSettlementPeriodBeforeUse
+		
 		If($PwrMgmt1)
 		{
 			Line 1 "During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins`t`t: " $xPeakDisconnectAction
@@ -11160,7 +11211,7 @@ Function OutputDeliveryGroupDetails
 			$rowdata += @(,('Session lingering',($htmlsilver -bor $htmlbold),$xSessionLinger,$htmlwhite))
 			If($xSessionLinger -ne "Off")
 			{
-				$rowdata += @(,('Keep sessions active until after',($htmlsilver -bor $htmlbold),$xEndPrelaunchSession,$htmlwhite))
+				$rowdata += @(,('Keep sessions active until after',($htmlsilver -bor $htmlbold),$xEndLinger,$htmlwhite))
 				
 				If($xSessionLingerAvgLoad -gt 0)
 				{
@@ -11255,6 +11306,19 @@ Function OutputDeliveryGroupDetails
 			$rowdata += @(,('Product code',($htmlsilver -bor $htmlbold),$ProductCode,$htmlwhite))
 		}
 		
+		#added in V2.13
+		#this data has been collected for a long time, I simple forgot to add it to the output
+		$rowdata += @(,( "Off Peak Buffer Size Percent",($htmlsilver -bor $htmlbold),$xOffPeakBufferSizePercent,$htmlwhite))
+		$rowdata += @(,( "Off Peak Disconnect Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xOffPeakDisconnectTimeout,$htmlwhite))
+		$rowdata += @(,( "Off Peak Extended Disconnect Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xOffPeakExtendedDisconnectTimeout,$htmlwhite))
+		$rowdata += @(,( "Off Peak LogOff Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xOffPeakLogOffTimeout,$htmlwhite))
+		$rowdata += @(,( "Peak Buffer Size Percent",($htmlsilver -bor $htmlbold),$xPeakBufferSizePercent,$htmlwhite))
+		$rowdata += @(,( "Peak Disconnect Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xPeakDisconnectTimeout,$htmlwhite))
+		$rowdata += @(,( "Peak Extended Disconnect Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xPeakExtendedDisconnectTimeout,$htmlwhite))
+		$rowdata += @(,( "Peak LogOff Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xPeakLogOffTimeout,$htmlwhite))
+		$rowdata += @(,( "Settlement Period Before Autoshutdown (HH:MM:SS)",($htmlsilver -bor $htmlbold),$xSettlementPeriodBeforeAutoShutdown,$htmlwhite))
+		$rowdata += @(,( "Settlement Period Before Use (HH:MM:SS)",($htmlsilver -bor $htmlbold),$xSettlementPeriodBeforeUse,$htmlwhite))
+
 		If($PwrMgmt1)
 		{
 			$rowdata += @(,("During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xPeakDisconnectAction,$htmlwhite))
@@ -11561,7 +11625,7 @@ Function OutputDeliveryGroupCatalogs
 		{
 			If($MCs.Count -gt 1)
 			{
-				[array]$MCs = $MCs | Sort -Unique
+				[array]$MCs = $MCs | Sort-Object -Unique
 			}
 		}
 		
@@ -11705,7 +11769,7 @@ Function OutputDeliveryGroupAppDisks
 			}
 		}
 		
-		$AppDisks = $AppDisks | Sort Name
+		$AppDisks = $AppDisks | Sort-Object Name
 		
 		ForEach($AppDisk in $AppDisks)
 		{
@@ -11936,7 +12000,7 @@ Function OutputDeliveryGroupUtilization
 
 			#If the Excel.exe process is still running for the user's sessionID, kill it
 			$SessionID = (Get-Process -PID $PID).SessionId
-			(Get-Process 'Excel' -ea 0 | ?{$_.sessionid -eq $Sessionid}) | Stop-Process 4>$Null
+			(Get-Process 'Excel' -ea 0 | Where-Object {$_.sessionid -eq $Sessionid}) | Stop-Process 4>$Null
 			
 			Write-Verbose "$(Get-Date): `t`t`tDeleting temp files $($TempFile)"
 			Remove-Item $TempFile *>$Null
@@ -11997,7 +12061,7 @@ Function OutputDeliveryGroupTags
 			}
 		}
 		
-		$Tags = $Tags | Sort 
+		$Tags = $Tags | Sort-Object 
 		
 		ForEach($Tag in $Tags)
 		{
@@ -12090,7 +12154,7 @@ Function OutputDeliveryGroupApplicationGroups
 	}
 	
 	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
-	$ApplicationGroups = Get-BrokerApplicationGroup @XDParams2 -AssociatedDesktopGroupUid $Group.Uid | Sort Name
+	$ApplicationGroups = Get-BrokerApplicationGroup @XDParams2 -AssociatedDesktopGroupUid $Group.Uid | Sort-Object Name
 	
 	If($? -and $Null -ne $ApplicationGroups)
 	{
@@ -12190,8 +12254,8 @@ Function ProcessApplications
 		WriteHTMLLine 1 0 $txt
 	}
 
-	$Global:TotalPublishedApplications = 0
-	$Global:TotalAppvApplications = 0
+	$Script:TotalPublishedApplications = 0
+	$Script:TotalAppvApplications = 0
 	
 	$AllApplications = Get-BrokerApplication @XDParams2 -SortBy "AdminFolderName,ApplicationName"
 	If($? -and $Null -ne $AllApplications)
@@ -12244,11 +12308,11 @@ Function OutputApplications
 
 		If($xLocation -eq "Master Image")
 		{
-			$Global:TotalPublishedApplications++
+			$Script:TotalPublishedApplications++
 		}
 		Else
 		{
-			$Global:TotalAppvApplications++
+			$Script:TotalAppvApplications++
 		}
 		
 		If($MSWord -or $PDF)
@@ -13301,7 +13365,7 @@ Function ProcessPolicies
 				Write-Verbose "$(Get-Date): `tThere are $($CtxGPOArray.Count) Citrix AD based policies to process"
 				Write-Verbose "$(Get-Date): "
 
-				[array]$CtxGPOArray = $CtxGPOArray | Sort -unique
+				[array]$CtxGPOArray = $CtxGPOArray | Sort-Object -unique
 				
 				ForEach($CtxGPO in $CtxGPOArray)
 				{
@@ -13377,8 +13441,8 @@ Function ProcessPolicySummary
 	If(Get-PSDrive localfarmgpo -EA 0)
 	{
 		$HDXPolicies = Get-CtxGroupPolicy -DriveName localfarmgpo -EA 0 `
-		| Select PolicyName, Type, Description, Enabled, Priority `
-		| Sort Type, Priority
+		| Select-Object PolicyName, Type, Description, Enabled, Priority `
+		| Sort-Object Type, Priority
 		
 		OutputSummaryPolicyTable $HDXPolicies "localfarmgpo"
 	}
@@ -13399,7 +13463,7 @@ Function ProcessPolicySummary
 		$CtxGPOArray = GetCtxGPOsInAD
 		If($CtxGPOArray -is [Array] -and $CtxGPOArray.Count -gt 0)
 		{
-			[array]$CtxGPOArray = $CtxGPOArray | Sort -unique
+			[array]$CtxGPOArray = $CtxGPOArray | Sort-Object -unique
 			Write-Verbose "$(Get-Date): "
 			Write-Verbose "$(Get-Date): `tThere are $($CtxGPOArray.Count) Citrix AD based policies to process"
 			Write-Verbose "$(Get-Date): "
@@ -13417,8 +13481,8 @@ Function ProcessPolicySummary
 				
 					Write-Verbose "$(Get-Date): `tRetrieving AD Policy $($CtxGPO)"
 					$HDXPolicies = Get-CtxGroupPolicy -DriveName ADGpoDrv -EA 0 `
-					| Select PolicyName, Type, Description, Enabled, Priority `
-					| Sort Type, Priority
+					| Select-Object PolicyName, Type, Description, Enabled, Priority `
+					| Sort-Object Type, Priority
 			
 					OutputSummaryPolicyTable $HDXPolicies "AD" $CtxGPO
 					
@@ -13578,9 +13642,9 @@ Function validStateProp( [object] $object, [string] $topLevel, [string] $secondL
 	#function created 8-jan-2014 by Michael B. Smith
 	If( $object )
 	{
-		If((gm -Name $topLevel -InputObject $object))
+		If((Get-Member-Name $topLevel -InputObject $object))
 		{
-			If((gm -Name $secondLevel -InputObject $object.$topLevel))
+			If((Get-Member-Name $secondLevel -InputObject $object.$topLevel))
 			{
 				Return $True
 			}
@@ -13594,7 +13658,7 @@ Function validObject( [object] $object, [string] $topLevel )
 	#function created 8-jan-2014 by Michael B. Smith
 	If( $object )
 	{
-		If((gm -Name $topLevel -InputObject $object))
+		If((Get-Member-Name $topLevel -InputObject $object))
 		{
 			Return $True
 		}
@@ -13608,13 +13672,12 @@ Function ProcessCitrixPolicies
 
 	Write-Verbose "$(Get-Date): `tRetrieving all $($xPolicyType) policy names"
 
-	$Global:TotalComputerPolicies = 0
-	$Global:TotalUserPolicies = 0
-	$Global:TotalSitePolicies = 0
-	$Global:TotalADPolicies = 0
-	$Global:TotalADPoliciesNotProcessed = 0
-	$Global:TotalPolicies = 0
-	$ADPoliciesNotProcessed = @()
+	$Script:TotalComputerPolicies = 0
+	$Script:TotalUserPolicies = 0
+	$Script:TotalSitePolicies = 0
+	$Script:TotalADPolicies = 0
+	$Script:TotalADPoliciesNotProcessed = 0
+	$Script:TotalPolicies = 0
 	
 	If($xDriveName -eq "localfarmgpo")
 	{
@@ -13655,8 +13718,8 @@ Function ProcessCitrixPolicies
 	
 	$Policies = Get-CtxGroupPolicy -Type $xPolicyType `
 	-DriveName $xDriveName -EA 0 `
-	| Select PolicyName, Type, Description, Enabled, Priority `
-	| Sort Priority
+	| Select-Object PolicyName, Type, Description, Enabled, Priority `
+	| Sort-Object Priority
 
 	If($? -and $Null -ne $Policies)
 	{
@@ -13666,21 +13729,21 @@ Function ProcessCitrixPolicies
 			
 			If($xDriveName -eq "localfarmgpo")
 			{
-				$Global:TotalSitePolicies++
+				$Script:TotalSitePolicies++
 			}
 			Else
 			{
-				$Global:TotalADPolicies++
+				$Script:TotalADPolicies++
 			}
 			If($Policy.Type -eq "Computer")
 			{
-				$Global:TotalComputerPolicies++
+				$Script:TotalComputerPolicies++
 			}
 			Else
 			{
-				$Global:TotalUserPolicies++
+				$Script:TotalUserPolicies++
 			}
-			$Global:TotalPolicies++
+			$Script:TotalPolicies++
 			
 			If($MSWord -or $PDF)
 			{
@@ -13761,7 +13824,7 @@ Function ProcessCitrixPolicies
 			$filters = Get-CtxGroupPolicyFilter -PolicyName $Policy.PolicyName `
 			-Type $xPolicyType `
 			-DriveName $xDriveName -EA 0 `
-			| Sort FilterType, FilterName -Unique
+			| Sort-Object FilterType, FilterName -Unique
 
 			If($? -and $Null -ne $Filters)
 			{
@@ -15319,7 +15382,6 @@ Function ProcessCitrixPolicies
 							$Action = $Null
 							$Url = $Null
 							$FlashInstance = $Null
-							$Spc = $Null
 							$tmp = $Null
 						}
 						Else
@@ -26756,11 +26818,11 @@ Function GetCtxGPOsInAD
 		$domain = $domainNC.Replace( 'DC=', '' ).Replace( ',', '.' )
 		Write-Verbose "$(Get-Date): `tSearching \\$($domain)\sysvol\$($domain)\Policies"
 		$sysvolFiles = @()
-		$sysvolFiles = dir -Recurse ( '\\' + $domain  + '\sysvol\' + $domain + '\Policies' ) -EA 0
+		$sysvolFiles = Get-ChildItem -Recurse ( '\\' + $domain  + '\sysvol\' + $domain + '\Policies' ) -EA 0
 		If($sysvolFiles.Count -eq 0)
 		{
 			Write-Verbose "$(Get-Date): `tSearch timed out.  Retrying.  Searching \\ + $($domain)\sysvol\$($domain)\Policies a second time."
-			$sysvolFiles = dir -Recurse ( '\\' + $domain  + '\sysvol\' + $domain + '\Policies' ) -EA 0
+			$sysvolFiles = Get-ChildItem -Recurse ( '\\' + $domain  + '\sysvol\' + $domain + '\Policies' ) -EA 0
 		}
 		ForEach( $file in $sysvolFiles )
 		{
@@ -27289,7 +27351,7 @@ Function GetSQLVersion
 		Default                    {$SQLVer = "Unable to determine SQL Server version. Major: $($Major) Minor: $($Minor) Edition: $($SQLEdition)"; Break}
 	}
 
-	Return $SQLVersion = "$($SQLVer) $($SQLEdition)"
+	Return "$($SQLVer) $($SQLEdition)"
 }
 
 Function GetDBCompatibilityLevel
@@ -28390,15 +28452,15 @@ Function ProcessAdministrators
 	Write-Verbose "$(Get-Date): Processing Administrators"
 	Write-Verbose "$(Get-Date): `tRetrieving Administrator data"
 	
-	$Global:TotalDeliveryGroupAdmins = 0
-	$Global:TotalFullAdmins = 0
-	$Global:TotalHelpDeskAdmins = 0
-	$Global:TotalHostAdmins = 0
-	$Global:TotalMachineCatalogAdmins = 0
-	$Global:TotalReadOnlyAdmins = 0
-	$Global:TotalCustomAdmins = 0
+	$Script:TotalDeliveryGroupAdmins = 0
+	$Script:TotalFullAdmins = 0
+	$Script:TotalHelpDeskAdmins = 0
+	$Script:TotalHostAdmins = 0
+	$Script:TotalMachineCatalogAdmins = 0
+	$Script:TotalReadOnlyAdmins = 0
+	$Script:TotalCustomAdmins = 0
 	
-	$Admins = Get-AdminAdministrator @XDParams2 | Sort Name
+	$Admins = Get-AdminAdministrator @XDParams2 | Sort-Object Name
 
 	If($? -and ($Null -ne $Admins))
 	{
@@ -28427,13 +28489,13 @@ Function OutputAdministrators
 	{
 		Switch ($Admin.Rights.RoleName)
 		{
-			"Delivery Group Administrator"	{$Global:TotalDeliveryGroupAdmins++}
-			"Full Administrator"			{$Global:TotalFullAdmins++}
-			"Help Desk Administrator"		{$Global:TotalHelpDeskAdmins++}
-			"Host Administrator"			{$Global:TotalHostAdmins++}
-			"Machine Catalog Administrator"	{$Global:TotalMachineCatalogAdmins++}
-			"Read Only Administrator"		{$Global:TotalReadOnlyAdmins++}
-			Default							{$Global:TotalCustomAdmins++}
+			"Delivery Group Administrator"	{$Script:TotalDeliveryGroupAdmins++}
+			"Full Administrator"			{$Script:TotalFullAdmins++}
+			"Help Desk Administrator"		{$Script:TotalHelpDeskAdmins++}
+			"Host Administrator"			{$Script:TotalHostAdmins++}
+			"Machine Catalog Administrator"	{$Script:TotalMachineCatalogAdmins++}
+			"Read Only Administrator"		{$Script:TotalReadOnlyAdmins++}
+			Default							{$Script:TotalCustomAdmins++}
 		}
 	}
 	
@@ -28857,15 +28919,15 @@ Function GetScopeDG
 	If($Scope.Name -eq "All")
 	{
 		$Results = Get-BrokerDesktopGroup @XDParams2 | `
-		Select Name, Description, Scopes | `
-		Sort Name -unique
+		Select-Object Name, Description, Scopes | `
+		Sort-Object Name -unique
 	}
 	Else
 	{
 		$Results = Get-BrokerDesktopGroup @XDParams2 | `
-		Select Name, Description, Scopes | `
-		? {$_.Scopes -like $Scope.Name} | `
-		Sort Name -unique
+		Select-Object Name, Description, Scopes | `
+		Where-Object {$_.Scopes -like $Scope.Name} | `
+		Sort-Object Name -unique
 	}
 	
 	If($? -and $Null -ne $Results)
@@ -28893,15 +28955,15 @@ Function GetScopeMC
 	If($Scope.Name -eq "All")
 	{
 		$Results = Get-BrokerCatalog @XDParams2 | `
-		Select Name, Description, Scopes | `
-		Sort Name -unique
+		Select-Object Name, Description, Scopes | `
+		Sort-Object Name -unique
 	}
 	Else
 	{
 		$Results = Get-BrokerCatalog @XDParams2 | `
-		Select Name, Description, Scopes | `
-		? {$_.Scopes -like $Scope.Name} | `
-		Sort Name -unique
+		Select-Object Name, Description, Scopes | `
+		Where-Object {$_.Scopes -like $Scope.Name} | `
+		Sort-Object Name -unique
 	}
 
 	If($? -and $Null -ne $Results)
@@ -28929,15 +28991,15 @@ Function GetScopeHyp
 	If($Scope.Name -eq "All")
 	{
 		$Results = Get-HypScopedObject @XDParams2 | `
-		Select ObjectName, Description, ScopeName | `
-		Sort ObjectName -unique
+		Select-Object ObjectName, Description, ScopeName | `
+		Sort-Object ObjectName -unique
 	}
 	Else
 	{
 		$Results = Get-HypScopedObject @XDParams2 | `
-		Select ObjectName, Description, ScopeName | `
-		? {$_.ScopeName -like $Scope.Name} | `
-		Sort ObjectName -unique
+		Select-Object ObjectName, Description, ScopeName | `
+		Where-Object {$_.ScopeName -like $Scope.Name} | `
+		Sort-Object ObjectName -unique
 	}
 
 	If($? -and $Null -ne $Results)
@@ -28968,7 +29030,7 @@ Function OutputScopeAdministrators
 		{
 			[System.Collections.Hashtable[]] $WordTable = @();
 			WriteWordLine 3 0 "Administrators for Scope: $($Scope.Name)"
-			$Admins = Get-AdminAdministrator @XDParams1 | ? {$_.Rights.ScopeName -Contains $Scope.Name}
+			$Admins = Get-AdminAdministrator @XDParams1 | Where-Object {$_.Rights.ScopeName -Contains $Scope.Name}
 			
 			If($? -and $Null -ne $Admins)
 			{
@@ -29032,7 +29094,7 @@ Function OutputScopeAdministrators
 		ForEach($Scope in $Scopes)
 		{
 			Line 1 "Administrators for Scope: $($Scope.Name)"
-			$Admins = Get-AdminAdministrator @XDParams1 | ? {$_.Rights.ScopeName -Contains $Scope.Name}
+			$Admins = Get-AdminAdministrator @XDParams1 | Where-Object {$_.Rights.ScopeName -Contains $Scope.Name}
 			
 			If($? -and $Null -ne $Admins)
 			{
@@ -29077,7 +29139,7 @@ Function OutputScopeAdministrators
 		{
 			$rowdata = @()
 			WriteHTMLLine 3 0 "Administrators for Scope: $($Scope.Name)"
-			$Admins = Get-AdminAdministrator @XDParams1 | ? {$_.Rights.ScopeName -Contains $Scope.Name}
+			$Admins = Get-AdminAdministrator @XDParams1 | Where-Object {$_.Rights.ScopeName -Contains $Scope.Name}
 			
 			If($? -and $Null -ne $Admins)
 			{
@@ -29523,7 +29585,7 @@ Function GetRolePermissions
 		}
 	}
 
-	$Results = $Results.GetEnumerator() | Sort Value
+	$Results = $Results.GetEnumerator() | Sort-Object Value
 	Return $Results
 }
 
@@ -29540,7 +29602,7 @@ Function OutputRoleAdministrators
 		{
 			[System.Collections.Hashtable[]] $WordTable = @();
 			WriteWordLine 3 0 "Administrators for Role: $($Role.Name)"
-			$Admins = Get-AdminAdministrator @XDParams1 | ? {$_.Rights.RoleName -Contains $Role.Name}
+			$Admins = Get-AdminAdministrator @XDParams1 | Where-Object {$_.Rights.RoleName -Contains $Role.Name}
 			
 			If($? -and $Null -ne $Admins)
 			{
@@ -29604,7 +29666,7 @@ Function OutputRoleAdministrators
 		ForEach($Role in $Roles)
 		{
 			Line 1 "Administrators for Role: $($Role.Name)"
-			$Admins = Get-AdminAdministrator @XDParams1 | ? {$_.Rights.RoleName -Contains $Role.Name}
+			$Admins = Get-AdminAdministrator @XDParams1 | Where-Object {$_.Rights.RoleName -Contains $Role.Name}
 			
 			If($? -and $Null -ne $Admins)
 			{
@@ -29649,7 +29711,7 @@ Function OutputRoleAdministrators
 		{
 			$rowdata = @()
 			WriteHTMLLine 3 0 "Administrators for Role: $($Role.Name)"
-			$Admins = Get-AdminAdministrator @XDParams1 | ? {$_.Rights.RoleName -Contains $Role.Name}
+			$Admins = Get-AdminAdministrator @XDParams1 | Where-Object {$_.Rights.RoleName -Contains $Role.Name}
 			
 			If($? -and $Null -ne $Admins)
 			{
@@ -29706,7 +29768,7 @@ Function ProcessControllers
 	Write-Verbose "$(Get-Date): Processing Controllers"
 	Write-Verbose "$(Get-Date): `tRetrieving Controller data"
 	
-	$Global:TotalControllers = 0
+	$Script:TotalControllers = 0
 	
 	$Controllers = Get-BrokerController @XDParams2 -SortBy DNSName
 
@@ -29752,7 +29814,7 @@ Function OutputControllers
 	ForEach($Controller in $Controllers)
 	{
 		Write-Verbose "$(Get-Date): `t`tOutput Controller $($Controller.DNSName)"
-		$Global:TotalControllers++
+		$Script:TotalControllers++
 
 		If($MSWord -or $PDF)
 		{
@@ -30197,7 +30259,7 @@ Function OutputControllerRegistryKeys
 {
 	#V2.11 sort the array by regkey and regvalue and change the output to match
 	Write-Verbose "$(Get-Date): `t`t`tOutput Registry Key data"
-	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort RegValue, RegKey
+	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort-Object RegValue, RegKey
 	
 	$txt = "Controller Registry Items"
 	#v2.11 change heading from "2" to "3"
@@ -30312,7 +30374,7 @@ Function ProcessHosting
 	#original work on the Hosting was done by Kenny Baldwin
 	Write-Verbose "$(Get-Date): Processing Hosting"
 	
-	$Global:TotalHostingConnections = 0
+	$Script:TotalHostingConnections = 0
 
 	If($MSWord -or $PDF)
 	{
@@ -30339,7 +30401,7 @@ Function ProcessHosting
 	{
 		ForEach($item in $HostingUnits)
 		{	
-			$Global:TotalHostingConnections++
+			$Script:TotalHostingConnections++
 			ForEach($storage in $item.Storage)
 			{	
 				$vmstorage += $storage.StoragePath
@@ -30472,7 +30534,7 @@ Function OutputHosting
 {
 	Param([object] $Hypervisor, [string] $xConnectionType, [string] $xAddress, [string] $xState, [string] $xUserName, [bool] $xMaintMode, [string] $xStorageName, [array] $xHAAddress, [array]$xPowerActions, [string] $xScopes, [string] $xZoneName)
 
-	$xHAAddress = $xHAAddress | Sort
+	$xHAAddress = $xHAAddress | Sort-Object
 	
 	$xxConnectionType = ""
 	Switch ($xConnectionType)
@@ -31249,7 +31311,7 @@ Function ProcessLicensing
 {
 	Write-Verbose "$(Get-Date): Processing Licensing"
 	
-	$Global:Licenses = @()
+	$Script:Licenses = @()
 	OutputLicensingOverview
 	
 	#get product license info
@@ -31423,7 +31485,7 @@ Function OutputXenDesktopLicenses
 			$obj | Add-Member -MemberType NoteProperty -Name LicenseType	-Value $Product.LicenseEdition
 			$obj | Add-Member -MemberType NoteProperty -Name LicenseModel	-Value $LicModel
 			$obj | Add-Member -MemberType NoteProperty -Name LicenseCount	-Value $Product.LicensesAvailable
-			$Global:Licenses += $obj
+			$Script:Licenses += $obj
 		}
 	}
 
@@ -31615,7 +31677,7 @@ Function ProcessStoreFront
 {
 	Write-Verbose "$(Get-Date): Processing StoreFront"
 	
-	$Global:TotalStoreFrontServers = 0
+	$Script:TotalStoreFrontServers = 0
 	
 	If($MSWord -or $PDF)
 	{
@@ -31638,7 +31700,7 @@ Function ProcessStoreFront
 		$First = $True
 		ForEach($SFInfo in $SFInfos)
 		{
-			$Global:TotalStoreFrontServers++
+			$Script:TotalStoreFrontServers++
 
 			$SFByteArray = $SFInfo.Policy
 			Write-Verbose "$(Get-Date): `t`tRetrieving StoreFront server information for $($SFInfo.LeafName)"
@@ -31777,7 +31839,7 @@ Function OutputStoreFrontDeliveryGroups
 		}
 	}
 
-	[array]$DeliveryGroups = $DeliveryGroups | Sort
+	[array]$DeliveryGroups = $DeliveryGroups | Sort-Object
 	
 	If($MSWord -or $PDF)
 	{
@@ -31892,7 +31954,7 @@ Function ProcessAppV
 			}
 		}
 		
-		$AppVs = $AppVs | Sort MgmtServer
+		$AppVs = $AppVs | Sort-Object MgmtServer
 		
 		OutputAppV $AppVs
 	}
@@ -32088,7 +32150,7 @@ Function OutputAppDNA
 
 		$msg = ""
 		$columnWidths = @("250","250")
-		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 " "
 	}
 }
@@ -32099,7 +32161,7 @@ Function ProcessZones
 {
 	Write-Verbose "$(Get-Date): Processing Zones"
 	
-	$Global:TotalZones = 0
+	$Script:TotalZones = 0
 
 	If($MSWord -or $PDF)
 	{
@@ -32117,12 +32179,12 @@ Function ProcessZones
 	
 	#get all zone names
 	Write-Verbose "$(Get-Date): `tRetrieving All Zones"
-	$Zones = Get-ConfigZone @XDParams1 | Sort Name
+	$Zones = Get-ConfigZone @XDParams1 | Sort-Object Name
 	$ZoneMembers = @()
 	
 	ForEach($Zone in $Zones)
 	{
-		$Global:TotalZones++
+		$Script:TotalZones++
 		Write-Verbose "$(Get-Date): `t`tRetrieving Machine Catalogs for Zone $($Zone.Name)"
 		$ZoneCatalogs = Get-BrokerCatalog @XDParams2 -ZoneUid $Zone.Uid
 		ForEach($ZoneCatalog in $ZoneCatalogs)
@@ -32141,7 +32203,7 @@ Function ProcessZones
 		$ZoneControllers = $Zone.ControllerNames
 		ForEach($ZoneController in $ZoneControllers)
 		{
-			$Results = Get-BrokerController -EA 0 | Where {$_.MachineName -Like "*$($ZoneController)"}
+			$Results = Get-BrokerController -EA 0 | Where-Object{$_.MachineName -Like "*$($ZoneController)"}
 			
 			If($? -and $Null -ne $Results)
 			{
@@ -32157,7 +32219,7 @@ Function ProcessZones
 		}
 
 		Write-Verbose "$(Get-Date): `t`tRetrieving Host Connections for Zone $($Zone.Name)"
-		$ZoneHosts = Get-ChildItem @XDParams1 -path 'xdhyp:\connections' 4>$Null | Where {$_.ZoneUid -eq $Zone.Uid}
+		$ZoneHosts = Get-ChildItem @XDParams1 -path 'xdhyp:\connections' 4>$Null | Where-Object{$_.ZoneUid -eq $Zone.Uid}
 		ForEach($ZoneHost in $ZoneHosts)
 		{
 			$obj = New-Object -TypeName PSObject
@@ -32181,7 +32243,7 @@ Function OutputZoneSiteView
 	Param([array]$ZoneMembers)
 	
 	Write-Verbose "$(Get-Date): `tOutput Zone Site View"
-	$ZoneMembers = $ZoneMembers | Sort MemName
+	$ZoneMembers = $ZoneMembers | Sort-Object MemName
 	
 	If($MSWord -or $PDF)
 	{
@@ -32262,11 +32324,11 @@ Function OutputPerZoneView
 	Param([array]$ZoneMembers, [object]$Zones)
 	
 	Write-Verbose "$(Get-Date): `tOutput Per Zone View"
-	$ZoneMembers = $ZoneMembers | Sort MemZone, MemName
+	$ZoneMembers = $ZoneMembers | Sort-Object MemZone, MemName
 
 	ForEach($Zone in $Zones)
 	{
-		$TmpZoneMembers = $ZoneMembers | Where {$_.MemZone -eq $Zone.Name}
+		$TmpZoneMembers = $ZoneMembers | Where-Object{$_.MemZone -eq $Zone.Name}
 		
 		If($MSWord -or $PDF)
 		{
@@ -32367,71 +32429,71 @@ Function ProcessSummaryPage
 	{
 		Write-Verbose "$(Get-Date): `tAdd Machine Catalog summary info"
 		WriteWordLine 0 0 "Machine Catalogs"
-		WriteWordLine 0 1 "Total Server OS Catalogs`t: " $Global:TotalServerOSCatalogs
-		WriteWordLine 0 1 "Total Desktop OS Catalogs`t: " $Global:TotalDesktopOSCatalogs
-		WriteWordLine 0 1 "Total RemotePC Catalogs`t: " $Global:TotalRemotePCCatalogs
-		WriteWordLine 0 2 "Total Machine Catalogs`t: " ($Global:TotalServerOSCatalogs+$Global:TotalDesktopOSCatalogs+$Global:TotalRemotePCCatalogs)
+		WriteWordLine 0 1 "Total Server OS Catalogs`t: " $Script:TotalServerOSCatalogs
+		WriteWordLine 0 1 "Total Desktop OS Catalogs`t: " $Script:TotalDesktopOSCatalogs
+		WriteWordLine 0 1 "Total RemotePC Catalogs`t: " $Script:TotalRemotePCCatalogs
+		WriteWordLine 0 2 "Total Machine Catalogs`t: " ($Script:TotalServerOSCatalogs+$Script:TotalDesktopOSCatalogs+$Script:TotalRemotePCCatalogs)
 		WriteWordLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd AppDisks summary info"
 		WriteWordLine 0 0 "AppDisks"
-		WriteWordLine 0 1 "Total AppDisks`t`t`t: " $Global:TotalAppDisks
+		WriteWordLine 0 1 "Total AppDisks`t`t`t: " $Script:TotalAppDisks
 		WriteWordLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Delivery Group summary info"
 		WriteWordLine 0 0 "Delivery Groups"
-		WriteWordLine 0 1 "Total Application Groups`t: " $Global:TotalApplicationGroups
-		WriteWordLine 0 1 "Total Desktop Groups`t`t: " $Global:TotalDesktopGroups
-		WriteWordLine 0 1 "Total Apps & Desktop Groups`t: " $Global:TotalAppsAndDesktopGroups
-		WriteWordLine 0 2 "Total Delivery Groups`t: " ($Global:TotalApplicationGroups+$Global:TotalDesktopGroups+$Global:TotalAppsAndDesktopGroups)
+		WriteWordLine 0 1 "Total Application Groups`t: " $Script:TotalApplicationGroups
+		WriteWordLine 0 1 "Total Desktop Groups`t`t: " $Script:TotalDesktopGroups
+		WriteWordLine 0 1 "Total Apps & Desktop Groups`t: " $Script:TotalAppsAndDesktopGroups
+		WriteWordLine 0 2 "Total Delivery Groups`t: " ($Script:TotalApplicationGroups+$Script:TotalDesktopGroups+$Script:TotalAppsAndDesktopGroups)
 		WriteWordLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Application summary info"
 		WriteWordLine 0 0 "Applications"
-		WriteWordLine 0 1 "Total Published Applications`t: " $Global:TotalPublishedApplications
-		WriteWordLine 0 1 "Total App-V Applications`t: " $Global:TotalAppvApplications
-		WriteWordLine 0 2 "Total Applications`t: " ($Global:TotalPublishedApplications + $Global:TotalAppvApplications)
+		WriteWordLine 0 1 "Total Published Applications`t: " $Script:TotalPublishedApplications
+		WriteWordLine 0 1 "Total App-V Applications`t: " $Script:TotalAppvApplications
+		WriteWordLine 0 2 "Total Applications`t: " ($Script:TotalPublishedApplications + $Script:TotalAppvApplications)
 		WriteWordLine 0 0 ""
 		
 		If($Policies -eq $True)
 		{
 			Write-Verbose "$(Get-Date): `tAdd Policy summary info"
 			WriteWordLine 0 0 "Policies"
-			WriteWordLine 0 1 "Total Computer Policies`t`t: " $Global:TotalComputerPolicies
-			WriteWordLine 0 1 "Total User Policies`t`t: " $Global:TotalUserPolicies
-			WriteWordLine 0 2 "Total Policies`t`t: " ($Global:TotalComputerPolicies + $Global:TotalUserPolicies)
+			WriteWordLine 0 1 "Total Computer Policies`t`t: " $Script:TotalComputerPolicies
+			WriteWordLine 0 1 "Total User Policies`t`t: " $Script:TotalUserPolicies
+			WriteWordLine 0 2 "Total Policies`t`t: " ($Script:TotalComputerPolicies + $Script:TotalUserPolicies)
 			WriteWordLine 0 0 ""
-			WriteWordLine 0 1 "Site Policies`t`t`t: " $Global:TotalSitePolicies
+			WriteWordLine 0 1 "Site Policies`t`t`t: " $Script:TotalSitePolicies
 			
 			If($NoADPolicies -eq $False)
 			{
 				#V2.10 add a space 
-				WriteWordLine 0 1 "Citrix AD Policies Processed`t: $($Global:TotalADPolicies)`t (AD Policies can contain multiple Citrix policies)"
-				WriteWordLine 0 1 "Citrix AD Policies not Processed`t: " $Global:TotalADPoliciesNotProcessed
+				WriteWordLine 0 1 "Citrix AD Policies Processed`t: $($Script:TotalADPolicies)`t (AD Policies can contain multiple Citrix policies)"
+				WriteWordLine 0 1 "Citrix AD Policies not Processed`t: " $Script:TotalADPoliciesNotProcessed
 			}
 			WriteWordLine 0 0 ""
 		}
 		
 		Write-Verbose "$(Get-Date): `tAdd administrator summary info"
 		WriteWordLine 0 0 "Administrators"
-		WriteWordLine 0 1 "Total Delivery Group Admins`t: " $Global:TotalDeliveryGroupAdmins
-		WriteWordLine 0 1 "Total Full Admins`t`t: " $Global:TotalFullAdmins
-		WriteWordLine 0 1 "Total Help Desk Admins`t`t: " $Global:TotalHelpDeskAdmins
-		WriteWordLine 0 1 "Total Host Admins`t`t: " $Global:TotalHostAdmins
-		WriteWordLine 0 1 "Total Machine Catalog Admins`t: " $Global:TotalMachineCatalogAdmins
-		WriteWordLine 0 1 "Total Read Only Admins`t`t: " $Global:TotalReadOnlyAdmins
-		WriteWordLine 0 1 "Total Custom Admins`t`t: " $Global:TotalCustomAdmins
-		WriteWordLine 0 2 "Total Administrators`t: " ($Global:TotalDeliveryGroupAdmins+$Global:TotalFullAdmins+$Global:TotalHelpDeskAdmins+$Global:TotalHostAdmins+$Global:TotalMachineCatalogAdmins+$Global:TotalReadOnlyAdmins+$Global:TotalCustomAdmins)
+		WriteWordLine 0 1 "Total Delivery Group Admins`t: " $Script:TotalDeliveryGroupAdmins
+		WriteWordLine 0 1 "Total Full Admins`t`t: " $Script:TotalFullAdmins
+		WriteWordLine 0 1 "Total Help Desk Admins`t`t: " $Script:TotalHelpDeskAdmins
+		WriteWordLine 0 1 "Total Host Admins`t`t: " $Script:TotalHostAdmins
+		WriteWordLine 0 1 "Total Machine Catalog Admins`t: " $Script:TotalMachineCatalogAdmins
+		WriteWordLine 0 1 "Total Read Only Admins`t`t: " $Script:TotalReadOnlyAdmins
+		WriteWordLine 0 1 "Total Custom Admins`t`t: " $Script:TotalCustomAdmins
+		WriteWordLine 0 2 "Total Administrators`t: " ($Script:TotalDeliveryGroupAdmins+$Script:TotalFullAdmins+$Script:TotalHelpDeskAdmins+$Script:TotalHostAdmins+$Script:TotalMachineCatalogAdmins+$Script:TotalReadOnlyAdmins+$Script:TotalCustomAdmins)
 		WriteWordLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Controller summary info"
 		WriteWordLine 0 0 "Controllers"
-		WriteWordLine 0 1 "Total Controllers`t`t: " $Global:TotalControllers
+		WriteWordLine 0 1 "Total Controllers`t`t: " $Script:TotalControllers
 		WriteWordLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Hosting Connection summary info"
 		WriteWordLine 0 0 "Hosting Connections"
-		WriteWordLine 0 1 "Total Hosting Connections`t: " $Global:TotalHostingConnections
+		WriteWordLine 0 1 "Total Hosting Connections`t: " $Script:TotalHostingConnections
 		WriteWordLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Licensing summary info"
 		WriteWordLine 0 0 "Licensing"
 		$TotalLicenses = 0
-		ForEach($License in $Global:Licenses)
+		ForEach($License in $Script:Licenses)
 		{
 			WriteWordLine 0 1 "$($License.LicenseProduct) $($License.LicenseType) $($License.LicenseModel)`t`t`t: $($License.LicenseCount)"
 			$TotalLicenses += $License.LicenseCount
@@ -32440,81 +32502,81 @@ Function ProcessSummaryPage
 		WriteWordLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd StoreFront summary info"
 		WriteWordLine 0 0 "StoreFront"
-		WriteWordLine 0 1 "Total StoreFront Servers`t: " $Global:TotalStoreFrontServers
+		WriteWordLine 0 1 "Total StoreFront Servers`t: " $Script:TotalStoreFrontServers
 		WriteWordLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Zone summary info"
 		WriteWordLine 0 0 "Zones"
-		WriteWordLine 0 1 "Total Zones`t`t`t: " $Global:TotalZones
+		WriteWordLine 0 1 "Total Zones`t`t`t: " $Script:TotalZones
 	}
 	ElseIf($Text)
 	{
 		Write-Verbose "$(Get-Date): `tAdd Machine Catalog summary info"
 		Line 0 "Machine Catalogs"
-		Line 1 "Total Server OS Catalogs`t: " $Global:TotalServerOSCatalogs
-		Line 1 "Total Desktop OS Catalogs`t: " $Global:TotalDesktopOSCatalogs
-		Line 1 "Total RemotePC Catalogs`t`t: " $Global:TotalRemotePCCatalogs
-		Line 2 "Total Machine Catalogs`t: " ($Global:TotalServerOSCatalogs+$Global:TotalDesktopOSCatalogs+$Global:TotalRemotePCCatalogs)
+		Line 1 "Total Server OS Catalogs`t: " $Script:TotalServerOSCatalogs
+		Line 1 "Total Desktop OS Catalogs`t: " $Script:TotalDesktopOSCatalogs
+		Line 1 "Total RemotePC Catalogs`t`t: " $Script:TotalRemotePCCatalogs
+		Line 2 "Total Machine Catalogs`t: " ($Script:TotalServerOSCatalogs+$Script:TotalDesktopOSCatalogs+$Script:TotalRemotePCCatalogs)
 		Line 0 ""
 		Write-Verbose "$(Get-Date): `tAdd AppDisks summary info"
 		Line 0 "AppDisks"
-		Line 1 "Total AppDisks`t`t`t: " $Global:TotalAppDisks
+		Line 1 "Total AppDisks`t`t`t: " $Script:TotalAppDisks
 		Line 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Delivery Group summary info"
 		Line 0 "Delivery Groups"
-		Line 1 "Total Application Groups`t: " $Global:TotalApplicationGroups
-		Line 1 "Total Desktop Groups`t`t: " $Global:TotalDesktopGroups
-		Line 1 "Total Apps & Desktop Groups`t: " $Global:TotalAppsAndDesktopGroups
-		Line 2 "Total Delivery Groups`t: " ($Global:TotalApplicationGroups+$Global:TotalDesktopGroups+$Global:TotalAppsAndDesktopGroups)
+		Line 1 "Total Application Groups`t: " $Script:TotalApplicationGroups
+		Line 1 "Total Desktop Groups`t`t: " $Script:TotalDesktopGroups
+		Line 1 "Total Apps & Desktop Groups`t: " $Script:TotalAppsAndDesktopGroups
+		Line 2 "Total Delivery Groups`t: " ($Script:TotalApplicationGroups+$Script:TotalDesktopGroups+$Script:TotalAppsAndDesktopGroups)
 		Line 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Application summary info"
 		Line 0 "Applications"
-		Line 1 "Total Published Applications`t: " $Global:TotalPublishedApplications
-		Line 1 "Total App-V Applications`t: " $Global:TotalAppvApplications
-		Line 2 "Total Applications`t: " ($Global:TotalPublishedApplications + $Global:TotalAppvApplications)
+		Line 1 "Total Published Applications`t: " $Script:TotalPublishedApplications
+		Line 1 "Total App-V Applications`t: " $Script:TotalAppvApplications
+		Line 2 "Total Applications`t: " ($Script:TotalPublishedApplications + $Script:TotalAppvApplications)
 		Line 0 ""
 		
 		If($Policies -eq $True)
 		{
 			Write-Verbose "$(Get-Date): `tAdd Policy summary info"
 			Line 0 "Policies"
-			Line 1 "Total Computer Policies`t`t: " $Global:TotalComputerPolicies
-			Line 1 "Total User Policies`t`t: " $Global:TotalUserPolicies
-			Line 2 "Total Policies`t`t: " ($Global:TotalComputerPolicies + $Global:TotalUserPolicies)
+			Line 1 "Total Computer Policies`t`t: " $Script:TotalComputerPolicies
+			Line 1 "Total User Policies`t`t: " $Script:TotalUserPolicies
+			Line 2 "Total Policies`t`t: " ($Script:TotalComputerPolicies + $Script:TotalUserPolicies)
 			Line 0 ""
-			Line 1 "Site Policies`t`t`t: " $Global:TotalSitePolicies
+			Line 1 "Site Policies`t`t`t: " $Script:TotalSitePolicies
 			
 			If($NoADPolicies -eq $False)
 			{
 				#V2.10 add a space 
-				Line 1 "Citrix AD Policies Processed`t: $($Global:TotalADPolicies)`t (AD Policies can contain multiple Citrix policies)"
-				Line 1 "Citrix AD Policies not Processed: " $Global:TotalADPoliciesNotProcessed
+				Line 1 "Citrix AD Policies Processed`t: $($Script:TotalADPolicies)`t (AD Policies can contain multiple Citrix policies)"
+				Line 1 "Citrix AD Policies not Processed: " $Script:TotalADPoliciesNotProcessed
 			}
 			Line 0 ""
 		}
 		
 		Write-Verbose "$(Get-Date): `tAdd administrator summary info"
 		Line 0 "Administrators"
-		Line 1 "Total Delivery Group Admins`t: " $Global:TotalDeliveryGroupAdmins
-		Line 1 "Total Full Admins`t`t: " $Global:TotalFullAdmins
-		Line 1 "Total Help Desk Admins`t`t: " $Global:TotalHelpDeskAdmins
-		Line 1 "Total Host Admins`t`t: " $Global:TotalHostAdmins
-		Line 1 "Total Machine Catalog Admins`t: " $Global:TotalMachineCatalogAdmins
-		Line 1 "Total Read Only Admins`t`t: " $Global:TotalReadOnlyAdmins
-		Line 1 "Total Custom Admins`t`t: " $Global:TotalCustomAdmins
-		Line 2 "Total Administrators`t: " ($Global:TotalDeliveryGroupAdmins+$Global:TotalFullAdmins+$Global:TotalHelpDeskAdmins+$Global:TotalHostAdmins+$Global:TotalMachineCatalogAdmins+$Global:TotalReadOnlyAdmins+$Global:TotalCustomAdmins)
+		Line 1 "Total Delivery Group Admins`t: " $Script:TotalDeliveryGroupAdmins
+		Line 1 "Total Full Admins`t`t: " $Script:TotalFullAdmins
+		Line 1 "Total Help Desk Admins`t`t: " $Script:TotalHelpDeskAdmins
+		Line 1 "Total Host Admins`t`t: " $Script:TotalHostAdmins
+		Line 1 "Total Machine Catalog Admins`t: " $Script:TotalMachineCatalogAdmins
+		Line 1 "Total Read Only Admins`t`t: " $Script:TotalReadOnlyAdmins
+		Line 1 "Total Custom Admins`t`t: " $Script:TotalCustomAdmins
+		Line 2 "Total Administrators`t: " ($Script:TotalDeliveryGroupAdmins+$Script:TotalFullAdmins+$Script:TotalHelpDeskAdmins+$Script:TotalHostAdmins+$Script:TotalMachineCatalogAdmins+$Script:TotalReadOnlyAdmins+$Script:TotalCustomAdmins)
 		Line 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Controller summary info"
 		Line 0 "Controllers"
-		Line 1 "Total Controllers`t`t: " $Global:TotalControllers
+		Line 1 "Total Controllers`t`t: " $Script:TotalControllers
 		Line 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Hosting Connection summary info"
 		Line 0 "Hosting Connections"
-		Line 1 "Total Hosting Connections`t: " $Global:TotalHostingConnections
+		Line 1 "Total Hosting Connections`t: " $Script:TotalHostingConnections
 		Line 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Licensing summary info"
 		Line 0 "Licensing"
 		$TotalLicenses = 0
-		ForEach($License in $Global:Licenses)
+		ForEach($License in $Script:Licenses)
 		{
 			Line 1 "$($License.LicenseProduct) $($License.LicenseType) $($License.LicenseModel)`t`t`t: $($License.LicenseCount)"
 			$TotalLicenses += $License.LicenseCount
@@ -32523,81 +32585,81 @@ Function ProcessSummaryPage
 		Line 0 ""
 		Write-Verbose "$(Get-Date): `tAdd StoreFront summary info"
 		Line 0 "StoreFront"
-		Line 1 "Total StoreFront Servers`t: " $Global:TotalStoreFrontServers
+		Line 1 "Total StoreFront Servers`t: " $Script:TotalStoreFrontServers
 		Line 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Zone summary info"
 		Line 0 "Zones"
-		Line 1 "Total Zones`t`t`t: " $Global:TotalZones
+		Line 1 "Total Zones`t`t`t: " $Script:TotalZones
 	}
 	ElseIf($HTML)
 	{
 		Write-Verbose "$(Get-Date): `tAdd Machine Catalog summary info"
 		WriteHTMLLine 0 0 "Machine Catalogs"
-		WriteHTMLLine 0 1 "Total Server OS Catalogs: " $Global:TotalServerOSCatalogs
-		WriteHTMLLine 0 1 "Total Desktop OS Catalogs: " $Global:TotalDesktopOSCatalogs
-		WriteHTMLLine 0 1 "Total RemotePC Catalogs: " $Global:TotalRemotePCCatalogs
-		WriteHTMLLine 0 2 "Total Machine Catalogs: " ($Global:TotalServerOSCatalogs+$Global:TotalDesktopOSCatalogs+$Global:TotalRemotePCCatalogs)
+		WriteHTMLLine 0 1 "Total Server OS Catalogs: " $Script:TotalServerOSCatalogs
+		WriteHTMLLine 0 1 "Total Desktop OS Catalogs: " $Script:TotalDesktopOSCatalogs
+		WriteHTMLLine 0 1 "Total RemotePC Catalogs: " $Script:TotalRemotePCCatalogs
+		WriteHTMLLine 0 2 "Total Machine Catalogs: " ($Script:TotalServerOSCatalogs+$Script:TotalDesktopOSCatalogs+$Script:TotalRemotePCCatalogs)
 		WriteHTMLLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd AppDisks summary info"
 		WriteHTMLLine 0 0 "AppDisks"
-		WriteHTMLLine 0 1 "Total AppDisks: " $Global:TotalAppDisks
+		WriteHTMLLine 0 1 "Total AppDisks: " $Script:TotalAppDisks
 		WriteHTMLLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Delivery Group summary info"
 		WriteHTMLLine 0 0 "Delivery Groups"
-		WriteHTMLLine 0 1 "Total Application Groups: " $Global:TotalApplicationGroups
-		WriteHTMLLine 0 1 "Total Desktop Groups: " $Global:TotalDesktopGroups
-		WriteHTMLLine 0 1 "Total Apps & Desktop Groups: " $Global:TotalAppsAndDesktopGroups
-		WriteHTMLLine 0 2 "Total Delivery Groups: " ($Global:TotalApplicationGroups+$Global:TotalDesktopGroups+$Global:TotalAppsAndDesktopGroups)
+		WriteHTMLLine 0 1 "Total Application Groups: " $Script:TotalApplicationGroups
+		WriteHTMLLine 0 1 "Total Desktop Groups: " $Script:TotalDesktopGroups
+		WriteHTMLLine 0 1 "Total Apps & Desktop Groups: " $Script:TotalAppsAndDesktopGroups
+		WriteHTMLLine 0 2 "Total Delivery Groups: " ($Script:TotalApplicationGroups+$Script:TotalDesktopGroups+$Script:TotalAppsAndDesktopGroups)
 		WriteHTMLLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Application summary info"
 		WriteHTMLLine 0 0 "Applications"
-		WriteHTMLLine 0 1 "Total Published Applications: " $Global:TotalPublishedApplications
-		WriteHTMLLine 0 1 "Total App-V Applications: " $Global:TotalAppvApplications
-		WriteHTMLLine 0 2 "Total Applications: " ($Global:TotalPublishedApplications + $Global:TotalAppvApplications)
+		WriteHTMLLine 0 1 "Total Published Applications: " $Script:TotalPublishedApplications
+		WriteHTMLLine 0 1 "Total App-V Applications: " $Script:TotalAppvApplications
+		WriteHTMLLine 0 2 "Total Applications: " ($Script:TotalPublishedApplications + $Script:TotalAppvApplications)
 		WriteHTMLLine 0 0 ""
 		
 		If($Policies -eq $True)
 		{
 			Write-Verbose "$(Get-Date): `tAdd Policy summary info"
 			WriteHTMLLine 0 0 "Policies"
-			WriteHTMLLine 0 1 "Total Computer Policies: " $Global:TotalComputerPolicies
-			WriteHTMLLine 0 1 "Total User Policies: " $Global:TotalUserPolicies
-			WriteHTMLLine 0 2 "Total Policies: " ($Global:TotalComputerPolicies + $Global:TotalUserPolicies)
+			WriteHTMLLine 0 1 "Total Computer Policies: " $Script:TotalComputerPolicies
+			WriteHTMLLine 0 1 "Total User Policies: " $Script:TotalUserPolicies
+			WriteHTMLLine 0 2 "Total Policies: " ($Script:TotalComputerPolicies + $Script:TotalUserPolicies)
 			WriteHTMLLine 0 0 ""
-			WriteHTMLLine 0 1 "Site Policies: " $Global:TotalSitePolicies
+			WriteHTMLLine 0 1 "Site Policies: " $Script:TotalSitePolicies
 			
 			If($NoADPolicies -eq $False)
 			{
 				#V2.10 add a space 
-				WriteHTMLLine 0 1 "Citrix AD Policies Processed: $($Global:TotalADPolicies) (AD Policies can contain multiple Citrix policies)"
-				WriteHTMLLine 0 1 "Citrix AD Policies not Processed: " $Global:TotalADPoliciesNotProcessed
+				WriteHTMLLine 0 1 "Citrix AD Policies Processed: $($Script:TotalADPolicies) (AD Policies can contain multiple Citrix policies)"
+				WriteHTMLLine 0 1 "Citrix AD Policies not Processed: " $Script:TotalADPoliciesNotProcessed
 			}
 			WriteHTMLLine 0 0 ""
 		}
 		
 		Write-Verbose "$(Get-Date): `tAdd administrator summary info"
 		WriteHTMLLine 0 0 "Administrators"
-		WriteHTMLLine 0 1 "Total Delivery Group Admins: " $Global:TotalDeliveryGroupAdmins
-		WriteHTMLLine 0 1 "Total Full Admins: " $Global:TotalFullAdmins
-		WriteHTMLLine 0 1 "Total Help Desk Admins: " $Global:TotalHelpDeskAdmins
-		WriteHTMLLine 0 1 "Total Host Admins: " $Global:TotalHostAdmins
-		WriteHTMLLine 0 1 "Total Machine Catalog Admins: " $Global:TotalMachineCatalogAdmins
-		WriteHTMLLine 0 1 "Total Read Only Admins: " $Global:TotalReadOnlyAdmins
-		WriteHTMLLine 0 1 "Total Custom Admins: " $Global:TotalCustomAdmins
-		WriteHTMLLine 0 2 "Total Administrators: " ($Global:TotalDeliveryGroupAdmins+$Global:TotalFullAdmins+$Global:TotalHelpDeskAdmins+$Global:TotalHostAdmins+$Global:TotalMachineCatalogAdmins+$Global:TotalReadOnlyAdmins+$Global:TotalCustomAdmins)
+		WriteHTMLLine 0 1 "Total Delivery Group Admins: " $Script:TotalDeliveryGroupAdmins
+		WriteHTMLLine 0 1 "Total Full Admins: " $Script:TotalFullAdmins
+		WriteHTMLLine 0 1 "Total Help Desk Admins: " $Script:TotalHelpDeskAdmins
+		WriteHTMLLine 0 1 "Total Host Admins: " $Script:TotalHostAdmins
+		WriteHTMLLine 0 1 "Total Machine Catalog Admins: " $Script:TotalMachineCatalogAdmins
+		WriteHTMLLine 0 1 "Total Read Only Admins: " $Script:TotalReadOnlyAdmins
+		WriteHTMLLine 0 1 "Total Custom Admins: " $Script:TotalCustomAdmins
+		WriteHTMLLine 0 2 "Total Administrators: " ($Script:TotalDeliveryGroupAdmins+$Script:TotalFullAdmins+$Script:TotalHelpDeskAdmins+$Script:TotalHostAdmins+$Script:TotalMachineCatalogAdmins+$Script:TotalReadOnlyAdmins+$Script:TotalCustomAdmins)
 		WriteHTMLLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Controller summary info"
 		WriteHTMLLine 0 0 "Controllers"
-		WriteHTMLLine 0 1 "Total Controllers: " $Global:TotalControllers
+		WriteHTMLLine 0 1 "Total Controllers: " $Script:TotalControllers
 		WriteHTMLLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Hosting Connection summary info"
 		WriteHTMLLine 0 0 "Hosting Connections"
-		WriteHTMLLine 0 1 "Total Hosting Connections: " $Global:TotalHostingConnections
+		WriteHTMLLine 0 1 "Total Hosting Connections: " $Script:TotalHostingConnections
 		WriteHTMLLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Licensing summary info"
 		WriteHTMLLine 0 0 "Licensing"
 		$TotalLicenses = 0
-		ForEach($License in $Global:Licenses)
+		ForEach($License in $Script:Licenses)
 		{
 			WriteHTMLLine 0 1 "$($License.LicenseProduct) $($License.LicenseType) $($License.LicenseModel): $($License.LicenseCount)"
 			$TotalLicenses += $License.LicenseCount
@@ -32606,11 +32668,11 @@ Function ProcessSummaryPage
 		WriteHTMLLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd StoreFront summary info"
 		WriteHTMLLine 0 0 "StoreFront"
-		WriteHTMLLine 0 1 "Total StoreFront Servers: " $Global:TotalStoreFrontServers
+		WriteHTMLLine 0 1 "Total StoreFront Servers: " $Script:TotalStoreFrontServers
 		WriteHTMLLine 0 0 ""
 		Write-Verbose "$(Get-Date): `tAdd Zone summary info"
 		WriteHTMLLine 0 0 "Zones"
-		WriteHTMLLine 0 1 "Total Zones: " $Global:TotalZones
+		WriteHTMLLine 0 1 "Total Zones: " $Script:TotalZones
 	}
 
 	Write-Verbose "$(Get-Date): Finished Create Summary Page"
@@ -32651,11 +32713,11 @@ Function ProcessScriptSetup
 		Exit
 	}
 
-	$Global:DoPolicies = $True
+	$Script:DoPolicies = $True
 	If($NoPolicies)
 	{
 		Write-Verbose "$(Get-Date): NoPolicies was specified so do not search for Citrix.GroupPolicy.Commands.psm1"
-		$Global:DoPolicies = $False
+		$Script:DoPolicies = $False
 	}
 	ElseIf(!(Check-LoadedModule "Citrix.GroupPolicy.Commands") -and $Policies -eq $False)
 	{
@@ -32663,7 +32725,7 @@ Function ProcessScriptSetup
 		Please see the Prerequisites section in the ReadMe file (https://dl.dropboxusercontent.com/u/43555945/XD7_Inventory_V1_ReadMe.rtf). 
 		`nCitrix Policy documentation will not take place"
 		Write-Verbose "$(Get-Date): "
-		$Global:DoPolicies = $False
+		$Script:DoPolicies = $False
 	}
 	ElseIf(!(Check-LoadedModule "Citrix.GroupPolicy.Commands") -and $Policies -eq $True)
 	{
@@ -32681,12 +32743,12 @@ Function ProcessScriptSetup
 	If($Policies -eq $False -and $NoPolicies -eq $False -and $NoADPolicies -eq $False)
 	{
 		#script defaults, so don't process policies
-		$Global:DoPolicies = $False
+		$Script:DoPolicies = $False
 	}
 	If($NoPolicies -eq $True)
 	{
 		#don't process policies
-		$Global:DoPolicies = $False
+		$Script:DoPolicies = $False
 	}
 	
 	#set value for MaxRecordCount
@@ -32999,7 +33061,7 @@ If($Section -eq "All" -or $Section -eq "Apps")
 
 If($Section -eq "All" -or $Section -eq "Policies")
 {
-	If($NoPolicies -or $Global:DoPolicies -eq $False)
+	If($NoPolicies -or $Script:DoPolicies -eq $False)
 	{
 		#don't process policies
 	}
