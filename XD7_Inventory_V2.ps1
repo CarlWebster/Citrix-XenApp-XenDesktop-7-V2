@@ -960,9 +960,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.11
+	VERSION: 2.12
 	AUTHOR: Carl Webster
-	LASTEDIT: March 2, 2018
+	LASTEDIT: March 10, 2018
 #>
 
 #endregion
@@ -1155,6 +1155,12 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.12 10-Mar-2018
+#	Fix $SQLVersion for SQL 2008 R2. Minor version is 50, not 5.
+#	In application details, change from "Folder (for user)" to "Application category (optional)". 
+#		This changed in XA/X 7.8 and I never noticed it and no one reported it.
+#		Thanks to lbates for bringing it to my attention.
 
 #Version 2.11 2-Mar-2018
 #	Added additional SQL database information to the Configuration section
@@ -12433,7 +12439,10 @@ Function OutputApplicationDetails
 			}
 		}
 		$ScriptInformation += @{Data = "Folder (for administrators)"; Value = $Application.AdminFolderName; }
-		$ScriptInformation += @{Data = "Folder (for user)"; Value = $Application.ClientFolder; }
+		#V2.12 change from "Folder (for user)" to "Application category (optional)". 
+		#This changed in XA/X 7.8 and I never noticed it and no one reported it.
+		#Thanks to lbates for bringing it to my attention.
+		$ScriptInformation += @{Data = "Application category (optional)"; Value = $Application.ClientFolder; }
 		$ScriptInformation += @{Data = "Visibility"; Value = $xVisibility[0]; }
 		$cnt = -1
 		ForEach($tmp in $xVisibility)
@@ -12536,7 +12545,10 @@ Function OutputApplicationDetails
 			}
 		}
 		Line 1 "Folder (for administrators)`t: " $Application.AdminFolderName
-		Line 1 "Folder (for user)`t`t: " $Application.ClientFolder
+		#V2.12 change from "Folder (for user)" to "Application category (optional)". 
+		#This changed in XA/X 7.8 and I never noticed it and no one reported it.
+		#Thanks to lbates for bringing it to my attention.
+		Line 1 "Application category (optional)`t: " $Application.ClientFolder
 		Line 1 "Visibility`t`t`t: " $xVisibility[0]
 		$cnt = -1
 		ForEach($tmp in $xVisibility)
@@ -12617,7 +12629,10 @@ Function OutputApplicationDetails
 			}
 		}
 		$rowdata += @(,('Folder (for administrators)',($htmlsilver -bor $htmlbold),$Application.AdminFolderName,$htmlwhite))
-		$rowdata += @(,('Folder (for user)',($htmlsilver -bor $htmlbold),$Application.ClientFolder,$htmlwhite))
+		#V2.12 change from "Folder (for user)" to "Application category (optional)". 
+		#This changed in XA/X 7.8 and I never noticed it and no one reported it.
+		#Thanks to lbates for bringing it to my attention.
+		$rowdata += @(,('Application category (optional)',($htmlsilver -bor $htmlbold),$Application.ClientFolder,$htmlwhite))
 		$rowdata += @(,('Visibility',($htmlsilver -bor $htmlbold),$xVisibility[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xVisibility)
@@ -27255,8 +27270,8 @@ Function GetSQLVersion
 {
 	Param([object]$SQLsrv)
 
-	#V2.11 add SQL 2017
-	#V2.11 add more info to the Default message
+	#V1.40 add SQL 2017
+	#V1.40 add more info to the Default message
 	$Major = $SQLsrv.VersionMajor
 	$Minor = $SQLsrv.VersionMinor
 	$SQLVer = ""
@@ -27266,7 +27281,7 @@ Function GetSQLVersion
 		8                          {$SQLVer = "SQL Server 2000"; Break}
 		9                          {$SQLVer = "SQL Server 2005"; Break}
 		{10 -and $Minor -eq 0}     {$SQLVer = "SQL Server 2008"} #can't do break here
-		{10 -and $Minor -eq 5}     {$SQLVer = "SQL Server 2008 R2"} #can't do break here
+		{10 -and $Minor -eq 50}    {$SQLVer = "SQL Server 2008 R2"} #can't do break here #V2.12 fix from 5 to 50
 		11                         {$SQLVer = "SQL Server 2012"; Break}
 		12                         {$SQLVer = "SQL Server 2014"; Break}
 		13                         {$SQLVer = "SQL Server 2016"; Break}
