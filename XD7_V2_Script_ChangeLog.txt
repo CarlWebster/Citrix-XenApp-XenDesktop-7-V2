@@ -17,6 +17,26 @@
 #		Add shortbut to user's Start Menu
 #		Start Menu Folder
 #		Wait for Printer Creation
+#	Added the following property to Delivery Group Details
+#		Reuse Machines Without Shutdown in Outage
+#	Added the following properties to Site Settings Details
+#		Base OU
+#		Color Depth
+#		Connection Leasing Enabled
+#		Default Minimum Functional Level
+#		DNS Resolution Enabled
+#		Is Secondary Broker
+#		Local Host Cache Enabled
+#		Reuse Machines Without Shutdown in Outage Allowed
+#		Secure ICA Required
+#		Trust Managed Anonymous XML Service Requests
+#		Trust Requests Sent to the XML Service Port
+#	Fixed missing variable set for Default Switch statement for $Group.MinimumFunctionalLevel in Function OutputDeliveryGroupDetails 
+#	Fixed missing variable set for Default Switch statement for $Catalog.MinimumFunctionalLevel in Function OutputMachines 
+#	Fixed missing variable set for Default Switch statement for $AppDisk.State in Function OutputAppDiskTable 
+#	Fixed missing variable set for Default Switch statement for $Application.CpuPriorityLevel in Function OutputApplicationDetails 
+#	Fixed missing variable set for Default Switch statement for $Application.ApplicationType in Function OutputApplicationDetails 
+#	Fixed all misspellings of unathenticated to unauthenticated
 
 #Version 2.13 7-Apr-2018
 #	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem

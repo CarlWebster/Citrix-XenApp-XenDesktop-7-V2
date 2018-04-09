@@ -962,7 +962,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.14
 	AUTHOR: Carl Webster
-	LASTEDIT: April 8, 2018
+	LASTEDIT: April 9, 2018
 #>
 
 #endregion
@@ -1170,6 +1170,26 @@ Param(
 #		Add shortbut to user's Start Menu
 #		Start Menu Folder
 #		Wait for Printer Creation
+#	Added the following property to Delivery Group Details
+#		Reuse Machines Without Shutdown in Outage
+#	Added the following properties to Site Settings Details
+#		Base OU
+#		Color Depth
+#		Connection Leasing Enabled
+#		Default Minimum Functional Level
+#		DNS Resolution Enabled
+#		Is Secondary Broker
+#		Local Host Cache Enabled
+#		Reuse Machines Without Shutdown in Outage Allowed
+#		Secure ICA Required
+#		Trust Managed Anonymous XML Service Requests
+#		Trust Requests Sent to the XML Service Port
+#	Fixed missing variable set for Default Switch statement for $Group.MinimumFunctionalLevel in Function OutputDeliveryGroupDetails 
+#	Fixed missing variable set for Default Switch statement for $Catalog.MinimumFunctionalLevel in Function OutputMachines 
+#	Fixed missing variable set for Default Switch statement for $AppDisk.State in Function OutputAppDiskTable 
+#	Fixed missing variable set for Default Switch statement for $Application.CpuPriorityLevel in Function OutputApplicationDetails 
+#	Fixed missing variable set for Default Switch statement for $Application.ApplicationType in Function OutputApplicationDetails 
+#	Fixed all misspellings of unathenticated to unauthenticated
 
 #Version 2.13 7-Apr-2018
 #	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
@@ -6333,7 +6353,7 @@ Function OutputMachines
 			"L7_7"	{$xVDAVersion = "7.7 (or newer)"; Break}
 			"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 			"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
-			Default {"Unable to determine VDA version: $($Catalog.MinimumFunctionalLevel)"; Break}
+			Default {$xVDAVersion = "Unable to determine VDA version: $($Catalog.MinimumFunctionalLevel)"; Break}
 		}
 
 		If($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -eq $True)
@@ -6451,7 +6471,8 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "Provisioning method"; Value = $xProvisioningType; }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
 				$CatalogInformation += @{Data = "Resources"; Value = $MachineData.HostingUnitName; }
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					$CatalogInformation += @{Data = "Zone"; Value = $Catalog.ZoneName; }
 				}
@@ -6514,7 +6535,8 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "Allocation type"; Value = $xAllocationType; }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
 				$CatalogInformation += @{Data = "Resources"; Value = $MachineData.HostingUnitName; }
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					$CatalogInformation += @{Data = "Zone"; Value = $Catalog.ZoneName; }
 				}
@@ -6539,7 +6561,8 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "No. of machines"; Value = $NumberOfMachines; }
 				$CatalogInformation += @{Data = "Allocated machines"; Value = $Catalog.UsedCount; }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					$CatalogInformation += @{Data = "Zone"; Value = $Catalog.ZoneName; }
 				}
@@ -6566,7 +6589,8 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "User data"; Value = $xPersistType; }
 				$CatalogInformation += @{Data = "Provisioning method"; Value = $xProvisioningType; }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					$CatalogInformation += @{Data = "Zone"; Value = $Catalog.ZoneName; }
 				}
@@ -6615,7 +6639,8 @@ Function OutputMachines
 				Line 1 "Provisioning method`t`t: " $xProvisioningType
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
 				Line 1 "Resources`t`t`t: " $MachineData.HostingUnitName
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					Line 1 "Zone`t`t`t`t: " $Catalog.ZoneName
 				}
@@ -6678,7 +6703,8 @@ Function OutputMachines
 				Line 1 "Allocation type`t`t`t: " $xAllocationType
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
 				Line 1 "Resources`t`t`t: " $MachineData.HostingUnitName
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					Line 1 "Zone`t`t`t`t: " $Catalog.ZoneName
 				}
@@ -6703,7 +6729,8 @@ Function OutputMachines
 				Line 1 "No. of machines`t`t`t: "$NumberOfMachines
 				Line 1 "Allocated machines`t`t: " $Catalog.UsedCount
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					Line 1 "Zone`t`t`t`t: " $Catalog.ZoneName
 				}
@@ -6730,7 +6757,8 @@ Function OutputMachines
 				Line 1 "User data`t`t`t: " $xPersistType
 				Line 1 "Provisioning method`t`t: " $xProvisioningType
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					Line 1 "Zone`t`t`t`t: " $Catalog.ZoneName
 				}
@@ -6765,7 +6793,8 @@ Function OutputMachines
 				$rowdata += @(,('Provisioning method',($htmlsilver -bor $htmlbold),$xProvisioningType,$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
 				$rowdata += @(,('Resources',($htmlsilver -bor $htmlbold),$MachineData.HostingUnitName,$htmlwhite))
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
 				}
@@ -6829,7 +6858,8 @@ Function OutputMachines
 				$rowdata += @(,('Allocation type',($htmlsilver -bor $htmlbold),$xAllocationType,$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
 				$rowdata += @(,('Resources',($htmlsilver -bor $htmlbold),$MachineData.HostingUnitName,$htmlwhite))
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
 				}
@@ -6855,7 +6885,8 @@ Function OutputMachines
 				$rowdata += @(,('No. of machines',($htmlsilver -bor $htmlbold),$NumberOfMachines,$htmlwhite))
 				$rowdata += @(,('Allocated machines',($htmlsilver -bor $htmlbold),$Catalog.UsedCount,$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
 				}
@@ -6882,7 +6913,8 @@ Function OutputMachines
 				$rowdata += @(,('User data',($htmlsilver -bor $htmlbold),$xPersistType,$htmlwhite))
 				$rowdata += @(,('Provisioning method',($htmlsilver -bor $htmlbold),$xProvisioningType,$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
-				If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				If(validObject $Catalog ZoneName)
 				{
 					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
 				}
@@ -7230,7 +7262,7 @@ Function OutputAppDiskTable
 			"Sealing"		{$xAppDiskState = "Sealing"; Break}
 			"Unknown"		{$xAppDiskState = "Unknown"; Break}
 			"Unsupported"	{$xAppDiskState = "Unsupported"; Break}
-			Default			{"Unable to determine AppDisk State: $($AppDisk.State)"; Break}
+			Default			{$xAppDiskState = "Unable to determine AppDisk State: $($AppDisk.State)"; Break}
 		}
 		
 		If($MSWord -or $PDF)
@@ -8112,7 +8144,8 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Provisioning Type"; Value = $Machine.ProvisioningType; }
 			$ScriptInformation += @{Data = "PvD State"; Value = $xPvdStage; }
 			$ScriptInformation += @{Data = "Scheduled Reboot"; Value = $Machine.ScheduledReboot; }
-			If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			If(validObject $Machine ZoneName)
 			{
 				$ScriptInformation += @{Data = "Zone"; Value = $Machine.ZoneName; }
 			}
@@ -8390,7 +8423,8 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Is Physical"; Value = $xIsPhysical; }
 			$ScriptInformation += @{Data = "Provisioning Type"; Value = $Machine.ProvisioningType; }
 			$ScriptInformation += @{Data = "PvD State"; Value = $xPvdStage; }
-			If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			If(validObject $Machine ZoneName)
 			{
 				$ScriptInformation += @{Data = "Zone"; Value = $Machine.ZoneName; }
 			}
@@ -8685,7 +8719,8 @@ Function OutputMachineDetails
 			Line 2 "Provisioning Type`t`t: " $Machine.ProvisioningType
 			Line 2 "PvD State`t`t`t: " $xPvdStage
 			Line 2 "Scheduled Reboot`t`t: " $Machine.ScheduledReboot
-			If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			If(validObject $Machine ZoneName)
 			{
 				Line 2 "Zone`t`t`t`t: " $Machine.ZoneName
 			}
@@ -8827,7 +8862,8 @@ Function OutputMachineDetails
 			Line 2 "Is Physical`t`t`t: " $xIsPhysical
 			Line 2 "Provisioning Type`t`t: " $Machine.ProvisioningType
 			Line 2 "PvD State`t`t`t: " $xPvdStage
-			If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			If(validObject $Machine ZoneName)
 			{
 				Line 2 "Zone`t`t`t`t: " $Machine.ZoneName
 			}
@@ -8987,7 +9023,8 @@ Function OutputMachineDetails
 			$rowdata += @(,('Provisioning Type',($htmlsilver -bor $htmlbold),$Machine.ProvisioningType,$htmlwhite))
 			$rowdata += @(,('PvD State',($htmlsilver -bor $htmlbold),$xPvdStage,$htmlwhite))
 			$rowdata += @(,('Scheduled Reboot',($htmlsilver -bor $htmlbold),$Machine.ScheduledReboot,$htmlwhite))
-			If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			If(validObject $Machine ZoneName)
 			{
 				$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Machine.ZoneName,$htmlwhite))
 			}
@@ -9170,7 +9207,8 @@ Function OutputMachineDetails
 			$rowdata += @(,('Is Physical',($htmlsilver -bor $htmlbold),$xIsPhysical,$htmlwhite))
 			$rowdata += @(,('Provisioning Type',($htmlsilver -bor $htmlbold),$Machine.ProvisioningType,$htmlwhite))
 			$rowdata += @(,('PvD State',($htmlsilver -bor $htmlbold),$xPvdStage,$htmlwhite))
-			If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			If(validObject $Machine ZoneName)
 			{
 				$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Machine.ZoneName,$htmlwhite))
 			}
@@ -9886,24 +9924,18 @@ Function OutputDeliveryGroupDetails
 		"L7_7"	{$xVDAVersion = "7.7 (or newer)"; Break}
 		"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 		"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
-		Default {"Unable to determine VDA version: $($Group.MinimumFunctionalLevel)"; Break}
+		#fixed in V2.14, forgot to set variable
+		Default {$xVDAVersion = "Unable to determine VDA version: $($Group.MinimumFunctionalLevel)"; Break}
 	}
 	
-	If($Group.ColorDepth -eq "FourBit")
+	#V2.14 change from If/ElseIf to Switch
+	Switch ($Group.ColorDepth)
 	{
-		$xColorDepth = "4bit - 16 colors"
-	}
-	ElseIf($Group.ColorDepth -eq "EightBit")
-	{
-		$xColorDepth = "8bit - 256 colors"
-	}
-	ElseIf($Group.ColorDepth -eq "SixteenBit")
-	{
-		$xColorDepth = "16bit - High color"
-	}
-	ElseIf($Group.ColorDepth -eq "TwentyFourBit")
-	{
-		$xColorDepth = "24bit - True color"
+		"FourBit"		{$xColorDepth = "4bit - 16 colors"; Break}
+		"EightBit"		{$xColorDepth = "8bit - 256 colors"; Break}
+		"SixteenBit"	{$xColorDepth = "16bit - High color"; Break}
+		"TwentyFourBit"	{$xColorDepth = "24bit - True color"; Break}
+		Default			{$xColorDepth = "Unable to determine Color Depth: $($Group.ColorDepth)"; Break}
 	}
 	
 	If($Group.ShutdownDesktopsAfterUse)
@@ -10313,7 +10345,7 @@ Function OutputDeliveryGroupDetails
 		
 		If($Group.SessionSupport -eq "MultiSession")
 		{
-			$ScriptInformation += @{Data = 'Give access to unathenticated (anonymous) users'; Value = $SFAnonymousUsers; }
+			$ScriptInformation += @{Data = 'Give access to unauthenticated (anonymous) users'; Value = $SFAnonymousUsers; }
 		}
 
 		If($xDeliveryType -ne "Applications" -and $Null -ne $DesktopSettings)
@@ -10406,7 +10438,7 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 
-		$ScriptInformation += @{Data = "Launch in user's home zone"; Value = $xUsersHomeZOne; }
+		$ScriptInformation += @{Data = "Launch in user's home zone"; Value = $xUsersHomeZone; }
 		
 		If($Group.SessionSupport -eq "MultiSession")
 		{
@@ -10659,6 +10691,11 @@ Function OutputDeliveryGroupDetails
 
 		$ScriptInformation += @{Data = "Automatic power on for assigned"; Value = $xAutoPowerOnForAssigned; }
 		$ScriptInformation += @{Data = "Automatic power on for assigned during peak"; Value = $xAutoPowerOnForAssignedDuringPeak; }
+		#Added V2.14
+		If(validObject $Group ReuseMachinesWithoutShutdownInOutage)
+		{
+			$ScriptInformation += @{Data = "Reuse Machines Without Shutdown in Outage"; Value = $Group.ReuseMachinesWithoutShutdownInOutage; }
+		}
 		
 		$ScriptInformation += @{Data = "All connections not through NetScaler Gateway"; Value = $xAllConnections; }
 		$ScriptInformation += @{Data = "Connections through NetScaler Gateway"; Value = $xNSConnection; }
@@ -10737,7 +10774,7 @@ Function OutputDeliveryGroupDetails
 
 		If($Group.SessionSupport -eq "MultiSession")
 		{
-			Line 1 "Give access to unathenticated (anonymous) users`t: " $SFAnonymousUsers
+			Line 1 "Give access to unauthenticated (anonymous) users`t: " $SFAnonymousUsers
 		}
 
 		If($xDeliveryType -ne "Applications" -and $Null -ne $DesktopSettings)
@@ -11083,6 +11120,11 @@ Function OutputDeliveryGroupDetails
 
 		Line 1 "Automatic power on for assigned`t`t`t`t: " $xAutoPowerOnForAssigned
 		Line 1 "Automatic power on for assigned during peak`t`t: " $xAutoPowerOnForAssignedDuringPeak
+		#Added V2.14
+		If(validObject $Group ReuseMachinesWithoutShutdownInOutage)
+		{
+			Line 1 "Reuse Machines Without Shutdown in Outage: " $Group.ReuseMachinesWithoutShutdownInOutage
+		}
 		
 		Line 1 "All connections not through NetScaler Gateway`t`t: " $xAllConnections
 		Line 1 "Connections through NetScaler Gateway`t`t`t: " $xNSConnection
@@ -11146,7 +11188,7 @@ Function OutputDeliveryGroupDetails
 
 		If($Group.SessionSupport -eq "MultiSession")
 		{
-			$rowdata += @(,('Give access to unathenticated (anonymous) users',($htmlsilver -bor $htmlbold),$SFAnonymousUsers,$htmlwhite))
+			$rowdata += @(,('Give access to unauthenticated (anonymous) users',($htmlsilver -bor $htmlbold),$SFAnonymousUsers,$htmlwhite))
 		}
 
 		If($xDeliveryType -ne "Applications" -and $Null -ne $DesktopSettings)
@@ -11493,6 +11535,11 @@ Function OutputDeliveryGroupDetails
 		
 		$rowdata += @(,("Automatic power on for assigned",($htmlsilver -bor $htmlbold), $xAutoPowerOnForAssigned,$htmlwhite))
 		$rowdata += @(,("Automatic power on for assigned during peak",($htmlsilver -bor $htmlbold), $xAutoPowerOnForAssignedDuringPeak,$htmlwhite))
+		#Added V2.14
+		If(validObject $Group ReuseMachinesWithoutShutdownInOutage)
+		{
+			$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($htmlsilver -bor $htmlbold),$Group.ReuseMachinesWithoutShutdownInOutage,$xAllConnections,$htmlwhite))
+		}
 
 		$rowdata += @(,('All connections not through NetScaler Gateway',($htmlsilver -bor $htmlbold),$xAllConnections,$htmlwhite))
 		$rowdata += @(,('Connections through NetScaler Gateway',($htmlsilver -bor $htmlbold),$xNSConnection,$htmlwhite))
@@ -12510,7 +12557,7 @@ Function OutputApplicationDetails
 		"Normal"		{$CPUPriorityLevel = "Normal"; Break}
 		"AboveNormal"	{$CPUPriorityLevel = "Above Normal"; Break}
 		"High"			{$CPUPriorityLevel = "High"; Break}
-		Default 		{"Unable to determine CPUPriorityLevel: $($Application.CpuPriorityLevel)"; Break}
+		Default 		{$CPUPriorityLevel = "Unable to determine CPUPriorityLevel: $($Application.CpuPriorityLevel)"; Break}
 	}
 	
 	$ApplicationType = ""
@@ -12519,7 +12566,7 @@ Function OutputApplicationDetails
 		"HostedOnDesktop"	{$ApplicationType = "Hosted on Desktop"; Break}
 		"InstalledOnClient"	{$ApplicationType = "Installed on Client"; Break}
 		"PublishedContent"	{$ApplicationType = "Published Content"; Break}
-		Default 			{"Unable to determine ApplicationType: $($Application.ApplicationType)"; Break}
+		Default 			{$ApplicationType = "Unable to determine ApplicationType: $($Application.ApplicationType)"; Break}
 	}
 	
 	If($MSWord -or $PDF)
@@ -13983,17 +14030,17 @@ Function ProcessCitrixPolicies
 						#5-May-2017 add back the WorkerGroup filter for xenapp 6.x
 						Switch($filter.FilterType)
 						{
-							"AccessControl"  {$tmp = "Access Control"; Break}
-							"BranchRepeater" {$tmp = "Citrix CloudBridge"; Break}
-							"ClientIP"       {$tmp = "Client IP Address"; Break}
-							"ClientName"     {$tmp = "Client Name"; Break}
-							"DesktopGroup"   {$tmp = "Delivery Group"; Break}
-							"DesktopKind"    {$tmp = "Delivery GroupType"; Break}
-							"DesktopTag"     {$tmp = "Tag"; Break}
-							"OU"             {$tmp = "Organizational Unit (OU)"; Break}
-							"User"           {$tmp = "User or group"; Break}
-							"WorkerGroup"    {$tmp = "Worker Group"; Break}
-							Default {$tmp = "Policy Filter Type could not be determined: $($filter.FilterType)"; Break}
+							"AccessControl"		{$tmp = "Access Control"; Break}
+							"BranchRepeater"	{$tmp = "Citrix CloudBridge"; Break}
+							"ClientIP"			{$tmp = "Client IP Address"; Break}
+							"ClientName"		{$tmp = "Client Name"; Break}
+							"DesktopGroup"		{$tmp = "Delivery Group"; Break}
+							"DesktopKind"		{$tmp = "Delivery GroupType"; Break}
+							"DesktopTag"		{$tmp = "Tag"; Break}
+							"OU"				{$tmp = "Organizational Unit (OU)"; Break}
+							"User"				{$tmp = "User or group"; Break}
+							"WorkerGroup"		{$tmp = "Worker Group"; Break}
+							Default				{$tmp = "Policy Filter Type could not be determined: $($filter.FilterType)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -14750,7 +14797,7 @@ Function ProcessCitrixPolicies
 							"DiagnosticMode"	{$tmp = "Diagnostic mode"; Break}
 							"Off"				{$tmp = "Off"; Break}
 							"Preferred"			{$tmp = "Preferred"; Break}
-							Default {$tmp = "HDX Enlightened Data Transport: $($Setting.HDXEnlightenedDataTransport.Value)"; Break}
+							Default 			{$tmp = "HDX Enlightened Data Transport: $($Setting.HDXEnlightenedDataTransport.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -14783,7 +14830,7 @@ Function ProcessCitrixPolicies
 							"DiagnosticMode"	{$tmp = "Diagnostic mode"; Break}
 							"Off"				{$tmp = "Off"; Break}
 							"Preferred"			{$tmp = "Preferred"; Break}
-							Default {$tmp = "HDX Adaptive Transport: $($Setting.HDXAdaptiveTransport.Value)"; Break}
+							Default 			{$tmp = "HDX Adaptive Transport: $($Setting.HDXAdaptiveTransport.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -15737,9 +15784,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.AutoClientReconnectAuthenticationRequired.Value)
 						{
-							"DoNotRequireAuthentication" {$tmp = "Do not require authentication"; Break}
-							"RequireAuthentication"      {$tmp = "Require authentication"; Break}
-							Default {$tmp = "Auto client reconnect authentication could not be determined: $($Setting.AutoClientReconnectAuthenticationRequired.Value)"; Break}
+							"DoNotRequireAuthentication"	{$tmp = "Do not require authentication"; Break}
+							"RequireAuthentication"			{$tmp = "Require authentication"; Break}
+							Default 						{$tmp = "Auto client reconnect authentication could not be determined: $($Setting.AutoClientReconnectAuthenticationRequired.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -15767,9 +15814,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.AutoClientReconnectLogging.Value)
 						{
-							"DoNotLogAutoReconnectEvents" {$tmp = "Do Not Log auto-reconnect events"; Break}
-							"LogAutoReconnectEvents"      {$tmp = "Log auto-reconnect events"; Break}
-							Default {$tmp = "Auto client reconnect logging could not be determined: $($Setting.AutoClientReconnectLogging.Value)"; Break}
+							"DoNotLogAutoReconnectEvents"	{$tmp = "Do Not Log auto-reconnect events"; Break}
+							"LogAutoReconnectEvents"		{$tmp = "Log auto-reconnect events"; Break}
+							Default							{$tmp = "Auto client reconnect logging could not be determined: $($Setting.AutoClientReconnectLogging.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -17134,7 +17181,7 @@ Function ProcessCitrixPolicies
 							"DoNotUseVideoCodec"		{$tmp = "Do not use video codec"; Break}
 							"UseVideoCodecIfPreferred"	{$tmp = "Use when preferred"; Break}
 							"ActivelyChangingRegions"	{$tmp = "For actively changing regions"; Break}
-							Default {$tmp = "Use video codec for compression could not be determined: $($Setting.UseVideoCodecForCompression.Value)"; Break}
+							Default 					{$tmp = "Use video codec for compression could not be determined: $($Setting.UseVideoCodecForCompression.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -17256,9 +17303,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.IcaKeepAlives.Value)
 						{
-							"DoNotSendKeepAlives" {$tmp = "Do not send ICA keep alive messages"; Break}
-							"SendKeepAlives"      {$tmp = "Send ICA keep alive messages"; Break}
-							Default {$tmp = "ICA keep alives could not be determined: $($Setting.IcaKeepAlives.Value)"; Break}
+							"DoNotSendKeepAlives"	{$tmp = "Do not send ICA keep alive messages"; Break}
+							"SendKeepAlives"		{$tmp = "Send ICA keep alive messages"; Break}
+							Default					{$tmp = "ICA keep alives could not be determined: $($Setting.IcaKeepAlives.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -18113,23 +18160,23 @@ Function ProcessCitrixPolicies
 							$cgpport3 = $cgpport3.substring(0, $cgpport3.indexof(","))
 							Switch ($cgpport1priority)
 							{
-								"0"	{$Port1Priority = "Very High"; Break}
-								"2"	{$Port1Priority = "Medium"; Break}
-								"3"	{$Port1Priority = "Low"; Break}
+								"0"		{$Port1Priority = "Very High"; Break}
+								"2"		{$Port1Priority = "Medium"; Break}
+								"3"		{$Port1Priority = "Low"; Break}
 								Default	{$Port1Priority = "Unknown"; Break}
 							}
 							Switch ($cgpport2priority)
 							{
-								"0"	{$Port2Priority = "Very High"; Break}
-								"2"	{$Port2Priority = "Medium"; Break}
-								"3"	{$Port2Priority = "Low"; Break}
+								"0"		{$Port2Priority = "Very High"; Break}
+								"2"		{$Port2Priority = "Medium"; Break}
+								"3"		{$Port2Priority = "Low"; Break}
 								Default	{$Port2Priority = "Unknown"; Break}
 							}
 							Switch ($cgpport3priority)
 							{
-								"0"	{$Port3Priority = "Very High"; Break}
-								"2"	{$Port3Priority = "Medium"; Break}
-								"3"	{$Port3Priority = "Low"; Break}
+								"0"		{$Port3Priority = "Very High"; Break}
+								"2"		{$Port3Priority = "Medium"; Break}
+								"3"		{$Port3Priority = "Low"; Break}
 								Default	{$Port3Priority = "Unknown"; Break}
 							}
 							$txt1 = "ICA\MultiStream Connections\Multi-Port Policy\CGP port1"
@@ -18531,10 +18578,10 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.AutoCreationEventLogPreference.Value)
 						{
-							"LogErrorsOnly"        {$tmp = "Log errors only"; Break}
-							"LogErrorsAndWarnings" {$tmp = "Log errors and warnings"; Break}
-							"DoNotLog"             {$tmp = "Do not log errors or warnings"; Break}
-							Default {$tmp = "Printer auto-creation event log preference could not be determined: $($Setting.AutoCreationEventLogPreference.Value)"; Break}
+							"LogErrorsOnly"			{$tmp = "Log errors only"; Break}
+							"LogErrorsAndWarnings"	{$tmp = "Log errors and warnings"; Break}
+							"DoNotLog"				{$tmp = "Do not log errors or warnings"; Break}
+							Default					{$tmp = "Printer auto-creation event log preference could not be determined: $($Setting.AutoCreationEventLogPreference.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -18722,11 +18769,11 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.ClientPrinterAutoCreation.Value)
 						{
-							"DoNotAutoCreate"    {$tmp = "Do not auto-create client printers"; Break}
-							"DefaultPrinterOnly" {$tmp = "Auto-create the client's Default printer only"; Break}
-							"LocalPrintersOnly"  {$tmp = "Auto-create local (non-network) client printers only"; Break}
-							"AllPrinters"        {$tmp = "Auto-create all client printers"; Break}
-							Default {$tmp = "Auto-create client printers could not be determined: $($Setting.ClientPrinterAutoCreation.Value)"; Break}
+							"DoNotAutoCreate"		{$tmp = "Do not auto-create client printers"; Break}
+							"DefaultPrinterOnly"	{$tmp = "Auto-create the client's Default printer only"; Break}
+							"LocalPrintersOnly"		{$tmp = "Auto-create local (non-network) client printers only"; Break}
+							"AllPrinters"			{$tmp = "Auto-create all client printers"; Break}
+							Default					{$tmp = "Auto-create client printers could not be determined: $($Setting.ClientPrinterAutoCreation.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -18798,9 +18845,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.ClientPrinterNames.Value)
 						{
-							"StandardPrinterNames" {$tmp = "Standard printer names"; Break}
-							"LegacyPrinterNames"   {$tmp = "Legacy printer names"; Break}
-							Default {$tmp = "Client printer names could not be determined: $($Setting.ClientPrinterNames.Value)"; Break}
+							"StandardPrinterNames"	{$tmp = "Standard printer names"; Break}
+							"LegacyPrinterNames"	{$tmp = "Legacy printer names"; Break}
+							Default					{$tmp = "Client printer names could not be determined: $($Setting.ClientPrinterNames.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -19071,7 +19118,7 @@ Function ProcessCitrixPolicies
 							"RetainedInUserProfile" {$tmp = "Retained in user profile only"; Break}
 							"FallbackToProfile"     {$tmp = "Held in profile only if not saved on client"; Break}
 							"DoNotRetain"           {$tmp = "Do not retain printer properties"; Break}
-							Default {$tmp = "Printer properties retention could not be determined: $($Setting.PrinterPropertiesRetention.Value)"; Break}
+							Default					{$tmp = "Printer properties retention could not be determined: $($Setting.PrinterPropertiesRetention.Value)"; Break}
 						}
 
 						If($MSWord -or $PDF)
@@ -19206,11 +19253,11 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.UniversalPrintDriverUsage.Value)
 						{
-							"SpecificOnly"       {$tmp = "Use only printer model specific drivers"; Break}
-							"UpdOnly"            {$tmp = "Use universal printing only"; Break}
-							"FallbackToUpd"      {$tmp = "Use universal printing only if requested driver is unavailable"; Break}
-							"FallbackToSpecific" {$tmp = "Use printer model specific drivers only if universal printing is unavailable"; Break}
-							Default {$tmp = "Universal print driver usage could not be determined: $($Setting.UniversalPrintDriverUsage.Value)"; Break}
+							"SpecificOnly"			{$tmp = "Use only printer model specific drivers"; Break}
+							"UpdOnly"				{$tmp = "Use universal printing only"; Break}
+							"FallbackToUpd"			{$tmp = "Use universal printing only if requested driver is unavailable"; Break}
+							"FallbackToSpecific"	{$tmp = "Use printer model specific drivers only if universal printing is unavailable"; Break}
+							Default					{$tmp = "Universal print driver usage could not be determined: $($Setting.UniversalPrintDriverUsage.Value)"; Break}
 						}
 
 						If($MSWord -or $PDF)
@@ -19250,7 +19297,7 @@ Function ProcessCitrixPolicies
 						{
 							"UpsEnabledWithFallback"	{$tmp = "Enabled with fallback to Windows' native remote printing"; Break}
 							"UpsOnlyEnabled"			{$tmp = "Enabled with no fallback to Windows' native remote printing"; Break}
-							Default	{$tmp = "Universal Print Server enable value could not be determined: $($Setting.UpsEnable.Value)"; Break}
+							Default						{$tmp = "Universal Print Server enable value could not be determined: $($Setting.UpsEnable.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -19450,9 +19497,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.EMFProcessingMode.Value)
 						{
-							"ReprocessEMFsForPrinter" {$tmp = "Reprocess EMFs for printer"; Break}
-							"SpoolDirectlyToPrinter"  {$tmp = "Spool directly to printer"; Break}
-							Default {$tmp = "Universal printing EMF processing mode could not be determined: $($Setting.EMFProcessingMode.Value)"; Break}
+							"ReprocessEMFsForPrinter"	{$tmp = "Reprocess EMFs for printer"; Break}
+							"SpoolDirectlyToPrinter"	{$tmp = "Spool directly to printer"; Break}
+							Default						{$tmp = "Universal printing EMF processing mode could not be determined: $($Setting.EMFProcessingMode.Value)"; Break}
 						}
 						 
 						If($MSWord -or $PDF)
@@ -19481,12 +19528,12 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.ImageCompressionLimit.Value)
 						{
-							"NoCompression"       {$tmp = "No compression"; Break}
-							"LosslessCompression" {$tmp = "Best quality (lossless compression)"; Break}
-							"MinimumCompression"  {$tmp = "High quality"; Break}
-							"MediumCompression"   {$tmp = "Standard quality"; Break}
-							"MaximumCompression"  {$tmp = "Reduced quality (maximum compression)"; Break}
-							Default {$tmp = "Universal printing image compression limit could not be determined: $($Setting.ImageCompressionLimit.Value)"; Break}
+							"NoCompression"			{$tmp = "No compression"; Break}
+							"LosslessCompression"	{$tmp = "Best quality (lossless compression)"; Break}
+							"MinimumCompression"	{$tmp = "High quality"; Break}
+							"MediumCompression"		{$tmp = "Standard quality"; Break}
+							"MaximumCompression"	{$tmp = "Reduced quality (maximum compression)"; Break}
+							Default					{$tmp = "Universal printing image compression limit could not be determined: $($Setting.ImageCompressionLimit.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -19638,7 +19685,7 @@ Function ProcessCitrixPolicies
 							"AutoCreatedOnly"       {$tmp = "Use print preview for auto-created printers only"; Break}
 							"GenericOnly"           {$tmp = "Use print preview for generic universal printers only"; Break}
 							"AutoCreatedAndGeneric" {$tmp = "Use print preview for both auto-created and generic universal printers"; Break}
-							Default {$tmp = "Universal printing preview preference could not be determined: $($Setting.UniversalPrintingPreviewPreference.Value)"; Break}
+							Default					{$tmp = "Universal printing preview preference could not be determined: $($Setting.UniversalPrintingPreviewPreference.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -19672,7 +19719,7 @@ Function ProcessCitrixPolicies
 							"MediumResolution"	{$tmp = "Medium Resolution (600 DPI)"; Break}
 							"HighResolution"	{$tmp = "High Resolution (1200 DPI)"; Break}
 							"Unlimited"			{$tmp = "No Limit"; Break}
-							Default {$tmp = "Universal printing print quality limit could not be determined: $($Setting.DPILimit.Value)"; Break}
+							Default				{$tmp = "Universal printing print quality limit could not be determined: $($Setting.DPILimit.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -20062,9 +20109,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.WatermarkStyle.Value)
 						{
-							"StyleMutiple" {$tmp = "Multiple"; Break}
-							"StyleSingle"   {$tmp = "Single"; Break}
-							Default {$tmp = "Session watermark style could not be determined: $($Setting.WatermarkStyle.Value)"; Break}
+							"StyleMutiple"	{$tmp = "Multiple"; Break}
+							"StyleSingle"	{$tmp = "Single"; Break}
+							Default			{$tmp = "Session watermark style could not be determined: $($Setting.WatermarkStyle.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -20209,7 +20256,7 @@ Function ProcessCitrixPolicies
 						{
 							"UseServerTimeZone" {$tmp = "Use server time zone"; Break}
 							"UseClientTimeZone" {$tmp = "Use client time zone"; Break}
-							Default {$tmp = "Use local time of client could not be determined: $($Setting.SessionTimeZone.Value)"; Break}
+							Default				{$tmp = "Use local time of client could not be determined: $($Setting.SessionTimeZone.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -20643,7 +20690,7 @@ Function ProcessCitrixPolicies
 							"ColorDepth24Bit"	{$tmp = "24 bits per pixel"; Break}
 							"ColorDepth16Bit"	{$tmp = "16 bits per pixel"; Break}
 							"ColorDepth8Bit"	{$tmp = "8 bits per pixel"; Break}
-							"Default" {$tmp = "Preferred color depth for simple graphics could not be determined: $($Setting.PreferredColorDepthForSimpleGraphics.Value)"; Break}
+							"Default"			{$tmp = "Preferred color depth for simple graphics could not be determined: $($Setting.PreferredColorDepthForSimpleGraphics.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -20697,7 +20744,7 @@ Function ProcessCitrixPolicies
 							"High"				{$tmp = "High"; Break}
 							"Medium"			{$tmp = "Medium"; Break}
 							"Low"				{$tmp = "Low"; Break}
-							"Default" {$tmp = "Visual quality could not be determined: $($Setting.VisualQuality.Value)"; Break}
+							"Default"			{$tmp = "Visual quality could not be determined: $($Setting.VisualQuality.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -20731,7 +20778,7 @@ Function ProcessCitrixPolicies
 							"High"      {$tmp = "High"; Break}
 							"Normal"    {$tmp = "Normal"; Break}
 							"Low"       {$tmp = "Low"; Break}
-							Default {$tmp = "Minimum image quality could not be determined: $($Setting.MinimumAdaptiveDisplayJpegQuality.Value)"; Break}
+							Default		{$tmp = "Minimum image quality could not be determined: $($Setting.MinimumAdaptiveDisplayJpegQuality.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -20788,7 +20835,7 @@ Function ProcessCitrixPolicies
 							"Normal"    {$tmp = "Normal"; Break}
 							"Low"       {$tmp = "Low"; Break}
 							"None"      {$tmp = "None"; Break}
-							Default {$tmp = "Progressive compression level could not be determined: $($Setting.ProgressiveCompressionLevel.Value)"; Break}
+							Default		{$tmp = "Progressive compression level could not be determined: $($Setting.ProgressiveCompressionLevel.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -21178,7 +21225,7 @@ Function ProcessCitrixPolicies
 							{
 								"BelowNormalOrLow"	{$tmp = "Below Normal or Low"; Break}
 								"Low"				{$tmp = "Low"; Break}
-								Default {$tmp = "CPU usage excluded process priority could not be determined: $($Setting.CPUUsageExcludedProcessPriority.Value)"; Break}
+								Default				{$tmp = "CPU usage excluded process priority could not be determined: $($Setting.CPUUsageExcludedProcessPriority.Value)"; Break}
 							}
 							If($MSWord -or $PDF)
 							{
@@ -23602,7 +23649,7 @@ Function ProcessCitrixPolicies
 						Switch ($Setting.FRDesktop_Part.Value)
 						{
 							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRDesktop_Part.Value)"; Break}
+							Default				{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRDesktop_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -23679,7 +23726,7 @@ Function ProcessCitrixPolicies
 						{
 							"RedirectUncPath"		{$tmp = "Redirect to the following UNC path"; Break}
 							"RedirectRelativeHome"	{$tmp = "Redirect to the users' home directory"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRDocuments_Part.Value)"; Break}
+							Default					{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRDocuments_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -23754,8 +23801,8 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.FRDownloads_Part.Value)
 						{
-							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRDownloads_Part.Value)"; Break}
+							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
+							Default				{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRDownloads_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -23830,8 +23877,8 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.FRFavorites_Part.Value)
 						{
-							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRFavorites_Part.Value)"; Break}
+							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
+							Default				{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRFavorites_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -23906,8 +23953,8 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.FRLinks_Part.Value)
 						{
-							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRLinks_Part.Value)"; Break}
+							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
+							Default				{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRLinks_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -23984,7 +24031,7 @@ Function ProcessCitrixPolicies
 						{
 							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
 							"RedirectRelativeDocuments" {$tmp = "Redirect relative to Documents folder"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRMusic_Part.Value)"; Break}
+							Default						{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRMusic_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -24061,7 +24108,7 @@ Function ProcessCitrixPolicies
 						{
 							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
 							"RedirectRelativeDocuments" {$tmp = "Redirect relative to Documents folder"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRPictures_Part.Value)"; Break}
+							Default						{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRPictures_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -24091,7 +24138,7 @@ Function ProcessCitrixPolicies
 						Switch ($Setting.FRSavedGames_Part.Value)
 						{
 							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRSavedGames_Part.Value)"; Break}
+							Default				{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRSavedGames_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -24167,7 +24214,7 @@ Function ProcessCitrixPolicies
 						Switch ($Setting.FRSearches_Part.Value)
 						{
 							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRSearches_Part.Value)"; Break}
+							Default				{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRSearches_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -24243,7 +24290,7 @@ Function ProcessCitrixPolicies
 						Switch ($Setting.FRStartMenu_Part.Value)
 						{
 							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRStartMenu_Part.Value)"; Break}
+							Default				{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRStartMenu_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -24320,7 +24367,7 @@ Function ProcessCitrixPolicies
 						{
 							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
 							"RedirectRelativeDocuments" {$tmp = "Redirect relative to Documents folder"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRVideos_Part.Value)"; Break}
+							Default						{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRVideos_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -26661,8 +26708,8 @@ Function Get-PrinterModifiedSettings
 				$tmp1 = $xelement.SubString($index + 1)
 				Switch ($tmp1)
 				{
-					1 {$tmp2 = "Monochrome"; Break}
-					2 {$tmp2 = "Color"; Break}
+					1 		{$tmp2 = "Monochrome"; Break}
+					2 		{$tmp2 = "Color"; Break}
 					Default {$tmp2 = "Color could not be determined: $($xelement) "; Break}
 				}
 				$ReturnStr = "$txt $tmp2"
@@ -26677,10 +26724,10 @@ Function Get-PrinterModifiedSettings
 				$tmp1 = $xelement.SubString($index + 1)
 				Switch ($tmp1)
 				{
-					-1 {$tmp2 = "150 dpi"; Break}
-					-2 {$tmp2 = "300 dpi"; Break}
-					-3 {$tmp2 = "600 dpi"; Break}
-					-4 {$tmp2 = "1200 dpi"; Break}
+					-1 		{$tmp2 = "150 dpi"; Break}
+					-2 		{$tmp2 = "300 dpi"; Break}
+					-3 		{$tmp2 = "600 dpi"; Break}
+					-4 		{$tmp2 = "1200 dpi"; Break}
 					Default {$tmp2 = "Custom...X resolution: $tmp1"; Break}
 				}
 				$ReturnStr = "$txt $tmp2"
@@ -26707,7 +26754,7 @@ Function Get-PrinterModifiedSettings
 				{
 					"portrait"  {$tmp2 = "Portrait"; Break}
 					"landscape" {$tmp2 = "Landscape"; Break}
-					Default {$tmp2 = "Orientation could not be determined: $($xelement) ; Break"}
+					Default 	{$tmp2 = "Orientation could not be determined: $($xelement) ; Break"}
 				}
 				$ReturnStr = "$txt $tmp2"
 			}
@@ -26721,9 +26768,9 @@ Function Get-PrinterModifiedSettings
 				$tmp1 = $xelement.SubString($index + 1)
 				Switch ($tmp1)
 				{
-					1 {$tmp2 = "Simplex"; Break}
-					2 {$tmp2 = "Vertical"; Break}
-					3 {$tmp2 = "Horizontal"; Break}
+					1 		{$tmp2 = "Simplex"; Break}
+					2 		{$tmp2 = "Vertical"; Break}
+					3 		{$tmp2 = "Horizontal"; Break}
 					Default {$tmp2 = "Duplex could not be determined: $($xelement) "; Break}
 				}
 				$ReturnStr = "$txt $tmp2"
@@ -27334,6 +27381,27 @@ Function OutputSiteSettings
 		}	
 	}
 
+	#added in V2.14
+	#https://developer-docs.citrix.com/projects/delivery-controller-sdk/en/latest/Broker/Set-BrokerSite/
+	Switch ($Script:XDSite1.ColorDepth)
+	{
+		"FourBit"		{$xColorDepth = "4bit - 16 colors"; Break}
+		"EightBit"		{$xColorDepth = "8bit - 256 colors"; Break}
+		"SixteenBit"	{$xColorDepth = "16bit - High color"; Break}
+		"TwentyFourBit"	{$xColorDepth = "24bit - True color"; Break}
+		Default			{$xColorDepth = "Unable to determine Color Depth: $($Script:XDSite1.ColorDepth)"; Break}
+	}
+	Switch ($Script:XDSite1.DefaultMinimumFunctionalLevel)
+	{
+		"L5" 	{$xVDAVersion = "5.6 FP1 (Windows XP and Windows Vista)"; Break}
+		"L7"	{$xVDAVersion = "7.0 (or newer)"; Break}
+		"L7_6"	{$xVDAVersion = "7.6 (or newer)"; Break}
+		"L7_7"	{$xVDAVersion = "7.7 (or newer)"; Break}
+		"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
+		"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
+		Default {$xVDAVersion = "Unable to determine VDA version: $($Script:XDSite1.DefaultMinimumFunctionalLevel)"; Break}
+	}
+
 	Write-Verbose "$(Get-Date): `tOutput Site Settings"
 	If($MSWord -or $PDF)
 	{
@@ -27343,6 +27411,30 @@ Function OutputSiteSettings
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{Data = "Site name"; Value = $XDSiteName; }
 		$ScriptInformation += @{Data = "Default StoreFront address"; Value = $DefaultStoreFrontAddress; }
+		#added in V2.14
+		$ScriptInformation += @{Data = "Base OU"; Value = $Script:XDSite1.BaseOU; }
+		$ScriptInformation += @{Data = "Color Depth"; Value = $xColorDepth; }
+		If(validObject $Script:XDSite1 ConnectionLeasingEnabled)
+		{
+			$ScriptInformation += @{Data = "Connection Leasing Enabled"; Value = $Script:XDSite1.ConnectionLeasingEnabled.ToString(); }
+		}
+		$ScriptInformation += @{Data = "Default Minimum Functional Level"; Value = $xVDAVersion; }
+		$ScriptInformation += @{Data = "DNS Resolution Enabled"; Value = $Script:XDSite1.DnsResolutionEnabled.ToString(); }
+		If(validObject $Script:XDSite1 IsSecondaryBroker)
+		{
+			$ScriptInformation += @{Data = "Is Secondary Broker"; Value = $Script:XDSite1.IsSecondaryBroker.ToString(); }
+		}
+		If(validObject $Script:XDSite1 LocalHostCacheEnabled)
+		{
+			$ScriptInformation += @{Data = "Local Host Cache Enabled"; Value = $Script:XDSite1.LocalHostCacheEnabled.ToString(); }
+		}
+		If(validObject $Script:XDSite1 ReuseMachinesWithoutShutdownInOutageAllowed)
+		{
+			$ScriptInformation += @{Data = "Reuse Machines Without Shutdown in Outage Allowed"; Value = $Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed.ToString(); }
+		}
+		$ScriptInformation += @{Data = "Secure ICA Required"; Value = $Script:XDSite1.SecureIcaRequired.ToString(); }
+		$ScriptInformation += @{Data = "Trust Managed Anonymous XML Service Requests"; Value = $Script:XDSite1.TrustManagedAnonymousXmlServiceRequests.ToString(); }
+		$ScriptInformation += @{Data = "Trust Requests Sent to the XML Service Port"; Value = $Script:XDSite1.TrustRequestsSentToTheXmlServicePort.ToString(); }
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -27363,8 +27455,32 @@ Function OutputSiteSettings
 		Line 0 ""
 		Line 0 "Site Settings"
 		Line 0 ""
-		Line 1 "Site name: " $XDSiteName
-		Line 1 "Default StoreFront address: " $DefaultStoreFrontAddress
+		Line 1 "Site name`t`t`t`t`t`t: " $XDSiteName
+		Line 1 "Default StoreFront address`t`t`t`t: " $DefaultStoreFrontAddress
+		#added in V2.14
+		Line 1 "Base OU`t`t`t`t`t`t`t: " $Script:XDSite1.BaseOU
+		Line 1 "Color Depth`t`t`t`t`t`t: " $xColorDepth
+		If(validObject $Script:XDSite1 ConnectionLeasingEnabled)
+		{
+			Line 1 "Connection Leasing Enabled`t`t`t`t: " $Script:XDSite1.ConnectionLeasingEnabled.ToString()
+		}
+		Line 1 "Default Minimum Functional Level`t`t`t: " $xVDAVersion
+		Line 1 "DNS Resolution Enabled`t`t`t`t`t: " $Script:XDSite1.DnsResolutionEnabled.ToString()
+		If(validObject $Script:XDSite1 IsSecondaryBroker)
+		{
+			Line 1 "Is Secondary Broker`t`t`t`t`t: " $Script:XDSite1.IsSecondaryBroker.ToString()
+		}
+		If(validObject $Script:XDSite1 LocalHostCacheEnabled)
+		{
+			Line 1 "Local Host Cache Enabled`t`t`t`t: " $Script:XDSite1.LocalHostCacheEnabled.ToString()
+		}
+		If(validObject $Script:XDSite1 ReuseMachinesWithoutShutdownInOutageAllowed)
+		{
+			Line 1 "Reuse Machines Without Shutdown in Outage Allowed`t: " $Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed.ToString()
+		}
+		Line 1 "Secure ICA Required`t`t`t`t`t: " $Script:XDSite1.SecureIcaRequired.ToString()
+		Line 1 "Trust Managed Anonymous XML Service Requests`t`t: " $Script:XDSite1.TrustManagedAnonymousXmlServiceRequests.ToString()
+		Line 1 "Trust Requests Sent to the XML Service Port`t`t: " $Script:XDSite1.TrustRequestsSentToTheXmlServicePort.ToString()
 		Line 0 ""
 	}
 	ElseIf($HTML)
@@ -27374,6 +27490,29 @@ Function OutputSiteSettings
 		$rowdata = @()
 		$columnHeaders = @("Site name",($htmlsilver -bor $htmlbold),$XDSiteName,$htmlwhite)
 		$rowdata += @(,('Default StoreFront address',($htmlsilver -bor $htmlbold),$DefaultStoreFrontAddress,$htmlwhite))
+		$rowdata += @(,("Base OU",($htmlsilver -bor $htmlbold),$Script:XDSite1.BaseOU,$htmlwhite))
+		$rowdata += @(,("Color Depth",($htmlsilver -bor $htmlbold),$xColorDepth,$htmlwhite))
+		If(validObject $Script:XDSite1 ConnectionLeasingEnabled)
+		{
+			$rowdata += @(,("Connection Leasing Enabled",($htmlsilver -bor $htmlbold),$Script:XDSite1.ConnectionLeasingEnabled.ToString(),$htmlwhite))
+		}
+		$rowdata += @(,("Default Minimum Functional Level",($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
+		$rowdata += @(,("DNS Resolution Enabled",($htmlsilver -bor $htmlbold),$Script:XDSite1.DnsResolutionEnabled.ToString(),$htmlwhite))
+		If(validObject $Script:XDSite1 IsSecondaryBroker)
+		{
+			$rowdata += @(,("Is Secondary Broker",($htmlsilver -bor $htmlbold),$Script:XDSite1.IsSecondaryBroker.ToString(),$htmlwhite))
+		}
+		If(validObject $Script:XDSite1 LocalHostCacheEnabled)
+		{
+			$rowdata += @(,("Local Host Cache Enabled",($htmlsilver -bor $htmlbold),$Script:XDSite1.LocalHostCacheEnabled.ToString(),$htmlwhite))
+		}
+		If(validObject $Script:XDSite1 ReuseMachinesWithoutShutdownInOutageAllowed)
+		{
+			$rowdata += @(,("Reuse Machines Without Shutdown in Outage Allowed",($htmlsilver -bor $htmlbold),$Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed.ToString(),$htmlwhite))
+		}
+		$rowdata += @(,("Secure ICA Required",($htmlsilver -bor $htmlbold),$Script:XDSite1.SecureIcaRequired.ToString(),$htmlwhite))
+		$rowdata += @(,("Trust Managed Anonymous XML Service Requests",($htmlsilver -bor $htmlbold),$Script:XDSite1.TrustManagedAnonymousXmlServiceRequests.ToString(),$htmlwhite))
+		$rowdata += @(,("Trust Requests Sent to the XML Service Port",($htmlsilver -bor $htmlbold),$Script:XDSite1.TrustRequestsSentToTheXmlServicePort.ToString(),$htmlwhite))
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
