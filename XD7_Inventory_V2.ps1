@@ -960,9 +960,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.13
+	VERSION: 2.14
 	AUTHOR: Carl Webster
-	LASTEDIT: April 7, 2018
+	LASTEDIT: April 8, 2018
 #>
 
 #endregion
@@ -1155,6 +1155,21 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.14
+#	Added the following properties to Application Details
+#		Application Type
+#		CPU Priority Level
+#		Home Zone Name
+#		Home Zone Only
+#		Ignore User Home Zone
+#		Icon from Client
+#		Local Launch Disabled
+#		Secure Command Line Arguments Enabled
+#		Add shortcut to user's desktop
+#		Add shortbut to user's Start Menu
+#		Start Menu Folder
+#		Wait for Printer Creation
 
 #Version 2.13 7-Apr-2018
 #	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
@@ -12446,7 +12461,7 @@ Function OutputApplicationDetails
 	}
 	Else
 	{
-		$xVisibility = {Users inherited from Delivery Group}
+		$xVisibility = "Users inherited from Delivery Group"
 	}
 	
 	$DeliveryGroups = @()
@@ -12476,7 +12491,7 @@ Function OutputApplicationDetails
 	}
 	
 	$RedirectedFileTypes = @()
-	#V2.10 22-jan=2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 	$Results = Get-BrokerConfiguredFTA -ApplicationUid $Application.Uid @XDParams2
 	If($? -and $Null -ne $Results)
 	{
@@ -12484,6 +12499,27 @@ Function OutputApplicationDetails
 		{
 			$RedirectedFileTypes += $Result.ExtensionName
 		}
+	}
+	
+	#added in 2.14
+	$CPUPriorityLevel = "Normal"
+	Switch ($Application.CpuPriorityLevel)
+	{
+		"Low"			{$CPUPriorityLevel = "Low"; Break}
+		"BelowNormal"	{$CPUPriorityLevel = "Below Normal"; Break}
+		"Normal"		{$CPUPriorityLevel = "Normal"; Break}
+		"AboveNormal"	{$CPUPriorityLevel = "Above Normal"; Break}
+		"High"			{$CPUPriorityLevel = "High"; Break}
+		Default 		{"Unable to determine CPUPriorityLevel: $($Application.CpuPriorityLevel)"; Break}
+	}
+	
+	$ApplicationType = ""
+	Switch ($Application.ApplicationType)
+	{
+		"HostedOnDesktop"	{$ApplicationType = "Hosted on Desktop"; Break}
+		"InstalledOnClient"	{$ApplicationType = "Installed on Client"; Break}
+		"PublishedContent"	{$ApplicationType = "Published Content"; Break}
+		Default 			{"Unable to determine ApplicationType: $($Application.ApplicationType)"; Break}
 	}
 	
 	If($MSWord -or $PDF)
@@ -12576,6 +12612,35 @@ Function OutputApplicationDetails
 			$ScriptInformation += @{Data = "Maximum instances per user"; Value = $tmp; }
 		}
 		
+		#added in 2.14
+		$ScriptInformation += @{Data = "Application Type"; Value = $ApplicationType; }
+		$ScriptInformation += @{Data = "CPU Priority Level"; Value = $CPUPriorityLevel; }
+		If(validObject $Application HomeZoneName)
+		{
+			$ScriptInformation += @{Data = "Home Zone Name"; Value = $Application.HomeZoneName; }
+		}
+		If(validObject $Application HomeZoneOnly)
+		{
+			$ScriptInformation += @{Data = "Home Zone Only"; Value = $Application.HomeZoneOnly.ToString(); }
+		}
+		If(validObject $Application IgnoreUserHomeZone)
+		{
+			$ScriptInformation += @{Data = "Ignore User Home Zone"; Value = $Application.IgnoreUserHomeZone.ToString(); }
+		}
+		$ScriptInformation += @{Data = "Icon from Client"; Value = $Application.IconFromClient; }
+		If(validObject $Application LocalLaunchDisabled)
+		{
+			$ScriptInformation += @{Data = "Local Launch Disabled"; Value = $Application.LocalLaunchDisabled.ToString(); }
+		}
+		$ScriptInformation += @{Data = "Secure Command Line Arguments Enabled"; Value = $Application.SecureCmdLineArgumentsEnabled.ToString(); }
+		$ScriptInformation += @{Data = "Add shortcut to user's desktop"; Value = $Application.ShortcutAddedToDesktop.ToString(); }
+		$ScriptInformation += @{Data = "Add shortcut to user's Start Menu"; Value = $Application.ShortcutAddedToStartMenu.ToString(); }
+		If($Application.ShortcutAddedToStartMenu)
+		{
+			$ScriptInformation += @{Data = "Start Menu Folder"; Value = $Application.StartMenuFolder ; }
+		}
+		$ScriptInformation += @{Data = "Wait for Printer Creation"; Value = $Application.WaitForPrinterCreation.ToString(); }
+		
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -12595,10 +12660,10 @@ Function OutputApplicationDetails
 	}
 	ElseIf($Text)
 	{
-		Line 1 "Name (for administrator)`t: " $Application.Name
-		Line 1 "Name (for user)`t`t`t: " $Application.PublishedName
-		Line 1 "Description`t`t`t: " $Application.Description
-		Line 1 "Delivery Group`t`t`t: " $DeliveryGroups[0]
+		Line 1 "Name (for administrator)`t`t: " $Application.Name
+		Line 1 "Name (for user)`t`t`t`t: " $Application.PublishedName
+		Line 1 "Description`t`t`t`t: " $Application.Description
+		Line 1 "Delivery Group`t`t`t`t: " $DeliveryGroups[0]
 		$cnt = -1
 		ForEach($Group in $DeliveryGroups)
 		{
@@ -12608,12 +12673,12 @@ Function OutputApplicationDetails
 				Line 5 "  " $Group
 			}
 		}
-		Line 1 "Folder (for administrators)`t: " $Application.AdminFolderName
+		Line 1 "Folder (for administrators)`t`t: " $Application.AdminFolderName
 		#V2.12 change from "Folder (for user)" to "Application category (optional)". 
 		#This changed in XA/X 7.8 and I never noticed it and no one reported it.
 		#Thanks to lbates for bringing it to my attention.
-		Line 1 "Application category (optional)`t: " $Application.ClientFolder
-		Line 1 "Visibility`t`t`t: " $xVisibility[0]
+		Line 1 "Application category (optional)`t`t: " $Application.ClientFolder
+		Line 1 "Visibility`t`t`t`t: " $xVisibility[0]
 		$cnt = -1
 		ForEach($tmp in $xVisibility)
 		{
@@ -12623,17 +12688,17 @@ Function OutputApplicationDetails
 				Line 5 "  " $xVisibility[$cnt]
 			}
 		}
-		Line 1 "Application Path`t`t: " $Application.CommandLineExecutable
-		Line 1 "Command line arguments`t`t: " $Application.CommandLineArguments
-		Line 1 "Working directory`t`t: " $Application.WorkingDirectory
+		Line 1 "Application Path`t`t`t: " $Application.CommandLineExecutable
+		Line 1 "Command line arguments`t`t`t: " $Application.CommandLineArguments
+		Line 1 "Working directory`t`t`t: " $Application.WorkingDirectory
 		$tmp1 = ""
 		ForEach($tmp in $RedirectedFileTypes)
 		{
 			$tmp1 += "$($tmp); "
 		}
-		Line 1 "Redirected file types`t`t: " $tmp1
+		Line 1 "Redirected file types`t`t`t: " $tmp1
 		$tmp1 = $Null
-		Line 1 "Tags`t`t`t`t: " $xTags[0]
+		Line 1 "Tags`t`t`t`t`t: " $xTags[0]
 		$cnt = -1
 		ForEach($tmp in $xTags)
 		{
@@ -12646,7 +12711,7 @@ Function OutputApplicationDetails
 
 		If($Application.Visible -eq $False)
 		{
-			Line 1 "Hidden`t`t`t`t: Application is hidden" ""
+			Line 1 "Hidden`t`t`t`t`t: Application is hidden" ""
 		}
 		
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "ApplicationUsageLimits")
@@ -12661,7 +12726,7 @@ Function OutputApplicationDetails
 			{
 				$tmp = $Application.MaxTotalInstances.ToString()
 			}
-			Line 1 "Maximum concurrent instances`t: " $tmp
+			Line 1 "Maximum concurrent instances`t`t: " $tmp
 			
 			$tmp = ""
 			If($Application.MaxPerUserInstances -eq 0)
@@ -12672,8 +12737,36 @@ Function OutputApplicationDetails
 			{
 				$tmp = $Application.MaxPerUserInstances.ToString()
 			}
-			Line 1 "Maximum instances per user`t: " $tmp
+			Line 1 "Maximum instances per user`t`t: " $tmp
 		}
+		#added in 2.14
+		Line 1 "Application Type`t`t`t: " $ApplicationType
+		Line 1 "CPU Priority Level`t`t`t: " $CPUPriorityLevel
+		If(validObject $Application HomeZoneName)
+		{
+			Line 1 "Home Zone Name`t`t`t`t: " $Application.HomeZoneName
+		}
+		If(validObject $Application HomeZoneOnly)
+		{
+			Line 1 "Home Zone Only`t`t`t`t: " $Application.HomeZoneOnly.ToString()
+		}
+		If(validObject $Application IgnoreUserHomeZone)
+		{
+			Line 1 "Ignore User Home Zone`t`t`t: " $Application.IgnoreUserHomeZone.ToString()
+		}
+		Line 1 "Icon from Client`t`t`t: " $Application.IconFromClient
+		If(validObject $Application LocalLaunchDisabled)
+		{
+			Line 1 "Local Launch Disabled`t`t`t: " $Application.LocalLaunchDisabled.ToString()
+		}
+		Line 1 "Secure Command Line Arguments Enabled`t: " $Application.SecureCmdLineArgumentsEnabled.ToString()
+		Line 1 "Add shortcut to user's desktop`t`t: " $Application.ShortcutAddedToDesktop.ToString()
+		Line 1 "Add shortcut to user's Start Menu`t: " $Application.ShortcutAddedToStartMenu.ToString()
+		If($Application.ShortcutAddedToStartMenu)
+		{
+			Line 1 "Start Menu Folder`t`t`t: " $Application.StartMenuFolder 
+		}
+		Line 1 "Wait for Printer Creation`t`t: " $Application.WaitForPrinterCreation.ToString()
 		Line 0 ""
 	}
 	ElseIf($HTML)
@@ -12757,6 +12850,36 @@ Function OutputApplicationDetails
 			}
 			$rowdata += @(,('Maximum instances per user',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 		}
+
+		#added in 2.14
+		$rowdata += @(,("Application Type",($htmlsilver -bor $htmlbold),$ApplicationType,$htmlwhite))
+		$rowdata += @(,("CPU Priority Level",($htmlsilver -bor $htmlbold),$CPUPriorityLevel,$htmlwhite))
+		If(validObject $Application HomeZoneName)
+		{
+			$rowdata += @(,("Home Zone Name",($htmlsilver -bor $htmlbold),$Application.HomeZoneName,$htmlwhite))
+		}
+		If(validObject $Application HomeZoneOnly)
+		{
+			$rowdata += @(,("Home Zone Only",($htmlsilver -bor $htmlbold),$Application.HomeZoneOnly.ToString(),$htmlwhite))
+		}
+		If(validObject $Application IgnoreUserHomeZone)
+		{
+			$rowdata += @(,("Ignore User Home Zone",($htmlsilver -bor $htmlbold),$Application.IgnoreUserHomeZone.ToString(),$htmlwhite))
+		}
+		$rowdata += @(,("Icon from Client",($htmlsilver -bor $htmlbold),$Application.IconFromClient,$htmlwhite))
+		If(validObject $Application LocalLaunchDisabled)
+		{
+			$rowdata += @(,("Local Launch Disabled",($htmlsilver -bor $htmlbold),$Application.LocalLaunchDisabled.ToString(),$htmlwhite))
+		}
+		$rowdata += @(,("Secure Command Line Arguments Enabled",($htmlsilver -bor $htmlbold),$Application.SecureCmdLineArgumentsEnabled.ToString(),$htmlwhite))
+		$rowdata += @(,("Add shortcut to user's desktop",($htmlsilver -bor $htmlbold),$Application.ShortcutAddedToDesktop.ToString(),$htmlwhite))
+		$rowdata += @(,("Add shortcut to user's Start Menu",($htmlsilver -bor $htmlbold),$Application.ShortcutAddedToStartMenu.ToString(),$htmlwhite))
+		If($Application.ShortcutAddedToStartMenu)
+		{
+			$rowdata += @(,("Start Menu Folder",($htmlsilver -bor $htmlbold),$Application.StartMenuFolder,$htmlwhite)) 
+		}
+		$rowdata += @(,("Wait for Printer Creation",($htmlsilver -bor $htmlbold),$Application.WaitForPrinterCreation.ToString(),$htmlwhite))
+
 		$msg = ""
 		$columnWidths = @("175","325")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
@@ -13642,7 +13765,7 @@ Function validStateProp( [object] $object, [string] $topLevel, [string] $secondL
 	#function created 8-jan-2014 by Michael B. Smith
 	If( $object )
 	{
-		If((Get-Member-Name $topLevel -InputObject $object))
+		If((Get-Member -Name $topLevel -InputObject $object))
 		{
 			If((Get-Member-Name $secondLevel -InputObject $object.$topLevel))
 			{
@@ -13658,7 +13781,7 @@ Function validObject( [object] $object, [string] $topLevel )
 	#function created 8-jan-2014 by Michael B. Smith
 	If( $object )
 	{
-		If((Get-Member-Name $topLevel -InputObject $object))
+		If((Get-Member -Name $topLevel -InputObject $object))
 		{
 			Return $True
 		}

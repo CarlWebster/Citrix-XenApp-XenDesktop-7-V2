@@ -3,6 +3,21 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.14
+#	Added the following properties to Application Details
+#		Application Type
+#		CPU Priority Level
+#		Home Zone Name
+#		Home Zone Only
+#		Ignore User Home Zone
+#		Icon from Client
+#		Local Launch Disabled
+#		Secure Command Line Arguments Enabled
+#		Add shortcut to user's desktop
+#		Add shortbut to user's Start Menu
+#		Start Menu Folder
+#		Wait for Printer Creation
+
 #Version 2.13 7-Apr-2018
 #	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
 #	Code clean-up for most recommendations made by Visual Studio Code
