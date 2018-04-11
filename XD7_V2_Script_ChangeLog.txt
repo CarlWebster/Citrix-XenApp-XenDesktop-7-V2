@@ -3,7 +3,7 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
-#Version 2.14
+#Version 2.14 11-Apr-2018
 #	Added the following properties to Application Details
 #		Application Type
 #		CPU Priority Level
@@ -14,11 +14,12 @@
 #		Local Launch Disabled
 #		Secure Command Line Arguments Enabled
 #		Add shortcut to user's desktop
-#		Add shortbut to user's Start Menu
+#		Add shortcut to user's Start Menu
 #		Start Menu Folder
 #		Wait for Printer Creation
 #	Added the following property to Delivery Group Details
-#		Reuse Machines Without Shutdown in Outage
+#		Reuse Machines Without Shutdown in Outage 
+#			With a note if the setting doesn't match the Site setting
 #	Added the following properties to Site Settings Details
 #		Base OU
 #		Color Depth
@@ -31,6 +32,7 @@
 #		Secure ICA Required
 #		Trust Managed Anonymous XML Service Requests
 #		Trust Requests Sent to the XML Service Port
+#	Change several calls from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 #	Fixed missing variable set for Default Switch statement for $Group.MinimumFunctionalLevel in Function OutputDeliveryGroupDetails 
 #	Fixed missing variable set for Default Switch statement for $Catalog.MinimumFunctionalLevel in Function OutputMachines 
 #	Fixed missing variable set for Default Switch statement for $AppDisk.State in Function OutputAppDiskTable 

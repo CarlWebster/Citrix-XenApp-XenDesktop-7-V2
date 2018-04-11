@@ -962,7 +962,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.14
 	AUTHOR: Carl Webster
-	LASTEDIT: April 9, 2018
+	LASTEDIT: April 11, 2018
 #>
 
 #endregion
@@ -1156,7 +1156,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.14
+#Version 2.14 11-Apr-2018
 #	Added the following properties to Application Details
 #		Application Type
 #		CPU Priority Level
@@ -1167,11 +1167,12 @@ Param(
 #		Local Launch Disabled
 #		Secure Command Line Arguments Enabled
 #		Add shortcut to user's desktop
-#		Add shortbut to user's Start Menu
+#		Add shortcut to user's Start Menu
 #		Start Menu Folder
 #		Wait for Printer Creation
 #	Added the following property to Delivery Group Details
-#		Reuse Machines Without Shutdown in Outage
+#		Reuse Machines Without Shutdown in Outage 
+#			With a note if the setting doesn't match the Site setting
 #	Added the following properties to Site Settings Details
 #		Base OU
 #		Color Depth
@@ -1184,6 +1185,7 @@ Param(
 #		Secure ICA Required
 #		Trust Managed Anonymous XML Service Requests
 #		Trust Requests Sent to the XML Service Port
+#	Change several calls from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 #	Fixed missing variable set for Default Switch statement for $Group.MinimumFunctionalLevel in Function OutputDeliveryGroupDetails 
 #	Fixed missing variable set for Default Switch statement for $Catalog.MinimumFunctionalLevel in Function OutputMachines 
 #	Fixed missing variable set for Default Switch statement for $AppDisk.State in Function OutputAppDiskTable 
@@ -1194,7 +1196,7 @@ Param(
 #Version 2.13 7-Apr-2018
 #	Added Operating System information to Functions GetComputerWMIInfo and OutputComputerItem
 #	Code clean-up for most recommendations made by Visual Studio Code
-#	During the code clean up, I came across some "unused" variables. I had just
+#	During the code clean-up, I came across some "unused" variables. I had just
 #		forgotten to add them to the output. OOPS! They are now added.
 #			Off Peak Buffer Size Percent
 #			Off Peak Disconnect Timeout (Minutes)
@@ -1206,7 +1208,7 @@ Param(
 #			Peak LogOff Timeout (Minutes)
 #			Settlement Period Before Auto Shutdown (HH:MM:SS)
 #			Settlement Period Before Use (HH:MM:SS)
-#		Code clean up also found a copy and paste error with Session Linger
+#		Code clean-up also found a copy and paste error with Session Linger
 #			The "end session linger" value was still using the "end session prelaunch" variable
 #			OOPS, sorry about that. Fixed.
 
@@ -6471,7 +6473,7 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "Provisioning method"; Value = $xProvisioningType; }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
 				$CatalogInformation += @{Data = "Resources"; Value = $MachineData.HostingUnitName; }
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					$CatalogInformation += @{Data = "Zone"; Value = $Catalog.ZoneName; }
@@ -6535,7 +6537,7 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "Allocation type"; Value = $xAllocationType; }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
 				$CatalogInformation += @{Data = "Resources"; Value = $MachineData.HostingUnitName; }
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					$CatalogInformation += @{Data = "Zone"; Value = $Catalog.ZoneName; }
@@ -6561,7 +6563,7 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "No. of machines"; Value = $NumberOfMachines; }
 				$CatalogInformation += @{Data = "Allocated machines"; Value = $Catalog.UsedCount; }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					$CatalogInformation += @{Data = "Zone"; Value = $Catalog.ZoneName; }
@@ -6589,7 +6591,7 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "User data"; Value = $xPersistType; }
 				$CatalogInformation += @{Data = "Provisioning method"; Value = $xProvisioningType; }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					$CatalogInformation += @{Data = "Zone"; Value = $Catalog.ZoneName; }
@@ -6639,7 +6641,7 @@ Function OutputMachines
 				Line 1 "Provisioning method`t`t: " $xProvisioningType
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
 				Line 1 "Resources`t`t`t: " $MachineData.HostingUnitName
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					Line 1 "Zone`t`t`t`t: " $Catalog.ZoneName
@@ -6703,7 +6705,7 @@ Function OutputMachines
 				Line 1 "Allocation type`t`t`t: " $xAllocationType
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
 				Line 1 "Resources`t`t`t: " $MachineData.HostingUnitName
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					Line 1 "Zone`t`t`t`t: " $Catalog.ZoneName
@@ -6729,7 +6731,7 @@ Function OutputMachines
 				Line 1 "No. of machines`t`t`t: "$NumberOfMachines
 				Line 1 "Allocated machines`t`t: " $Catalog.UsedCount
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					Line 1 "Zone`t`t`t`t: " $Catalog.ZoneName
@@ -6757,7 +6759,7 @@ Function OutputMachines
 				Line 1 "User data`t`t`t: " $xPersistType
 				Line 1 "Provisioning method`t`t: " $xProvisioningType
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					Line 1 "Zone`t`t`t`t: " $Catalog.ZoneName
@@ -6793,7 +6795,7 @@ Function OutputMachines
 				$rowdata += @(,('Provisioning method',($htmlsilver -bor $htmlbold),$xProvisioningType,$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
 				$rowdata += @(,('Resources',($htmlsilver -bor $htmlbold),$MachineData.HostingUnitName,$htmlwhite))
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
@@ -6858,7 +6860,7 @@ Function OutputMachines
 				$rowdata += @(,('Allocation type',($htmlsilver -bor $htmlbold),$xAllocationType,$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
 				$rowdata += @(,('Resources',($htmlsilver -bor $htmlbold),$MachineData.HostingUnitName,$htmlwhite))
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
@@ -6885,7 +6887,7 @@ Function OutputMachines
 				$rowdata += @(,('No. of machines',($htmlsilver -bor $htmlbold),$NumberOfMachines,$htmlwhite))
 				$rowdata += @(,('Allocated machines',($htmlsilver -bor $htmlbold),$Catalog.UsedCount,$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
@@ -6913,7 +6915,7 @@ Function OutputMachines
 				$rowdata += @(,('User data',($htmlsilver -bor $htmlbold),$xPersistType,$htmlwhite))
 				$rowdata += @(,('Provisioning method',($htmlsilver -bor $htmlbold),$xProvisioningType,$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
-				#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
 					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
@@ -8144,7 +8146,7 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Provisioning Type"; Value = $Machine.ProvisioningType; }
 			$ScriptInformation += @{Data = "PvD State"; Value = $xPvdStage; }
 			$ScriptInformation += @{Data = "Scheduled Reboot"; Value = $Machine.ScheduledReboot; }
-			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
 			{
 				$ScriptInformation += @{Data = "Zone"; Value = $Machine.ZoneName; }
@@ -8423,7 +8425,7 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Is Physical"; Value = $xIsPhysical; }
 			$ScriptInformation += @{Data = "Provisioning Type"; Value = $Machine.ProvisioningType; }
 			$ScriptInformation += @{Data = "PvD State"; Value = $xPvdStage; }
-			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
 			{
 				$ScriptInformation += @{Data = "Zone"; Value = $Machine.ZoneName; }
@@ -8719,7 +8721,7 @@ Function OutputMachineDetails
 			Line 2 "Provisioning Type`t`t: " $Machine.ProvisioningType
 			Line 2 "PvD State`t`t`t: " $xPvdStage
 			Line 2 "Scheduled Reboot`t`t: " $Machine.ScheduledReboot
-			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
 			{
 				Line 2 "Zone`t`t`t`t: " $Machine.ZoneName
@@ -8862,7 +8864,7 @@ Function OutputMachineDetails
 			Line 2 "Is Physical`t`t`t: " $xIsPhysical
 			Line 2 "Provisioning Type`t`t: " $Machine.ProvisioningType
 			Line 2 "PvD State`t`t`t: " $xPvdStage
-			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
 			{
 				Line 2 "Zone`t`t`t`t: " $Machine.ZoneName
@@ -9023,7 +9025,7 @@ Function OutputMachineDetails
 			$rowdata += @(,('Provisioning Type',($htmlsilver -bor $htmlbold),$Machine.ProvisioningType,$htmlwhite))
 			$rowdata += @(,('PvD State',($htmlsilver -bor $htmlbold),$xPvdStage,$htmlwhite))
 			$rowdata += @(,('Scheduled Reboot',($htmlsilver -bor $htmlbold),$Machine.ScheduledReboot,$htmlwhite))
-			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
 			{
 				$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Machine.ZoneName,$htmlwhite))
@@ -9207,7 +9209,7 @@ Function OutputMachineDetails
 			$rowdata += @(,('Is Physical',($htmlsilver -bor $htmlbold),$xIsPhysical,$htmlwhite))
 			$rowdata += @(,('Provisioning Type',($htmlsilver -bor $htmlbold),$Machine.ProvisioningType,$htmlwhite))
 			$rowdata += @(,('PvD State',($htmlsilver -bor $htmlbold),$xPvdStage,$htmlwhite))
-			#If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
+			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
 			{
 				$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Machine.ZoneName,$htmlwhite))
@@ -10298,6 +10300,7 @@ Function OutputDeliveryGroupDetails
 	{
 		WriteWordLine 4 0 "Details: " $Group.Name
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
+		[System.Collections.Hashtable[]] $HighlightedCells = @();
 		$ScriptInformation += @{Data = "Description"; Value = $Group.Description; }
 		If(![String]::IsNullOrEmpty($Group.PublishedName))
 		{
@@ -10499,7 +10502,7 @@ Function OutputDeliveryGroupDetails
 				{
 					$tmp = "Do not send a notification"
 					$ScriptInformation += @{Data = "Send notification to users"; Value = $tmp; }
-				}
+			}
 				Else
 				{
 					$tmp = "$($RestartSchedule.WarningDuration) minutes before user is logged off"
@@ -10694,7 +10697,15 @@ Function OutputDeliveryGroupDetails
 		#Added V2.14
 		If(validObject $Group ReuseMachinesWithoutShutdownInOutage)
 		{
-			$ScriptInformation += @{Data = "Reuse Machines Without Shutdown in Outage"; Value = $Group.ReuseMachinesWithoutShutdownInOutage; }
+			If($Group.ReuseMachinesWithoutShutdownInOutage -eq $Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed)
+			{
+				$ScriptInformation += @{Data = "Reuse Machines Without Shutdown in Outage"; Value = $Group.ReuseMachinesWithoutShutdownInOutage; }
+			}
+			Else
+			{
+				$ScriptInformation += @{Data = "Reuse Machines Without Shutdown in Outage"; Value = "$($Group.ReuseMachinesWithoutShutdownInOutage) (Doesn't match Site setting)"; }
+			}
+			
 		}
 		
 		$ScriptInformation += @{Data = "All connections not through NetScaler Gateway"; Value = $xAllConnections; }
@@ -10717,6 +10728,8 @@ Function OutputDeliveryGroupDetails
 		-AutoFit $wdAutoFitFixed;
 
 		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+		## Set the required highlighted cell
+		SetWordCellFormat -Coordinates $HighlightedCells -Table $Table -Bold -BackgroundColor $wdColorRed -Solid;
 
 		$Table.Columns.Item(1).Width = 200;
 		$Table.Columns.Item(2).Width = 200;
@@ -10774,7 +10787,7 @@ Function OutputDeliveryGroupDetails
 
 		If($Group.SessionSupport -eq "MultiSession")
 		{
-			Line 1 "Give access to unauthenticated (anonymous) users`t: " $SFAnonymousUsers
+			Line 1 "Give access to unauthenticated (anonymous) users: " $SFAnonymousUsers
 		}
 
 		If($xDeliveryType -ne "Applications" -and $Null -ne $DesktopSettings)
@@ -11118,17 +11131,24 @@ Function OutputDeliveryGroupDetails
 			Line 1 "During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins: " $xOffPeakExtendedDisconnectAction
 		}
 
-		Line 1 "Automatic power on for assigned`t`t`t`t: " $xAutoPowerOnForAssigned
-		Line 1 "Automatic power on for assigned during peak`t`t: " $xAutoPowerOnForAssignedDuringPeak
+		Line 1 "Automatic power on for assigned`t`t`t: " $xAutoPowerOnForAssigned
+		Line 1 "Automatic power on for assigned during peak`t: " $xAutoPowerOnForAssignedDuringPeak
 		#Added V2.14
 		If(validObject $Group ReuseMachinesWithoutShutdownInOutage)
 		{
-			Line 1 "Reuse Machines Without Shutdown in Outage: " $Group.ReuseMachinesWithoutShutdownInOutage
+			If($Group.ReuseMachinesWithoutShutdownInOutage -eq $Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed)
+			{
+				Line 1 "Reuse Machines Without Shutdown in Outage`t: " $Group.ReuseMachinesWithoutShutdownInOutage
+			}
+			Else
+			{
+				Line 1 "Reuse Machines Without Shutdown in Outage`t: $($Group.ReuseMachinesWithoutShutdownInOutage) (Doesn't match Site setting)"
+			}
 		}
 		
-		Line 1 "All connections not through NetScaler Gateway`t`t: " $xAllConnections
-		Line 1 "Connections through NetScaler Gateway`t`t`t: " $xNSConnection
-		Line 1 "Connections meeting any of the following filters`t: " $xAGFilters[0]
+		Line 1 "All connections not through NetScaler Gateway`t: " $xAllConnections
+		Line 1 "Connections through NetScaler Gateway`t`t: " $xNSConnection
+		Line 1 "Connections meeting any of the following filters: " $xAGFilters[0]
 		$cnt = -1
 		ForEach($tmp in $xAGFilters)
 		{
@@ -11538,7 +11558,14 @@ Function OutputDeliveryGroupDetails
 		#Added V2.14
 		If(validObject $Group ReuseMachinesWithoutShutdownInOutage)
 		{
-			$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($htmlsilver -bor $htmlbold),$Group.ReuseMachinesWithoutShutdownInOutage,$xAllConnections,$htmlwhite))
+			If($Group.ReuseMachinesWithoutShutdownInOutage -eq $Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed)
+			{
+				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($htmlsilver -bor $htmlbold),$Group.ReuseMachinesWithoutShutdownInOutage,$htmlwhite))
+			}
+			Else
+			{
+				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($htmlsilver -bor $htmlbold),"$($Group.ReuseMachinesWithoutShutdownInOutage) (Doesn't match Site setting)",$htmlwhite))
+			}
 		}
 
 		$rowdata += @(,('All connections not through NetScaler Gateway',($htmlsilver -bor $htmlbold),$xAllConnections,$htmlwhite))
@@ -12013,8 +12040,8 @@ Function OutputDeliveryGroupUtilization
 			#Assumes that date is always on A column 
 			$range = $worksheet.Range("A2")
 			$selectionXL = $worksheet.Range($range,$range.end($xlDirection::xlDown))
-			$Start = @($selectionXL)[0].Text
-			$End = @($selectionXL)[-1].Text
+			#$Start = @($selectionXL)[0].Text
+			#$End = @($selectionXL)[-1].Text
 
 			Write-Verbose "$(Get-Date): `t`t`tCreating chart for $($Group.Name)"
 			$chart = $worksheet.Shapes.AddChart().Chart 
@@ -30699,7 +30726,6 @@ Function ProcessHosting
 			$hypvmstorage = @()
 			$hyppvdstorage = @()
 			$hypnetwork = @()
-			$capabilities = $Hypervisor.Capabilities -join ', '	
 			ForEach($storage in $vmstorage)
 			{
 				If($storage.Contains($Hypervisor.Name))
