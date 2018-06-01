@@ -965,7 +965,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.17
 	AUTHOR: Carl Webster
-	LASTEDIT: May 29, 2018
+	LASTEDIT: June 1, 2018
 #>
 
 #endregion
@@ -1177,6 +1177,10 @@ Param(
 #		This should mean the database is running on SQL Server Express or has an Instance name
 #	In Function OutputXenDesktopLicenses, fix for when the property LicenseExpirationDate is $Null which means 
 #		the license Expiration Date is "Permanent" (Found by Ken Avram)
+#	In Machine Catalog Details, for MCS catalogs, add Account Identity data:
+#		Account naming scheme
+#		Naming scheme type
+#		AD location (OU distinquished name)
 #	Optimize Function ProcessCitrixPolicies by removing unneeded variable $WordTableRowHash. This removed almost 500
 #		lines of code and almost 500 unneeded variable initializations
 #	When outputting Machine Catalog details, check if MetadataMap contains data, if so add it to output. For example:
@@ -6336,6 +6340,25 @@ Function OutputMachines
 			Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
 		}
 		
+		#V2.17 add getting the Account Identity Pool data
+		If($Catalog.ProvisioningType -eq "MCS")
+		{
+			$IdentityPool = @(Get-AcctIdentityPool @XDParams2 -IdentityPoolName $Catalog.Name)
+			
+			If($? -and $Null -ne $IdentityPool)
+			{
+				$IdentityNamingScheme = $IdentityPool.NamingScheme
+				$IdentityNamingSchemeType = $IdentityPool.NamingSchemeType
+				$IdentityOU = $IdentityPool.OU
+			}
+			Else
+			{
+				$IdentityNamingScheme = "Not Found"
+				$IdentityNamingSchemeType = "Not Found"
+				$IdentityOU = "Not Found"
+			}
+		}
+		
 		If($MSWord -or $PDF)
 		{
 
@@ -6352,6 +6375,11 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "Allocation type"; Value = $xAllocationType; }
 				$CatalogInformation += @{Data = "User data"; Value = $xPersistType; }
 				$CatalogInformation += @{Data = "Provisioning method"; Value = $xProvisioningType; }
+				#V2.17 add identity pool data
+				$CatalogInformation += @{Data = "Account naming scheme"; Value = $IdentityNamingScheme; }
+				$CatalogInformation += @{Data = "Naming scheme type"; Value = $IdentityNamingSchemeType; }
+				$CatalogInformation += @{Data = "AD Location"; Value = $IdentityOU; }
+				#end of identity pool data
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
 				$CatalogInformation += @{Data = "Resources"; Value = $MachineData.HostingUnitName; }
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
@@ -6537,6 +6565,11 @@ Function OutputMachines
 				Line 1 "Allocation type`t`t`t: " $xAllocationType
 				Line 1 "User data`t`t`t: " $xPersistType
 				Line 1 "Provisioning method`t`t: " $xProvisioningType
+				#V2.17 add identity pool data
+				Line 1 "Account naming scheme`t`t: " $IdentityNamingScheme
+				Line 1 "Naming scheme type`t`t: " $IdentityNamingSchemeType
+				Line 1 "AD Location`t`t`t: " $IdentityOU
+				#end of identity pool data
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
 				Line 1 "Resources`t`t`t: " $MachineData.HostingUnitName
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
@@ -6709,6 +6742,11 @@ Function OutputMachines
 				$rowdata += @(,('Allocation type',($htmlsilver -bor $htmlbold),$xAllocationType,$htmlwhite))
 				$rowdata += @(,('User data',($htmlsilver -bor $htmlbold),$xPersistType,$htmlwhite))
 				$rowdata += @(,('Provisioning method',($htmlsilver -bor $htmlbold),$xProvisioningType,$htmlwhite))
+				#V2.17 add identity pool data
+				$rowdata += @(,("Account naming scheme",($htmlsilver -bor $htmlbold),$IdentityNamingScheme,$htmlwhite))
+				$rowdata += @(,("Naming scheme type",($htmlsilver -bor $htmlbold),$IdentityNamingSchemeType,$htmlwhite))
+				$rowdata += @(,("AD Location",($htmlsilver -bor $htmlbold),$IdentityOU,$htmlwhite))
+				#end of identity pool data
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
 				$rowdata += @(,('Resources',($htmlsilver -bor $htmlbold),$MachineData.HostingUnitName,$htmlwhite))
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
