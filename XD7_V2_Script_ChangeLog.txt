@@ -21,13 +21,7 @@
 #		This should mean the database is running on SQL Server Express or has an Instance name
 #	In Function OutputXenDesktopLicenses, fix for when the property LicenseExpirationDate is $Null which means 
 #		the license Expiration Date is "Permanent" (Found by Ken Avram)
-#	In Machine Catalog Details, for MCS catalogs, add Account Identity data:
-#		Account naming scheme
-#		Naming scheme type
-#		AD location (OU distinquished name)
-#	Optimize Function ProcessCitrixPolicies by removing unneeded variable $WordTableRowHash. This removed almost 500
-#		lines of code and almost 500 unneeded variable initializations
-#	When outputting Machine Catalog details, check if MetadataMap contains data, if so add it to output. For example:
+#	In Machine Catalog details, check if MetadataMap contains data, if so add it to output. For example:
 #		ImageManagementPrep_DoImagePreparation True 
 #		ImageManagementPrep_Excluded_Steps Not set 
 #		ImageManagementPrep_NoAutoShutdown False
@@ -37,6 +31,14 @@
 #			https://support.citrix.com/article/CTX217456
 #			https://support.citrix.com/article/CTX223245
 #			https://www.citrix.com/blogs/2016/04/04/machine-creation-service-image-preparation-overview-and-fault-finding/
+#	
+#	In Machine Catalog Details, for MCS catalogs, add Account Identity Pool data:
+#		Account naming scheme
+#		Naming scheme type
+#		AD Domain
+#		AD location (OU distinquished name)
+#	Optimize Function ProcessCitrixPolicies by removing unneeded variable $WordTableRowHash. This removed almost 500
+#		lines of code and almost 500 unneeded variable initializations
 
 #Version 2.16 16-May-2018
 #	Added a Note to the Help Text and ReadMe file about the Citrix.GroupPolicy.Commands module:

@@ -965,7 +965,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.17
 	AUTHOR: Carl Webster
-	LASTEDIT: June 1, 2018
+	LASTEDIT: June 2, 2018
 #>
 
 #endregion
@@ -1177,13 +1177,7 @@ Param(
 #		This should mean the database is running on SQL Server Express or has an Instance name
 #	In Function OutputXenDesktopLicenses, fix for when the property LicenseExpirationDate is $Null which means 
 #		the license Expiration Date is "Permanent" (Found by Ken Avram)
-#	In Machine Catalog Details, for MCS catalogs, add Account Identity data:
-#		Account naming scheme
-#		Naming scheme type
-#		AD location (OU distinquished name)
-#	Optimize Function ProcessCitrixPolicies by removing unneeded variable $WordTableRowHash. This removed almost 500
-#		lines of code and almost 500 unneeded variable initializations
-#	When outputting Machine Catalog details, check if MetadataMap contains data, if so add it to output. For example:
+#	In Machine Catalog details, check if MetadataMap contains data, if so add it to output. For example:
 #		ImageManagementPrep_DoImagePreparation True 
 #		ImageManagementPrep_Excluded_Steps Not set 
 #		ImageManagementPrep_NoAutoShutdown False
@@ -1194,6 +1188,14 @@ Param(
 #			https://support.citrix.com/article/CTX223245
 #			https://www.citrix.com/blogs/2016/04/04/machine-creation-service-image-preparation-overview-and-fault-finding/
 #	
+#	In Machine Catalog Details, for MCS catalogs, add Account Identity Pool data:
+#		Account naming scheme
+#		Naming scheme type
+#		AD Domain
+#		AD location (OU distinquished name)
+#	Optimize Function ProcessCitrixPolicies by removing unneeded variable $WordTableRowHash. This removed almost 500
+#		lines of code and almost 500 unneeded variable initializations
+#
 #Version 2.16 16-May-2018
 #	Added a Note to the Help Text and ReadMe file about the Citrix.GroupPolicy.Commands module:
 #		Note: The Citrix Group Policy PowerShell module will not load from an elevated PowerShell session. 
@@ -6347,12 +6349,24 @@ Function OutputMachines
 			
 			If($? -and $Null -ne $IdentityPool)
 			{
-				$IdentityNamingScheme = $IdentityPool.NamingScheme
-				$IdentityNamingSchemeType = $IdentityPool.NamingSchemeType
-				$IdentityOU = $IdentityPool.OU
+				If($IdentityPool.NamingSchemeType -eq "None")
+				{
+					$IdentityDomain = "N/A"
+					$IdentityNamingScheme = "Use existing AD accounts"
+					$IdentityNamingSchemeType = "None"
+					$IdentityOU = "N/A"
+				}
+				Else
+				{
+					$IdentityDomain = $IdentityPool.Domain
+					$IdentityNamingScheme = $IdentityPool.NamingScheme
+					$IdentityNamingSchemeType = $IdentityPool.NamingSchemeType
+					$IdentityOU = $IdentityPool.OU
+				}
 			}
 			Else
 			{
+				$IdentityDomain = "Not Found"
 				$IdentityNamingScheme = "Not Found"
 				$IdentityNamingSchemeType = "Not Found"
 				$IdentityOU = "Not Found"
@@ -6361,7 +6375,6 @@ Function OutputMachines
 		
 		If($MSWord -or $PDF)
 		{
-
 			$Selection.InsertNewPage()
 			WriteWordLine 2 0 "Machine Catalog: $($Catalog.Name)"
 			[System.Collections.Hashtable[]] $CatalogInformation = @()
@@ -6378,6 +6391,7 @@ Function OutputMachines
 				#V2.17 add identity pool data
 				$CatalogInformation += @{Data = "Account naming scheme"; Value = $IdentityNamingScheme; }
 				$CatalogInformation += @{Data = "Naming scheme type"; Value = $IdentityNamingSchemeType; }
+				$CatalogInformation += @{Data = "AD Domain"; Value = $IdentityDomain; }
 				$CatalogInformation += @{Data = "AD Location"; Value = $IdentityOU; }
 				#end of identity pool data
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
@@ -6568,6 +6582,7 @@ Function OutputMachines
 				#V2.17 add identity pool data
 				Line 1 "Account naming scheme`t`t: " $IdentityNamingScheme
 				Line 1 "Naming scheme type`t`t: " $IdentityNamingSchemeType
+				Line 1 "AD Domain`t`t`t: " $IdentityDomain
 				Line 1 "AD Location`t`t`t: " $IdentityOU
 				#end of identity pool data
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
@@ -6745,6 +6760,7 @@ Function OutputMachines
 				#V2.17 add identity pool data
 				$rowdata += @(,("Account naming scheme",($htmlsilver -bor $htmlbold),$IdentityNamingScheme,$htmlwhite))
 				$rowdata += @(,("Naming scheme type",($htmlsilver -bor $htmlbold),$IdentityNamingSchemeType,$htmlwhite))
+				$rowdata += @(,("AD Domain",($htmlsilver -bor $htmlbold),$IdentityDomain,$htmlwhite))
 				$rowdata += @(,("AD Location",($htmlsilver -bor $htmlbold),$IdentityOU,$htmlwhite))
 				#end of identity pool data
 				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
