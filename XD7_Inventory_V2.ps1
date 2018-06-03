@@ -965,7 +965,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.17
 	AUTHOR: Carl Webster
-	LASTEDIT: June 2, 2018
+	LASTEDIT: June 4, 2018
 #>
 
 #endregion
@@ -1159,16 +1159,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.17
-#	Added new Computer policy setting
-#		ICA\Rendezvous Protocol (XA/XD 7.18)
-#		To enhance the scalability of the Cloud Connector, use the Rendezvous protocol for the VDA to connect directly 
-#		to the NetScaler Gateway Service. This new policy setting allows the VDA to establish an outbound connection 
-#		to a Rendezvous point (Flow Redirector, a component on the NetScaler Gateway Service cloud), bypassing the 
-#		Cloud Connector on a resource location for HDX traffic once the session is launched. Rendezvous Protocol is 
-#		enabled by default and applies only to Citrix Cloud.
-#	Added new User policy setting
-#		ICA\Multimedia\Browser Content Redirection Authentication Sites (XA/XD 7.18)
+#Version 2.17 4-Jun-2018
 #	Fixed a blank line in HTML output for Groom Retention Settings in Days (Found by Ken Avram)
 #	Fixed HTML Hosting output for "Simultaneous actions..." where output showed System.Object[] (Found by Ken Avram)
 #	In Function OutputAdministrators, fix for when $Admin.Rights.ScopeName and $Admin.Rights.RoleName are arrays (Found by Ken Avram)
@@ -14955,28 +14946,6 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.ReadonlyClipboard.State 
 						}
 					}
-					If((validStateProp $Setting RendezvousProtocol State ) -and ($Setting.RendezvousProtocol.State -ne "NotConfigured"))
-					{
-						#new in 7.18
-						$txt = "ICA\Rendezvous Protocol"
-						If($MSWord -or $PDF)
-						{
-							$SettingsWordTable += @{
-							Text = $txt;
-							Value = $Setting.RendezvousProtocol.State;
-							}
-						}
-						ElseIf($HTML)
-						{
-							$rowdata += @(,(
-							$txt,$htmlbold,
-							$Setting.RendezvousProtocol.State,$htmlwhite))
-						}
-						ElseIf($Text)
-						{
-							OutputPolicySetting $txt $Setting.RendezvousProtocol.State 
-						}
-					}
 					If((validStateProp $Setting RestrictClientClipboardWrite State ) -and ($Setting.RestrictClientClipboardWrite.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Restrict client clipboard write"
@@ -17514,61 +17483,6 @@ Function ProcessCitrixPolicies
 						#new in 7.16
 						$txt = "ICA\Multimedia\Browser Content Redirection ACL Configuration"
 						$array = $Setting.BRUrlWhitelist.Values.Split(';')
-						$tmp = $array[0]
-						If($MSWord -or $PDF)
-						{
-							$SettingsWordTable += @{
-							Text = $txt;
-							Value = $tmp;
-							}
-						}
-						ElseIf($HTML)
-						{
-							$rowdata += @(,(
-							$txt,$htmlbold,
-							$tmp,$htmlwhite))
-						}
-						ElseIf($Text)
-						{
-							OutputPolicySetting $txt $tmp 
-						}
-
-						$txt = ""
-						$cnt = -1
-						ForEach($element in $array)
-						{
-							$cnt++
-							
-							If($cnt -ne 0)
-							{
-								$tmp = "$($element) "
-								If($MSWord -or $PDF)
-								{
-									$SettingsWordTable += @{
-									Text = "";
-									Value = $tmp;
-									}
-								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
-							}
-						}
-						$array = $Null
-						$tmp = $Null
-					}
-					If((validStateProp $Setting WebBrowserRedirectionAuthenticationSites State ) -and ($Setting.WebBrowserRedirectionAuthenticationSites.State -ne "NotConfigured"))
-					{
-						#new in 7.18
-						$txt = "ICA\Multimedia\Browser Content Redirection Authentication Sites"
-						$array = $Setting.WebBrowserRedirectionAuthenticationSites.Values.Split(';')
 						$tmp = $array[0]
 						If($MSWord -or $PDF)
 						{
