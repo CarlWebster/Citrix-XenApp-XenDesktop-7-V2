@@ -965,7 +965,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.19
 	AUTHOR: Carl Webster
-	LASTEDIT: August 14, 2018
+	LASTEDIT: September 18, 2018
 #>
 
 #endregion
@@ -1160,6 +1160,11 @@ Param(
 # This script is based on the 1.20 script
 
 #Version 2.19
+#	Added new broker entitlement properties (Thanks to Sacha Thomet and Carl Stalhood)
+#		Leasing behavior (LeasingBehavior)
+#		Maximum concurrent instances (MaxPerEntitlementInstances)
+#		SecureICA required (SecureIcaRequired)
+#		Session reconnection (SessionReconnection)
 #	Added new broker registry keys
 #		HeartbeatDistributionWidthSecs
 #		SiteDynamicDataRefreshMaxShutdownMs
@@ -9750,6 +9755,8 @@ Function OutputDeliveryGroupDetails
 	Param([object] $Group)
 
 	$xDGType = "Delivery Group Type cannot be determined: $($Group.DeliveryType) $($Group.DesktopKind)"
+	$xSessionReconnection = ""
+	$xSecureIcaRequired = "Use delivery group setting"
 	$xVDAVersion = ""
 	$xDeliveryType = ""
 	$xColorDepth = ""
@@ -9882,6 +9889,19 @@ Function OutputDeliveryGroupDetails
 				}
 
 				[array]$DesktopSettingsExcludedUsers = $DesktopSettingsExcludedUsers | Sort-Object -unique
+			}
+			#added in V2.19
+			Switch ($DesktopSettings.SessionReconnection)
+			{
+				"Always" 			{$xSessionReconnection = "Always"; Break}
+				"DisconnectedOnly"	{$xSessionReconnection = "Disconnected Only"; Break}
+				"SameEndpointOnly"	{$xSessionReconnection = "Same Endpoint Only"; Break}
+				Default {$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSettings.SessionReconnection)"; Break}
+			}
+			#added in V2.19
+			If($Null -ne $DesktopSettings.SecureIcaRequired)
+			{
+				$xSecureIcaRequired = $DesktopSettings.SecureIcaRequired.ToString()
 			}
 		}
 		ElseIf($? -and $Null -eq $DesktopSettings)
@@ -10365,6 +10385,12 @@ Function OutputDeliveryGroupDetails
 				}
 			}
 			$ScriptInformation += @{Data = "     Enable desktop"; Value = $DesktopSettings.Enabled; }
+			#New in V2.19
+			$ScriptInformation += @{Data = "     Leasing behavior"; Value = $DesktopSettings.LeasingBehavior; }
+			$ScriptInformation += @{Data = "     Maximum concurrent instances"; Value = $DesktopSettings.MaxPerEntitlementInstances.ToString(); }
+			$ScriptInformation += @{Data = "     SecureICA required"; Value = $xSecureIcaRequired; }
+			$ScriptInformation += @{Data = "     Session reconnection"; Value = $xSessionReconnection; }
+			#
 		}
 		
 		$ScriptInformation += @{Data = "Scopes"; Value = $DGScopes[0]; }
@@ -10805,6 +10831,12 @@ Function OutputDeliveryGroupDetails
 				}
 			}
 			Line 2 "Enable desktop`t`t`t`t: " $DesktopSettings.Enabled
+			#New in V2.19
+			Line 2 "Leasing behavior`t`t`t: " $DesktopSettings.LeasingBehavior
+			Line 2 "Maximum concurrent instances`t`t: " $DesktopSettings.MaxPerEntitlementInstances.ToString()
+			Line 2 "SecureICA required`t`t`t: " $xSecureIcaRequired
+			Line 2 "Session reconnection`t`t`t: " $xSessionReconnection
+			#
 		}
 		
 		Line 1 "Scopes`t`t`t`t`t`t: " $DGScopes[0]
@@ -11227,6 +11259,12 @@ Function OutputDeliveryGroupDetails
 				}
 			}
 			$rowdata += @(,("     Enable desktop",($htmlsilver -bor $htmlbold),$DesktopSettings.Enabled,$htmlwhite))
+			#New in V2.19
+			$rowdata += @(,("     Leasing behavior",($htmlsilver -bor $htmlbold),$DesktopSettings.LeasingBehavior,$htmlwhite))
+			$rowdata += @(,("     Maximum concurrent instances",($htmlsilver -bor $htmlbold),$DesktopSettings.MaxPerEntitlementInstances.ToString(),$htmlwhite))
+			$rowdata += @(,("     SecureICA required",($htmlsilver -bor $htmlbold),$xSecureIcaRequired,$htmlwhite))
+			$rowdata += @(,("     Session reconnection",($htmlsilver -bor $htmlbold),$xSessionReconnection,$htmlwhite))
+			#
 		}
 		
 		$rowdata += @(,('Scopes',($htmlsilver -bor $htmlbold),$DGScopes[0],$htmlwhite))
@@ -33064,8 +33102,13 @@ Function ProcessScriptSetup
 	Write-Verbose "$(Get-Date): Major version $($MajorVersion)"
 	Write-Verbose "$(Get-Date): Minor version $($MinorVersion)"
 
-	#first check to make sure this is a 7.x Site
-	If($MajorVersion -eq 7)
+	#first check to make sure this is a 7.x Site or 1808+ Site
+	
+	If($MajorVersion -ge 1808)
+	{
+		#version 1808 or later
+	}
+	ElseIf($MajorVersion -eq 7)
 	{
 		#this is a XenDesktop 7.x Site, now test to see if it is less than 7.8
 		If($MinorVersion -lt 8)

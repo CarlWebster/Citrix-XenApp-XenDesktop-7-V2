@@ -3,6 +3,21 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.19
+#	Added new broker entitlement properties (Thanks to Sacha Thomet and Carl Stalhood)
+#		Leasing behavior (LeasingBehavior)
+#		Maximum concurrent instances (MaxPerEntitlementInstances)
+#		SecureICA required (SecureIcaRequired)
+#		Session reconnection (SessionReconnection)
+#	Added new broker registry keys
+#		HeartbeatDistributionWidthSecs
+#		SiteDynamicDataRefreshMaxShutdownMs
+#		BulkPowerCheckingCoolOffActivePowerActionsSecs
+#		BulkPowerCheckingCoolOffSecs
+#		ExportConfigurationChunkSize
+#		MaxLocalDBMemorySizeMB
+#		LastOutageModeEnteredTime
+
 #Version 2.18 5-Jun-2018
 #	Added new Computer policy settings
 #		ICA\Rendezvous Protocol (XA/XD 7.18)
