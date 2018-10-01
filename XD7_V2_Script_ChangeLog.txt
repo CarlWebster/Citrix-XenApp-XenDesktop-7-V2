@@ -3,8 +3,8 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
-#Version 2.19
-#	Added new broker entitlement properties (Thanks to Sacha Thomet and Carl Stalhood)
+#Version 2.19 2-Oct-2018
+#	Added new broker entitlement properties from Get-BrokerEntitlementPolicyRule (Thanks to Sacha Thomet and Carl Stalhood)
 #		Leasing behavior (LeasingBehavior)
 #		Maximum concurrent instances (MaxPerEntitlementInstances)
 #		SecureICA required (SecureIcaRequired)
@@ -17,6 +17,10 @@
 #		ExportConfigurationChunkSize
 #		MaxLocalDBMemorySizeMB
 #		LastOutageModeEnteredTime
+#	Changed the wording of the Delivery options in Application details to match the text in Studio
+#		For 1808, add the new MaxPerMachineInstances property (PowerShell only)
+#	Updated version checking at beginning of script to handle 1808 and hopefully later versions
+#	Tested with 1808.2
 
 #Version 2.18 5-Jun-2018
 #	Added new Computer policy settings

@@ -965,7 +965,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.19
 	AUTHOR: Carl Webster
-	LASTEDIT: September 18, 2018
+	LASTEDIT: October 1, 2018
 #>
 
 #endregion
@@ -1159,8 +1159,8 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.19
-#	Added new broker entitlement properties (Thanks to Sacha Thomet and Carl Stalhood)
+#Version 2.19 2-Oct-2018
+#	Added new broker entitlement properties from Get-BrokerEntitlementPolicyRule (Thanks to Sacha Thomet and Carl Stalhood)
 #		Leasing behavior (LeasingBehavior)
 #		Maximum concurrent instances (MaxPerEntitlementInstances)
 #		SecureICA required (SecureIcaRequired)
@@ -1173,6 +1173,10 @@ Param(
 #		ExportConfigurationChunkSize
 #		MaxLocalDBMemorySizeMB
 #		LastOutageModeEnteredTime
+#	Changed the wording of the Delivery options in Application details to match the text in Studio
+#		For 1808, add the new MaxPerMachineInstances property (PowerShell only)
+#	Updated version checking at beginning of script to handle 1808 and hopefully later versions
+#	Tested with 1808.2
 
 #Version 2.18 5-Jun-2018
 #	Added new Computer policy settings
@@ -12678,28 +12682,38 @@ Function OutputApplicationDetails
 		
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "ApplicationUsageLimits")
 		{
+			#change wording in V2.19 to match the text in Studio
+			$ScriptInformation += @{Data = "How do you want to control the use of this application?"; Value = ""; }
 			
-			$tmp = ""
 			If($Application.MaxTotalInstances -eq 0)
 			{
-				$tmp = "Unlimited"
+				$ScriptInformation += @{Data = ""; Value = "Allow unlimited use"; }
 			}
 			Else
 			{
-				$tmp = $Application.MaxTotalInstances.ToString()
+				$ScriptInformation += @{Data = "     Limit the number of instances running at the same time to"; Value = $Application.MaxTotalInstances.ToString(); }
 			}
-			$ScriptInformation += @{Data = "Maximum concurrent instances"; Value = $tmp; }
 			
-			$tmp = ""
 			If($Application.MaxPerUserInstances -eq 0)
 			{
-				$tmp = "Unlimited"
 			}
 			Else
 			{
-				$tmp = $Application.MaxPerUserInstances.ToString()
+				$ScriptInformation += @{Data = "     Limit to one instance per user"; Value = ""; }
 			}
-			$ScriptInformation += @{Data = "Maximum instances per user"; Value = $tmp; }
+			
+			#New property in 1808, added in script V2.19
+			If(validObject $Application MaxPerMachineInstances)
+			{
+				If($Application.MaxPerMachineInstances -eq 0)
+				{
+					$ScriptInformation += @{Data = "     Limit the number of instances per machine to"; Value = "Unlimited"; }
+				}
+				Else
+				{
+					$ScriptInformation += @{Data = "     Limit the number of instances per machine to"; Value = $Application.MaxPerMachineInstances.ToString(); }
+				}
+			}
 		}
 		
 		#added in 2.14
@@ -12806,29 +12820,40 @@ Function OutputApplicationDetails
 		
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "ApplicationUsageLimits")
 		{
+			#change wording in V2.19 to match the text in Studio
+			Line 1 "How do you want to control the use of this application?"
 			
-			$tmp = ""
 			If($Application.MaxTotalInstances -eq 0)
 			{
-				$tmp = "Unlimited"
+				Line 2 "Allow unlimited use"
 			}
 			Else
 			{
-				$tmp = $Application.MaxTotalInstances.ToString()
+				Line 2 "Limit the number of instances running at the same time to " $Application.MaxTotalInstances.ToString()
 			}
-			Line 1 "Maximum concurrent instances`t`t: " $tmp
 			
-			$tmp = ""
 			If($Application.MaxPerUserInstances -eq 0)
 			{
-				$tmp = "Unlimited"
 			}
 			Else
 			{
-				$tmp = $Application.MaxPerUserInstances.ToString()
+				Line 2 "Limit to one instance per user"
 			}
-			Line 1 "Maximum instances per user`t`t: " $tmp
+			
+			#New property in 1808, added in script V2.19
+			If(validObject $Application MaxPerMachineInstances)
+			{
+				If($Application.MaxPerMachineInstances -eq 0)
+				{
+					Line 2 "Limit the number of instances per machine to: Unlimited"
+				}
+				Else
+				{
+					Line 2 "Limit the number of instances per machine to " $Application.MaxPerMachineInstances.ToString()
+				}
+			}
 		}
+
 		#added in 2.14
 		Line 1 "Application Type`t`t`t: " $ApplicationType
 		Line 1 "CPU Priority Level`t`t`t: " $CPUPriorityLevel
@@ -12918,27 +12943,38 @@ Function OutputApplicationDetails
 
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "ApplicationUsageLimits")
 		{
-			$tmp = ""
+			#change wording in V2.19 to match the text in Studio
+			$rowdata += @(,("How do you want to control the use of this application?",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			
 			If($Application.MaxTotalInstances -eq 0)
 			{
-				$tmp = "Unlimited"
+				$rowdata += @(,("",($htmlsilver -bor $htmlbold),"Allow unlimited use",$htmlwhite))
 			}
 			Else
 			{
-				$tmp = $Application.MaxTotalInstances.ToString()
+				$rowdata += @(,("     Limit the number of instances running at the same time to",($htmlsilver -bor $htmlbold),$Application.MaxTotalInstances.ToString(),$htmlwhite))
 			}
-			$rowdata += @(,('Maximum concurrent instances',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 			
-			$tmp = ""
 			If($Application.MaxPerUserInstances -eq 0)
 			{
-				$tmp = "Unlimited"
 			}
 			Else
 			{
-				$tmp = $Application.MaxPerUserInstances.ToString()
+				$rowdata += @(,("     Limit to one instance per user",($htmlsilver -bor $htmlbold),"",$htmlwhite))
 			}
-			$rowdata += @(,('Maximum instances per user',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+			
+			#New property in 1808, added in script V2.19
+			If(validObject $Application MaxPerMachineInstances)
+			{
+				If($Application.MaxPerMachineInstances -eq 0)
+				{
+					$rowdata += @(,("     Limit the number of instances per machine to",($htmlsilver -bor $htmlbold),"Unlimited",$htmlwhite))
+				}
+				Else
+				{
+					$rowdata += @(,("     Limit the number of instances per machine to",($htmlsilver -bor $htmlbold),$Application.MaxPerMachineInstances.ToString(),$htmlwhite))
+				}
+			}
 		}
 
 		#added in 2.14
