@@ -963,9 +963,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.18
+	VERSION: 2.19
 	AUTHOR: Carl Webster
-	LASTEDIT: June 5, 2018
+	LASTEDIT: October 1, 2018
 #>
 
 #endregion
@@ -1158,6 +1158,25 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.19 2-Oct-2018
+#	Added new broker entitlement properties from Get-BrokerEntitlementPolicyRule (Thanks to Sacha Thomet and Carl Stalhood)
+#		Leasing behavior (LeasingBehavior)
+#		Maximum concurrent instances (MaxPerEntitlementInstances)
+#		SecureICA required (SecureIcaRequired)
+#		Session reconnection (SessionReconnection)
+#	Added new broker registry keys
+#		HeartbeatDistributionWidthSecs
+#		SiteDynamicDataRefreshMaxShutdownMs
+#		BulkPowerCheckingCoolOffActivePowerActionsSecs
+#		BulkPowerCheckingCoolOffSecs
+#		ExportConfigurationChunkSize
+#		MaxLocalDBMemorySizeMB
+#		LastOutageModeEnteredTime
+#	Changed the wording of the Delivery options in Application details to match the text in Studio
+#		For 1808, add the new MaxPerMachineInstances property (PowerShell only)
+#	Updated version checking at beginning of script to handle 1808 and hopefully later versions
+#	Tested with 1808.2
 
 #Version 2.18 5-Jun-2018
 #	Added new Computer policy settings
@@ -9740,6 +9759,8 @@ Function OutputDeliveryGroupDetails
 	Param([object] $Group)
 
 	$xDGType = "Delivery Group Type cannot be determined: $($Group.DeliveryType) $($Group.DesktopKind)"
+	$xSessionReconnection = ""
+	$xSecureIcaRequired = "Use delivery group setting"
 	$xVDAVersion = ""
 	$xDeliveryType = ""
 	$xColorDepth = ""
@@ -9872,6 +9893,19 @@ Function OutputDeliveryGroupDetails
 				}
 
 				[array]$DesktopSettingsExcludedUsers = $DesktopSettingsExcludedUsers | Sort-Object -unique
+			}
+			#added in V2.19
+			Switch ($DesktopSettings.SessionReconnection)
+			{
+				"Always" 			{$xSessionReconnection = "Always"; Break}
+				"DisconnectedOnly"	{$xSessionReconnection = "Disconnected Only"; Break}
+				"SameEndpointOnly"	{$xSessionReconnection = "Same Endpoint Only"; Break}
+				Default {$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSettings.SessionReconnection)"; Break}
+			}
+			#added in V2.19
+			If($Null -ne $DesktopSettings.SecureIcaRequired)
+			{
+				$xSecureIcaRequired = $DesktopSettings.SecureIcaRequired.ToString()
 			}
 		}
 		ElseIf($? -and $Null -eq $DesktopSettings)
@@ -10355,6 +10389,12 @@ Function OutputDeliveryGroupDetails
 				}
 			}
 			$ScriptInformation += @{Data = "     Enable desktop"; Value = $DesktopSettings.Enabled; }
+			#New in V2.19
+			$ScriptInformation += @{Data = "     Leasing behavior"; Value = $DesktopSettings.LeasingBehavior; }
+			$ScriptInformation += @{Data = "     Maximum concurrent instances"; Value = $DesktopSettings.MaxPerEntitlementInstances.ToString(); }
+			$ScriptInformation += @{Data = "     SecureICA required"; Value = $xSecureIcaRequired; }
+			$ScriptInformation += @{Data = "     Session reconnection"; Value = $xSessionReconnection; }
+			#
 		}
 		
 		$ScriptInformation += @{Data = "Scopes"; Value = $DGScopes[0]; }
@@ -10795,6 +10835,12 @@ Function OutputDeliveryGroupDetails
 				}
 			}
 			Line 2 "Enable desktop`t`t`t`t: " $DesktopSettings.Enabled
+			#New in V2.19
+			Line 2 "Leasing behavior`t`t`t: " $DesktopSettings.LeasingBehavior
+			Line 2 "Maximum concurrent instances`t`t: " $DesktopSettings.MaxPerEntitlementInstances.ToString()
+			Line 2 "SecureICA required`t`t`t: " $xSecureIcaRequired
+			Line 2 "Session reconnection`t`t`t: " $xSessionReconnection
+			#
 		}
 		
 		Line 1 "Scopes`t`t`t`t`t`t: " $DGScopes[0]
@@ -11217,6 +11263,12 @@ Function OutputDeliveryGroupDetails
 				}
 			}
 			$rowdata += @(,("     Enable desktop",($htmlsilver -bor $htmlbold),$DesktopSettings.Enabled,$htmlwhite))
+			#New in V2.19
+			$rowdata += @(,("     Leasing behavior",($htmlsilver -bor $htmlbold),$DesktopSettings.LeasingBehavior,$htmlwhite))
+			$rowdata += @(,("     Maximum concurrent instances",($htmlsilver -bor $htmlbold),$DesktopSettings.MaxPerEntitlementInstances.ToString(),$htmlwhite))
+			$rowdata += @(,("     SecureICA required",($htmlsilver -bor $htmlbold),$xSecureIcaRequired,$htmlwhite))
+			$rowdata += @(,("     Session reconnection",($htmlsilver -bor $htmlbold),$xSessionReconnection,$htmlwhite))
+			#
 		}
 		
 		$rowdata += @(,('Scopes',($htmlsilver -bor $htmlbold),$DGScopes[0],$htmlwhite))
@@ -12630,28 +12682,38 @@ Function OutputApplicationDetails
 		
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "ApplicationUsageLimits")
 		{
+			#change wording in V2.19 to match the text in Studio
+			$ScriptInformation += @{Data = "How do you want to control the use of this application?"; Value = ""; }
 			
-			$tmp = ""
 			If($Application.MaxTotalInstances -eq 0)
 			{
-				$tmp = "Unlimited"
+				$ScriptInformation += @{Data = ""; Value = "Allow unlimited use"; }
 			}
 			Else
 			{
-				$tmp = $Application.MaxTotalInstances.ToString()
+				$ScriptInformation += @{Data = "     Limit the number of instances running at the same time to"; Value = $Application.MaxTotalInstances.ToString(); }
 			}
-			$ScriptInformation += @{Data = "Maximum concurrent instances"; Value = $tmp; }
 			
-			$tmp = ""
 			If($Application.MaxPerUserInstances -eq 0)
 			{
-				$tmp = "Unlimited"
 			}
 			Else
 			{
-				$tmp = $Application.MaxPerUserInstances.ToString()
+				$ScriptInformation += @{Data = "     Limit to one instance per user"; Value = ""; }
 			}
-			$ScriptInformation += @{Data = "Maximum instances per user"; Value = $tmp; }
+			
+			#New property in 1808, added in script V2.19
+			If(validObject $Application MaxPerMachineInstances)
+			{
+				If($Application.MaxPerMachineInstances -eq 0)
+				{
+					$ScriptInformation += @{Data = "     Limit the number of instances per machine to"; Value = "Unlimited"; }
+				}
+				Else
+				{
+					$ScriptInformation += @{Data = "     Limit the number of instances per machine to"; Value = $Application.MaxPerMachineInstances.ToString(); }
+				}
+			}
 		}
 		
 		#added in 2.14
@@ -12758,29 +12820,40 @@ Function OutputApplicationDetails
 		
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "ApplicationUsageLimits")
 		{
+			#change wording in V2.19 to match the text in Studio
+			Line 1 "How do you want to control the use of this application?"
 			
-			$tmp = ""
 			If($Application.MaxTotalInstances -eq 0)
 			{
-				$tmp = "Unlimited"
+				Line 2 "Allow unlimited use"
 			}
 			Else
 			{
-				$tmp = $Application.MaxTotalInstances.ToString()
+				Line 2 "Limit the number of instances running at the same time to " $Application.MaxTotalInstances.ToString()
 			}
-			Line 1 "Maximum concurrent instances`t`t: " $tmp
 			
-			$tmp = ""
 			If($Application.MaxPerUserInstances -eq 0)
 			{
-				$tmp = "Unlimited"
 			}
 			Else
 			{
-				$tmp = $Application.MaxPerUserInstances.ToString()
+				Line 2 "Limit to one instance per user"
 			}
-			Line 1 "Maximum instances per user`t`t: " $tmp
+			
+			#New property in 1808, added in script V2.19
+			If(validObject $Application MaxPerMachineInstances)
+			{
+				If($Application.MaxPerMachineInstances -eq 0)
+				{
+					Line 2 "Limit the number of instances per machine to: Unlimited"
+				}
+				Else
+				{
+					Line 2 "Limit the number of instances per machine to " $Application.MaxPerMachineInstances.ToString()
+				}
+			}
 		}
+
 		#added in 2.14
 		Line 1 "Application Type`t`t`t: " $ApplicationType
 		Line 1 "CPU Priority Level`t`t`t: " $CPUPriorityLevel
@@ -12870,27 +12943,38 @@ Function OutputApplicationDetails
 
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "ApplicationUsageLimits")
 		{
-			$tmp = ""
+			#change wording in V2.19 to match the text in Studio
+			$rowdata += @(,("How do you want to control the use of this application?",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			
 			If($Application.MaxTotalInstances -eq 0)
 			{
-				$tmp = "Unlimited"
+				$rowdata += @(,("",($htmlsilver -bor $htmlbold),"Allow unlimited use",$htmlwhite))
 			}
 			Else
 			{
-				$tmp = $Application.MaxTotalInstances.ToString()
+				$rowdata += @(,("     Limit the number of instances running at the same time to",($htmlsilver -bor $htmlbold),$Application.MaxTotalInstances.ToString(),$htmlwhite))
 			}
-			$rowdata += @(,('Maximum concurrent instances',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 			
-			$tmp = ""
 			If($Application.MaxPerUserInstances -eq 0)
 			{
-				$tmp = "Unlimited"
 			}
 			Else
 			{
-				$tmp = $Application.MaxPerUserInstances.ToString()
+				$rowdata += @(,("     Limit to one instance per user",($htmlsilver -bor $htmlbold),"",$htmlwhite))
 			}
-			$rowdata += @(,('Maximum instances per user',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+			
+			#New property in 1808, added in script V2.19
+			If(validObject $Application MaxPerMachineInstances)
+			{
+				If($Application.MaxPerMachineInstances -eq 0)
+				{
+					$rowdata += @(,("     Limit the number of instances per machine to",($htmlsilver -bor $htmlbold),"Unlimited",$htmlwhite))
+				}
+				Else
+				{
+					$rowdata += @(,("     Limit the number of instances per machine to",($htmlsilver -bor $htmlbold),$Application.MaxPerMachineInstances.ToString(),$htmlwhite))
+				}
+			}
 		}
 
 		#added in 2.14
@@ -30134,6 +30218,9 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "DisablePerformanceCounters" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ExtraSpinUpTimeSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "FreeSessionThresholdForLoadEvaluation" $ComputerName
+	#new in V1808/7.19
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "HeartbeatDistributionWidthSecs" $ComputerName
+	#end
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "HeartbeatPeriodMs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "LaunchLicenseCheckPeriodSec" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "LaunchRetryPeriodSec" $ComputerName
@@ -30157,6 +30244,9 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "NonContactableSessionGracePeriodSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ProtectedSessionReconnectSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SettleTimeForVdaStatusUpdateMs" $ComputerName
+	#new in V1808/7.19
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SiteDynamicDataRefreshMaxShutdownMs" $ComputerName
+	#end
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SiteDynamicDataRefreshPeriodMs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SupportMultipleForest" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "TestVdaCommunicationsTimeoutSecs" $ComputerName
@@ -30174,6 +30264,9 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "DisablePerformanceCounters" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ExtraSpinUpTimeSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "FreeSessionThresholdForLoadEvaluation" $ComputerName
+	#new in V1808/7.19
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "HeartbeatDistributionWidthSecs" $ComputerName
+	#end
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "HeartbeatPeriodMs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "LaunchLicenseCheckPeriodSec" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "LaunchRetryPeriodSec" $ComputerName
@@ -30197,6 +30290,9 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "NonContactableSessionGracePeriodSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ProtectedSessionReconnectSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "SettleTimeForVdaStatusUpdateMs" $ComputerName
+	#new in V1808/7.19
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "SiteDynamicDataRefreshMaxShutdownMs" $ComputerName
+	#end
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "SiteDynamicDataRefreshPeriodMs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "SupportMultipleForest" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "TestVdaCommunicationsTimeoutSecs" $ComputerName
@@ -30208,6 +30304,10 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "WorkerSettingsAssessmentMinutes" $ComputerName
 
 	#HostingManagementSettings
+	#new in V1808/7.19
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "BulkPowerCheckingCoolOffActivePowerActionsSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "BulkPowerCheckingCoolOffSecs" $ComputerName
+	#end
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "CompletedActionRetentionPeriodSec" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ComplexPowerActionTimeoutSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "HostingStartupRetryPeriodLimitMs" $ComputerName
@@ -30223,6 +30323,10 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "PvdImageUpdateTimeoutMins" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SimplePowerActionTimeoutSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "StarvationBoostPeriodSec" $ComputerName
+	#new in V1808/7.19
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "BulkPowerCheckingCoolOffActivePowerActionsSecs" $ComputerName
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "BulkPowerCheckingCoolOffSecs" $ComputerName
+	#end
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "CompletedActionRetentionPeriodSec" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "ComplexPowerActionTimeoutSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "HostingStartupRetryPeriodLimitMs" $ComputerName
@@ -30454,8 +30558,14 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ElectionTimeBeforeTakingOverMS" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ElectionTimeBetweenStdev" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ElectionWcfSendTimeoutMS" $ComputerName
+	#new in V1808/7.19
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "ExportConfigurationChunkSize" $ComputerName
+	#end
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "InitialOutageModeDetectionPeriod" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "MaximumOutageModeDetectionPeriod" $ComputerName
+	#new in V1808/7.19
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "MaxLocalDBMemorySizeMB" $ComputerName
+	#end
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "MinimalOutageModeRecoveryPeriod" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "OutageModeDetectionResetPeriod" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer\LHC" "OutageModeForced" $ComputerName
@@ -30467,6 +30577,9 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "EarliestOutageModeEndTime" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "Enabled" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "LastOutageModeEndTime" $ComputerName
+	#new in V1808/7.19
+	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "LastOutageModeEnteredTime" $ComputerName
+	#end
 	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "OutageModeEntered" $ComputerName
 	
 	
@@ -33025,8 +33138,13 @@ Function ProcessScriptSetup
 	Write-Verbose "$(Get-Date): Major version $($MajorVersion)"
 	Write-Verbose "$(Get-Date): Minor version $($MinorVersion)"
 
-	#first check to make sure this is a 7.x Site
-	If($MajorVersion -eq 7)
+	#first check to make sure this is a 7.x Site or 1808+ Site
+	
+	If($MajorVersion -ge 1808)
+	{
+		#version 1808 or later
+	}
+	ElseIf($MajorVersion -eq 7)
 	{
 		#this is a XenDesktop 7.x Site, now test to see if it is less than 7.8
 		If($MinorVersion -lt 8)
