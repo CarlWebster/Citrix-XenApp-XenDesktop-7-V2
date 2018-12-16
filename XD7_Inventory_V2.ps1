@@ -216,6 +216,8 @@
 	
 	For Word and PDF output, this adds eights pages, per Controller, to the report.
 	For Text and HTML, this adds 315 lines, per Controller, to the report.
+
+	This parameter is disabled by default.
 	This parameter has an alias of BRK.
 .PARAMETER DeliveryGroups
 	Gives detailed information on all desktops in all Desktop (Delivery) Groups.
@@ -289,6 +291,7 @@
 		AppDisks
 		Applications
 		BrokerRegistryKeys
+		VDARegistryKeys
 		DeliveryGroups
 		HardWare
 		Hosting
@@ -338,6 +341,11 @@
 	Give detailed information for StoreFront.
 	This parameter is disabled by default.
 	This parameter has an alias of SF.
+.PARAMETER VDARegistryKeys
+	Adds information on registry keys to the Machine Details section.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of VRK.
 .PARAMETER AddDateTime
 	Adds a date timestamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
@@ -925,6 +933,7 @@
 		AppDisks            = True
 		Applications        = True
 		BrokerRegistryKeys  = True
+		VDARegistryKeys		= True
 		DeliveryGroups      = True
 		HardWare            = True
 		Hosting             = True
@@ -963,9 +972,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.19
+	VERSION: 2.20
 	AUTHOR: Carl Webster
-	LASTEDIT: October 1, 2018
+	LASTEDIT: December 13, 2018
 #>
 
 #endregion
@@ -1109,6 +1118,10 @@ Param(
 	[Switch]$StoreFront=$False,	
 	
 	[parameter(Mandatory=$False)] 
+	[Alias("VRK")]
+	[Switch]$VDARegistryKeys=$False,
+
+	[parameter(Mandatory=$False)] 
 	[Alias("ADT")]
 	[Switch]$AddDateTime=$False,
 	
@@ -1158,6 +1171,25 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.20
+#	Fixed missing Disabled value for policy setting ICA\Printing\Universal Print Server\Universal Print Server enable
+#	Updated for XenApp/XenDesktop 1811
+#		Added new MinimumFunctionalLevel L7_20 (1811 or newer) - (Thanks to Carl Stalhood)
+#	Removed unneeded variable $itemCount
+#	Added processing the MetaDataMap properties for Machine Catalogs.
+#		Sample possible Keys and Values:
+#			Citrix_DesktopStudio_PreviousImageVdaFunctionalLevel_Is_L7_9 True 
+#			Citrix_DesktopStudio_RdsCatalogLicenseCheck_Warning NoPoweredOnVm 
+#			Citrix_DesktopStudio_Upgraded True 
+#		Keys that start with "Task" are ignored.
+#		The Citrix_DesktopStudio_IdentityPoolUid Key is ignored
+#	Added "HKLM:\System\Currentcontrolset\services\picadm\Parameters" "DisableFullStreamWrite" to Machine details
+#		From the What's New in 1811 Client drive mapping performance improvements
+#	Added Functions GetVDARegistryKeys, Get-VDARegKeyToObject, and OutputVDARegistryKeys
+#	Added new Parameter VDARegistryKeys
+#	Added VDARegistryKeys to MaxDetails
+
 
 #Version 2.19 2-Oct-2018
 #	Added new broker entitlement properties from Get-BrokerEntitlementPolicyRule (Thanks to Sacha Thomet and Carl Stalhood)
@@ -1660,6 +1692,7 @@ If($MaxDetails)
 	$AppDisks			= $True
 	$Applications		= $True
 	$BrokerRegistryKeys	= $True
+	$VDARegistryKeys	= $True
 	$DeliveryGroups		= $True
 	$HardWare			= $True
 	$Hosting			= $True
@@ -4028,8 +4061,9 @@ Function Get-RegKeyToObject
     $val = Get-RegistryValue2 $RegPath $RegKey $ComputerName
 	
     $obj1 = New-Object -TypeName PSObject
-	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey	-Value $RegPath
-	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue	-Value $RegKey
+	$obj1 | Add-Member -MemberType NoteProperty -Name ComputerName	-Value $ComputerName
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey		-Value $RegPath
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue		-Value $RegKey
     If($Null -eq $val) 
 	{
         $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value "Not set"
@@ -6273,6 +6307,7 @@ Function OutputMachines
 			"L7_7"	{$xVDAVersion = "7.7 (or newer)"; Break}
 			"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 			"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
+			"L7_20"	{$xVDAVersion = "1811 (or newer)"; Break}
 			Default {$xVDAVersion = "Unable to determine VDA version: $($Catalog.MinimumFunctionalLevel)"; Break}
 		}
 
@@ -6325,13 +6360,17 @@ Function OutputMachines
 						}
 					}
 					
-					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
+					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+					(($xAllocationType -eq "Random") -or 
+					($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 					{
 						$TempDiskCacheSize = $MachineData.WriteBackCacheDiskSize
 						$TempMemoryCacheSize = $MachineData.WriteBackCacheMemorySize
 					}
 					
-					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
+					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+					($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
+					((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 					{
 						If($MachineData.UseFullDiskCloneProvisioning -eq $True)
 						{
@@ -6452,13 +6491,17 @@ Function OutputMachines
 					}
 				}
 			
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				(($xAllocationType -eq "Random") -or 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
 					$CatalogInformation += @{Data = "Temporary memory cache size"; Value = "$($TempMemoryCacheSize) MB"; }
 					$CatalogInformation += @{Data = "Temporary disk cache size"; Value = "$($TempDiskCacheSize) GB"; }
 				}
 
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
+				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
 					$CatalogInformation += @{Data = "VM copy mode"; Value = $VMCopyMode; }
 				}
@@ -6558,12 +6601,37 @@ Function OutputMachines
 			
 			If($Null -ne $MachineData)
 			{
-				$itemCount = $MachineData.MetadataMap.Count
 				$itemKeys = $MachineData.MetadataMap.Keys
 
 				ForEach( $itemKey in $itemKeys )
 				{
 					$value = $MachineData.MetadataMap[ $itemKey ]
+					
+					If($value -eq "")
+					{
+						$value = "Not set"
+					}
+					$CatalogInformation += @{Data = $itemKey; Value = $value; }
+				}
+			}
+			
+			#added in V2.20
+			If($SessionSUpport -eq "MultiSession")
+			{
+				$itemKeys = $Catalog.MetadataMap.Keys
+
+				ForEach( $itemKey in $itemKeys )
+				{
+					If($itemKey.StartsWith("Task"))
+					{
+						Continue
+					}
+					If($itemKey.StartsWith("Citrix_DesktopStudio_IdentityPoolUid"))
+					{
+						Continue
+					}
+
+					$value = $Catalog.MetadataMap[ $itemKey ]
 					
 					If($value -eq "")
 					{
@@ -6643,13 +6711,17 @@ Function OutputMachines
 					}
 				}
 				
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				(($xAllocationType -eq "Random") -or 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
 					Line 1 "Temporary memory cache size`t: " "$($TempMemoryCacheSize) MB"
 					Line 1 "Temporary disk cache size`t: " "$($MachineData.WriteBackCacheDiskSize) GB"
 				}
 
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
+				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
 					Line 1 "VM copy mode`t`t`t: " $VMCopyMode
 				}
@@ -6749,7 +6821,6 @@ Function OutputMachines
 
 			If($Null -ne $MachineData)
 			{
-				$itemCount = $MachineData.MetadataMap.Count
 				$itemKeys = $MachineData.MetadataMap.Keys
 
 				ForEach( $itemKey in $itemKeys )
@@ -6764,6 +6835,32 @@ Function OutputMachines
 				}
 			}
 			
+			#added in V2.20
+			If($SessionSUpport -eq "MultiSession")
+			{
+				$itemKeys = $Catalog.MetadataMap.Keys
+
+				ForEach( $itemKey in $itemKeys )
+				{
+					If($itemKey.StartsWith("Task"))
+					{
+						Continue
+					}
+					If($itemKey.StartsWith("Citrix_DesktopStudio_IdentityPoolUid"))
+					{
+						Continue
+					}
+
+					$value = $Catalog.MetadataMap[ $itemKey ]
+					
+					If($value -eq "")
+					{
+						$value = "Not set"
+					}
+					Line 1 "$($itemKey)`t: " $value
+				}
+			}
+
 			Line 0 ""
 		}
 		ElseIf($HTML)
@@ -6821,13 +6918,17 @@ Function OutputMachines
 					}
 				}
 				
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				(($xAllocationType -eq "Random") -or 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
 					$rowdata += @(,('Temporary memory cache size',($htmlsilver -bor $htmlbold),"$($TempMemoryCacheSize) MB",$htmlwhite))
 					$rowdata += @(,('Temporary disk cache size',($htmlsilver -bor $htmlbold), "$($TempDiskCacheSize) GB",$htmlwhite))
 				}
 
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
+				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
 					$rowdata += @(,('VM copy mode',($htmlsilver -bor $htmlbold),$VMCopyMode,$htmlwhite))
 				}
@@ -6929,7 +7030,6 @@ Function OutputMachines
 			
 			If($Null -ne $MachineData)
 			{
-				$itemCount = $MachineData.MetadataMap.Count
 				$itemKeys = $MachineData.MetadataMap.Keys
 
 				ForEach( $itemKey in $itemKeys )
@@ -6944,6 +7044,32 @@ Function OutputMachines
 				}
 			}
 			
+			#added in V2.20
+			If($Catalog.SessionSupport -eq "MultiSession")
+			{
+				$itemKeys = $Catalog.MetadataMap.Keys
+
+				ForEach( $itemKey in $itemKeys )
+				{
+					If($itemKey.StartsWith("Task"))
+					{
+						Continue
+					}
+					If($itemKey.StartsWith("Citrix_DesktopStudio_IdentityPoolUid"))
+					{
+						Continue
+					}
+					
+					$value = $Catalog.MetadataMap[ $itemKey ]
+					
+					If($value -eq "")
+					{
+						$value = "Not set"
+					}
+					$rowdata += @(,($itemKey,($htmlsilver -bor $htmlbold),$value,$htmlwhite))
+				}
+			}
+
 			$msg = ""
 			$columnWidths = @("225px","200px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "425"
@@ -7741,15 +7867,272 @@ Function OutputAppDiskAdmins
 #endregion
 
 #region function to output machine/desktop details
+Function GetVDARegistryKeys
+{
+	Param([string]$ComputerName, [string]$xType)
+
+	#Get-VDARegKeyToObject "HKLM:\" "" $ComputerName
+
+	If($xType -eq "Server")
+	{
+		#From the 1811 docs
+		Get-VDARegKeyToObject "HKLM:\System\Currentcontrolset\services\picadm\Parameters" "DisableFullStreamWrite" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\SCMConfig" "EnableSvchostMitigationPolicy" $ComputerName
+
+		#From the 1808 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICA" "DisableAppendMouse" $ComputerName
+		
+		#From What's New and Fixed in 7.18
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppression" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\SmartCard" "EnableSCardHookVcResponseTimeout" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppressionForSmartCardPublishedApps" $ComputerName
+		
+		#From the 7.17 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "EnableDDAPICursor" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "SupportMultipleForest" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "ListOfSIDs" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix" "CtxKlMap" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\TerminalServer" "fSingleSessionPerUser" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB" "EnableBloombergHID" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName
+
+		#From the 7.16 PDF
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig" "MaxPolicyAge" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig" "PolicyTimeout" $ComputerName
+		
+		#From the 7.15 LTSR docs
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Ica\Thinwire" "EnableDrvTw2NotifyMonitorOrigin" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix" "EnableVisualEffect" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\StreamingHook" "EnableReadImageFileExecOptionsExclusionList" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\StreamingHook" "EnableReadImageFileExecOptionsExclusionList" $ComputerName
+		
+		#From CTX128009
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "ApplicationLaunchWaitTimeoutMS" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckerStartupDelayInSeconds" $ComputerName
+		
+		#From CTX891671
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckSysModules" $ComputerName
+		
+		#From CTX101644
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "SeamlessFlags" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "WorkerWaitInterval" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "WorkerFullCheckInterval" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "AAHookFlags" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "FilePathName" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "Flag" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "Settings" $ComputerName
+
+		#From CTX107825
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook" "ExcludedImageNames" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook" "ExcludedImageNames" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi" "UviProcessExcludes" $ComputerName
+
+		#From CTX226605
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi" "UviEnabled" $ComputerName
+	}
+	ElseIf($xType -eq "Desktop")
+	{
+		#From What's New and Fixed in 7.18
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppression" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\SmartCard" "EnableSCardHookVcResponseTimeout" $ComputerName
+		
+		#From the 1808 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICA" "DisableAppendMouse" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Audio" "CleanMappingWhenDisconnect" $ComputerName
+		
+		#From the 7.17 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "EnableDDAPICursor" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "SupportMultipleForest" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "ListOfSIDs" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix" "CtxKlMap" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA" "DisableRemotePCSleepPreventer" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA\RemotePC" "RpcaMode" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA\RemotePC" "RpcaTimeout" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "AllowMultipleRemotePCAssignments" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB" "EnableBloombergHID" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName
+
+		#From the 7.16 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "HKLM_DisableMontereyFBCOnInit" $ComputerName
+		
+		#From the 7.15 LTSR docs
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Ica\Thinwire" "EnableDrvTw2NotifyMonitorOrigin" $ComputerName
+		
+		#From CTX891671
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckSysModules" $ComputerName
+		
+		#From CTX107825
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook" "ExcludedImageNames" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook" "ExcludedImageNames" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi" "UviProcessExcludes" $ComputerName
+
+		#From CTX226605
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi" "UviEnabled" $ComputerName
+	}
+}
+
+Function Get-VDARegKeyToObject 
+{
+	#function contributed by Andrew Williamson @ Fujitsu Services
+    param([string]$RegPath,
+    [string]$RegKey,
+    [string]$ComputerName)
+	
+    $val = Get-RegistryValue2 $RegPath $RegKey $ComputerName
+	
+    $obj1 = New-Object -TypeName PSObject
+	$obj1 | Add-Member -MemberType NoteProperty -Name ComputerName	-Value $ComputerName
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey		-Value $RegPath
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue		-Value $RegKey
+    If($Null -eq $val) 
+	{
+        $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value "Not set"
+    } 
+	Else 
+	{
+	    $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value $val
+    }
+    $Script:VDARegistryItems.Add($obj1) > $Null
+}
+
+Function OutputVDARegistryKeys
+{
+	#V2.11 sort the array by regkey and regvalue and change the output to match
+	Write-Verbose "$(Get-Date): `t`t`tOutput Registry Key data"
+	$Script:VDARegistryItems = $Script:VDARegistryItems | Sort-Object RegValue, RegKey
+	
+	$txt = "Machine Registry Items"
+	#v2.11 change heading from "2" to "3"
+	If($MSWord -or $PDF)
+	{
+		WriteWordLine 3 0 $txt
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 3 0 $txt
+	}
+
+	If($MSWord -or $PDF)
+	{
+		$WordTable = @()
+	}
+	ElseIf($HTML)
+	{
+		$rowdata = @()
+	}
+	
+	If($Script:VDARegistryItems)
+	{
+		If($Text)
+		{
+			Line 1 "Registry Key                                                                  Registry Value                                     Data            " 
+			Line 1 "================================================================================================================================================="
+		}
+
+		ForEach($Item in $Script:VDARegistryItems)
+		{
+			If($MSWord -or $PDF)
+			{
+				$WordTable += @{
+				RegKey = $Item.RegKey; 
+				RegValue = $Item.RegValue; 
+				Value = $Item.Value
+				}
+			}
+			ElseIf($Text)
+			{
+				Line 1 ( "{0,-77} {1,-50} {2,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value)
+			}
+			ElseIf($HTML)
+			{
+				$rowdata += @(,(
+				$Item.RegKey,$htmlwhite,
+				$Item.RegValue,$htmlwhite,
+				$Item.Value,$htmlwhite))
+			}
+		}
+	}
+	Else
+	{
+		If($MSWord -or $PDF)
+		{
+			WriteWordLine 0 1 "<None found>"
+		}
+		ElseIf($Text)
+		{
+			Line 1 "<None found>"
+		}
+		ElseIf($HTML)
+		{
+			WriteHTMLLine 0 1 "None found"
+		}
+	}
+
+	If($MSWord -or $PDF)
+	{
+		$Table = AddWordTable -Hashtable $WordTable `
+		-Columns  RegKey, RegValue, Value `
+		-Headers  "Registry Key", "Registry Value", "Value" `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 230;
+		$Table.Columns.Item(2).Width = 210;
+		$Table.Columns.Item(3).Width = 60;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
+	}
+	ElseIf($Text)
+	{
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		$columnHeaders = @(
+		'Registry Key',($htmlsilver -bor $htmlbold),
+		'Registry Value',($htmlsilver -bor $htmlbold),
+		'Value',($htmlsilver -bor $htmlbold)
+		)
+
+		$msg = ""
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
+		WriteHTMLLine 0 0 " "
+	}
+}
+
 Function OutputMachineDetails
 {
 	Param([object] $Machine)
+	
+	#V2.20
+	$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 	
 	#V2.10 22-Jan-2018, if HostedMachineName is empty, like for RemotePC and unregistered machines, use the first part of DNSName
 	$tmp = $Machine.DNSName.Split(".")
 	$xMachineName = $tmp[0]
 	$tmp = $Null
 	Write-Verbose "$(Get-Date): `t`tOutput Machine $xMachineName"
+	
+	#V2.20
+	Write-Verbose "$(Get-Date): `t`t`tTesting $(xMachineName)"
+	$MachineIsOnline = $False
+	If(Test-Connection -ComputerName $xMachineName)
+	{
+		Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is online"
+		$MachineIsOnline = $True
+	}
 	
 	$xAssociatedUserFullNames = @()
 	ForEach($Value in $Machine.AssociatedUserFullNames)
@@ -8167,6 +8550,13 @@ Function OutputMachineDetails
 			$Table = $Null
 			WriteWordLine 0 0 ""
 
+			#V2.20
+			If($VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Server"
+				OutputVDARegistryKeys
+			}
+			
 			WriteWordLine 4 0 "Machine Details"
 			[System.Collections.Hashtable[]] $ScriptInformation = @()
 			$ScriptInformation += @{Data = "Agent Version"; Value = $Machine.AgentVersion; }
@@ -8446,6 +8836,13 @@ Function OutputMachineDetails
 			$Table = $Null
 			WriteWordLine 0 0 ""
 
+			#V2.20
+			If($VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Desktop"
+				OutputVDARegistryKeys
+			}
+			
 			WriteWordLine 4 0 "Machine Details"
 			[System.Collections.Hashtable[]] $ScriptInformation = @()
 			$ScriptInformation += @{Data = "Agent Version"; Value = $Machine.AgentVersion; }
@@ -8726,6 +9123,13 @@ Function OutputMachineDetails
 			Line 2 "Load Index`t`t`t: " $Machine.LoadIndex
 			Line 0 ""
 
+			#V2.20
+			If($VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Server"
+				OutputVDARegistryKeys
+			}
+			
 			Line 1 "Machine Details"
 			Line 2 "Agent Version`t`t`t: " $Machine.AgentVersion
 			Line 2 "IP Address`t`t`t: " $Machine.IPAddress
@@ -8869,6 +9273,13 @@ Function OutputMachineDetails
 			}
 			Line 0 ""
 
+			#V2.20
+			If($VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Desktop"
+				OutputVDARegistryKeys
+			}
+			
 			Line 1 "Machine Details"
 			Line 2 "Agent Version`t`t`t: " $Machine.AgentVersion
 			Line 2 "IP Address`t`t`t: " $Machine.IPAddress
@@ -9034,6 +9445,13 @@ Function OutputMachineDetails
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 			WriteHTMLLine 0 0 " "
 
+			#V2.20
+			If($VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Server"
+				OutputVDARegistryKeys
+			}
+			
 			WriteHTMLLine 4 0 "Machine Details"
 			$rowdata = @()
 			$columnHeaders = @("Agent Version",($htmlsilver -bor $htmlbold),$Machine.AgentVersion,$htmlwhite)
@@ -9218,6 +9636,13 @@ Function OutputMachineDetails
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 			WriteHTMLLine 0 0 " "
 
+			#V2.20
+			If($VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Desktop"
+				OutputVDARegistryKeys
+			}
+			
 			WriteHTMLLine 4 0 "Machine Details"
 			$rowdata = @()
 			$columnHeaders = @("Agent Version",($htmlsilver -bor $htmlbold),$Machine.AgentVersion,$htmlwhite)
@@ -9927,6 +10352,7 @@ Function OutputDeliveryGroupDetails
 		"L7_7"	{$xVDAVersion = "7.7 (or newer)"; Break}
 		"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 		"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
+		"L7_20"	{$xVDAVersion = "1811 (or newer)"; Break}
 		#fixed in V2.14, forgot to set variable
 		Default {$xVDAVersion = "Unable to determine VDA version: $($Group.MinimumFunctionalLevel)"; Break}
 	}
@@ -19247,6 +19673,7 @@ Function ProcessCitrixPolicies
 						{
 							"UpsEnabledWithFallback"	{$tmp = "Enabled with fallback to Windows' native remote printing"; Break}
 							"UpsOnlyEnabled"			{$tmp = "Enabled with no fallback to Windows' native remote printing"; Break}
+							"UpsDisabled"				{$tmp = "Disabled"; Break} #added V2.20
 							Default	{$tmp = "Universal Print Server enable value could not be determined: $($Setting.UpsEnable.Value)"; Break}
 						}
 						
@@ -27136,6 +27563,7 @@ Function OutputSiteSettings
 		"L7_7"	{$xVDAVersion = "7.7 (or newer)"; Break}
 		"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 		"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
+		"L7_20"	{$xVDAVersion = "1811 (or newer)"; Break}
 		Default {$xVDAVersion = "Unable to determine VDA version: $($Script:XDSite1.DefaultMinimumFunctionalLevel)"; Break}
 	}
 
@@ -30581,8 +31009,6 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "LastOutageModeEnteredTime" $ComputerName
 	#end
 	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "OutageModeEntered" $ComputerName
-	
-	
 }
 
 Function OutputControllerRegistryKeys

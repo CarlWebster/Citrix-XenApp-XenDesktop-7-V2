@@ -3,6 +3,63 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.20
+#	Fixed missing Disabled value for policy setting ICA\Printing\Universal Print Server\Universal Print Server enable
+#	Updated for XenApp/XenDesktop 1811
+#	Added new MinimumFunctionalLevel L7_20 (1811 or newer) - (Thanks to Carl Stalhood)
+#	Removed unneeded variable $itemCount
+#	Added processing the MetaDataMap properties for Machine Catalogs.
+#		Sample possible Keys and Values:
+#			Citrix_DesktopStudio_PreviousImageVdaFunctionalLevel_Is_L7_9 True 
+#			Citrix_DesktopStudio_RdsCatalogLicenseCheck_Warning NoPoweredOnVm 
+#			Citrix_DesktopStudio_Upgraded True 
+#		Keys that start with "Task" are ignored.
+#		The Citrix_DesktopStudio_IdentityPoolUid Key is ignored
+#	Added VDA registry key data to Machine details
+#		HKLM:\SOFTWARE\Citrix\CtxKlMap
+#		HKLM:\SOFTWARE\Citrix\Audio\CleanMappingWhenDisconnect
+#		HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent\DisableLogonUISuppression
+#		HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent\DisableLogonUISuppressionForSmartCardPublishedApps
+#		HKLM:\SOFTWARE\Citrix\CtxHook\ExcludedImageNames
+#		HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook\FilePathName
+#		HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook\Flag
+#		HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook\Settings
+#		HKLM:\Software\Citrix\DesktopServer\AllowMultipleRemotePCAssignments
+#		HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig\EnableDDAPICursor
+#		HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig\#HKLM_DisableMontereyFBCOnInit
+#		HKLM:\SOFTWARE\Citrix\ICA\DisableAppendMouse
+#		HKLM:\SOFTWARE\Citrix\Ica\Thinwire\EnableDrvTw2NotifyMonitorOrigin
+#		HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio\EchoCancellation
+#		HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB\EnableBloombergHID
+#		HKLM:\SOFTWARE\Citrix\PortICA\DisableRemotePCSleepPreventer
+#		HKLM:\SOFTWARE\Citrix\PortICA\RemotePC\RpcaMode
+#		HKLM:\SOFTWARE\Citrix\PortICA\RemotePC\RpcaTimeout
+#		HKLM:\SOFTWARE\Citrix\SmartCard\EnableSCardHookVcResponseTimeout
+#		HKLM:\SOFTWARE\Citrix\StreamingHook\EnableReadImageFileExecOptionsExclusionList
+#		HKLM:\Software\Citrix\VirtualDesktopAgent\ListOfSIDs
+#		HKLM:\Software\Citrix\VirtualDesktopAgent\SupportMultipleForest
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook\ExcludedImageNames
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio\EchoCancellation
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\StreamingHook\EnableReadImageFileExecOptionsExclusionList
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\EnableVisualEffect
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\AAHookFlags
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\ApplicationLaunchWaitTimeoutMS
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\LogoffCheckerStartupDelayInSeconds
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\LogoffCheckSysModules
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\SeamlessFlags
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\WorkerWaitInterval
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\WorkerFullCheckInterval
+#		HKLM:\SYSTEM\CurrentControlSet\Control\SCMConfig\EnableSvchostMitigationPolicy
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig\MaxPolicyAge
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig\PolicyTimeout
+#		HKLM:\SYSTEM\CurrentControlSet\Control\TerminalServer\fSingleSessionPerUser
+#		HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi\UviEnabled
+#		HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi\UviProcessExcludes
+#		HKLM:\System\Currentcontrolset\services\picadm\Parameters\DisableFullStreamWrite
+#	Added Functions GetVDARegistryKeys, Get-VDARegKeyToObject, and OutputVDARegistryKeys
+#	Added new Parameter VDARegistryKeys
+#	Added VDARegistryKeys to MaxDetails
+
 #Version 2.19 2-Oct-2018
 #	Added new broker entitlement properties from Get-BrokerEntitlementPolicyRule (Thanks to Sacha Thomet and Carl Stalhood)
 #		Leasing behavior (LeasingBehavior)
