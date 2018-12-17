@@ -73,12 +73,55 @@
 		Spanish
 		Swedish
 		
+.PARAMETER HTML
+	Creates an HTML file with an .html extension.
+	This parameter is disabled by default.
+.PARAMETER MSWord
+	SaveAs DOCX file
+	This parameter is set True if no other output format is selected.
+.PARAMETER PDF
+	SaveAs PDF file instead of DOCX file.
+	This parameter is disabled by default.
+	The PDF file is roughly 5X to 10X larger than the DOCX file.
+	This parameter requires Microsoft Word to be installed.
+	This parameter uses the Word SaveAs PDF capability.
+.PARAMETER Text
+	Creates a formatted text file with a .txt extension.
+	This parameter is disabled by default.
+.PARAMETER AddDateTime
+	Adds a date timestamp to the end of the file name.
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2018 at 6PM is 2018-06-01_1800.
+	Output filename will be ReportName_2018-06-01_1800.docx (or .pdf).
+	This parameter is disabled by default.
+	This parameter has an alias of ADT.
 .PARAMETER AdminAddress
 	Specifies the address of a XenDesktop controller the PowerShell snapins will connect 
 	to. 
 	This can be provided as a hostname or an IP address. 
 	This parameter defaults to Localhost.
 	This parameter has an alias of AA.
+.PARAMETER Administrators
+	Give detailed information for Administrator Scopes and Roles.
+	This parameter is disabled by default.
+	This parameter has an alias of Admins.
+.PARAMETER AppDisks
+	Gives detailed information for all AppDisks.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of AD.
+.PARAMETER Applications
+	Gives detailed information for all applications.
+	This parameter is disabled by default.
+	This parameter has an alias of Apps.
+.PARAMETER BrokerRegistryKeys
+	Adds information on 315 registry keys to the Controller section.
+	
+	For Word and PDF output, this adds eights pages, per Controller, to the report.
+	For Text and HTML, this adds 315 lines, per Controller, to the report.
+
+	This parameter is disabled by default.
+	This parameter has an alias of BRK.
 .PARAMETER CompanyAddress
 	Company Address to use for the Cover Page, if the Cover Page has the Address field.
 	
@@ -178,47 +221,6 @@
 	The default value is Sideline.
 	This parameter has an alias of CP.
 	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER UserName
-	Username to use for the Cover Page and Footer.
-	The default value is contained in $env:username
-	This parameter has an alias of UN.
-	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER HTML
-	Creates an HTML file with an .html extension.
-	This parameter is disabled by default.
-.PARAMETER MSWord
-	SaveAs DOCX file
-	This parameter is set True if no other output format is selected.
-.PARAMETER PDF
-	SaveAs PDF file instead of DOCX file.
-	This parameter is disabled by default.
-	The PDF file is roughly 5X to 10X larger than the DOCX file.
-	This parameter requires Microsoft Word to be installed.
-	This parameter uses the Word SaveAs PDF capability.
-.PARAMETER Text
-	Creates a formatted text file with a .txt extension.
-	This parameter is disabled by default.
-.PARAMETER Administrators
-	Give detailed information for Administrator Scopes and Roles.
-	This parameter is disabled by default.
-	This parameter has an alias of Admins.
-.PARAMETER AppDisks
-	Gives detailed information for all AppDisks.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of AD.
-.PARAMETER Applications
-	Gives detailed information for all applications.
-	This parameter is disabled by default.
-	This parameter has an alias of Apps.
-.PARAMETER BrokerRegistryKeys
-	Adds information on 315 registry keys to the Controller section.
-	
-	For Word and PDF output, this adds eights pages, per Controller, to the report.
-	For Text and HTML, this adds 315 lines, per Controller, to the report.
-
-	This parameter is disabled by default.
-	This parameter has an alias of BRK.
 .PARAMETER DeliveryGroups
 	Gives detailed information on all desktops in all Desktop (Delivery) Groups.
 	
@@ -243,24 +245,14 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of DGU.
-.PARAMETER Hosting
-	Give detailed information for Hosts, Host Connections, and Resources.
+.PARAMETER Dev
+	Clears errors at the beginning of the script.
+	Outputs all errors to a text file at the end of the script.
+	
+	This is used when the script developer requests more troubleshooting data.
+	The text file is placed in the same folder from where the script is run.
+	
 	This parameter is disabled by default.
-	This parameter has an alias of Host.
-.PARAMETER Logging
-	Give the Configuration Logging report with, by default, details for the previous 
-	seven days.
-	This parameter is disabled by default.
-.PARAMETER StartDate
-	The start date for the Configuration Logging report.
-	
-	The format for date only is MM/DD/YYYY.
-	
-	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
-	The double quotes are needed.
-	
-	The default is today's date minus seven days.
-	This parameter has an alias of SD.
 .PARAMETER EndDate
 	The end date for the Configuration Logging report.
 	
@@ -271,6 +263,31 @@
 	
 	The default is today's date.
 	This parameter has an alias of ED.
+.PARAMETER Folder
+	Specifies the optional output folder to save the output report. 
+.PARAMETER Hardware
+	Use WMI to gather hardware information on Computer System, Disks, Processor, and 
+	Network Interface Cards
+
+	This parameter may require the script be run from an elevated PowerShell session 
+	using an account with permission to retrieve hardware information (i.e. Domain Admin 
+	or Local Administrator).
+
+	Selecting this parameter will add to both the time it takes to run the script and 
+	size of the report.
+
+	This parameter is disabled by default.
+	This parameter has an alias of HW.
+.PARAMETER Hosting
+	Give detailed information for Hosts, Host Connections, and Resources.
+	This parameter is disabled by default.
+	This parameter has an alias of Host.
+.PARAMETER Log
+	Generates a log file for troubleshooting.
+.PARAMETER Logging
+	Give the Configuration Logging report with, by default, details for the previous 
+	seven days.
+	This parameter is disabled by default.
 .PARAMETER MachineCatalogs
 	Gives detailed information for all machines in all Machine Catalogs.
 	
@@ -306,6 +323,22 @@
 	can take a very long time to run.
 
 	This parameter has an alias of MAX.
+.PARAMETER NoADPolicies
+	Excludes all Citrix AD-based policy information from the output document.
+	Includes only Site policies created in Studio.
+	
+	This switch is useful in large AD environments, where there may be thousands
+	of policies, to keep SYSVOL from being searched.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of NoAD.
+.PARAMETER NoPolicies
+	Excludes all Site and Citrix AD-based policy information from the output document.
+	
+	Using the NoPolicies parameter will cause the Policies parameter to be set to False.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of NP.
 .PARAMETER Policies
 	Give detailed information for both Site and Citrix AD based Policies.
 	
@@ -321,53 +354,12 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of Pol.
-.PARAMETER NoPolicies
-	Excludes all Site and Citrix AD-based policy information from the output document.
-	
-	Using the NoPolicies parameter will cause the Policies parameter to be set to False.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of NP.
-.PARAMETER NoADPolicies
-	Excludes all Citrix AD-based policy information from the output document.
-	Includes only Site policies created in Studio.
-	
-	This switch is useful in large AD environments, where there may be thousands
-	of policies, to keep SYSVOL from being searched.
+.PARAMETER ScriptInfo
+	Outputs information about the script to a text file.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
-	This parameter has an alias of NoAD.
-.PARAMETER StoreFront
-	Give detailed information for StoreFront.
-	This parameter is disabled by default.
-	This parameter has an alias of SF.
-.PARAMETER VDARegistryKeys
-	Adds information on registry keys to the Machine Details section.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of VRK.
-.PARAMETER AddDateTime
-	Adds a date timestamp to the end of the file name.
-	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be ReportName_2018-06-01_1800.docx (or .pdf).
-	This parameter is disabled by default.
-	This parameter has an alias of ADT.
-.PARAMETER Folder
-	Specifies the optional output folder to save the output report. 
-.PARAMETER Hardware
-	Use WMI to gather hardware information on Computer System, Disks, Processor, and 
-	Network Interface Cards
-
-	This parameter may require the script be run from an elevated PowerShell session 
-	using an account with permission to retrieve hardware information (i.e. Domain Admin 
-	or Local Administrator).
-
-	Selecting this parameter will add to both the time it takes to run the script and 
-	size of the report.
-
-	This parameter is disabled by default.
-	This parameter has an alias of HW.
+	This parameter has an alias of SI.
 .PARAMETER Section
 	Processes a specific section of the report.
 	Valid options are:
@@ -394,6 +386,32 @@
 	Using Policies will force the Policies switch to True.
 	If Policies is selected and the NoPolicies switch is used, the script will terminate.
 	
+.PARAMETER StartDate
+	The start date for the Configuration Logging report.
+	
+	The format for date only is MM/DD/YYYY.
+	
+	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
+	The double quotes are needed.
+	
+	The default is today's date minus seven days.
+	This parameter has an alias of SD.
+.PARAMETER StoreFront
+	Give detailed information for StoreFront.
+	This parameter is disabled by default.
+	This parameter has an alias of SF.
+.PARAMETER UserName
+	Username to use for the Cover Page and Footer.
+	The default value is contained in $env:username
+	This parameter has an alias of UN.
+	This parameter is only valid with the MSWORD and PDF output parameters.
+.PARAMETER VDARegistryKeys
+	Adds information on registry keys to the Machine Details section.
+	
+	If this parameter is used, MachineCatalogs is set to True.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of VRK.
 .PARAMETER SmtpServer
 	Specifies the optional email server to send the output report. 
 .PARAMETER SmtpPort
@@ -408,22 +426,6 @@
 .PARAMETER To
 	Specifies the username for the To email address.
 	If SmtpServer is used, this is a required parameter.
-.PARAMETER Dev
-	Clears errors at the beginning of the script.
-	Outputs all errors to a text file at the end of the script.
-	
-	This is used when the script developer requests more troubleshooting data.
-	The text file is placed in the same folder from where the script is run.
-	
-	This parameter is disabled by default.
-.PARAMETER ScriptInfo
-	Outputs information about the script to a text file.
-	The text file is placed in the same folder from where the script is run.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of SI.
-.PARAMETER Log
-	Generates a log file for troubleshooting.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1
 	
@@ -974,7 +976,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.20
 	AUTHOR: Carl Webster
-	LASTEDIT: December 13, 2018
+	LASTEDIT: December 16, 2018
 #>
 
 #endregion
@@ -984,10 +986,46 @@
 [CmdletBinding(SupportsShouldProcess = $False, ConfirmImpact = "None", DefaultParameterSetName = "Word") ]
 
 Param(
+	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$HTML=$False,
+
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$MSWord=$False,
+
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$PDF=$False,
+
+	[parameter(ParameterSetName="Text",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$Text=$False,
+
+	[parameter(Mandatory=$False)] 
+	[Alias("ADT")]
+	[Switch]$AddDateTime=$False,
+	
 	[parameter(Mandatory=$False)] 
 	[ValidateNotNullOrEmpty()]
 	[Alias("AA")]
 	[string]$AdminAddress="Localhost",
+
+	[parameter(Mandatory=$False)] 
+	[Alias("Admins")]
+	[Switch]$Administrators=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("AD")]
+	[Switch]$AppDisks=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("Apps")]
+	[Switch]$Applications=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("BRK")]
+	[Switch]$BrokerRegistryKeys=$False,
 
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
@@ -1031,45 +1069,6 @@ Param(
 	[ValidateNotNullOrEmpty()]
 	[string]$CoverPage="Sideline", 
 
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("UN")]
-	[ValidateNotNullOrEmpty()]
-	[string]$UserName=$env:username,
-
-	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$HTML=$False,
-
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$MSWord=$False,
-
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$PDF=$False,
-
-	[parameter(ParameterSetName="Text",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$Text=$False,
-
-	[parameter(Mandatory=$False)] 
-	[Alias("Admins")]
-	[Switch]$Administrators=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("AD")]
-	[Switch]$AppDisks=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("Apps")]
-	[Switch]$Applications=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("BRK")]
-	[Switch]$BrokerRegistryKeys=$False,
-
 	[parameter(Mandatory=$False)] 
 	[Alias("DG")]
 	[Switch]$DeliveryGroups=$False,	
@@ -1079,19 +1078,28 @@ Param(
 	[Switch]$DeliveryGroupsUtilization=$False,	
 	
 	[parameter(Mandatory=$False)] 
+	[Switch]$Dev=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("ED")]
+	[Datetime]$EndDate = (Get-Date -displayhint date),
+	
+	[parameter(Mandatory=$False)] 
+	[string]$Folder="",
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("HW")]
+	[Switch]$Hardware=$False,
+
+	[parameter(Mandatory=$False)] 
 	[Alias("Host")]
 	[Switch]$Hosting=$False,	
 	
 	[parameter(Mandatory=$False)] 
-	[Switch]$Logging=$False,	
+	[Switch]$Log=$False,
 	
 	[parameter(Mandatory=$False)] 
-	[Alias("SD")]
-	[Datetime]$StartDate = ((Get-Date -displayhint date).AddDays(-7)),
-
-	[parameter(Mandatory=$False)] 
-	[Alias("ED")]
-	[Datetime]$EndDate = (Get-Date -displayhint date),
+	[Switch]$Logging=$False,	
 	
 	[parameter(Mandatory=$False)] 
 	[Alias("MC")]
@@ -1102,39 +1110,43 @@ Param(
 	[Switch]$MaxDetails=$False,
 
 	[parameter(Mandatory=$False)] 
-	[Alias("Pol")]
-	[Switch]$Policies=$False,	
+	[Alias("NoAD")]
+	[Switch]$NoADPolicies=$False,	
 	
 	[parameter(Mandatory=$False)] 
 	[Alias("NP")]
 	[Switch]$NoPolicies=$False,	
 	
 	[parameter(Mandatory=$False)] 
-	[Alias("NoAD")]
-	[Switch]$NoADPolicies=$False,	
+	[Alias("Pol")]
+	[Switch]$Policies=$False,	
 	
+	[parameter(Mandatory=$False)] 
+	[Alias("SI")]
+	[Switch]$ScriptInfo=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[string]$Section="All",
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("SD")]
+	[Datetime]$StartDate = ((Get-Date -displayhint date).AddDays(-7)),
+
 	[parameter(Mandatory=$False)] 
 	[Alias("SF")]
 	[Switch]$StoreFront=$False,	
 	
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("UN")]
+	[ValidateNotNullOrEmpty()]
+	[string]$UserName=$env:username,
+
 	[parameter(Mandatory=$False)] 
 	[Alias("VRK")]
 	[Switch]$VDARegistryKeys=$False,
 
-	[parameter(Mandatory=$False)] 
-	[Alias("ADT")]
-	[Switch]$AddDateTime=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[string]$Folder="",
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("HW")]
-	[Switch]$Hardware=$False,
-
-	[parameter(Mandatory=$False)] 
-	[string]$Section="All",
-	
 	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
 	[string]$SmtpServer="",
 
@@ -1148,18 +1160,8 @@ Param(
 	[string]$From="",
 
 	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
-	[string]$To="",
+	[string]$To=""
 
-	[parameter(Mandatory=$False)] 
-	[Switch]$Dev=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("SI")]
-	[Switch]$ScriptInfo=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[Switch]$Log=$False
-	
 	)
 #endregion
 
@@ -1228,6 +1230,11 @@ Param(
 #	Added Functions GetVDARegistryKeys, Get-VDARegKeyToObject, and OutputVDARegistryKeys
 #	Added new Parameter VDARegistryKeys
 #	Added VDARegistryKeys to MaxDetails
+#	If VDARegistryKeys is used, force MachineCatalogs to True
+#	Updated funcions ShowScriptOptions and ProcessScriptEnd for the new VDARegistryKeys parameter
+#	Added functions OutputAppendixA and OutputAppendixB
+#		Appendix A is a list of all VDA registry keys sorted by key name, key value, and computer name
+#		Appendix B is a list of all Controller registry keys sorted by key name, key value, and Controller name
 
 
 #Version 2.19 2-Oct-2018
@@ -1830,6 +1837,13 @@ If($Folder -ne "")
 		Write-Error "Folder $Folder does not exist.  Script cannot continue"
 		Exit
 	}
+}
+
+If($VDARegistryKeys)
+{	
+	#Force $MachineCatalogs to True
+	Write-Verbose "$(Get-Date): VDARegistryKeys switch is set. Forcing MachineCatalogs to True."
+	$MachineCatalogs = $True
 }
 #endregion
 
@@ -5698,6 +5712,7 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): To                 : $($To)"
 	Write-Verbose "$(Get-Date): Use SSL            : $($UseSSL)"
 	Write-Verbose "$(Get-Date): User Name          : $($UserName)"
+	Write-Verbose "$(Get-Date): VDA Registry Keys  : $($VDARegistryKeys)"
 	Write-Verbose "$(Get-Date): XA/XD Version      : $($Script:XDSiteVersion)"
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): OS Detected        : $($Script:RunningOS)"
@@ -6112,6 +6127,9 @@ Function ProcessMachineCatalogs
 	$Script:TotalServerOSCatalogs = 0
 	$Script:TotalDesktopOSCatalogs = 0
 	$Script:TotalRemotePCCatalogs = 0
+	#V2.20
+	$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+	$Script:ALLVDARegistryItems = New-Object System.Collections.ArrayList
 
 	$AllMachineCatalogs = Get-BrokerCatalog @XDParams2 -SortBy Name 
 
@@ -8155,9 +8173,6 @@ Function OutputMachineDetails
 {
 	Param([object] $Machine)
 	
-	#V2.20
-	$Script:VDARegistryItems = New-Object System.Collections.ArrayList
-	
 	#V2.10 22-Jan-2018, if HostedMachineName is empty, like for RemotePC and unregistered machines, use the first part of DNSName
 	$tmp = $Machine.DNSName.Split(".")
 	$xMachineName = $tmp[0]
@@ -8165,12 +8180,19 @@ Function OutputMachineDetails
 	Write-Verbose "$(Get-Date): `t`tOutput Machine $xMachineName"
 	
 	#V2.20
-	Write-Verbose "$(Get-Date): `t`t`tTesting $(xMachineName)"
-	$MachineIsOnline = $False
-	If(Test-Connection -ComputerName $xMachineName)
+	If($VDARegistryKeys)
 	{
-		Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is online"
-		$MachineIsOnline = $True
+		Write-Verbose "$(Get-Date): `t`t`tTesting $(xMachineName)"
+		$MachineIsOnline = $False
+		If(Test-Connection -ComputerName $xMachineName -EA 0)
+		{
+			Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is online"
+			$MachineIsOnline = $True
+		}
+		Else
+		{
+			Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is offline. VDA Registry Key data cannot be gathered."
+		}
 	}
 	
 	$xAssociatedUserFullNames = @()
@@ -8594,6 +8616,8 @@ Function OutputMachineDetails
 			{
 				GetVDARegistryKeys $Machine.DNSName "Server"
 				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
 			
 			WriteWordLine 4 0 "Machine Details"
@@ -8880,6 +8904,8 @@ Function OutputMachineDetails
 			{
 				GetVDARegistryKeys $Machine.DNSName "Desktop"
 				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
 			
 			WriteWordLine 4 0 "Machine Details"
@@ -9167,6 +9193,8 @@ Function OutputMachineDetails
 			{
 				GetVDARegistryKeys $Machine.DNSName "Server"
 				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
 			
 			Line 1 "Machine Details"
@@ -9317,6 +9345,8 @@ Function OutputMachineDetails
 			{
 				GetVDARegistryKeys $Machine.DNSName "Desktop"
 				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
 			
 			Line 1 "Machine Details"
@@ -9489,6 +9519,8 @@ Function OutputMachineDetails
 			{
 				GetVDARegistryKeys $Machine.DNSName "Server"
 				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
 			
 			WriteHTMLLine 4 0 "Machine Details"
@@ -9680,6 +9712,8 @@ Function OutputMachineDetails
 			{
 				GetVDARegistryKeys $Machine.DNSName "Desktop"
 				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
 			
 			WriteHTMLLine 4 0 "Machine Details"
@@ -33768,6 +33802,7 @@ Function ProcessScriptEnd
 		{
 			Out-File -FilePath $SIFile -Append -InputObject "User Name          : $($UserName)" 4>$Null
 		}
+		Out-File -FilePath $SIFile -Append -InputObject "VDA Registry Keys  : $($VDARegistryKeys)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "XA/XD Version      : $($Script:XDSiteVersion)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "OS Detected        : $($Script:RunningOS)" 4>$Null
@@ -33802,6 +33837,303 @@ Function ProcessScriptEnd
 		}
 	}
 	$ErrorActionPreference = $SaveEAPreference
+}
+#endregion
+
+#region AppendixA
+Function OutputAppendixA
+{
+	Write-Verbose "$(Get-Date): Create Appendix A VDA Registry Items"
+
+	#sort the array by regkey, regvalue and servername
+	$Script:ALLVDARegistryItems = $Script:ALLVDARegistryItems | Sort-Object RegKey, RegValue, ComputerName
+	
+	If($MSWord -or $PDF)
+	{
+		$selection.InsertNewPage()
+		WriteWordLine 3 0 "Appendix A - VDA Registry Items"
+		WriteWordLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
+		WriteWordLine 0 0 "These items may or may not be needed"
+		WriteWordLine 0 0 "This Appendix is for VDA comparison only"
+		WriteWordLine 0 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:AllVDARegistryItems)
+		{
+			$AppendixWordTable = @()
+			ForEach($Item in $Script:ALLVDARegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				{
+					$AppendixWordTable += @{ 
+					RegKey = "";
+					RegValue = "";
+					RegData = "";
+					ComputerName = "";
+					}
+				}
+
+				$AppendixWordTable += @{ 
+				RegKey = $Item.RegKey;
+				RegValue = $Item.RegValue;
+				RegData = $Item.Value;
+				ComputerName = $Item.ComputerName;
+				}
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$Table = AddWordTable -Hashtable $AppendixWordTable `
+			-Columns RegKey, RegValue, RegData, ComputerName `
+			-Headers "Registry Key", "Registry Value", "Data", "Computer Name" `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
+
+			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
+		}
+	}
+	ElseIf($Text)
+	{
+		Line 0 "Appendix A - VDA Registry Items"
+		Line 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
+		Line 0 "These items may or may not be needed"
+		Line 0 "This Appendix is for VDA comparison only"
+		Line 0 ""
+		Line 1 "Registry Key                                                      Registry Value                 Data            Computer Name    " 
+		Line 1 "================================================================================================================================"
+		
+		$Save = ""
+		$First = $True
+		If($Script:AllVDARegistryItems)
+		{
+			ForEach($Item in $Script:ALLVDARegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				{
+					Line 0 ""
+				}
+
+				Line 1 ( "{0,-65} {1,-30} {2,-15} {3,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value, $Item.ComputerName )
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+		}
+		Else
+		{
+			Line 1 "<None found>"
+		}
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 3 0 "Appendix A - VDA Registry Items"
+		WriteHTMLLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
+		WriteHTMLLine 0 0 "These items may or may not be needed"
+		WriteHTMLLine 0 0 "This Appendix is for VDA comparison only"
+		WriteHTMLLine 0 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:AllVDARegistryItems)
+		{
+			$rowdata = @()
+			ForEach($Item in $Script:AllVDARegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				{
+					$rowdata += @(,(
+					"",$htmlwhite))
+				}
+
+				$rowdata += @(,(
+				$Item.RegKey,$htmlwhite,
+				$Item.RegValue,$htmlwhite,
+				$Item.Value,$htmlwhite,
+				$Item.ComputerName,$htmlwhite))
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$columnHeaders = @(
+			'Registry Key',($htmlsilver -bor $htmlbold),
+			'Registry Key',($htmlsilver -bor $htmlbold),
+			'Data',($htmlsilver -bor $htmlbold),
+			'Computer Name',($htmlsilver -bor $htmlbold))
+
+			$msg = ""
+			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		}
+		Else
+		{
+			WriteHTMLLine 1 "None found"
+		}
+		WriteHTMLLine 0 ""
+	}
+
+	Write-Verbose "$(Get-Date): Finished Creating Appendix A VDA Registry Items"
+	Write-Verbose "$(Get-Date): "
+}
+#endregion
+
+#region AppendixB
+Function OutputAppendixB
+{
+	Write-Verbose "$(Get-Date): Create Appendix B Controller Registry Items"
+
+	#sort the array by regkey, regvalue and servername
+	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort-Object RegKey, RegValue, ComputerName
+	
+	If($MSWord -or $PDF)
+	{
+		$selection.InsertNewPage()
+		WriteWordLine 3 0 "Appendix B - Controller Registry Items"
+		WriteWordLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on Controllers"
+		WriteWordLine 0 0 "These items may or may not be needed"
+		WriteWordLine 0 0 "This Appendix is for Controller comparison only"
+		WriteWordLine 0 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:ControllerRegistryItems)
+		{
+			$AppendixWordTable = @()
+			ForEach($Item in $Script:ControllerRegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				{
+					$AppendixWordTable += @{ 
+					RegKey = "";
+					RegValue = "";
+					RegData = "";
+					ComputerName = "";
+					}
+				}
+
+				$AppendixWordTable += @{ 
+				RegKey = $Item.RegKey;
+				RegValue = $Item.RegValue;
+				RegData = $Item.Value;
+				ComputerName = $Item.ComputerName;
+				}
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$Table = AddWordTable -Hashtable $AppendixWordTable `
+			-Columns RegKey, RegValue, RegData, ComputerName `
+			-Headers "Registry Key", "Registry Value", "Data", "Computer Name" `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
+
+			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
+		}
+	}
+	ElseIf($Text)
+	{
+		Line 0 "Appendix B - Controller Registry Items"
+		Line 0 "Miscellaneous Registry Items That May or May Not Exist on Controllers"
+		Line 0 "These items may or may not be needed"
+		Line 0 "This Appendix is for Controller comparison only"
+		Line 0 ""
+		Line 1 "Registry Key                                                      Registry Value                 Data            Controller Name    " 
+		Line 1 "================================================================================================================================"
+		
+		$Save = ""
+		$First = $True
+		If($Script:ControllerRegistryItems)
+		{
+			ForEach($Item in $Script:ControllerRegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				{
+					Line 0 ""
+				}
+
+				Line 1 ( "{0,-65} {1,-30} {2,-15} {3,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value, $Item.ComputerName )
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+		}
+		Else
+		{
+			Line 1 "<None found>"
+		}
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 3 0 "Appendix B - Controller Registry Items"
+		WriteHTMLLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on Controllers"
+		WriteHTMLLine 0 0 "These items may or may not be needed"
+		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
+		WriteHTMLLine 0 0 ""
+		$rowdata = @()
+		
+		$Save = ""
+		$First = $True
+		If($Script:ControllerRegistryItems)
+		{
+			ForEach($Item in $Script:ControllerRegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				{
+					$rowdata += @(,("",$htmlwhite))
+				}
+
+				$rowdata += @(,(
+				$Item.RegKey,$htmlwhite,
+				$Item.RegValue,$htmlwhite,
+				$Item.Value,$htmlwhite,
+				$Item.ComputerName,$htmlwhite))
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$columnHeaders = @(
+			'Registry Key',($htmlsilver -bor $htmlbold),
+			'Registry Key',($htmlsilver -bor $htmlbold),
+			'Data',($htmlsilver -bor $htmlbold),
+			'Controller Name',($htmlsilver -bor $htmlbold))
+
+			$msg = ""
+			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		}
+		Else
+		{
+			WriteHTMLLine 1 "None found"
+		}
+		WriteHTMLLine 0 ""
+	}
+
+	Write-Verbose "$(Get-Date): Finished Creating Appendix B Controller Registry Items"
+	Write-Verbose "$(Get-Date): "
 }
 #endregion
 
@@ -33903,6 +34235,16 @@ If($Section -eq "All" -or $Section -eq "Zones")
 If($Section -eq "All")
 {
 	ProcessSummaryPage
+}
+
+If($VDARegistryKeys)
+{
+	OutputAppendixA #V2.20
+}
+
+If($BrokerRegistryKeys)
+{
+	OutputAppendixB	#V2.20
 }
 #endregion
 
