@@ -1188,7 +1188,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.20
+#Version 2.20 20-Dec-2018
 #	Updated for XenApp/XenDesktop 1811
 #	Added new MinimumFunctionalLevel L7_20 (1811 or newer) - (Thanks to Carl Stalhood)
 #	Added VDA registry key data to Machine details (Linux VDAs are ignored. Thanks to Rene Bigler for testing this.)
