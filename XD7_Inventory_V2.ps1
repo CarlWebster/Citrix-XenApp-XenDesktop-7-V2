@@ -91,8 +91,8 @@
 .PARAMETER AddDateTime
 	Adds a date timestamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be ReportName_2018-06-01_1800.docx (or .pdf).
+	June 1, 2019 at 6PM is 2019-06-01_1800.
+	Output filename will be ReportName_2019-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 	This parameter has an alias of ADT.
 .PARAMETER AdminAddress
@@ -624,11 +624,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2018
-	-EndDate 01/31/2018	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2019
+	-EndDate 01/31/2019	
 	
-	Creates a report with Configuration Logging details for the dates 01/01/2018 through 
-	01/31/2018.
+	Creates a report with Configuration Logging details for the dates 01/01/2019 through 
+	01/31/2019.
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
@@ -640,11 +640,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2018 10:00:00"
-	-EndDate "06/01/2018 14:00:00"	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2019 10:00:00"
+	-EndDate "06/01/2019 14:00:00"	
 	
 	Creates a report with Configuration Logging details for the time range 
-	06/01/2018 10:00:00AM through 06/01/2018 02:00:00PM.
+	06/01/2019 10:00:00AM through 06/01/2019 02:00:00PM.
 	
 	Narrowing the report down to seconds does not work. Seconds must be either 00 or 59.
 	
@@ -780,8 +780,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be XD7SiteName_2018-06-01_1800.docx
+	June 1, 2019 at 6PM is 2019-06-01_1800.
+	Output filename will be XD7SiteName_2019-06-01_1800.docx
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF -AddDateTime
 	
@@ -797,8 +797,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be XD7SiteName_2018-06-01_1800.pdf
+	June 1, 2019 at 6PM is 2019-06-01_1800.
+	Output filename will be XD7SiteName_2019-06-01_1800.pdf
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hardware
 	
@@ -916,7 +916,21 @@
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	Adds the information on 315 Broker registry keys to the Controllers section.
+	Adds the information on over 300 Broker registry keys to the Controllers section.
+.EXAMPLE
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -VDARegistryKeys
+	
+	Will use all Default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	Adds the information on VDA registry keys to the Machine Details section.
+	Forces the MachineCatalogs parameter to $True
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MaxDetails
 	
@@ -976,7 +990,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.20
 	AUTHOR: Carl Webster
-	LASTEDIT: December 16, 2018
+	LASTEDIT: December 20, 2018
 #>
 
 #endregion
@@ -1175,18 +1189,9 @@ Param(
 # This script is based on the 1.20 script
 
 #Version 2.20
-#	Fixed missing Disabled value for policy setting ICA\Printing\Universal Print Server\Universal Print Server enable
 #	Updated for XenApp/XenDesktop 1811
 #	Added new MinimumFunctionalLevel L7_20 (1811 or newer) - (Thanks to Carl Stalhood)
-#	Removed unneeded variable $itemCount
-#	Added processing the MetaDataMap properties for Machine Catalogs.
-#		Sample possible Keys and Values:
-#			Citrix_DesktopStudio_PreviousImageVdaFunctionalLevel_Is_L7_9 True 
-#			Citrix_DesktopStudio_RdsCatalogLicenseCheck_Warning NoPoweredOnVm 
-#			Citrix_DesktopStudio_Upgraded True 
-#		Keys that start with "Task" are ignored.
-#		The Citrix_DesktopStudio_IdentityPoolUid Key is ignored
-#	Added VDA registry key data to Machine details
+#	Added VDA registry key data to Machine details (Linux VDAs are ignored. Thanks to Rene Bigler for testing this.)
 #		HKLM:\SOFTWARE\Citrix\CtxKlMap
 #		HKLM:\SOFTWARE\Citrix\Audio\CleanMappingWhenDisconnect
 #		HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent\DisableLogonUISuppression
@@ -1233,9 +1238,25 @@ Param(
 #	If VDARegistryKeys is used, force MachineCatalogs to True
 #	Updated funcions ShowScriptOptions and ProcessScriptEnd for the new VDARegistryKeys parameter
 #	Added functions OutputAppendixA and OutputAppendixB
-#		Appendix A is a list of all VDA registry keys sorted by key name, key value, and computer name
+#		Appendix A is a list of all VDA registry keys sorted by key name, key value, VDA type, and computer name
 #		Appendix B is a list of all Controller registry keys sorted by key name, key value, and Controller name
-
+#	Added processing the MetaDataMap properties for Machine Catalogs.
+#		Sample possible Keys and Values:
+#			Citrix_DesktopStudio_PreviousImageVdaFunctionalLevel_Is_L7_9 True 
+#			Citrix_DesktopStudio_RdsCatalogLicenseCheck_Warning NoPoweredOnVm 
+#				[Studio warning: The Microsoft Remote Desktop licensing check could not be run...]
+#				[There is no value provided to tell if the warning was removed from Studio or
+#					was successful during catalog creation]
+#			Citrix_DesktopStudio_Upgraded True 
+#		Keys that start with "Task" are ignored.
+#		The Citrix_DesktopStudio_IdentityPoolUid Key is ignored
+#	Comment out unused Word variables
+#	Fixed missing Disabled value for policy setting ICA\Printing\Universal Print Server\Universal Print Server enable
+#	Fixed several $Var -ne $null to $Null -ne $Var and on two Get-Process lines for WinWord and Excel (thanks to MBS)
+#	In Function OutputHostingSession, remove all the Desktop code as desktops are not used in that function
+#	Removed unused variables
+#	Reorganize the list of parameters in the help text and parameter sets
+#	Update help text
 
 #Version 2.19 2-Oct-2018
 #	Added new broker entitlement properties from Get-BrokerEntitlementPolicyRule (Thanks to Sacha Thomet and Carl Stalhood)
@@ -1861,13 +1882,13 @@ If($MSWord -or $PDF)
 	#http://msdn.microsoft.com/en-us/library/office/aa211923(v=office.11).aspx
 	[int]$wdAlignPageNumberRight = 2
 	[long]$wdColorGray15 = 14277081
-	[long]$wdColorGray05 = 15987699 
+	#[long]$wdColorGray05 = 15987699 
 	[int]$wdMove = 0
 	[int]$wdSeekMainDocument = 0
 	[int]$wdSeekPrimaryFooter = 4
 	[int]$wdStory = 6
 	[int]$wdColorRed = 255
-	[int]$wdColorBlack = 0
+	#[int]$wdColorBlack = 0
 	[int]$wdWord2007 = 12
 	[int]$wdWord2010 = 14
 	[int]$wdWord2013 = 15
@@ -1876,29 +1897,29 @@ If($MSWord -or $PDF)
 	[int]$wdFormatPDF = 17
 	#http://blogs.technet.com/b/heyscriptingguy/archive/2006/03/01/how-can-i-right-align-a-single-column-in-a-word-table.aspx
 	#http://msdn.microsoft.com/en-us/library/office/ff835817%28v=office.15%29.aspx
-	[int]$wdAlignParagraphLeft = 0
-	[int]$wdAlignParagraphCenter = 1
-	[int]$wdAlignParagraphRight = 2
+	#[int]$wdAlignParagraphLeft = 0
+	#[int]$wdAlignParagraphCenter = 1
+	#[int]$wdAlignParagraphRight = 2
 	#http://msdn.microsoft.com/en-us/library/office/ff193345%28v=office.15%29.aspx
-	[int]$wdCellAlignVerticalTop = 0
-	[int]$wdCellAlignVerticalCenter = 1
-	[int]$wdCellAlignVerticalBottom = 2
+	#[int]$wdCellAlignVerticalTop = 0
+	#[int]$wdCellAlignVerticalCenter = 1
+	#[int]$wdCellAlignVerticalBottom = 2
 	#http://msdn.microsoft.com/en-us/library/office/ff844856%28v=office.15%29.aspx
 	[int]$wdAutoFitFixed = 0
 	[int]$wdAutoFitContent = 1
-	[int]$wdAutoFitWindow = 2
+	#[int]$wdAutoFitWindow = 2
 	#http://msdn.microsoft.com/en-us/library/office/ff821928%28v=office.15%29.aspx
 	[int]$wdAdjustNone = 0
 	[int]$wdAdjustProportional = 1
-	[int]$wdAdjustFirstColumn = 2
-	[int]$wdAdjustSameWidth = 3
+	#[int]$wdAdjustFirstColumn = 2
+	#[int]$wdAdjustSameWidth = 3
 
 	[int]$PointsPerTabStop = 36
 	[int]$Indent0TabStops = 0 * $PointsPerTabStop
-	[int]$Indent1TabStops = 1 * $PointsPerTabStop
-	[int]$Indent2TabStops = 2 * $PointsPerTabStop
-	[int]$Indent3TabStops = 3 * $PointsPerTabStop
-	[int]$Indent4TabStops = 4 * $PointsPerTabStop
+	#[int]$Indent1TabStops = 1 * $PointsPerTabStop
+	#[int]$Indent2TabStops = 2 * $PointsPerTabStop
+	#[int]$Indent3TabStops = 3 * $PointsPerTabStop
+	#[int]$Indent4TabStops = 4 * $PointsPerTabStop
 
 	# http://www.thedoctools.com/index.php?show=wt_style_names_english_danish_german_french
 	[int]$wdStyleHeading1 = -2
@@ -1914,7 +1935,7 @@ If($MSWord -or $PDF)
 	[int]$wdLineStyleSingle = 1
 
 	[int]$wdHeadingFormatTrue = -1
-	[int]$wdHeadingFormatFalse = 0 
+	#[int]$wdHeadingFormatFalse = 0 
 	
 	[string]$Script:RunningOS = (Get-WmiObject -class Win32_OperatingSystem -EA 0).Caption
 }
@@ -2003,8 +2024,6 @@ Function GetComputerWMIInfo
 		WriteHTMLLine 4 0 "General Computer"
 	}
 	
-	[bool]$GotComputerItems = $True
-	
 	Try
 	{
 		$Results = Get-WmiObject -computername $RemoteComputerName win32_computersystem
@@ -2088,8 +2107,6 @@ Function GetComputerWMIInfo
 		WriteHTMLLine 4 0 "Drive(s)"
 	}
 
-	[bool]$GotDrives = $True
-	
 	Try
 	{
 		$Results = Get-WmiObject -computername $RemoteComputerName Win32_LogicalDisk
@@ -2174,8 +2191,6 @@ Function GetComputerWMIInfo
 		WriteHTMLLine 4 0 "Processor(s)"
 	}
 
-	[bool]$GotProcessors = $True
-	
 	Try
 	{
 		$Results = Get-WmiObject -computername $RemoteComputerName win32_Processor
@@ -2272,7 +2287,7 @@ Function GetComputerWMIInfo
 		$Nics = $Results | Where-Object {$Null -ne $_.ipaddress}
 		$Results = $Null
 
-		If($Nics -eq $Null ) 
+		If($Null -eq $Nics) 
 		{ 
 			$GotNics = $False 
 		} 
@@ -3538,7 +3553,9 @@ Function CheckWordPrereq
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
 	#Find out if winword is running in our session
-	[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	#[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	#fix by MBS in V2.20
+	[bool]$wordrunning = $null –ne ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID})
 	If($wordrunning)
 	{
 		$ErrorActionPreference = $SaveEAPreference
@@ -5284,7 +5301,10 @@ Function CheckExcelPrereq
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
 	#Find out if excel is running in our session
-	[bool]$excelrunning = ((Get-Process 'Excel' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	#[bool]$excelrunning = ((Get-Process 'Excel' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	#fix by MBS in V2.20
+	[bool]$excelrunning = $null –ne ((Get-Process 'Excel' -ea 0) | Where-Object {$_.SessionId -eq $SessionID})
+	
 	If($excelrunning)
 	{
 		$ErrorActionPreference = $SaveEAPreference
@@ -7933,100 +7953,100 @@ Function GetVDARegistryKeys
 	If($xType -eq "Server")
 	{
 		#From the 1811 docs
-		Get-VDARegKeyToObject "HKLM:\System\Currentcontrolset\services\picadm\Parameters" "DisableFullStreamWrite" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\SCMConfig" "EnableSvchostMitigationPolicy" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\System\Currentcontrolset\services\picadm\Parameters" "DisableFullStreamWrite" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\SCMConfig" "EnableSvchostMitigationPolicy" $ComputerName $xType
 
 		#From the 1808 PDF
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICA" "DisableAppendMouse" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICA" "DisableAppendMouse" $ComputerName $xType
 		
 		#From What's New and Fixed in 7.18
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppression" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\SmartCard" "EnableSCardHookVcResponseTimeout" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppressionForSmartCardPublishedApps" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppression" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\SmartCard" "EnableSCardHookVcResponseTimeout" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppressionForSmartCardPublishedApps" $ComputerName $xType
 		
 		#From the 7.17 PDF
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "EnableDDAPICursor" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "SupportMultipleForest" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "ListOfSIDs" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix" "CtxKlMap" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\TerminalServer" "fSingleSessionPerUser" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB" "EnableBloombergHID" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "EnableDDAPICursor" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "SupportMultipleForest" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "ListOfSIDs" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix" "CtxKlMap" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\TerminalServer" "fSingleSessionPerUser" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB" "EnableBloombergHID" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName $xType
 
 		#From the 7.16 PDF
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig" "MaxPolicyAge" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig" "PolicyTimeout" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig" "MaxPolicyAge" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig" "PolicyTimeout" $ComputerName $xType
 		
 		#From the 7.15 LTSR docs
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Ica\Thinwire" "EnableDrvTw2NotifyMonitorOrigin" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix" "EnableVisualEffect" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\StreamingHook" "EnableReadImageFileExecOptionsExclusionList" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\StreamingHook" "EnableReadImageFileExecOptionsExclusionList" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Ica\Thinwire" "EnableDrvTw2NotifyMonitorOrigin" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix" "EnableVisualEffect" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\StreamingHook" "EnableReadImageFileExecOptionsExclusionList" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\StreamingHook" "EnableReadImageFileExecOptionsExclusionList" $ComputerName $xType
 		
 		#From CTX128009
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "ApplicationLaunchWaitTimeoutMS" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckerStartupDelayInSeconds" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "ApplicationLaunchWaitTimeoutMS" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckerStartupDelayInSeconds" $ComputerName $xType
 		
 		#From CTX891671
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckSysModules" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckSysModules" $ComputerName $xType
 		
 		#From CTX101644
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "SeamlessFlags" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "WorkerWaitInterval" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "WorkerFullCheckInterval" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "AAHookFlags" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "FilePathName" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "Flag" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "Settings" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "SeamlessFlags" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "WorkerWaitInterval" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "WorkerFullCheckInterval" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "AAHookFlags" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "FilePathName" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "Flag" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "Settings" $ComputerName $xType
 
 		#From CTX107825
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook" "ExcludedImageNames" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook" "ExcludedImageNames" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi" "UviProcessExcludes" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook" "ExcludedImageNames" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook" "ExcludedImageNames" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi" "UviProcessExcludes" $ComputerName $xType
 
 		#From CTX226605
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi" "UviEnabled" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi" "UviEnabled" $ComputerName $xType
 	}
 	ElseIf($xType -eq "Desktop")
 	{
 		#From What's New and Fixed in 7.18
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppression" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\SmartCard" "EnableSCardHookVcResponseTimeout" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppression" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\SmartCard" "EnableSCardHookVcResponseTimeout" $ComputerName $xType
 		
 		#From the 1808 PDF
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICA" "DisableAppendMouse" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Audio" "CleanMappingWhenDisconnect" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICA" "DisableAppendMouse" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Audio" "CleanMappingWhenDisconnect" $ComputerName $xType
 		
 		#From the 7.17 PDF
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "EnableDDAPICursor" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "SupportMultipleForest" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "ListOfSIDs" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix" "CtxKlMap" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA" "DisableRemotePCSleepPreventer" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA\RemotePC" "RpcaMode" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA\RemotePC" "RpcaTimeout" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "AllowMultipleRemotePCAssignments" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB" "EnableBloombergHID" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "EnableDDAPICursor" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "SupportMultipleForest" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "ListOfSIDs" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix" "CtxKlMap" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA" "DisableRemotePCSleepPreventer" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA\RemotePC" "RpcaMode" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA\RemotePC" "RpcaTimeout" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "AllowMultipleRemotePCAssignments" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB" "EnableBloombergHID" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName $xType
 
 		#From the 7.16 PDF
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "HKLM_DisableMontereyFBCOnInit" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "HKLM_DisableMontereyFBCOnInit" $ComputerName $xType
 		
 		#From the 7.15 LTSR docs
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Ica\Thinwire" "EnableDrvTw2NotifyMonitorOrigin" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Ica\Thinwire" "EnableDrvTw2NotifyMonitorOrigin" $ComputerName $xType
 		
 		#From CTX891671
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckSysModules" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckSysModules" $ComputerName $xType
 		
 		#From CTX107825
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook" "ExcludedImageNames" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook" "ExcludedImageNames" $ComputerName
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi" "UviProcessExcludes" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook" "ExcludedImageNames" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook" "ExcludedImageNames" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi" "UviProcessExcludes" $ComputerName $xType
 
 		#From CTX226605
-		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi" "UviEnabled" $ComputerName
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi" "UviEnabled" $ComputerName $xType
 	}
 }
 
@@ -8035,12 +8055,14 @@ Function Get-VDARegKeyToObject
 	#function contributed by Andrew Williamson @ Fujitsu Services
     param([string]$RegPath,
     [string]$RegKey,
-    [string]$ComputerName)
+    [string]$ComputerName,
+	[string]$xType)
 	
     $val = Get-RegistryValue2 $RegPath $RegKey $ComputerName
 	
     $obj1 = New-Object -TypeName PSObject
 	$obj1 | Add-Member -MemberType NoteProperty -Name ComputerName	-Value $ComputerName
+	$obj1 | Add-Member -MemberType NoteProperty -Name VDAType		-Value $xType
 	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey		-Value $RegPath
 	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue		-Value $RegKey
     If($Null -eq $val) 
@@ -8180,18 +8202,28 @@ Function OutputMachineDetails
 	Write-Verbose "$(Get-Date): `t`tOutput Machine $xMachineName"
 	
 	#V2.20
-	If($VDARegistryKeys)
+	#first see if VDA is Linux
+	If($Machine.OSType -Like "*linux*")
 	{
-		Write-Verbose "$(Get-Date): `t`t`tTesting $(xMachineName)"
-		$MachineIsOnline = $False
-		If(Test-Connection -ComputerName $xMachineName -EA 0)
+		#Linux VDAs do not have an easily accessible registry so skip them
+		$LinuxVDA = $True
+	}
+	Else
+	{
+		$LinuxVDA = $False
+		If($VDARegistryKeys)
 		{
-			Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is online"
-			$MachineIsOnline = $True
-		}
-		Else
-		{
-			Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is offline. VDA Registry Key data cannot be gathered."
+			Write-Verbose "$(Get-Date): `t`t`tTesting $(xMachineName)"
+			$MachineIsOnline = $False
+			If(Test-Connection -ComputerName $xMachineName -EA 0)
+			{
+				Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is online"
+				$MachineIsOnline = $True
+			}
+			Else
+			{
+				Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is offline. VDA Registry Key data cannot be gathered."
+			}
 		}
 	}
 	
@@ -8612,12 +8644,16 @@ Function OutputMachineDetails
 			WriteWordLine 0 0 ""
 
 			#V2.20
-			If($VDARegistryKeys -and $MachineIsOnline)
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Server"
 				OutputVDARegistryKeys
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
 			}
 			
 			WriteWordLine 4 0 "Machine Details"
@@ -8900,12 +8936,16 @@ Function OutputMachineDetails
 			WriteWordLine 0 0 ""
 
 			#V2.20
-			If($VDARegistryKeys -and $MachineIsOnline)
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Desktop"
 				OutputVDARegistryKeys
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
 			}
 			
 			WriteWordLine 4 0 "Machine Details"
@@ -9189,12 +9229,16 @@ Function OutputMachineDetails
 			Line 0 ""
 
 			#V2.20
-			If($VDARegistryKeys -and $MachineIsOnline)
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Server"
 				OutputVDARegistryKeys
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
 			}
 			
 			Line 1 "Machine Details"
@@ -9341,12 +9385,16 @@ Function OutputMachineDetails
 			Line 0 ""
 
 			#V2.20
-			If($VDARegistryKeys -and $MachineIsOnline)
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Desktop"
 				OutputVDARegistryKeys
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
 			}
 			
 			Line 1 "Machine Details"
@@ -9515,12 +9563,16 @@ Function OutputMachineDetails
 			WriteHTMLLine 0 0 " "
 
 			#V2.20
-			If($VDARegistryKeys -and $MachineIsOnline)
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Server"
 				OutputVDARegistryKeys
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
 			}
 			
 			WriteHTMLLine 4 0 "Machine Details"
@@ -9708,12 +9760,16 @@ Function OutputMachineDetails
 			WriteHTMLLine 0 0 " "
 
 			#V2.20
-			If($VDARegistryKeys -and $MachineIsOnline)
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Desktop"
 				OutputVDARegistryKeys
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
 			}
 			
 			WriteHTMLLine 4 0 "Machine Details"
@@ -32006,23 +32062,9 @@ Function OutputHostingSessions
 	ForEach($Session in $Sessions)
 	{
 		Write-Verbose "$(Get-Date): `t`t`tOutput session $($Session.UserName)"
-		#get the private desktop
-		#get desktop by Session Uid
-		$xMachineName = ""
 		#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
-		#V2.15 change from the deprecated Get-BrokerDesktop to Get-BrokerMachine
-		#$Desktop = Get-BrokerDesktop -SessionUid $Session.Uid @XDParams2
-		$Desktop = Get-BrokerMachine -SessionUid $Session.Uid @XDParams2
+		#V2.20 remove all the desktop code as it is not used in this function
 		
-		If($? -and $Null -ne $Desktop)
-		{
-			$xMachineName = $Desktop.MachineName
-		}
-		Else
-		{
-			$xMachineName = "Not Found"
-		}
-
 		If($Session.SessionSupport -eq "SingleSession")
 		{
 			$xSessionType = "Single"
@@ -33846,13 +33888,14 @@ Function OutputAppendixA
 	Write-Verbose "$(Get-Date): Create Appendix A VDA Registry Items"
 
 	#sort the array by regkey, regvalue and servername
-	$Script:ALLVDARegistryItems = $Script:ALLVDARegistryItems | Sort-Object RegKey, RegValue, ComputerName
+	$Script:ALLVDARegistryItems = $Script:ALLVDARegistryItems | Sort-Object RegKey, RegValue, VDAType, ComputerName
 	
 	If($MSWord -or $PDF)
 	{
 		$selection.InsertNewPage()
 		WriteWordLine 3 0 "Appendix A - VDA Registry Items"
 		WriteWordLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
+		WriteWordLine 0 0 "Linux VDAs are excluded"
 		WriteWordLine 0 0 "These items may or may not be needed"
 		WriteWordLine 0 0 "This Appendix is for VDA comparison only"
 		WriteWordLine 0 0 ""
@@ -33864,12 +33907,13 @@ Function OutputAppendixA
 			$AppendixWordTable = @()
 			ForEach($Item in $Script:ALLVDARegistryItems)
 			{
-				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)")
 				{
 					$AppendixWordTable += @{ 
 					RegKey = "";
 					RegValue = "";
 					RegData = "";
+					VDAType = "";
 					ComputerName = "";
 					}
 				}
@@ -33878,17 +33922,18 @@ Function OutputAppendixA
 				RegKey = $Item.RegKey;
 				RegValue = $Item.RegValue;
 				RegData = $Item.Value;
+				VDAType = $Item.VDAType.Substring(0,1);
 				ComputerName = $Item.ComputerName;
 				}
-				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)"
 				If($First)
 				{
 					$First = $False
 				}
 			}
 			$Table = AddWordTable -Hashtable $AppendixWordTable `
-			-Columns RegKey, RegValue, RegData, ComputerName `
-			-Headers "Registry Key", "Registry Value", "Data", "Computer Name" `
+			-Columns RegKey, RegValue, RegData, VDAType, ComputerName `
+			-Headers "Registry Key", "Registry Value", "Data", "VDA", "Computer Name" `
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitContent;
 
@@ -33905,11 +33950,10 @@ Function OutputAppendixA
 	{
 		Line 0 "Appendix A - VDA Registry Items"
 		Line 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
+		Line 0 "Linux VDAs are excluded"
 		Line 0 "These items may or may not be needed"
 		Line 0 "This Appendix is for VDA comparison only"
 		Line 0 ""
-		Line 1 "Registry Key                                                      Registry Value                 Data            Computer Name    " 
-		Line 1 "================================================================================================================================"
 		
 		$Save = ""
 		$First = $True
@@ -33917,13 +33961,17 @@ Function OutputAppendixA
 		{
 			ForEach($Item in $Script:ALLVDARegistryItems)
 			{
-				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)")
 				{
 					Line 0 ""
 				}
 
-				Line 1 ( "{0,-65} {1,-30} {2,-15} {3,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value, $Item.ComputerName )
-				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				Line 0 "Registry Key`t: " $Item.RegKey
+				Line 0 "Registry Value`t: " $Item.RegValue
+				Line 0 "Data`t`t: " $Item.Value
+				Line 0 "VDA Type`t: " $Item.VDAType
+				Line 0 "Computer Name`t: " $Item.ComputerName
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)"
 				If($First)
 				{
 					$First = $False
@@ -33940,6 +33988,7 @@ Function OutputAppendixA
 	{
 		WriteHTMLLine 3 0 "Appendix A - VDA Registry Items"
 		WriteHTMLLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
+		WriteHTMLLine 0 0 "Linux VDAs are excluded"
 		WriteHTMLLine 0 0 "These items may or may not be needed"
 		WriteHTMLLine 0 0 "This Appendix is for VDA comparison only"
 		WriteHTMLLine 0 0 ""
@@ -33951,7 +34000,7 @@ Function OutputAppendixA
 			$rowdata = @()
 			ForEach($Item in $Script:AllVDARegistryItems)
 			{
-				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)")
 				{
 					$rowdata += @(,(
 					"",$htmlwhite))
@@ -33961,8 +34010,9 @@ Function OutputAppendixA
 				$Item.RegKey,$htmlwhite,
 				$Item.RegValue,$htmlwhite,
 				$Item.Value,$htmlwhite,
+				$Item.VDAType,$htmlwhite,
 				$Item.ComputerName,$htmlwhite))
-				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)"
 				If($First)
 				{
 					$First = $False
@@ -33972,6 +34022,7 @@ Function OutputAppendixA
 			'Registry Key',($htmlsilver -bor $htmlbold),
 			'Registry Key',($htmlsilver -bor $htmlbold),
 			'Data',($htmlsilver -bor $htmlbold),
+			'VDA Type',($htmlsilver -bor $htmlbold),
 			'Computer Name',($htmlsilver -bor $htmlbold))
 
 			$msg = ""
@@ -34057,8 +34108,6 @@ Function OutputAppendixB
 		Line 0 "These items may or may not be needed"
 		Line 0 "This Appendix is for Controller comparison only"
 		Line 0 ""
-		Line 1 "Registry Key                                                      Registry Value                 Data            Controller Name    " 
-		Line 1 "================================================================================================================================"
 		
 		$Save = ""
 		$First = $True
@@ -34071,7 +34120,10 @@ Function OutputAppendixB
 					Line 0 ""
 				}
 
-				Line 1 ( "{0,-65} {1,-30} {2,-15} {3,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value, $Item.ComputerName )
+				Line 0 "Registry Key`t: " $Item.RegKey
+				Line 0 "Registry Value`t: " $Item.RegValue
+				Line 0 "Data`t`t: " $Item.Value
+				Line 0 "Controller Name`t: " $Item.ComputerName
 				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
 				If($First)
 				{
