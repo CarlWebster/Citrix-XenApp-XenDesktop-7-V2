@@ -73,12 +73,55 @@
 		Spanish
 		Swedish
 		
+.PARAMETER HTML
+	Creates an HTML file with an .html extension.
+	This parameter is disabled by default.
+.PARAMETER MSWord
+	SaveAs DOCX file
+	This parameter is set True if no other output format is selected.
+.PARAMETER PDF
+	SaveAs PDF file instead of DOCX file.
+	This parameter is disabled by default.
+	The PDF file is roughly 5X to 10X larger than the DOCX file.
+	This parameter requires Microsoft Word to be installed.
+	This parameter uses the Word SaveAs PDF capability.
+.PARAMETER Text
+	Creates a formatted text file with a .txt extension.
+	This parameter is disabled by default.
+.PARAMETER AddDateTime
+	Adds a date timestamp to the end of the file name.
+	The timestamp is in the format of yyyy-MM-dd_HHmm.
+	June 1, 2019 at 6PM is 2019-06-01_1800.
+	Output filename will be ReportName_2019-06-01_1800.docx (or .pdf).
+	This parameter is disabled by default.
+	This parameter has an alias of ADT.
 .PARAMETER AdminAddress
 	Specifies the address of a XenDesktop controller the PowerShell snapins will connect 
 	to. 
 	This can be provided as a hostname or an IP address. 
 	This parameter defaults to Localhost.
 	This parameter has an alias of AA.
+.PARAMETER Administrators
+	Give detailed information for Administrator Scopes and Roles.
+	This parameter is disabled by default.
+	This parameter has an alias of Admins.
+.PARAMETER AppDisks
+	Gives detailed information for all AppDisks.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of AD.
+.PARAMETER Applications
+	Gives detailed information for all applications.
+	This parameter is disabled by default.
+	This parameter has an alias of Apps.
+.PARAMETER BrokerRegistryKeys
+	Adds information on 315 registry keys to the Controller section.
+	
+	For Word and PDF output, this adds eights pages, per Controller, to the report.
+	For Text and HTML, this adds 315 lines, per Controller, to the report.
+
+	This parameter is disabled by default.
+	This parameter has an alias of BRK.
 .PARAMETER CompanyAddress
 	Company Address to use for the Cover Page, if the Cover Page has the Address field.
 	
@@ -178,45 +221,6 @@
 	The default value is Sideline.
 	This parameter has an alias of CP.
 	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER UserName
-	Username to use for the Cover Page and Footer.
-	The default value is contained in $env:username
-	This parameter has an alias of UN.
-	This parameter is only valid with the MSWORD and PDF output parameters.
-.PARAMETER HTML
-	Creates an HTML file with an .html extension.
-	This parameter is disabled by default.
-.PARAMETER MSWord
-	SaveAs DOCX file
-	This parameter is set True if no other output format is selected.
-.PARAMETER PDF
-	SaveAs PDF file instead of DOCX file.
-	This parameter is disabled by default.
-	The PDF file is roughly 5X to 10X larger than the DOCX file.
-	This parameter requires Microsoft Word to be installed.
-	This parameter uses the Word SaveAs PDF capability.
-.PARAMETER Text
-	Creates a formatted text file with a .txt extension.
-	This parameter is disabled by default.
-.PARAMETER Administrators
-	Give detailed information for Administrator Scopes and Roles.
-	This parameter is disabled by default.
-	This parameter has an alias of Admins.
-.PARAMETER AppDisks
-	Gives detailed information for all AppDisks.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of AD.
-.PARAMETER Applications
-	Gives detailed information for all applications.
-	This parameter is disabled by default.
-	This parameter has an alias of Apps.
-.PARAMETER BrokerRegistryKeys
-	Adds information on 315 registry keys to the Controller section.
-	
-	For Word and PDF output, this adds eights pages, per Controller, to the report.
-	For Text and HTML, this adds 315 lines, per Controller, to the report.
-	This parameter has an alias of BRK.
 .PARAMETER DeliveryGroups
 	Gives detailed information on all desktops in all Desktop (Delivery) Groups.
 	
@@ -241,24 +245,14 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of DGU.
-.PARAMETER Hosting
-	Give detailed information for Hosts, Host Connections, and Resources.
+.PARAMETER Dev
+	Clears errors at the beginning of the script.
+	Outputs all errors to a text file at the end of the script.
+	
+	This is used when the script developer requests more troubleshooting data.
+	The text file is placed in the same folder from where the script is run.
+	
 	This parameter is disabled by default.
-	This parameter has an alias of Host.
-.PARAMETER Logging
-	Give the Configuration Logging report with, by default, details for the previous 
-	seven days.
-	This parameter is disabled by default.
-.PARAMETER StartDate
-	The start date for the Configuration Logging report.
-	
-	The format for date only is MM/DD/YYYY.
-	
-	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
-	The double quotes are needed.
-	
-	The default is today's date minus seven days.
-	This parameter has an alias of SD.
 .PARAMETER EndDate
 	The end date for the Configuration Logging report.
 	
@@ -269,6 +263,31 @@
 	
 	The default is today's date.
 	This parameter has an alias of ED.
+.PARAMETER Folder
+	Specifies the optional output folder to save the output report. 
+.PARAMETER Hardware
+	Use WMI to gather hardware information on Computer System, Disks, Processor, and 
+	Network Interface Cards
+
+	This parameter may require the script be run from an elevated PowerShell session 
+	using an account with permission to retrieve hardware information (i.e. Domain Admin 
+	or Local Administrator).
+
+	Selecting this parameter will add to both the time it takes to run the script and 
+	size of the report.
+
+	This parameter is disabled by default.
+	This parameter has an alias of HW.
+.PARAMETER Hosting
+	Give detailed information for Hosts, Host Connections, and Resources.
+	This parameter is disabled by default.
+	This parameter has an alias of Host.
+.PARAMETER Log
+	Generates a log file for troubleshooting.
+.PARAMETER Logging
+	Give the Configuration Logging report with, by default, details for the previous 
+	seven days.
+	This parameter is disabled by default.
 .PARAMETER MachineCatalogs
 	Gives detailed information for all machines in all Machine Catalogs.
 	
@@ -289,6 +308,7 @@
 		AppDisks
 		Applications
 		BrokerRegistryKeys
+		VDARegistryKeys
 		DeliveryGroups
 		HardWare
 		Hosting
@@ -303,6 +323,22 @@
 	can take a very long time to run.
 
 	This parameter has an alias of MAX.
+.PARAMETER NoADPolicies
+	Excludes all Citrix AD-based policy information from the output document.
+	Includes only Site policies created in Studio.
+	
+	This switch is useful in large AD environments, where there may be thousands
+	of policies, to keep SYSVOL from being searched.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of NoAD.
+.PARAMETER NoPolicies
+	Excludes all Site and Citrix AD-based policy information from the output document.
+	
+	Using the NoPolicies parameter will cause the Policies parameter to be set to False.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of NP.
 .PARAMETER Policies
 	Give detailed information for both Site and Citrix AD based Policies.
 	
@@ -318,48 +354,12 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of Pol.
-.PARAMETER NoPolicies
-	Excludes all Site and Citrix AD-based policy information from the output document.
-	
-	Using the NoPolicies parameter will cause the Policies parameter to be set to False.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of NP.
-.PARAMETER NoADPolicies
-	Excludes all Citrix AD-based policy information from the output document.
-	Includes only Site policies created in Studio.
-	
-	This switch is useful in large AD environments, where there may be thousands
-	of policies, to keep SYSVOL from being searched.
+.PARAMETER ScriptInfo
+	Outputs information about the script to a text file.
+	The text file is placed in the same folder from where the script is run.
 	
 	This parameter is disabled by default.
-	This parameter has an alias of NoAD.
-.PARAMETER StoreFront
-	Give detailed information for StoreFront.
-	This parameter is disabled by default.
-	This parameter has an alias of SF.
-.PARAMETER AddDateTime
-	Adds a date timestamp to the end of the file name.
-	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be ReportName_2018-06-01_1800.docx (or .pdf).
-	This parameter is disabled by default.
-	This parameter has an alias of ADT.
-.PARAMETER Folder
-	Specifies the optional output folder to save the output report. 
-.PARAMETER Hardware
-	Use WMI to gather hardware information on Computer System, Disks, Processor, and 
-	Network Interface Cards
-
-	This parameter may require the script be run from an elevated PowerShell session 
-	using an account with permission to retrieve hardware information (i.e. Domain Admin 
-	or Local Administrator).
-
-	Selecting this parameter will add to both the time it takes to run the script and 
-	size of the report.
-
-	This parameter is disabled by default.
-	This parameter has an alias of HW.
+	This parameter has an alias of SI.
 .PARAMETER Section
 	Processes a specific section of the report.
 	Valid options are:
@@ -386,6 +386,32 @@
 	Using Policies will force the Policies switch to True.
 	If Policies is selected and the NoPolicies switch is used, the script will terminate.
 	
+.PARAMETER StartDate
+	The start date for the Configuration Logging report.
+	
+	The format for date only is MM/DD/YYYY.
+	
+	Format to include a specific time range is "MM/DD/YYYY HH:MM:SS" in 24-hour format.
+	The double quotes are needed.
+	
+	The default is today's date minus seven days.
+	This parameter has an alias of SD.
+.PARAMETER StoreFront
+	Give detailed information for StoreFront.
+	This parameter is disabled by default.
+	This parameter has an alias of SF.
+.PARAMETER UserName
+	Username to use for the Cover Page and Footer.
+	The default value is contained in $env:username
+	This parameter has an alias of UN.
+	This parameter is only valid with the MSWORD and PDF output parameters.
+.PARAMETER VDARegistryKeys
+	Adds information on registry keys to the Machine Details section.
+	
+	If this parameter is used, MachineCatalogs is set to True.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of VRK.
 .PARAMETER SmtpServer
 	Specifies the optional email server to send the output report. 
 .PARAMETER SmtpPort
@@ -400,22 +426,6 @@
 .PARAMETER To
 	Specifies the username for the To email address.
 	If SmtpServer is used, this is a required parameter.
-.PARAMETER Dev
-	Clears errors at the beginning of the script.
-	Outputs all errors to a text file at the end of the script.
-	
-	This is used when the script developer requests more troubleshooting data.
-	The text file is placed in the same folder from where the script is run.
-	
-	This parameter is disabled by default.
-.PARAMETER ScriptInfo
-	Outputs information about the script to a text file.
-	The text file is placed in the same folder from where the script is run.
-	
-	This parameter is disabled by default.
-	This parameter has an alias of SI.
-.PARAMETER Log
-	Generates a log file for troubleshooting.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1
 	
@@ -614,11 +624,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2018
-	-EndDate 01/31/2018	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2019
+	-EndDate 01/31/2019	
 	
-	Creates a report with Configuration Logging details for the dates 01/01/2018 through 
-	01/31/2018.
+	Creates a report with Configuration Logging details for the dates 01/01/2019 through 
+	01/31/2019.
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
@@ -630,11 +640,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2018 10:00:00"
-	-EndDate "06/01/2018 14:00:00"	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2019 10:00:00"
+	-EndDate "06/01/2019 14:00:00"	
 	
 	Creates a report with Configuration Logging details for the time range 
-	06/01/2018 10:00:00AM through 06/01/2018 02:00:00PM.
+	06/01/2019 10:00:00AM through 06/01/2019 02:00:00PM.
 	
 	Narrowing the report down to seconds does not work. Seconds must be either 00 or 59.
 	
@@ -770,8 +780,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be XD7SiteName_2018-06-01_1800.docx
+	June 1, 2019 at 6PM is 2019-06-01_1800.
+	Output filename will be XD7SiteName_2019-06-01_1800.docx
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF -AddDateTime
 	
@@ -787,8 +797,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2018 at 6PM is 2018-06-01_1800.
-	Output filename will be XD7SiteName_2018-06-01_1800.pdf
+	June 1, 2019 at 6PM is 2019-06-01_1800.
+	Output filename will be XD7SiteName_2019-06-01_1800.pdf
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hardware
 	
@@ -906,7 +916,21 @@
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	Adds the information on 315 Broker registry keys to the Controllers section.
+	Adds the information on over 300 Broker registry keys to the Controllers section.
+.EXAMPLE
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -VDARegistryKeys
+	
+	Will use all Default values.
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
+	Webster" or 
+	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
+	$env:username = Administrator
+
+	Carl Webster for the Company Name.
+	Sideline for the Cover Page format.
+	Administrator for the User Name.
+	Adds the information on VDA registry keys to the Machine Details section.
+	Forces the MachineCatalogs parameter to $True
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MaxDetails
 	
@@ -925,6 +949,7 @@
 		AppDisks            = True
 		Applications        = True
 		BrokerRegistryKeys  = True
+		VDARegistryKeys		= True
 		DeliveryGroups      = True
 		HardWare            = True
 		Hosting             = True
@@ -963,9 +988,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.19
+	VERSION: 2.20
 	AUTHOR: Carl Webster
-	LASTEDIT: October 1, 2018
+	LASTEDIT: December 20, 2018
 #>
 
 #endregion
@@ -975,10 +1000,46 @@
 [CmdletBinding(SupportsShouldProcess = $False, ConfirmImpact = "None", DefaultParameterSetName = "Word") ]
 
 Param(
+	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$HTML=$False,
+
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$MSWord=$False,
+
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$PDF=$False,
+
+	[parameter(ParameterSetName="Text",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Switch]$Text=$False,
+
+	[parameter(Mandatory=$False)] 
+	[Alias("ADT")]
+	[Switch]$AddDateTime=$False,
+	
 	[parameter(Mandatory=$False)] 
 	[ValidateNotNullOrEmpty()]
 	[Alias("AA")]
 	[string]$AdminAddress="Localhost",
+
+	[parameter(Mandatory=$False)] 
+	[Alias("Admins")]
+	[Switch]$Administrators=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("AD")]
+	[Switch]$AppDisks=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("Apps")]
+	[Switch]$Applications=$False,	
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("BRK")]
+	[Switch]$BrokerRegistryKeys=$False,
 
 	[parameter(ParameterSetName="Word",Mandatory=$False)] 
 	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
@@ -1022,45 +1083,6 @@ Param(
 	[ValidateNotNullOrEmpty()]
 	[string]$CoverPage="Sideline", 
 
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Alias("UN")]
-	[ValidateNotNullOrEmpty()]
-	[string]$UserName=$env:username,
-
-	[parameter(ParameterSetName="HTML",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$HTML=$False,
-
-	[parameter(ParameterSetName="Word",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$MSWord=$False,
-
-	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$PDF=$False,
-
-	[parameter(ParameterSetName="Text",Mandatory=$False)] 
-	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
-	[Switch]$Text=$False,
-
-	[parameter(Mandatory=$False)] 
-	[Alias("Admins")]
-	[Switch]$Administrators=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("AD")]
-	[Switch]$AppDisks=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("Apps")]
-	[Switch]$Applications=$False,	
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("BRK")]
-	[Switch]$BrokerRegistryKeys=$False,
-
 	[parameter(Mandatory=$False)] 
 	[Alias("DG")]
 	[Switch]$DeliveryGroups=$False,	
@@ -1070,19 +1092,28 @@ Param(
 	[Switch]$DeliveryGroupsUtilization=$False,	
 	
 	[parameter(Mandatory=$False)] 
+	[Switch]$Dev=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("ED")]
+	[Datetime]$EndDate = (Get-Date -displayhint date),
+	
+	[parameter(Mandatory=$False)] 
+	[string]$Folder="",
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("HW")]
+	[Switch]$Hardware=$False,
+
+	[parameter(Mandatory=$False)] 
 	[Alias("Host")]
 	[Switch]$Hosting=$False,	
 	
 	[parameter(Mandatory=$False)] 
-	[Switch]$Logging=$False,	
+	[Switch]$Log=$False,
 	
 	[parameter(Mandatory=$False)] 
-	[Alias("SD")]
-	[Datetime]$StartDate = ((Get-Date -displayhint date).AddDays(-7)),
-
-	[parameter(Mandatory=$False)] 
-	[Alias("ED")]
-	[Datetime]$EndDate = (Get-Date -displayhint date),
+	[Switch]$Logging=$False,	
 	
 	[parameter(Mandatory=$False)] 
 	[Alias("MC")]
@@ -1093,35 +1124,43 @@ Param(
 	[Switch]$MaxDetails=$False,
 
 	[parameter(Mandatory=$False)] 
-	[Alias("Pol")]
-	[Switch]$Policies=$False,	
+	[Alias("NoAD")]
+	[Switch]$NoADPolicies=$False,	
 	
 	[parameter(Mandatory=$False)] 
 	[Alias("NP")]
 	[Switch]$NoPolicies=$False,	
 	
 	[parameter(Mandatory=$False)] 
-	[Alias("NoAD")]
-	[Switch]$NoADPolicies=$False,	
+	[Alias("Pol")]
+	[Switch]$Policies=$False,	
 	
+	[parameter(Mandatory=$False)] 
+	[Alias("SI")]
+	[Switch]$ScriptInfo=$False,
+	
+	[parameter(Mandatory=$False)] 
+	[string]$Section="All",
+	
+	[parameter(Mandatory=$False)] 
+	[Alias("SD")]
+	[Datetime]$StartDate = ((Get-Date -displayhint date).AddDays(-7)),
+
 	[parameter(Mandatory=$False)] 
 	[Alias("SF")]
 	[Switch]$StoreFront=$False,	
 	
-	[parameter(Mandatory=$False)] 
-	[Alias("ADT")]
-	[Switch]$AddDateTime=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[string]$Folder="",
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("HW")]
-	[Switch]$Hardware=$False,
+	[parameter(ParameterSetName="Word",Mandatory=$False)] 
+	[parameter(ParameterSetName="PDF",Mandatory=$False)] 
+	[parameter(ParameterSetName="SMTP",Mandatory=$False)] 
+	[Alias("UN")]
+	[ValidateNotNullOrEmpty()]
+	[string]$UserName=$env:username,
 
 	[parameter(Mandatory=$False)] 
-	[string]$Section="All",
-	
+	[Alias("VRK")]
+	[Switch]$VDARegistryKeys=$False,
+
 	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
 	[string]$SmtpServer="",
 
@@ -1135,18 +1174,8 @@ Param(
 	[string]$From="",
 
 	[parameter(ParameterSetName="SMTP",Mandatory=$True)] 
-	[string]$To="",
+	[string]$To=""
 
-	[parameter(Mandatory=$False)] 
-	[Switch]$Dev=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[Alias("SI")]
-	[Switch]$ScriptInfo=$False,
-	
-	[parameter(Mandatory=$False)] 
-	[Switch]$Log=$False
-	
 	)
 #endregion
 
@@ -1158,6 +1187,76 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.20 20-Dec-2018
+#	Updated for XenApp/XenDesktop 1811
+#	Added new MinimumFunctionalLevel L7_20 (1811 or newer) - (Thanks to Carl Stalhood)
+#	Added VDA registry key data to Machine details (Linux VDAs are ignored. Thanks to Rene Bigler for testing this.)
+#		HKLM:\SOFTWARE\Citrix\CtxKlMap
+#		HKLM:\SOFTWARE\Citrix\Audio\CleanMappingWhenDisconnect
+#		HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent\DisableLogonUISuppression
+#		HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent\DisableLogonUISuppressionForSmartCardPublishedApps
+#		HKLM:\SOFTWARE\Citrix\CtxHook\ExcludedImageNames
+#		HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook\FilePathName
+#		HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook\Flag
+#		HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook\Settings
+#		HKLM:\Software\Citrix\DesktopServer\AllowMultipleRemotePCAssignments
+#		HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig\EnableDDAPICursor
+#		HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig\#HKLM_DisableMontereyFBCOnInit
+#		HKLM:\SOFTWARE\Citrix\ICA\DisableAppendMouse
+#		HKLM:\SOFTWARE\Citrix\Ica\Thinwire\EnableDrvTw2NotifyMonitorOrigin
+#		HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio\EchoCancellation
+#		HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB\EnableBloombergHID
+#		HKLM:\SOFTWARE\Citrix\PortICA\DisableRemotePCSleepPreventer
+#		HKLM:\SOFTWARE\Citrix\PortICA\RemotePC\RpcaMode
+#		HKLM:\SOFTWARE\Citrix\PortICA\RemotePC\RpcaTimeout
+#		HKLM:\SOFTWARE\Citrix\SmartCard\EnableSCardHookVcResponseTimeout
+#		HKLM:\SOFTWARE\Citrix\StreamingHook\EnableReadImageFileExecOptionsExclusionList
+#		HKLM:\Software\Citrix\VirtualDesktopAgent\ListOfSIDs
+#		HKLM:\Software\Citrix\VirtualDesktopAgent\SupportMultipleForest
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook\ExcludedImageNames
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio\EchoCancellation
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\StreamingHook\EnableReadImageFileExecOptionsExclusionList
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\EnableVisualEffect
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\AAHookFlags
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\ApplicationLaunchWaitTimeoutMS
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\LogoffCheckerStartupDelayInSeconds
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\LogoffCheckSysModules
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\SeamlessFlags
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\WorkerWaitInterval
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI\WorkerFullCheckInterval
+#		HKLM:\SYSTEM\CurrentControlSet\Control\SCMConfig\EnableSvchostMitigationPolicy
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig\MaxPolicyAge
+#		HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig\PolicyTimeout
+#		HKLM:\SYSTEM\CurrentControlSet\Control\TerminalServer\fSingleSessionPerUser
+#		HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi\UviEnabled
+#		HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi\UviProcessExcludes
+#		HKLM:\System\Currentcontrolset\services\picadm\Parameters\DisableFullStreamWrite
+#	Added Functions GetVDARegistryKeys, Get-VDARegKeyToObject, and OutputVDARegistryKeys
+#	Added new Parameter VDARegistryKeys
+#	Added VDARegistryKeys to MaxDetails
+#	If VDARegistryKeys is used, force MachineCatalogs to True
+#	Updated funcions ShowScriptOptions and ProcessScriptEnd for the new VDARegistryKeys parameter
+#	Added functions OutputAppendixA and OutputAppendixB
+#		Appendix A is a list of all VDA registry keys sorted by key name, key value, VDA type, and computer name
+#		Appendix B is a list of all Controller registry keys sorted by key name, key value, and Controller name
+#	Added processing the MetaDataMap properties for Machine Catalogs.
+#		Sample possible Keys and Values:
+#			Citrix_DesktopStudio_PreviousImageVdaFunctionalLevel_Is_L7_9 True 
+#			Citrix_DesktopStudio_RdsCatalogLicenseCheck_Warning NoPoweredOnVm 
+#				[Studio warning: The Microsoft Remote Desktop licensing check could not be run...]
+#				[There is no value provided to tell if the warning was removed from Studio or
+#					was successful during catalog creation]
+#			Citrix_DesktopStudio_Upgraded True 
+#		Keys that start with "Task" are ignored.
+#		The Citrix_DesktopStudio_IdentityPoolUid Key is ignored
+#	Comment out unused Word variables
+#	Fixed missing Disabled value for policy setting ICA\Printing\Universal Print Server\Universal Print Server enable
+#	Fixed several $Var -ne $null to $Null -ne $Var and on two Get-Process lines for WinWord and Excel (thanks to MBS)
+#	In Function OutputHostingSession, remove all the Desktop code as desktops are not used in that function
+#	Removed unused variables
+#	Reorganize the list of parameters in the help text and parameter sets
+#	Update help text
 
 #Version 2.19 2-Oct-2018
 #	Added new broker entitlement properties from Get-BrokerEntitlementPolicyRule (Thanks to Sacha Thomet and Carl Stalhood)
@@ -1660,6 +1759,7 @@ If($MaxDetails)
 	$AppDisks			= $True
 	$Applications		= $True
 	$BrokerRegistryKeys	= $True
+	$VDARegistryKeys	= $True
 	$DeliveryGroups		= $True
 	$HardWare			= $True
 	$Hosting			= $True
@@ -1759,6 +1859,13 @@ If($Folder -ne "")
 		Exit
 	}
 }
+
+If($VDARegistryKeys)
+{	
+	#Force $MachineCatalogs to True
+	Write-Verbose "$(Get-Date): VDARegistryKeys switch is set. Forcing MachineCatalogs to True."
+	$MachineCatalogs = $True
+}
 #endregion
 
 #region initialize variables for Word, HTML, and text
@@ -1775,13 +1882,13 @@ If($MSWord -or $PDF)
 	#http://msdn.microsoft.com/en-us/library/office/aa211923(v=office.11).aspx
 	[int]$wdAlignPageNumberRight = 2
 	[long]$wdColorGray15 = 14277081
-	[long]$wdColorGray05 = 15987699 
+	#[long]$wdColorGray05 = 15987699 
 	[int]$wdMove = 0
 	[int]$wdSeekMainDocument = 0
 	[int]$wdSeekPrimaryFooter = 4
 	[int]$wdStory = 6
 	[int]$wdColorRed = 255
-	[int]$wdColorBlack = 0
+	#[int]$wdColorBlack = 0
 	[int]$wdWord2007 = 12
 	[int]$wdWord2010 = 14
 	[int]$wdWord2013 = 15
@@ -1790,29 +1897,29 @@ If($MSWord -or $PDF)
 	[int]$wdFormatPDF = 17
 	#http://blogs.technet.com/b/heyscriptingguy/archive/2006/03/01/how-can-i-right-align-a-single-column-in-a-word-table.aspx
 	#http://msdn.microsoft.com/en-us/library/office/ff835817%28v=office.15%29.aspx
-	[int]$wdAlignParagraphLeft = 0
-	[int]$wdAlignParagraphCenter = 1
-	[int]$wdAlignParagraphRight = 2
+	#[int]$wdAlignParagraphLeft = 0
+	#[int]$wdAlignParagraphCenter = 1
+	#[int]$wdAlignParagraphRight = 2
 	#http://msdn.microsoft.com/en-us/library/office/ff193345%28v=office.15%29.aspx
-	[int]$wdCellAlignVerticalTop = 0
-	[int]$wdCellAlignVerticalCenter = 1
-	[int]$wdCellAlignVerticalBottom = 2
+	#[int]$wdCellAlignVerticalTop = 0
+	#[int]$wdCellAlignVerticalCenter = 1
+	#[int]$wdCellAlignVerticalBottom = 2
 	#http://msdn.microsoft.com/en-us/library/office/ff844856%28v=office.15%29.aspx
 	[int]$wdAutoFitFixed = 0
 	[int]$wdAutoFitContent = 1
-	[int]$wdAutoFitWindow = 2
+	#[int]$wdAutoFitWindow = 2
 	#http://msdn.microsoft.com/en-us/library/office/ff821928%28v=office.15%29.aspx
 	[int]$wdAdjustNone = 0
 	[int]$wdAdjustProportional = 1
-	[int]$wdAdjustFirstColumn = 2
-	[int]$wdAdjustSameWidth = 3
+	#[int]$wdAdjustFirstColumn = 2
+	#[int]$wdAdjustSameWidth = 3
 
 	[int]$PointsPerTabStop = 36
 	[int]$Indent0TabStops = 0 * $PointsPerTabStop
-	[int]$Indent1TabStops = 1 * $PointsPerTabStop
-	[int]$Indent2TabStops = 2 * $PointsPerTabStop
-	[int]$Indent3TabStops = 3 * $PointsPerTabStop
-	[int]$Indent4TabStops = 4 * $PointsPerTabStop
+	#[int]$Indent1TabStops = 1 * $PointsPerTabStop
+	#[int]$Indent2TabStops = 2 * $PointsPerTabStop
+	#[int]$Indent3TabStops = 3 * $PointsPerTabStop
+	#[int]$Indent4TabStops = 4 * $PointsPerTabStop
 
 	# http://www.thedoctools.com/index.php?show=wt_style_names_english_danish_german_french
 	[int]$wdStyleHeading1 = -2
@@ -1828,7 +1935,7 @@ If($MSWord -or $PDF)
 	[int]$wdLineStyleSingle = 1
 
 	[int]$wdHeadingFormatTrue = -1
-	[int]$wdHeadingFormatFalse = 0 
+	#[int]$wdHeadingFormatFalse = 0 
 	
 	[string]$Script:RunningOS = (Get-WmiObject -class Win32_OperatingSystem -EA 0).Caption
 }
@@ -1917,8 +2024,6 @@ Function GetComputerWMIInfo
 		WriteHTMLLine 4 0 "General Computer"
 	}
 	
-	[bool]$GotComputerItems = $True
-	
 	Try
 	{
 		$Results = Get-WmiObject -computername $RemoteComputerName win32_computersystem
@@ -2002,8 +2107,6 @@ Function GetComputerWMIInfo
 		WriteHTMLLine 4 0 "Drive(s)"
 	}
 
-	[bool]$GotDrives = $True
-	
 	Try
 	{
 		$Results = Get-WmiObject -computername $RemoteComputerName Win32_LogicalDisk
@@ -2088,8 +2191,6 @@ Function GetComputerWMIInfo
 		WriteHTMLLine 4 0 "Processor(s)"
 	}
 
-	[bool]$GotProcessors = $True
-	
 	Try
 	{
 		$Results = Get-WmiObject -computername $RemoteComputerName win32_Processor
@@ -2186,7 +2287,7 @@ Function GetComputerWMIInfo
 		$Nics = $Results | Where-Object {$Null -ne $_.ipaddress}
 		$Results = $Null
 
-		If($Nics -eq $Null ) 
+		If($Null -eq $Nics) 
 		{ 
 			$GotNics = $False 
 		} 
@@ -3452,7 +3553,9 @@ Function CheckWordPrereq
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
 	#Find out if winword is running in our session
-	[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	#[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	#fix by MBS in V2.20
+	[bool]$wordrunning = $null –ne ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID})
 	If($wordrunning)
 	{
 		$ErrorActionPreference = $SaveEAPreference
@@ -4028,8 +4131,9 @@ Function Get-RegKeyToObject
     $val = Get-RegistryValue2 $RegPath $RegKey $ComputerName
 	
     $obj1 = New-Object -TypeName PSObject
-	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey	-Value $RegPath
-	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue	-Value $RegKey
+	$obj1 | Add-Member -MemberType NoteProperty -Name ComputerName	-Value $ComputerName
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey		-Value $RegPath
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue		-Value $RegKey
     If($Null -eq $val) 
 	{
         $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value "Not set"
@@ -5197,7 +5301,10 @@ Function CheckExcelPrereq
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
 	#Find out if excel is running in our session
-	[bool]$excelrunning = ((Get-Process 'Excel' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	#[bool]$excelrunning = ((Get-Process 'Excel' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
+	#fix by MBS in V2.20
+	[bool]$excelrunning = $null –ne ((Get-Process 'Excel' -ea 0) | Where-Object {$_.SessionId -eq $SessionID})
+	
 	If($excelrunning)
 	{
 		$ErrorActionPreference = $SaveEAPreference
@@ -5625,6 +5732,7 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): To                 : $($To)"
 	Write-Verbose "$(Get-Date): Use SSL            : $($UseSSL)"
 	Write-Verbose "$(Get-Date): User Name          : $($UserName)"
+	Write-Verbose "$(Get-Date): VDA Registry Keys  : $($VDARegistryKeys)"
 	Write-Verbose "$(Get-Date): XA/XD Version      : $($Script:XDSiteVersion)"
 	Write-Verbose "$(Get-Date): "
 	Write-Verbose "$(Get-Date): OS Detected        : $($Script:RunningOS)"
@@ -6039,6 +6147,9 @@ Function ProcessMachineCatalogs
 	$Script:TotalServerOSCatalogs = 0
 	$Script:TotalDesktopOSCatalogs = 0
 	$Script:TotalRemotePCCatalogs = 0
+	#V2.20
+	$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+	$Script:ALLVDARegistryItems = New-Object System.Collections.ArrayList
 
 	$AllMachineCatalogs = Get-BrokerCatalog @XDParams2 -SortBy Name 
 
@@ -6273,6 +6384,7 @@ Function OutputMachines
 			"L7_7"	{$xVDAVersion = "7.7 (or newer)"; Break}
 			"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 			"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
+			"L7_20"	{$xVDAVersion = "1811 (or newer)"; Break}
 			Default {$xVDAVersion = "Unable to determine VDA version: $($Catalog.MinimumFunctionalLevel)"; Break}
 		}
 
@@ -6325,13 +6437,17 @@ Function OutputMachines
 						}
 					}
 					
-					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
+					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+					(($xAllocationType -eq "Random") -or 
+					($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 					{
 						$TempDiskCacheSize = $MachineData.WriteBackCacheDiskSize
 						$TempMemoryCacheSize = $MachineData.WriteBackCacheMemorySize
 					}
 					
-					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
+					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+					($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
+					((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 					{
 						If($MachineData.UseFullDiskCloneProvisioning -eq $True)
 						{
@@ -6452,13 +6568,17 @@ Function OutputMachines
 					}
 				}
 			
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				(($xAllocationType -eq "Random") -or 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
 					$CatalogInformation += @{Data = "Temporary memory cache size"; Value = "$($TempMemoryCacheSize) MB"; }
 					$CatalogInformation += @{Data = "Temporary disk cache size"; Value = "$($TempDiskCacheSize) GB"; }
 				}
 
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
+				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
 					$CatalogInformation += @{Data = "VM copy mode"; Value = $VMCopyMode; }
 				}
@@ -6558,12 +6678,37 @@ Function OutputMachines
 			
 			If($Null -ne $MachineData)
 			{
-				$itemCount = $MachineData.MetadataMap.Count
 				$itemKeys = $MachineData.MetadataMap.Keys
 
 				ForEach( $itemKey in $itemKeys )
 				{
 					$value = $MachineData.MetadataMap[ $itemKey ]
+					
+					If($value -eq "")
+					{
+						$value = "Not set"
+					}
+					$CatalogInformation += @{Data = $itemKey; Value = $value; }
+				}
+			}
+			
+			#added in V2.20
+			If($SessionSUpport -eq "MultiSession")
+			{
+				$itemKeys = $Catalog.MetadataMap.Keys
+
+				ForEach( $itemKey in $itemKeys )
+				{
+					If($itemKey.StartsWith("Task"))
+					{
+						Continue
+					}
+					If($itemKey.StartsWith("Citrix_DesktopStudio_IdentityPoolUid"))
+					{
+						Continue
+					}
+
+					$value = $Catalog.MetadataMap[ $itemKey ]
 					
 					If($value -eq "")
 					{
@@ -6643,13 +6788,17 @@ Function OutputMachines
 					}
 				}
 				
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				(($xAllocationType -eq "Random") -or 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
 					Line 1 "Temporary memory cache size`t: " "$($TempMemoryCacheSize) MB"
 					Line 1 "Temporary disk cache size`t: " "$($MachineData.WriteBackCacheDiskSize) GB"
 				}
 
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
+				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
 					Line 1 "VM copy mode`t`t`t: " $VMCopyMode
 				}
@@ -6749,7 +6898,6 @@ Function OutputMachines
 
 			If($Null -ne $MachineData)
 			{
-				$itemCount = $MachineData.MetadataMap.Count
 				$itemKeys = $MachineData.MetadataMap.Keys
 
 				ForEach( $itemKey in $itemKeys )
@@ -6764,6 +6912,32 @@ Function OutputMachines
 				}
 			}
 			
+			#added in V2.20
+			If($SessionSUpport -eq "MultiSession")
+			{
+				$itemKeys = $Catalog.MetadataMap.Keys
+
+				ForEach( $itemKey in $itemKeys )
+				{
+					If($itemKey.StartsWith("Task"))
+					{
+						Continue
+					}
+					If($itemKey.StartsWith("Citrix_DesktopStudio_IdentityPoolUid"))
+					{
+						Continue
+					}
+
+					$value = $Catalog.MetadataMap[ $itemKey ]
+					
+					If($value -eq "")
+					{
+						$value = "Not set"
+					}
+					Line 1 "$($itemKey)`t: " $value
+				}
+			}
+
 			Line 0 ""
 		}
 		ElseIf($HTML)
@@ -6821,13 +6995,17 @@ Function OutputMachines
 					}
 				}
 				
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and (($xAllocationType -eq "Random") -or ($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				(($xAllocationType -eq "Random") -or 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
 					$rowdata += @(,('Temporary memory cache size',($htmlsilver -bor $htmlbold),"$($TempMemoryCacheSize) MB",$htmlwhite))
 					$rowdata += @(,('Temporary disk cache size',($htmlsilver -bor $htmlbold), "$($TempDiskCacheSize) GB",$htmlwhite))
 				}
 
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -and ($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and ((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
+				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
+				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
 					$rowdata += @(,('VM copy mode',($htmlsilver -bor $htmlbold),$VMCopyMode,$htmlwhite))
 				}
@@ -6929,7 +7107,6 @@ Function OutputMachines
 			
 			If($Null -ne $MachineData)
 			{
-				$itemCount = $MachineData.MetadataMap.Count
 				$itemKeys = $MachineData.MetadataMap.Keys
 
 				ForEach( $itemKey in $itemKeys )
@@ -6944,6 +7121,32 @@ Function OutputMachines
 				}
 			}
 			
+			#added in V2.20
+			If($Catalog.SessionSupport -eq "MultiSession")
+			{
+				$itemKeys = $Catalog.MetadataMap.Keys
+
+				ForEach( $itemKey in $itemKeys )
+				{
+					If($itemKey.StartsWith("Task"))
+					{
+						Continue
+					}
+					If($itemKey.StartsWith("Citrix_DesktopStudio_IdentityPoolUid"))
+					{
+						Continue
+					}
+					
+					$value = $Catalog.MetadataMap[ $itemKey ]
+					
+					If($value -eq "")
+					{
+						$value = "Not set"
+					}
+					$rowdata += @(,($itemKey,($htmlsilver -bor $htmlbold),$value,$htmlwhite))
+				}
+			}
+
 			$msg = ""
 			$columnWidths = @("225px","200px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "425"
@@ -7741,6 +7944,253 @@ Function OutputAppDiskAdmins
 #endregion
 
 #region function to output machine/desktop details
+Function GetVDARegistryKeys
+{
+	Param([string]$ComputerName, [string]$xType)
+
+	#Get-VDARegKeyToObject "HKLM:\" "" $ComputerName
+
+	If($xType -eq "Server")
+	{
+		#From the 1811 docs
+		Get-VDARegKeyToObject "HKLM:\System\Currentcontrolset\services\picadm\Parameters" "DisableFullStreamWrite" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\SCMConfig" "EnableSvchostMitigationPolicy" $ComputerName $xType
+
+		#From the 1808 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICA" "DisableAppendMouse" $ComputerName $xType
+		
+		#From What's New and Fixed in 7.18
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppression" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\SmartCard" "EnableSCardHookVcResponseTimeout" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppressionForSmartCardPublishedApps" $ComputerName $xType
+		
+		#From the 7.17 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "EnableDDAPICursor" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "SupportMultipleForest" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "ListOfSIDs" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix" "CtxKlMap" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\TerminalServer" "fSingleSessionPerUser" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB" "EnableBloombergHID" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName $xType
+
+		#From the 7.16 PDF
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig" "MaxPolicyAge" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\ica-tcp\AudioConfig" "PolicyTimeout" $ComputerName $xType
+		
+		#From the 7.15 LTSR docs
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Ica\Thinwire" "EnableDrvTw2NotifyMonitorOrigin" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix" "EnableVisualEffect" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\StreamingHook" "EnableReadImageFileExecOptionsExclusionList" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\StreamingHook" "EnableReadImageFileExecOptionsExclusionList" $ComputerName $xType
+		
+		#From CTX128009
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "ApplicationLaunchWaitTimeoutMS" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckerStartupDelayInSeconds" $ComputerName $xType
+		
+		#From CTX891671
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckSysModules" $ComputerName $xType
+		
+		#From CTX101644
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "SeamlessFlags" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "WorkerWaitInterval" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "WorkerFullCheckInterval" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "AAHookFlags" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "FilePathName" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "Flag" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook\AppInit_Dlls\SHAppBarHook" "Settings" $ComputerName $xType
+
+		#From CTX107825
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook" "ExcludedImageNames" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook" "ExcludedImageNames" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi" "UviProcessExcludes" $ComputerName $xType
+
+		#From CTX226605
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi" "UviEnabled" $ComputerName $xType
+	}
+	ElseIf($xType -eq "Desktop")
+	{
+		#From What's New and Fixed in 7.18
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppression" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\SmartCard" "EnableSCardHookVcResponseTimeout" $ComputerName $xType
+		
+		#From the 1808 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICA" "DisableAppendMouse" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Audio" "CleanMappingWhenDisconnect" $ComputerName $xType
+		
+		#From the 7.17 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "EnableDDAPICursor" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "SupportMultipleForest" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\VirtualDesktopAgent" "ListOfSIDs" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix" "CtxKlMap" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA" "DisableRemotePCSleepPreventer" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA\RemotePC" "RpcaMode" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\PortICA\RemotePC" "RpcaTimeout" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "AllowMultipleRemotePCAssignments" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\GenericUSB" "EnableBloombergHID" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\ClientAudio" "EchoCancellation" $ComputerName $xType
+
+		#From the 7.16 PDF
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\HDX3D\BitmapRemotingConfig" "HKLM_DisableMontereyFBCOnInit" $ComputerName $xType
+		
+		#From the 7.15 LTSR docs
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Ica\Thinwire" "EnableDrvTw2NotifyMonitorOrigin" $ComputerName $xType
+		
+		#From CTX891671
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\Citrix\wfshell\TWI" "LogoffCheckSysModules" $ComputerName $xType
+		
+		#From CTX107825
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\CtxHook" "ExcludedImageNames" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\CtxHook" "ExcludedImageNames" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\services\CtxUvi" "UviProcessExcludes" $ComputerName $xType
+
+		#From CTX226605
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxUvi" "UviEnabled" $ComputerName $xType
+	}
+}
+
+Function Get-VDARegKeyToObject 
+{
+	#function contributed by Andrew Williamson @ Fujitsu Services
+    param([string]$RegPath,
+    [string]$RegKey,
+    [string]$ComputerName,
+	[string]$xType)
+	
+    $val = Get-RegistryValue2 $RegPath $RegKey $ComputerName
+	
+    $obj1 = New-Object -TypeName PSObject
+	$obj1 | Add-Member -MemberType NoteProperty -Name ComputerName	-Value $ComputerName
+	$obj1 | Add-Member -MemberType NoteProperty -Name VDAType		-Value $xType
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey		-Value $RegPath
+	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue		-Value $RegKey
+    If($Null -eq $val) 
+	{
+        $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value "Not set"
+    } 
+	Else 
+	{
+	    $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value $val
+    }
+    $Script:VDARegistryItems.Add($obj1) > $Null
+}
+
+Function OutputVDARegistryKeys
+{
+	#V2.11 sort the array by regkey and regvalue and change the output to match
+	Write-Verbose "$(Get-Date): `t`t`tOutput Registry Key data"
+	$Script:VDARegistryItems = $Script:VDARegistryItems | Sort-Object RegValue, RegKey
+	
+	$txt = "Machine Registry Items"
+	#v2.11 change heading from "2" to "3"
+	If($MSWord -or $PDF)
+	{
+		WriteWordLine 3 0 $txt
+	}
+	ElseIf($Text)
+	{
+		Line 0 $txt
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 3 0 $txt
+	}
+
+	If($MSWord -or $PDF)
+	{
+		$WordTable = @()
+	}
+	ElseIf($HTML)
+	{
+		$rowdata = @()
+	}
+	
+	If($Script:VDARegistryItems)
+	{
+		If($Text)
+		{
+			Line 1 "Registry Key                                                                  Registry Value                                     Data            " 
+			Line 1 "================================================================================================================================================="
+		}
+
+		ForEach($Item in $Script:VDARegistryItems)
+		{
+			If($MSWord -or $PDF)
+			{
+				$WordTable += @{
+				RegKey = $Item.RegKey; 
+				RegValue = $Item.RegValue; 
+				Value = $Item.Value
+				}
+			}
+			ElseIf($Text)
+			{
+				Line 1 ( "{0,-77} {1,-50} {2,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value)
+			}
+			ElseIf($HTML)
+			{
+				$rowdata += @(,(
+				$Item.RegKey,$htmlwhite,
+				$Item.RegValue,$htmlwhite,
+				$Item.Value,$htmlwhite))
+			}
+		}
+	}
+	Else
+	{
+		If($MSWord -or $PDF)
+		{
+			WriteWordLine 0 1 "<None found>"
+		}
+		ElseIf($Text)
+		{
+			Line 1 "<None found>"
+		}
+		ElseIf($HTML)
+		{
+			WriteHTMLLine 0 1 "None found"
+		}
+	}
+
+	If($MSWord -or $PDF)
+	{
+		$Table = AddWordTable -Hashtable $WordTable `
+		-Columns  RegKey, RegValue, Value `
+		-Headers  "Registry Key", "Registry Value", "Value" `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 230;
+		$Table.Columns.Item(2).Width = 210;
+		$Table.Columns.Item(3).Width = 60;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
+	}
+	ElseIf($Text)
+	{
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		$columnHeaders = @(
+		'Registry Key',($htmlsilver -bor $htmlbold),
+		'Registry Value',($htmlsilver -bor $htmlbold),
+		'Value',($htmlsilver -bor $htmlbold)
+		)
+
+		$msg = ""
+		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
+		WriteHTMLLine 0 0 " "
+	}
+}
+
 Function OutputMachineDetails
 {
 	Param([object] $Machine)
@@ -7750,6 +8200,32 @@ Function OutputMachineDetails
 	$xMachineName = $tmp[0]
 	$tmp = $Null
 	Write-Verbose "$(Get-Date): `t`tOutput Machine $xMachineName"
+	
+	#V2.20
+	#first see if VDA is Linux
+	If($Machine.OSType -Like "*linux*")
+	{
+		#Linux VDAs do not have an easily accessible registry so skip them
+		$LinuxVDA = $True
+	}
+	Else
+	{
+		$LinuxVDA = $False
+		If($VDARegistryKeys)
+		{
+			Write-Verbose "$(Get-Date): `t`t`tTesting $(xMachineName)"
+			$MachineIsOnline = $False
+			If(Test-Connection -ComputerName $xMachineName -EA 0)
+			{
+				Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is online"
+				$MachineIsOnline = $True
+			}
+			Else
+			{
+				Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is offline. VDA Registry Key data cannot be gathered."
+			}
+		}
+	}
 	
 	$xAssociatedUserFullNames = @()
 	ForEach($Value in $Machine.AssociatedUserFullNames)
@@ -8167,6 +8643,19 @@ Function OutputMachineDetails
 			$Table = $Null
 			WriteWordLine 0 0 ""
 
+			#V2.20
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Server"
+				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
+			}
+			
 			WriteWordLine 4 0 "Machine Details"
 			[System.Collections.Hashtable[]] $ScriptInformation = @()
 			$ScriptInformation += @{Data = "Agent Version"; Value = $Machine.AgentVersion; }
@@ -8446,6 +8935,19 @@ Function OutputMachineDetails
 			$Table = $Null
 			WriteWordLine 0 0 ""
 
+			#V2.20
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Desktop"
+				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
+			}
+			
 			WriteWordLine 4 0 "Machine Details"
 			[System.Collections.Hashtable[]] $ScriptInformation = @()
 			$ScriptInformation += @{Data = "Agent Version"; Value = $Machine.AgentVersion; }
@@ -8726,6 +9228,19 @@ Function OutputMachineDetails
 			Line 2 "Load Index`t`t`t: " $Machine.LoadIndex
 			Line 0 ""
 
+			#V2.20
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Server"
+				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
+			}
+			
 			Line 1 "Machine Details"
 			Line 2 "Agent Version`t`t`t: " $Machine.AgentVersion
 			Line 2 "IP Address`t`t`t: " $Machine.IPAddress
@@ -8869,6 +9384,19 @@ Function OutputMachineDetails
 			}
 			Line 0 ""
 
+			#V2.20
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Desktop"
+				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
+			}
+			
 			Line 1 "Machine Details"
 			Line 2 "Agent Version`t`t`t: " $Machine.AgentVersion
 			Line 2 "IP Address`t`t`t: " $Machine.IPAddress
@@ -9034,6 +9562,19 @@ Function OutputMachineDetails
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 			WriteHTMLLine 0 0 " "
 
+			#V2.20
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Server"
+				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
+			}
+			
 			WriteHTMLLine 4 0 "Machine Details"
 			$rowdata = @()
 			$columnHeaders = @("Agent Version",($htmlsilver -bor $htmlbold),$Machine.AgentVersion,$htmlwhite)
@@ -9218,6 +9759,19 @@ Function OutputMachineDetails
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 			WriteHTMLLine 0 0 " "
 
+			#V2.20
+			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
+			{
+				GetVDARegistryKeys $Machine.DNSName "Desktop"
+				OutputVDARegistryKeys
+				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+			}
+			ElseIf($LinuxVDA -and $VDARegistryKeys)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tVDA is Linux, skipping"
+			}
+			
 			WriteHTMLLine 4 0 "Machine Details"
 			$rowdata = @()
 			$columnHeaders = @("Agent Version",($htmlsilver -bor $htmlbold),$Machine.AgentVersion,$htmlwhite)
@@ -9927,6 +10481,7 @@ Function OutputDeliveryGroupDetails
 		"L7_7"	{$xVDAVersion = "7.7 (or newer)"; Break}
 		"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 		"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
+		"L7_20"	{$xVDAVersion = "1811 (or newer)"; Break}
 		#fixed in V2.14, forgot to set variable
 		Default {$xVDAVersion = "Unable to determine VDA version: $($Group.MinimumFunctionalLevel)"; Break}
 	}
@@ -19247,6 +19802,7 @@ Function ProcessCitrixPolicies
 						{
 							"UpsEnabledWithFallback"	{$tmp = "Enabled with fallback to Windows' native remote printing"; Break}
 							"UpsOnlyEnabled"			{$tmp = "Enabled with no fallback to Windows' native remote printing"; Break}
+							"UpsDisabled"				{$tmp = "Disabled"; Break} #added V2.20
 							Default	{$tmp = "Universal Print Server enable value could not be determined: $($Setting.UpsEnable.Value)"; Break}
 						}
 						
@@ -27136,6 +27692,7 @@ Function OutputSiteSettings
 		"L7_7"	{$xVDAVersion = "7.7 (or newer)"; Break}
 		"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 		"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
+		"L7_20"	{$xVDAVersion = "1811 (or newer)"; Break}
 		Default {$xVDAVersion = "Unable to determine VDA version: $($Script:XDSite1.DefaultMinimumFunctionalLevel)"; Break}
 	}
 
@@ -30581,8 +31138,6 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "LastOutageModeEnteredTime" $ComputerName
 	#end
 	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "OutageModeEntered" $ComputerName
-	
-	
 }
 
 Function OutputControllerRegistryKeys
@@ -31507,23 +32062,9 @@ Function OutputHostingSessions
 	ForEach($Session in $Sessions)
 	{
 		Write-Verbose "$(Get-Date): `t`t`tOutput session $($Session.UserName)"
-		#get the private desktop
-		#get desktop by Session Uid
-		$xMachineName = ""
 		#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
-		#V2.15 change from the deprecated Get-BrokerDesktop to Get-BrokerMachine
-		#$Desktop = Get-BrokerDesktop -SessionUid $Session.Uid @XDParams2
-		$Desktop = Get-BrokerMachine -SessionUid $Session.Uid @XDParams2
+		#V2.20 remove all the desktop code as it is not used in this function
 		
-		If($? -and $Null -ne $Desktop)
-		{
-			$xMachineName = $Desktop.MachineName
-		}
-		Else
-		{
-			$xMachineName = "Not Found"
-		}
-
 		If($Session.SessionSupport -eq "SingleSession")
 		{
 			$xSessionType = "Single"
@@ -33303,6 +33844,7 @@ Function ProcessScriptEnd
 		{
 			Out-File -FilePath $SIFile -Append -InputObject "User Name          : $($UserName)" 4>$Null
 		}
+		Out-File -FilePath $SIFile -Append -InputObject "VDA Registry Keys  : $($VDARegistryKeys)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "XA/XD Version      : $($Script:XDSiteVersion)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "OS Detected        : $($Script:RunningOS)" 4>$Null
@@ -33337,6 +33879,313 @@ Function ProcessScriptEnd
 		}
 	}
 	$ErrorActionPreference = $SaveEAPreference
+}
+#endregion
+
+#region AppendixA
+Function OutputAppendixA
+{
+	Write-Verbose "$(Get-Date): Create Appendix A VDA Registry Items"
+
+	#sort the array by regkey, regvalue and servername
+	$Script:ALLVDARegistryItems = $Script:ALLVDARegistryItems | Sort-Object RegKey, RegValue, VDAType, ComputerName
+	
+	If($MSWord -or $PDF)
+	{
+		$selection.InsertNewPage()
+		WriteWordLine 3 0 "Appendix A - VDA Registry Items"
+		WriteWordLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
+		WriteWordLine 0 0 "Linux VDAs are excluded"
+		WriteWordLine 0 0 "These items may or may not be needed"
+		WriteWordLine 0 0 "This Appendix is for VDA comparison only"
+		WriteWordLine 0 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:AllVDARegistryItems)
+		{
+			$AppendixWordTable = @()
+			ForEach($Item in $Script:ALLVDARegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)")
+				{
+					$AppendixWordTable += @{ 
+					RegKey = "";
+					RegValue = "";
+					RegData = "";
+					VDAType = "";
+					ComputerName = "";
+					}
+				}
+
+				$AppendixWordTable += @{ 
+				RegKey = $Item.RegKey;
+				RegValue = $Item.RegValue;
+				RegData = $Item.Value;
+				VDAType = $Item.VDAType.Substring(0,1);
+				ComputerName = $Item.ComputerName;
+				}
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$Table = AddWordTable -Hashtable $AppendixWordTable `
+			-Columns RegKey, RegValue, RegData, VDAType, ComputerName `
+			-Headers "Registry Key", "Registry Value", "Data", "VDA", "Computer Name" `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
+
+			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
+		}
+	}
+	ElseIf($Text)
+	{
+		Line 0 "Appendix A - VDA Registry Items"
+		Line 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
+		Line 0 "Linux VDAs are excluded"
+		Line 0 "These items may or may not be needed"
+		Line 0 "This Appendix is for VDA comparison only"
+		Line 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:AllVDARegistryItems)
+		{
+			ForEach($Item in $Script:ALLVDARegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)")
+				{
+					Line 0 ""
+				}
+
+				Line 0 "Registry Key`t: " $Item.RegKey
+				Line 0 "Registry Value`t: " $Item.RegValue
+				Line 0 "Data`t`t: " $Item.Value
+				Line 0 "VDA Type`t: " $Item.VDAType
+				Line 0 "Computer Name`t: " $Item.ComputerName
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+		}
+		Else
+		{
+			Line 1 "<None found>"
+		}
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 3 0 "Appendix A - VDA Registry Items"
+		WriteHTMLLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
+		WriteHTMLLine 0 0 "Linux VDAs are excluded"
+		WriteHTMLLine 0 0 "These items may or may not be needed"
+		WriteHTMLLine 0 0 "This Appendix is for VDA comparison only"
+		WriteHTMLLine 0 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:AllVDARegistryItems)
+		{
+			$rowdata = @()
+			ForEach($Item in $Script:AllVDARegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)")
+				{
+					$rowdata += @(,(
+					"",$htmlwhite))
+				}
+
+				$rowdata += @(,(
+				$Item.RegKey,$htmlwhite,
+				$Item.RegValue,$htmlwhite,
+				$Item.Value,$htmlwhite,
+				$Item.VDAType,$htmlwhite,
+				$Item.ComputerName,$htmlwhite))
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$columnHeaders = @(
+			'Registry Key',($htmlsilver -bor $htmlbold),
+			'Registry Key',($htmlsilver -bor $htmlbold),
+			'Data',($htmlsilver -bor $htmlbold),
+			'VDA Type',($htmlsilver -bor $htmlbold),
+			'Computer Name',($htmlsilver -bor $htmlbold))
+
+			$msg = ""
+			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		}
+		Else
+		{
+			WriteHTMLLine 1 "None found"
+		}
+		WriteHTMLLine 0 ""
+	}
+
+	Write-Verbose "$(Get-Date): Finished Creating Appendix A VDA Registry Items"
+	Write-Verbose "$(Get-Date): "
+}
+#endregion
+
+#region AppendixB
+Function OutputAppendixB
+{
+	Write-Verbose "$(Get-Date): Create Appendix B Controller Registry Items"
+
+	#sort the array by regkey, regvalue and servername
+	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort-Object RegKey, RegValue, ComputerName
+	
+	If($MSWord -or $PDF)
+	{
+		$selection.InsertNewPage()
+		WriteWordLine 3 0 "Appendix B - Controller Registry Items"
+		WriteWordLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on Controllers"
+		WriteWordLine 0 0 "These items may or may not be needed"
+		WriteWordLine 0 0 "This Appendix is for Controller comparison only"
+		WriteWordLine 0 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:ControllerRegistryItems)
+		{
+			$AppendixWordTable = @()
+			ForEach($Item in $Script:ControllerRegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				{
+					$AppendixWordTable += @{ 
+					RegKey = "";
+					RegValue = "";
+					RegData = "";
+					ComputerName = "";
+					}
+				}
+
+				$AppendixWordTable += @{ 
+				RegKey = $Item.RegKey;
+				RegValue = $Item.RegValue;
+				RegData = $Item.Value;
+				ComputerName = $Item.ComputerName;
+				}
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$Table = AddWordTable -Hashtable $AppendixWordTable `
+			-Columns RegKey, RegValue, RegData, ComputerName `
+			-Headers "Registry Key", "Registry Value", "Data", "Computer Name" `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
+
+			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
+		}
+	}
+	ElseIf($Text)
+	{
+		Line 0 "Appendix B - Controller Registry Items"
+		Line 0 "Miscellaneous Registry Items That May or May Not Exist on Controllers"
+		Line 0 "These items may or may not be needed"
+		Line 0 "This Appendix is for Controller comparison only"
+		Line 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:ControllerRegistryItems)
+		{
+			ForEach($Item in $Script:ControllerRegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				{
+					Line 0 ""
+				}
+
+				Line 0 "Registry Key`t: " $Item.RegKey
+				Line 0 "Registry Value`t: " $Item.RegValue
+				Line 0 "Data`t`t: " $Item.Value
+				Line 0 "Controller Name`t: " $Item.ComputerName
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+		}
+		Else
+		{
+			Line 1 "<None found>"
+		}
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 3 0 "Appendix B - Controller Registry Items"
+		WriteHTMLLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on Controllers"
+		WriteHTMLLine 0 0 "These items may or may not be needed"
+		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
+		WriteHTMLLine 0 0 ""
+		$rowdata = @()
+		
+		$Save = ""
+		$First = $True
+		If($Script:ControllerRegistryItems)
+		{
+			ForEach($Item in $Script:ControllerRegistryItems)
+			{
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
+				{
+					$rowdata += @(,("",$htmlwhite))
+				}
+
+				$rowdata += @(,(
+				$Item.RegKey,$htmlwhite,
+				$Item.RegValue,$htmlwhite,
+				$Item.Value,$htmlwhite,
+				$Item.ComputerName,$htmlwhite))
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$columnHeaders = @(
+			'Registry Key',($htmlsilver -bor $htmlbold),
+			'Registry Key',($htmlsilver -bor $htmlbold),
+			'Data',($htmlsilver -bor $htmlbold),
+			'Controller Name',($htmlsilver -bor $htmlbold))
+
+			$msg = ""
+			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		}
+		Else
+		{
+			WriteHTMLLine 1 "None found"
+		}
+		WriteHTMLLine 0 ""
+	}
+
+	Write-Verbose "$(Get-Date): Finished Creating Appendix B Controller Registry Items"
+	Write-Verbose "$(Get-Date): "
 }
 #endregion
 
@@ -33438,6 +34287,16 @@ If($Section -eq "All" -or $Section -eq "Zones")
 If($Section -eq "All")
 {
 	ProcessSummaryPage
+}
+
+If($VDARegistryKeys)
+{
+	OutputAppendixA #V2.20
+}
+
+If($BrokerRegistryKeys)
+{
+	OutputAppendixB	#V2.20
 }
 #endregion
 
