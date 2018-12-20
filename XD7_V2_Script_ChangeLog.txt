@@ -3,6 +3,11 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.20.1 20-Dec-2018
+#	Added variable $Script:AllControllerRegistryItems
+#	Reworked the variable $Script:ControllerRegistryItems
+#	Fixed Function OutputAppendixB to use $Script:AllControllerRegistryItems
+
 #Version 2.20 20-Dec-2018
 #	Updated for XenApp/XenDesktop 1811
 #	Added new MinimumFunctionalLevel L7_20 (1811 or newer) - (Thanks to Carl Stalhood)
