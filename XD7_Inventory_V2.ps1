@@ -988,7 +988,7 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.20
+	VERSION: 2.20.1
 	AUTHOR: Carl Webster
 	LASTEDIT: December 20, 2018
 #>
@@ -1187,6 +1187,11 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.20.1 20-Dec-2018
+#	Added variable $Script:AllControllerRegistryItems
+#	Reworked the variable $Script:ControllerRegistryItems
+#	Fixed Function OutputAppendixB to use $Script:AllControllerRegistryItems
 
 #Version 2.20 20-Dec-2018
 #	Updated for XenApp/XenDesktop 1811
@@ -30636,6 +30641,9 @@ Function ProcessControllers
 	Write-Verbose "$(Get-Date): `tRetrieving Controller data"
 	
 	$Script:TotalControllers = 0
+	#Fix V2.20.1
+	$Script:ControllerRegistryItems = New-Object System.Collections.ArrayList
+	$Script:AllControllerRegistryItems = New-Object System.Collections.ArrayList	
 	
 	$Controllers = Get-BrokerController @XDParams2 -SortBy DNSName
 
@@ -30727,9 +30735,11 @@ Function OutputControllers
 		
 		If($BrokerRegistryKeys)
 		{
-			$Script:ControllerRegistryItems = New-Object System.Collections.ArrayList
 			GetControllerRegistryKeys $Controller.DNSName
 			OutputControllerRegistryKeys
+			#Fix V2.20.1
+			$Script:AllControllerRegistryItems += $Script:ControllerRegistryItems
+			$Script:ControllerRegistryItems = New-Object System.Collections.ArrayList
 		}
 	}
 
@@ -34046,7 +34056,8 @@ Function OutputAppendixB
 	Write-Verbose "$(Get-Date): Create Appendix B Controller Registry Items"
 
 	#sort the array by regkey, regvalue and servername
-	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort-Object RegKey, RegValue, ComputerName
+	#Fix V2.20.1
+	$Script:AllControllerRegistryItems = $Script:AllControllerRegistryItems | Sort-Object RegKey, RegValue, ComputerName
 	
 	If($MSWord -or $PDF)
 	{
@@ -34059,10 +34070,10 @@ Function OutputAppendixB
 		
 		$Save = ""
 		$First = $True
-		If($Script:ControllerRegistryItems)
+		If($Script:AllControllerRegistryItems)
 		{
 			$AppendixWordTable = @()
-			ForEach($Item in $Script:ControllerRegistryItems)
+			ForEach($Item in $Script:AllControllerRegistryItems)
 			{
 				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
 				{
@@ -34111,9 +34122,9 @@ Function OutputAppendixB
 		
 		$Save = ""
 		$First = $True
-		If($Script:ControllerRegistryItems)
+		If($Script:AllControllerRegistryItems)
 		{
-			ForEach($Item in $Script:ControllerRegistryItems)
+			ForEach($Item in $Script:AllControllerRegistryItems)
 			{
 				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
 				{
@@ -34148,9 +34159,9 @@ Function OutputAppendixB
 		
 		$Save = ""
 		$First = $True
-		If($Script:ControllerRegistryItems)
+		If($Script:AllControllerRegistryItems)
 		{
-			ForEach($Item in $Script:ControllerRegistryItems)
+			ForEach($Item in $Script:AllControllerRegistryItems)
 			{
 				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())")
 				{
