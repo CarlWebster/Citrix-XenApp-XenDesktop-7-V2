@@ -988,9 +988,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.20.1
+	VERSION: 2.20.2
 	AUTHOR: Carl Webster
-	LASTEDIT: December 20, 2018
+	LASTEDIT: December 26, 2018
 #>
 
 #endregion
@@ -1187,6 +1187,9 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.20.2 26-Dec-2018
+#	Fixed Function OutputAppendixA to fix duplicate VDA registry lines
 
 #Version 2.20.1 20-Dec-2018
 #	Added variable $Script:AllControllerRegistryItems
@@ -33917,7 +33920,7 @@ Function OutputAppendixA
 			$AppendixWordTable = @()
 			ForEach($Item in $Script:ALLVDARegistryItems)
 			{
-				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)")
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$($Item.VDAType)")
 				{
 					$AppendixWordTable += @{ 
 					RegKey = "";
@@ -33935,7 +33938,7 @@ Function OutputAppendixA
 				VDAType = $Item.VDAType.Substring(0,1);
 				ComputerName = $Item.ComputerName;
 				}
-				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)"
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$($Item.VDAType)"
 				If($First)
 				{
 					$First = $False
@@ -33971,7 +33974,7 @@ Function OutputAppendixA
 		{
 			ForEach($Item in $Script:ALLVDARegistryItems)
 			{
-				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)")
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$($Item.VDAType)")
 				{
 					Line 0 ""
 				}
@@ -33981,7 +33984,7 @@ Function OutputAppendixA
 				Line 0 "Data`t`t: " $Item.Value
 				Line 0 "VDA Type`t: " $Item.VDAType
 				Line 0 "Computer Name`t: " $Item.ComputerName
-				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)"
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$($Item.VDAType)"
 				If($First)
 				{
 					$First = $False
@@ -34010,7 +34013,7 @@ Function OutputAppendixA
 			$rowdata = @()
 			ForEach($Item in $Script:AllVDARegistryItems)
 			{
-				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)")
+				If(!$First -and $Save -ne "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$($Item.VDAType)")
 				{
 					$rowdata += @(,(
 					"",$htmlwhite))
@@ -34022,7 +34025,7 @@ Function OutputAppendixA
 				$Item.Value,$htmlwhite,
 				$Item.VDAType,$htmlwhite,
 				$Item.ComputerName,$htmlwhite))
-				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$(Item.VDAType)"
+				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$($Item.VDAType)"
 				If($First)
 				{
 					$First = $False
