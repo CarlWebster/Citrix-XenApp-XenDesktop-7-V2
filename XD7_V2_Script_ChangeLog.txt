@@ -3,6 +3,9 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.20.2 26-Dec-2018
+#	Fixed Function OutputAppendixA to fix duplicate VDA registry lines
+
 #Version 2.20.1 20-Dec-2018
 #	Added variable $Script:AllControllerRegistryItems
 #	Reworked the variable $Script:ControllerRegistryItems
