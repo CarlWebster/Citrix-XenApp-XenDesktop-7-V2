@@ -1188,6 +1188,10 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.21
+#	Added License Server version
+#	Added the restart schedule "Frequency notification" to Delivery Group details
+
 #Version 2.20.2 26-Dec-2018
 #	Fixed Function OutputAppendixA to fix duplicate VDA registry lines
 
@@ -11031,6 +11035,14 @@ Function OutputDeliveryGroupDetails
 			
 			If($? -and $Null -ne $RestartSchedule)
 			{
+				#added in V2.21
+				Switch($RestartSchedule.WarningRepeatInterval)
+				{
+					0	{$RestartScheduleWarningRepeatInterval = "Do not repeat"}
+					5	{$RestartScheduleWarningRepeatInterval = "Every 5 minutes"} 
+					Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
+				}
+			
 				$ScriptInformation += @{Data = "Restart machines automatically"; Value = "Yes"; }
 
 				If($ChkTags -eq $True)
@@ -11075,14 +11087,14 @@ Function OutputDeliveryGroupDetails
 				{
 					$tmp = "Do not send a notification"
 					$ScriptInformation += @{Data = "Send notification to users"; Value = $tmp; }
-			}
+				}
 				Else
 				{
 					$tmp = "$($RestartSchedule.WarningDuration) minutes before user is logged off"
 					$ScriptInformation += @{Data = "Send notification to users"; Value = $tmp; }
 					$ScriptInformation += @{Data = "Notification message"; Value = $RestartSchedule.WarningMessage; }
 				}
-				
+				$ScriptInformation += @{Data = "Notification frequency"; Value = $RestartScheduleWarningRepeatInterval; }
 			}
 			Else
 			{
@@ -11477,6 +11489,14 @@ Function OutputDeliveryGroupDetails
 			
 			If($? -and $Null -ne $RestartSchedule)
 			{
+				#added in V2.21
+				Switch($RestartSchedule.WarningRepeatInterval)
+				{
+					0	{$RestartScheduleWarningRepeatInterval = "Do not repeat"}
+					5	{$RestartScheduleWarningRepeatInterval = "Every 5 minutes"} 
+					Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
+				}
+
 				Line 1 "Restart machines automatically`t`t`t: " "Yes"
 
 				If($ChkTags -eq $True)
@@ -11528,6 +11548,7 @@ Function OutputDeliveryGroupDetails
 					Line 1 "Send notification to users`t`t`t: " $tmp
 					Line 1 "Notification message`t`t`t`t: " $RestartSchedule.WarningMessage
 				}
+				Line 1 "Notification frequency`t`t`t`t: " $RestartScheduleWarningRepeatInterval
 				
 			}
 			Else
@@ -11905,6 +11926,14 @@ Function OutputDeliveryGroupDetails
 			
 			If($? -and $Null -ne $RestartSchedule)
 			{
+				#added in V2.21
+				Switch($RestartSchedule.WarningRepeatInterval)
+				{
+					0	{$RestartScheduleWarningRepeatInterval = "Do not repeat"}
+					5	{$RestartScheduleWarningRepeatInterval = "Every 5 minutes"} 
+					Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
+				}
+
 				$rowdata += @(,('Restart machines automatically',($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
 
 				If($ChkTags -eq $True)
@@ -11956,7 +11985,7 @@ Function OutputDeliveryGroupDetails
 					$rowdata += @(,('Send notification to users',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
 					$rowdata += @(,('Notification message',($htmlsilver -bor $htmlbold),$RestartSchedule.WarningMessage,$htmlwhite))
 				}
-				
+					$rowdata += @(,('Notification frequency',($htmlsilver -bor $htmlbold),$RestartScheduleWarningRepeatInterval,$htmlwhite))
 			}
 			Else
 			{
@@ -31307,7 +31336,8 @@ Function ProcessHosting
 			{	
 				$pvdstorage += $storage.StoragePath
 			}
-			ForEach($network in $item.NetworkPath)
+			#ForEach($network in $item.NetworkPath)
+			ForEach($network in $item.PermittedNetworks)
 			{	
 				$vmnetwork += $network
 			}
@@ -31350,7 +31380,7 @@ Function ProcessHosting
 			}
 			ForEach($network in $vmnetwork)
 			{
-				If($network.Contains($Hypervisor.Name))
+				If($network.NetworkPath.Contains($Hypervisor.Name))
 				{
 					$hypnetwork += $network
 				}
@@ -31410,7 +31440,7 @@ Function ProcessHosting
 				$txt = "Unable to retrieve Hosting Connections"
 				OutputWarning $txt
 			}
-			OutputHosting $Hypervisor $xConnectionType $xAddress $xState $xUserName $xMaintMode $xStorageName $xHAAddress $xPowerActions $xScopes $xZoneName
+			OutputHosting $Hypervisor $xConnectionType $xAddress $xState $xUserName $xMaintMode $xStorageName $xHAAddress $xPowerActions $xScopes $xZoneName $vmstorage $pvdstorage $vmnetwork
 		}
 	}
 	ElseIf($? -and $Null -eq $Hypervisors)
@@ -31428,7 +31458,7 @@ Function ProcessHosting
 
 Function OutputHosting
 {
-	Param([object] $Hypervisor, [string] $xConnectionType, [string] $xAddress, [string] $xState, [string] $xUserName, [bool] $xMaintMode, [string] $xStorageName, [array] $xHAAddress, [array]$xPowerActions, [string] $xScopes, [string] $xZoneName)
+	Param([object] $Hypervisor, [string] $xConnectionType, [string] $xAddress, [string] $xState, [string] $xUserName, [bool] $xMaintMode, [string] $xStorageName, [array] $xHAAddress, [array]$xPowerActions, [string] $xScopes, [string] $xZoneName, [array] $vmstorage, [array] $pvdstorage, [array] $vmnetwork)
 
 	$xHAAddress = $xHAAddress | Sort-Object 
 	
@@ -31479,6 +31509,7 @@ Function OutputHosting
 			$ScriptInformation.Add(@{Data = "Zone"; Value = $xZoneName; }) > $Null
 		}
 		$ScriptInformation.Add(@{Data = "Storage resource name"; Value = $xStorageName; }) > $Null
+		#$ScriptInformation.Add(@{Data = "Networks"; Value = $xStorageName; }) > $Null
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -32208,6 +32239,26 @@ Function OutputLicensingOverview
 	#V2.15 added getting the IP address for the license server
 	$LicenseServerIPAddress = Get-IPAddress $Script:XDSite1.LicenseServerName
 	
+	#V2.21 add getting version
+	#For 64-bit OS, navigate to HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Citrix\LicenseServer\Install
+	#For 32-bit OS, navigate to HKEY_LOCAL_MACHINE\SOFTWARE\Citrix\LicenseServer\Install
+	#Look for REG_SZ called Version -- This key contains the License server version
+	$LicenseServerVersion = $Null
+	$tmparray = $Script:XDSite1.LicenseServerName.Split(".")
+	$ShortLicenseServerName = $tmparray[0]
+	$tmparray = $Null
+	$LicenseServerVersion = Get-RegistryValue2 "HKLM:\SOFTWARE\Wow6432Node\Citrix\LicenseServer\Install" "Version" $ShortLicenseServerName
+	
+	If($Null -eq $LicenseServerVersion)
+	{
+		$LicenseServerVersion = Get-RegistryValue2 "HKLM:\SOFTWARE\Citrix\LicenseServer\Install" "Version" $ShortLicenseServerName
+
+		If($Null -eq $LicenseServerVersion)
+		{
+			$LicenseServerVersion = "Unable to retrieve License Server version"
+		}
+	}
+	
 	$LicenseEditionType = ""
 	$LicenseModelType = ""
 
@@ -32258,6 +32309,7 @@ Function OutputLicensingOverview
 		$ScriptInformation.Add(@{Data = "License model"; Value = $LicenseModelType; }) > $Null
 		$ScriptInformation.Add(@{Data = "Required SA date"; Value = $tmpdate; }) > $Null
 		$ScriptInformation.Add(@{Data = "XenDesktop license use"; Value = $Script:XDSite1.LicensedSessionsActive; }) > $Null
+		$ScriptInformation.Add(@{Data = "Version"; Value = $LicenseServerVersion; }) > $Null
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -32287,6 +32339,7 @@ Function OutputLicensingOverview
 		Line 0 "License model`t`t: " $LicenseModelType
 		Line 0 "Required SA date`t: " $tmpdate
 		Line 0 "XenDesktop license use`t: " $Script:XDSite1.LicensedSessionsActive
+		Line 0 "Version`t`t`t: " $LicenseServerVersion
 		Line 0 ""
 	}
 	ElseIf($HTML)
@@ -32302,6 +32355,7 @@ Function OutputLicensingOverview
 		$rowdata += @(,('License model',($htmlsilver -bor $htmlbold),$LicenseModelType,$htmlwhite))
 		$rowdata += @(,('Required SA date',($htmlsilver -bor $htmlbold),$tmpdate,$htmlwhite))
 		$rowdata += @(,('XenDesktop license use',($htmlsilver -bor $htmlbold),$Script:XDSite1.LicensedSessionsActive,$htmlwhite))
+		$rowdata += @(,('Version',($htmlsilver -bor $htmlbold),$LicenseServerVersion,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150","125")
