@@ -1190,7 +1190,10 @@ Param(
 
 #Version 2.21
 #	Added License Server version
+#	Added missing data in the hosting section for Networks, Standard Storage, Personal vDisk Storage
 #	Added the restart schedule "Frequency notification" to Delivery Group details
+#	Fixed, in Functions OutputDesktopOSMachine and OutputServerOSMachine, the output of users
+#	Fixed bug in Function ProcessHosting where the comparison for $Hypervisor.Name was done incorrectly
 #	For Application details, changed "Description" to "Description and keywords"
 
 #Version 2.20.2 26-Dec-2018
@@ -31320,6 +31323,7 @@ Function ProcessHosting
 
 	$vmstorage = @()
 	$pvdstorage = @()
+	$tmpstorage = @() #added V2.21
 	$vmnetwork = @()
 
 	Write-Verbose "$(Get-Date): `tProcessing Hosting Units"
@@ -31337,7 +31341,12 @@ Function ProcessHosting
 			{	
 				$pvdstorage += $storage.StoragePath
 			}
-			#ForEach($network in $item.NetworkPath)
+			#added temp storage in V2.21
+			ForEach($storage in $item.AdditionalStorage.StorageLocations)
+			{	
+				$tmpstorage += $storage.StoragePath
+			}
+			#corrected in V2.21
 			ForEach($network in $item.PermittedNetworks)
 			{	
 				$vmnetwork += $network
@@ -31365,26 +31374,50 @@ Function ProcessHosting
 			$hypvmstorage = @()
 			$hyppvdstorage = @()
 			$hypnetwork = @()
+			#V2.21 fixed bug where the comparison for $Hypervisor.Name was done incorrectly
 			ForEach($storage in $vmstorage)
 			{
-				If($storage.Contains($Hypervisor.Name))
+                $tmpArray = $storage.Split("\")
+                $tmpHypName = $tmpArray[2]
+				If($tmpHypName -eq $Hypervisor.Name)
 				{		
 					$hypvmstorage += $storage		
 				}
+				$tmpArray = $Null
+				$tmpHypName = $Null
 			}
 			ForEach($storage in $pvdstorage)
 			{
-				If($storage.Contains($Hypervisor.Name))
+                $tmpArray = $storage.Split("\")
+                $tmpHypName = $tmpArray[2]
+				If($tmpHypName -eq $Hypervisor.Name)
 				{
 					$hyppvdstorage += $storage		
 				}
+				$tmpArray = $Null
+				$tmpHypName = $Null
+			}
+			ForEach($storage in $tmpstorage)
+			{
+                $tmpArray = $storage.Split("\")
+                $tmpHypName = $tmpArray[2]
+				If($tmpHypName -eq $Hypervisor.Name)
+				{		
+					$hyptmpstorage += $storage		
+				}
+				$tmpArray = $Null
+				$tmpHypName = $Null
 			}
 			ForEach($network in $vmnetwork)
 			{
-				If($network.NetworkPath.Contains($Hypervisor.Name))
+                $tmpArray = $network.NetworkPath.Split("\")
+                $tmpHypName = $tmpArray[2]
+				If($tmpHypName -eq $Hypervisor.Name)
 				{
 					$hypnetwork += $network
 				}
+				$tmpArray = $Null
+				$tmpHypName = $Null
 			}
 			$xStorageName = ""
 			ForEach($Unit in $HostingUnits)
@@ -31441,7 +31474,10 @@ Function ProcessHosting
 				$txt = "Unable to retrieve Hosting Connections"
 				OutputWarning $txt
 			}
-			OutputHosting $Hypervisor $xConnectionType $xAddress $xState $xUserName $xMaintMode $xStorageName $xHAAddress $xPowerActions $xScopes $xZoneName $vmstorage $pvdstorage $vmnetwork
+			OutputHosting $Hypervisor $xConnectionType $xAddress $xState `
+			$xUserName $xMaintMode $xStorageName $xHAAddress `
+			$xPowerActions $xScopes $xZoneName $hypvmstorage `
+			$hyppvdstorage $hypnetwork $hyptmpstorage
 		}
 	}
 	ElseIf($? -and $Null -eq $Hypervisors)
@@ -31459,9 +31495,83 @@ Function ProcessHosting
 
 Function OutputHosting
 {
-	Param([object] $Hypervisor, [string] $xConnectionType, [string] $xAddress, [string] $xState, [string] $xUserName, [bool] $xMaintMode, [string] $xStorageName, [array] $xHAAddress, [array]$xPowerActions, [string] $xScopes, [string] $xZoneName, [array] $vmstorage, [array] $pvdstorage, [array] $vmnetwork)
+	Param([object] $Hypervisor, 
+	[string] $xConnectionType, 
+	[string] $xAddress, 
+	[string] $xState, 
+	[string] $xUserName, 
+	[bool] $xMaintMode, 
+	[string] $xStorageName, 
+	[array] $xHAAddress, 
+	[array]$xPowerActions, 
+	[string] $xScopes, 
+	[string] $xZoneName, 
+	[array] $hypvmstorage, 
+	[array] $hyppvdstorage, 
+	[array] $hypnetwork,
+	[array] $hyptmpstorage)
 
 	$xHAAddress = $xHAAddress | Sort-Object 
+	
+	#get array of standard storage - added in V2.21
+	$HypStdStorage = @()
+	ForEach($path in $hypvmstorage)
+	{
+		$tmp1 = $path.split("\")
+		$cnt1 = $tmp1.Length
+		$tmp2 = $tmp1[$cnt1-1]
+
+		ForEach($tmp in $tmp2)
+		{
+			$tmp3 = $tmp.Split(".")
+			$HypStdStorage += $tmp3[0]
+		}
+	}
+	
+	#get array of PvD storage - added in V2.21
+	$HypPersonalvDiskStorage = @()
+	ForEach($path in $HypPvDStorage)
+	{
+		$tmp1 = $path.split("\")
+		$cnt1 = $tmp1.Length
+		$tmp2 = $tmp1[$cnt1-1]
+
+		ForEach($tmp in $tmp2)
+		{
+			$tmp3 = $tmp.Split(".")
+			$HypPersonalvDiskStorage += $tmp3[0]
+		}
+	}
+	
+	#get array of temporary storage - added in V2.21
+	$HypTempStorage = @()
+	ForEach($path in $hyptmpstorage)
+	{
+		$tmp1 = $path.split("\")
+		$cnt1 = $tmp1.Length
+		$tmp2 = $tmp1[$cnt1-1]
+
+		ForEach($tmp in $tmp2)
+		{
+			$tmp3 = $tmp.Split(".")
+			$HypTempStorage += $tmp3[0]
+		}
+	}
+	
+	#get array of nework names - added in V2.21
+	$HypNetworkName = @()
+	ForEach($path in $hypnetwork.NetworkPath)
+	{
+		$tmp1 = $path.split("\")
+		$cnt1 = $tmp1.Length
+		$tmp2 = $tmp1[$cnt1-1]
+
+		ForEach($tmp in $tmp2)
+		{
+			$tmp3 = $tmp.Split(".")
+			$HypNetworkName += $tmp3[0]
+		}
+	}
 	
 	$xxConnectionType = ""
 	Switch ($xConnectionType)
@@ -31510,7 +31620,67 @@ Function OutputHosting
 			$ScriptInformation.Add(@{Data = "Zone"; Value = $xZoneName; }) > $Null
 		}
 		$ScriptInformation.Add(@{Data = "Storage resource name"; Value = $xStorageName; }) > $Null
-		#$ScriptInformation.Add(@{Data = "Networks"; Value = $xStorageName; }) > $Null
+		#addin V2.21
+		If($HypNetworkName.Length -gt 0)
+		{
+			$ScriptInformation.Add(@{Data = "Networks"; Value = $HypNetworkName[0]; }) > $Null
+			$cnt = -1
+			ForEach($item in $HypNetworkName)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					$ScriptInformation.Add(@{Data = ""; Value = $item; }) > $Null
+				}
+			}
+		}
+		#added in V2.21
+		If($HypStdStorage.Length -gt 0)
+		{
+			$ScriptInformation.Add(@{Data = "Standard storage"; Value = $HypStdStorage[0]; }) > $Null
+			$cnt = -1
+			ForEach($item in $HypStdStorage)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					$ScriptInformation.Add(@{Data = ""; Value = $item; }) > $Null
+				}
+			}
+		}
+		#added in V2.21
+		If($HypPersonalvDiskStorage.Length -gt 0)
+		{
+			$ScriptInformation.Add(@{Data = "Personal vDisk storage"; Value = $HypPersonalvDiskStorage[0]; }) > $Null
+			$cnt = -1
+			ForEach($item in $HypPersonalvDiskStorage)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					$ScriptInformation.Add(@{Data = ""; Value = $item; }) > $Null
+				}
+			}
+		}
+		#added in V2.21
+		If($HypTempStorage.Length -gt 0)
+		{
+			$ScriptInformation.Add(@{Data = "Temporary storage"; Value = $HypTempStorage[0]; }) > $Null
+			$cnt = -1
+			ForEach($item in $HypTempStorage)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					$ScriptInformation.Add(@{Data = ""; Value = $item; }) > $Null
+				}
+			}
+		}
+
 		$Table = AddWordTable -Hashtable $ScriptInformation `
 		-Columns Data,Value `
 		-List `
@@ -31586,6 +31756,66 @@ Function OutputHosting
 			Line 1 "Zone`t`t`t: " $xZoneName
 		}
 		Line 1 "Storage resource name`t: " $xStorageName
+		#addedin V2.21
+		If($HypNetworkName.Length -gt 0)
+		{
+			Line 1 "Networks`t`t: " $HypNetworkName[0]
+			$cnt = -1
+			ForEach($item in $HypNetworkName)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					Line 4 "  " $item
+				}
+			}
+		}
+		#added in V2.21
+		If($HypStdStorage.Length -gt 0)
+		{
+			Line 1 "Standard storage`t: " $HypStdStorage[0]
+			$cnt = -1
+			ForEach($item in $HypStdStorage)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					Line 4 "  " $item
+				}
+			}
+		}
+		#added in V2.21
+		If($HypPersonalvDiskStorage.Length -gt 0)
+		{
+			Line 1 "Personal vDisk storage`t: " $HypPersonalvDiskStorage[0]
+			$cnt = -1
+			ForEach($item in $HypPersonalvDiskStorage)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					Line 4 "  " $item
+				}
+			}
+		}
+		#added in V2.21
+		If($HypTempStorage.Length -gt 0)
+		{
+			Line 1 "Temporary storage`t: " $HypTempStorage[0]
+			$cnt = -1
+			ForEach($item in $HypTempStorage)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					Line 4 "  " $item
+				}
+			}
+		}
 		Line 0 ""
 		
 		Line 1 "Advanced"
@@ -31627,6 +31857,66 @@ Function OutputHosting
 			$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$xZoneName,$htmlwhite))
 		}
 		$rowdata += @(,('Storage resource name',($htmlsilver -bor $htmlbold),$xStorageName,$htmlwhite))
+		#added in V2.21
+		If($HypNetworkName.Length -gt 0)
+		{
+			$rowdata += @(,('Network',($htmlsilver -bor $htmlbold),$HypNetworkName[0],$htmlwhite))
+			$cnt = -1
+			ForEach($item in $HypNetworkName)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$item,$htmlwhite))
+				}
+			}
+		}
+		#added in V2.21
+		If($HypStdStorage.Length -gt 0)
+		{
+			$rowdata += @(,('Standard storage',($htmlsilver -bor $htmlbold),$HypStdStorage[0],$htmlwhite))
+			$cnt = -1
+			ForEach($item in $HypStdStorage)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$item,$htmlwhite))
+				}
+			}
+		}
+		#added in V2.21
+		If($HypPersonalvDiskStorage.Length -gt 0)
+		{
+			$rowdata += @(,('Personal vDisk storage',($htmlsilver -bor $htmlbold),$HypPersonalvDiskStorage[0],$htmlwhite))
+			$cnt = -1
+			ForEach($item in $HypPersonalvDiskStorage)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$item,$htmlwhite))
+				}
+			}
+		}
+		#added in V2.21
+		If($HypTempStorage.Length -gt 0)
+		{
+			$rowdata += @(,('Temporary storage',($htmlsilver -bor $htmlbold),$HypTempStorage[0],$htmlwhite))
+			$cnt = -1
+			ForEach($item in $HypTempStorage)
+			{
+				$cnt++
+				
+				If($cnt -gt 0)
+				{
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$item,$htmlwhite))
+				}
+			}
+		}
 
 		$msg = ""
 		$columnWidths = @("150","200")
@@ -31807,17 +32097,6 @@ Function OutputDesktopOSMachine
 	Write-Verbose "$(Get-Date): `t`t`tOutput desktop $($Desktop.DNSName)"
 	If($MSWord -or $PDF)
 	{
-		If(![String]::IsNullOrEmpty($Desktop.AssociatedUserNames))
-		{
-			ForEach($AssociatedUserName in $Desktop.AssociatedUserNames)
-			{
-				$xName += $AssociatedUserName
-			}
-		}
-		If($xName -eq "")
-		{
-			$xName = "Not assigned"
-		}
 		If($Desktop.InMaintenanceMode)
 		{
 			$xMaintMode = "On"
@@ -31837,7 +32116,22 @@ Function OutputDesktopOSMachine
 		$ScriptInformation.Add(@{Data = "Name"; Value = $Desktop.DNSName; }) > $Null
 		$ScriptInformation.Add(@{Data = "Machine Catalog"; Value = $Desktop.CatalogName; }) > $Null
 		$ScriptInformation.Add(@{Data = "Delivery Group"; Value = $Desktop.DesktopGroupName; }) > $Null
-		$ScriptInformation.Add(@{Data = "User"; Value = $xName; }) > $Null
+		#fixed in 2.21
+		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
+		{
+			$cnt = -1
+			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
+			{
+				If($cnt -eq 0)
+				{
+					$ScriptInformation.Add(@{Data = "User"; Value = $AssociatedUserName; }) > $Null
+				}
+				Else
+				{
+					$ScriptInformation.Add(@{Data = ""; Value = $AssociatedUserName; }) > $Null
+				}
+			}
+		}
 		$ScriptInformation.Add(@{Data = "Maintenance Mode"; Value = $xMaintMode; }) > $Null
 		$ScriptInformation.Add(@{Data = "Persist User Changes"; Value = $xUserChanges; }) > $Null
 		$ScriptInformation.Add(@{Data = "Power State"; Value = $Desktop.PowerState; }) > $Null
@@ -31867,13 +32161,23 @@ Function OutputDesktopOSMachine
 		{
 			Line 1 "Delivery Group`t`t: " $Desktop.DesktopGroupName
 		}
-		If(![String]::IsNullOrEmpty($Desktop.AssociatedUserNames))
+		#fixed in 2.21
+		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
 		{
-			ForEach($AssociatedUserName in $Desktop.AssociatedUserNames)
+			$cnt = -1
+			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
 			{
-				$xName += $AssociatedUserName
+				$cnt++
+				If($cnt -eq 0)
+				{
+					Line 1 "User`t`t`t: " $AssociatedUserName
+				}
+				Else
+				{
+					Line 4 "  " $AssociatedUserName
+				}
 			}
-			Line 1 "User`t`t`t: " $xName
+			
 		}
 		If($Desktop.InMaintenanceMode)
 		{
@@ -31921,18 +32225,20 @@ Function OutputDesktopOSMachine
 		{
 			$rowdata += @(,('Delivery Group',($htmlsilver -bor $htmlbold),$Desktop.DesktopGroupName,$htmlwhite))
 		}
-		If(![String]::IsNullOrEmpty($Desktop.AssociatedUserNames))
+		#fixed in 2.21
+		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
 		{
 			$cnt = -1
-			ForEach($AssociatedUserName in $Desktop.AssociatedUserNames)
+			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
 			{
+				$cnt++
 				If($cnt -eq 0)
 				{
 					$rowdata += @(,('User',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
 				}
 				Else
 				{
-					$rowdata += @(,('User',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
 				}
 			}
 		}
@@ -31959,17 +32265,6 @@ Function OutputServerOSMachine
 
 	If($MSWord -or $PDF)
 	{
-		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
-		{
-			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
-			{
-				$xName += $AssociatedUserName + "`n"
-			}
-		}
-		If($xName -eq "")
-		{
-			$xName = "Not assigned"
-		}
 		If($Server.InMaintenanceMode)
 		{
 			$xMaintMode = "On"
@@ -31989,7 +32284,22 @@ Function OutputServerOSMachine
 		$ScriptInformation.Add(@{Data = "Name"; Value = $Server.DNSName; }) > $Null
 		$ScriptInformation.Add(@{Data = "Machine Catalog"; Value = $Server.CatalogName; }) > $Null
 		$ScriptInformation.Add(@{Data = "Delivery Group"; Value = $Server.DesktopGroupName; }) > $Null
-		$ScriptInformation.Add(@{Data = "User"; Value = $xName; }) > $Null
+		#fixed in 2.21
+		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
+		{
+			$cnt = -1
+			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
+			{
+				If($cnt -eq 0)
+				{
+					$ScriptInformation.Add(@{Data = "User"; Value = $AssociatedUserName; }) > $Null
+				}
+				Else
+				{
+					$ScriptInformation.Add(@{Data = ""; Value = $AssociatedUserName; }) > $Null
+				}
+			}
+		}
 		$ScriptInformation.Add(@{Data = "Maintenance Mode"; Value = $xMaintMode; }) > $Null
 		$ScriptInformation.Add(@{Data = "Persist User Changes"; Value = $xUserChanges; }) > $Null
 		$ScriptInformation.Add(@{Data = "Power State"; Value = $Server.PowerState; }) > $Null
@@ -32019,13 +32329,23 @@ Function OutputServerOSMachine
 		{
 			Line 1 "Delivery Group`t`t: " $Server.DesktopGroupName
 		}
+		#fixed in 2.21
 		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
 		{
+			$cnt = -1
 			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
 			{
-				$xName += $AssociatedUserName + "`n"
+				$cnt++
+				If($cnt -eq 0)
+				{
+					Line 1 "User`t`t`t: " $AssociatedUserName
+				}
+				Else
+				{
+					Line 4 "  " $AssociatedUserName
+				}
 			}
-			Line 1 "User`t`t`t: " $xName
+			
 		}
 		If($Server.InMaintenanceMode)
 		{
@@ -32073,18 +32393,20 @@ Function OutputServerOSMachine
 		{
 			$rowdata += @(,('Delivery Group',($htmlsilver -bor $htmlbold),$Server.DesktopGroupName,$htmlwhite))
 		}
+		#fixed in 2.21
 		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
 		{
 			$cnt = -1
 			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
 			{
+				$cnt++
 				If($cnt -eq 0)
 				{
 					$rowdata += @(,('User',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
 				}
 				Else
 				{
-					$rowdata += @(,('User',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
+					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
 				}
 			}
 		}
