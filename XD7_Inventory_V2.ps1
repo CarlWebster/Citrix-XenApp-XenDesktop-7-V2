@@ -1191,6 +1191,7 @@ Param(
 #Version 2.21
 #	Added License Server version
 #	Added the restart schedule "Frequency notification" to Delivery Group details
+#	For Application details, changed "Description" to "Description and keywords"
 
 #Version 2.20.2 26-Dec-2018
 #	Fixed Function OutputAppendixA to fix duplicate VDA registry lines
@@ -13213,7 +13214,7 @@ Function OutputApplicationDetails
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
 		$ScriptInformation += @{Data = "Name (for administrator)"; Value = $Application.Name; }
 		$ScriptInformation += @{Data = "Name (for user)"; Value = $Application.PublishedName; }
-		$ScriptInformation += @{Data = "Description"; Value = $Application.Description; }
+		$ScriptInformation += @{Data = "Description and keywords"; Value = $Application.Description; }
 		$ScriptInformation += @{Data = "Delivery Group"; Value = $DeliveryGroups[0]; }
 		$cnt = -1
 		ForEach($Group in $DeliveryGroups)
@@ -13358,7 +13359,7 @@ Function OutputApplicationDetails
 	{
 		Line 1 "Name (for administrator)`t`t: " $Application.Name
 		Line 1 "Name (for user)`t`t`t`t: " $Application.PublishedName
-		Line 1 "Description`t`t`t`t: " $Application.Description
+		Line 1 "Description and keywords`t`t: " $Application.Description
 		Line 1 "Delivery Group`t`t`t`t: " $DeliveryGroups[0]
 		$cnt = -1
 		ForEach($Group in $DeliveryGroups)
@@ -13481,7 +13482,7 @@ Function OutputApplicationDetails
 		$rowdata = @()
 		$columnHeaders = @("Name (for administrator)",($htmlsilver -bor $htmlbold),$Application.Name,$htmlwhite)
 		$rowdata += @(,('Name (for user)',($htmlsilver -bor $htmlbold),$Application.PublishedName,$htmlwhite))
-		$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Application.Description,$htmlwhite))
+		$rowdata += @(,('Description and keywords',($htmlsilver -bor $htmlbold),$Application.Description,$htmlwhite))
 		$rowdata += @(,('Delivery Group',($htmlsilver -bor $htmlbold),$DeliveryGroups[0],$htmlwhite))
 		$cnt = -1
 		ForEach($Group in $DeliveryGroups)
