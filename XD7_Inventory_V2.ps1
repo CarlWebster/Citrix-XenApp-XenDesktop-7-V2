@@ -1190,11 +1190,12 @@ Param(
 
 #Version 2.21
 #	Added License Server version
-#	Added missing data in the hosting section for Networks, Standard Storage, Personal vDisk Storage
+#	Added missing data in the hosting section for Networks, Standard Storage, Personal vDisk Storage, and Temporary Storage
 #	Added the restart schedule "Frequency notification" to Delivery Group details
 #	Fixed, in Functions OutputDesktopOSMachine and OutputServerOSMachine, the output of users
 #	Fixed bug in Function ProcessHosting where the comparison for $Hypervisor.Name was done incorrectly
-#	For Application details, changed "Description" to "Description and keywords"
+#	For Application details changed "Description" to "Description and keywords"
+#	In the Delivery Controllers section added a blank line after the Word and HTML tables
 
 #Version 2.20.2 26-Dec-2018
 #	Fixed Function OutputAppendixA to fix duplicate VDA registry lines
@@ -30749,6 +30750,7 @@ Function OutputControllers
 
 			FindWordDocumentEnd
 			$Table = $Null
+			WriteWordLine 0 0 "" #added V2.21
 		}
 		ElseIf($Text)
 		{
@@ -30767,6 +30769,7 @@ Function OutputControllers
 			$msg = ""
 			$columnWidths = @("100px","250px")
 			FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+			WriteHTMLLine 0 0 "" #added V2.21
 		}
 		
 		If($BrokerRegistryKeys)
