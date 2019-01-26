@@ -157,6 +157,7 @@ SYNOPSIS
     Creates an inventory of a Citrix XenDesktop 7.8+ Site.
 
 SYNTAX
+
     C:\Scripts\XD7_Inventory_V2.ps1 [-MSWord] [-AddDateTime] [-AdminAddress 
     <String>] [-Administrators] [-AppDisks] [-Applications] [-BrokerRegistryKeys] 
     [-CompanyAddress <String>] [-CompanyEmail <String>] [-CompanyFax <String>] 
