@@ -988,9 +988,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.20.2
+	VERSION: 2.21
 	AUTHOR: Carl Webster
-	LASTEDIT: December 26, 2018
+	LASTEDIT: January 26, 2019
 #>
 
 #endregion
@@ -1191,9 +1191,13 @@ Param(
 #Version 2.21
 #	Added License Server version
 #	Added missing data in the hosting section for Networks, Standard Storage, Personal vDisk Storage, and Temporary Storage
+#	Added test to catch multiple output parameters used
 #	Added the restart schedule "Frequency notification" to Delivery Group details
+#	Changed in Function Get-IPAddress, the Catch value from $Null to "Unable to resolve IP address"
 #	Fixed, in Functions OutputDesktopOSMachine and OutputServerOSMachine, the output of users
 #	Fixed bug in Function ProcessHosting where the comparison for $Hypervisor.Name was done incorrectly
+#	Fixed in Delivery Groups details to handle multiple Desktop Entitlements and multiple Restart Schedules
+#	Fixed in Function OutputControllerRegistryKeys, added a blank line after the Word table
 #	For Application details changed "Description" to "Description and keywords"
 #	In the Delivery Controllers section added a blank line after the Word and HTML tables
 
@@ -1721,6 +1725,37 @@ If($MSWord -eq $False -and $PDF -eq $False -and $Text -eq $False -and $HTML -eq 
 }
 
 Write-Verbose "$(Get-Date): Testing output parameters"
+
+#added in V2.21
+$OutputCnt = 0
+
+If($MSWord)
+{
+	$OutputCnt++
+}
+If($PDF)
+{
+	$OutputCnt++
+}
+If($Text)
+{
+	$OutputCnt++
+}
+If($HTML)
+{
+	$OutputCnt++
+}
+
+If($OutputCnt -eq 0)
+{
+	Write-Error "No output parameter detected.  Script cannot continue"
+	Exit
+}
+ElseIf($OutputCnt -gt 1)
+{
+	Write-Error "Multiple output parameters detected.  Script cannot continue"
+	Exit
+}
 
 If($MSWord)
 {
@@ -5938,7 +5973,7 @@ Function Get-IPAddress
 	
 	Catch
 	{
-		$IP = $Null
+		$IP = "Unable to resolve IP address" #changed from $Null in V2.21
 	}
 
 	If($? -and $Null -ne $IP)
@@ -10424,72 +10459,6 @@ Function OutputDeliveryGroupDetails
 		}
 	}
 
-	$DesktopSettings = $Null
-	If($xDeliveryType -ne "Applications")
-	{
-		$DesktopSettingsIncludedUsers = @()
-		$DesktopSettingsExcludedUsers = @()
-		$DesktopSettings = Get-BrokerEntitlementPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid
-		
-		If($? -and $Null -ne $DesktopSettings)
-		{
-			If($CanRestrictToTags -eq $True)
-			{
-				$RestrictedToTag = $DesktopSettings.RestrictToTag
-			}
-			Else
-			{
-				$RestrictedToTag = "-"
-			}
-			
-			If($DesktopSettings.IncludedUserFilterEnabled -eq $True)
-			{
-				ForEach($User in $DesktopSettings.IncludedUsers)
-				{
-					$DesktopSettingsIncludedUsers += $User.Name
-				}
-				
-				[array]$DesktopSettingsIncludedUsers = $DesktopSettingsIncludedUsers | Sort-Object -unique
-			}
-			ElseIf($DesktopSettings.IncludedUserFilterEnabled -eq $False)
-			{
-				$DesktopSettingsIncludedUsers += "Allow everyone with access to this Delivery Group to use a desktop"
-			}
-			
-			If($DesktopSettings.ExcludedUserFilterEnabled -eq $True)
-			{
-				ForEach($User in $DesktopSettings.ExcludedUsers)
-				{
-					$DesktopSettingsExcludedUsers += $User.Name
-				}
-
-				[array]$DesktopSettingsExcludedUsers = $DesktopSettingsExcludedUsers | Sort-Object -unique
-			}
-			#added in V2.19
-			Switch ($DesktopSettings.SessionReconnection)
-			{
-				"Always" 			{$xSessionReconnection = "Always"; Break}
-				"DisconnectedOnly"	{$xSessionReconnection = "Disconnected Only"; Break}
-				"SameEndpointOnly"	{$xSessionReconnection = "Same Endpoint Only"; Break}
-				Default {$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSettings.SessionReconnection)"; Break}
-			}
-			#added in V2.19
-			If($Null -ne $DesktopSettings.SecureIcaRequired)
-			{
-				$xSecureIcaRequired = $DesktopSettings.SecureIcaRequired.ToString()
-			}
-		}
-		ElseIf($? -and $Null -eq $DesktopSettings)
-		{
-			$RestrictedToTag = "-"
-		}
-		Else
-		{
-			$DesktopSettings = $Null
-			$RestrictedToTag = "-"
-		}
-	}
-	
 	Switch ($Group.MinimumFunctionalLevel)
 	{
 		"L5" 	{$xVDAVersion = "5.6 FP1 (Windows XP and Windows Vista)"; Break}
@@ -10926,47 +10895,104 @@ Function OutputDeliveryGroupDetails
 			$ScriptInformation += @{Data = 'Give access to unauthenticated (anonymous) users'; Value = $SFAnonymousUsers; }
 		}
 
-		If($xDeliveryType -ne "Applications" -and $Null -ne $DesktopSettings)
+		#If($xDeliveryType -ne "Applications" -and $Null -ne $DesktopSettings)
+		If($xDeliveryType -ne "Applications")
 		{
-			$ScriptInformation += @{Data = "Desktop Entitlement"; Value = ""; }
-			$ScriptInformation += @{Data = "     Display name"; Value = $DesktopSettings.PublishedName; }
-			$ScriptInformation += @{Data = "     Description"; Value = $DesktopSettings.Description; }
-			If($CanRestrictToTags)
-			{
-				$ScriptInformation += @{Data = "     Restrict launches to machines with tag"; Value = $RestrictedToTag; }
-			}
-			$ScriptInformation += @{Data = "     Included Users"; Value = $DesktopSettingsIncludedUsers[0]; }
-			$cnt = -1
-			ForEach($tmp in $DesktopSettingsIncludedUsers)
-			{
-				$cnt++
-				If($cnt -gt 0)
-				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
-				}
-			}
+			#Fixed in V2.1 to handle multiple desktop entitlements
+			$DesktopSettings = $Null
+			$DesktopSettings = Get-BrokerEntitlementPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid
 			
-			If($DesktopSettingsExcludedUsers.Count -gt 0)
+			If($? -and $Null -ne $DesktopSettings)
 			{
-				$ScriptInformation += @{Data = "     Excluded Users"; Value = $DesktopSettingsExcludedUsers[0]; }
-				$cnt = -1
-				#V2.15 changed to use correct variable name
-				ForEach($tmp in $DesktopSettingsExcludedUsers)
+				ForEach($DesktopSetting in $DesktopSettings)
 				{
-					$cnt++
-					If($cnt -gt 0)
+					$DesktopSettingIncludedUsers = @()
+					$DesktopSettingExcludedUsers = @()
+					If($CanRestrictToTags -eq $True)
 					{
-						$ScriptInformation += @{Data = ""; Value = $tmp; }
+						$RestrictedToTag = $DesktopSetting.RestrictToTag
 					}
+					Else
+					{
+						$RestrictedToTag = "-"
+					}
+					
+					If($DesktopSetting.IncludedUserFilterEnabled -eq $True)
+					{
+						ForEach($User in $DesktopSetting.IncludedUsers)
+						{
+							$DesktopSettingIncludedUsers += $User.Name
+						}
+						
+						[array]$DesktopSettingIncludedUsers = $DesktopSettingIncludedUsers | Sort-Object -unique
+					}
+					ElseIf($DesktopSetting.IncludedUserFilterEnabled -eq $False)
+					{
+						$DesktopSettingIncludedUsers += "Allow everyone with access to this Delivery Group to use a desktop"
+					}
+					
+					If($DesktopSetting.ExcludedUserFilterEnabled -eq $True)
+					{
+						ForEach($User in $DesktopSetting.ExcludedUsers)
+						{
+							$DesktopSettingExcludedUsers += $User.Name
+						}
+
+						[array]$DesktopSettingExcludedUsers = $DesktopSettingExcludedUsers | Sort-Object -unique
+					}
+					#added in V2.19
+					Switch ($DesktopSetting.SessionReconnection)
+					{
+						"Always" 			{$xSessionReconnection = "Always"; Break}
+						"DisconnectedOnly"	{$xSessionReconnection = "Disconnected Only"; Break}
+						"SameEndpointOnly"	{$xSessionReconnection = "Same Endpoint Only"; Break}
+						Default {$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSetting.SessionReconnection)"; Break}
+					}
+					#added in V2.19
+					If($Null -ne $DesktopSetting.SecureIcaRequired)
+					{
+						$xSecureIcaRequired = $DesktopSetting.SecureIcaRequired.ToString()
+					}
+					$ScriptInformation += @{Data = "Desktop Entitlement"; Value = ""; }
+					$ScriptInformation += @{Data = "     Display name"; Value = $DesktopSetting.PublishedName; }
+					$ScriptInformation += @{Data = "     Description"; Value = $DesktopSetting.Description; }
+					If($CanRestrictToTags)
+					{
+						$ScriptInformation += @{Data = "     Restrict launches to machines with tag"; Value = $RestrictedToTag; }
+					}
+					$ScriptInformation += @{Data = "     Included Users"; Value = $DesktopSettingIncludedUsers[0]; }
+					$cnt = -1
+					ForEach($tmp in $DesktopSettingIncludedUsers)
+					{
+						$cnt++
+						If($cnt -gt 0)
+						{
+							$ScriptInformation += @{Data = ""; Value = $tmp; }
+						}
+					}
+					
+					If($DesktopSettingExcludedUsers.Count -gt 0)
+					{
+						$ScriptInformation += @{Data = "     Excluded Users"; Value = $DesktopSettingExcludedUsers[0]; }
+						$cnt = -1
+						#V2.15 changed to use correct variable name
+						ForEach($tmp in $DesktopSettingExcludedUsers)
+						{
+							$cnt++
+							If($cnt -gt 0)
+							{
+								$ScriptInformation += @{Data = ""; Value = $tmp; }
+							}
+						}
+					}
+					$ScriptInformation += @{Data = "     Enable desktop"; Value = $DesktopSetting.Enabled; }
+					#New in V2.19
+					$ScriptInformation += @{Data = "     Leasing behavior"; Value = $DesktopSetting.LeasingBehavior; }
+					$ScriptInformation += @{Data = "     Maximum concurrent instances"; Value = $DesktopSetting.MaxPerEntitlementInstances; }
+					$ScriptInformation += @{Data = "     SecureICA required"; Value = $DesktopSetting.SecureIcaRequired; }
+					$ScriptInformation += @{Data = "     Session reconnection"; Value = $xSessionReconnection; }
 				}
 			}
-			$ScriptInformation += @{Data = "     Enable desktop"; Value = $DesktopSettings.Enabled; }
-			#New in V2.19
-			$ScriptInformation += @{Data = "     Leasing behavior"; Value = $DesktopSettings.LeasingBehavior; }
-			$ScriptInformation += @{Data = "     Maximum concurrent instances"; Value = $DesktopSettings.MaxPerEntitlementInstances.ToString(); }
-			$ScriptInformation += @{Data = "     SecureICA required"; Value = $xSecureIcaRequired; }
-			$ScriptInformation += @{Data = "     Session reconnection"; Value = $xSessionReconnection; }
-			#
 		}
 		
 		$ScriptInformation += @{Data = "Scopes"; Value = $DGScopes[0]; }
@@ -11027,79 +11053,84 @@ Function OutputDeliveryGroupDetails
 		
 		If($Group.SessionSupport -eq "MultiSession")
 		{
+			#Fixed in V2.21 to handle multiple restart schedules
 			If((Get-BrokerServiceAddedCapability @XDParams1) -contains "MultipleRebootSchedulesPerGroup")
 			{
 				$ChkTags = $True
-				$RestartSchedule = Get-BrokerRebootScheduleV2 @XDParams1 -DesktopGroupUid $Group.Uid
+				$RestartSchedules = Get-BrokerRebootScheduleV2 @XDParams1 -DesktopGroupUid $Group.Uid
 			}
 			Else
 			{
 				$ChkTags = $False
-				$RestartSchedule = Get-BrokerRebootSchedule @XDParams1 -DesktopGroupUid $Group.Uid
+				$RestartSchedules = Get-BrokerRebootSchedule @XDParams1 -DesktopGroupUid $Group.Uid
 			}
 			
-			If($? -and $Null -ne $RestartSchedule)
+			If($? -and $Null -ne $RestartSchedules)
 			{
-				#added in V2.21
-				Switch($RestartSchedule.WarningRepeatInterval)
+				ForEach($RestartSchedule in $RestartSchedules)
 				{
-					0	{$RestartScheduleWarningRepeatInterval = "Do not repeat"}
-					5	{$RestartScheduleWarningRepeatInterval = "Every 5 minutes"} 
-					Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
-				}
-			
-				$ScriptInformation += @{Data = "Restart machines automatically"; Value = "Yes"; }
+					$ScriptInformation += @{Data = "Restart Schedule"; Value = ""; }
+					#added in V2.21
+					Switch($RestartSchedule.WarningRepeatInterval)
+					{
+						0	{$RestartScheduleWarningRepeatInterval = "Do not repeat"}
+						5	{$RestartScheduleWarningRepeatInterval = "Every 5 minutes"} 
+						Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
+					}
+				
+					$ScriptInformation += @{Data = "     Restart machines automatically"; Value = "Yes"; }
 
-				If($ChkTags -eq $True)
-				{
-					$ScriptInformation += @{Data = "Restrict to tag"; Value = $RestartSchedule.RestrictToTag; }
+					If($ChkTags -eq $True)
+					{
+						$ScriptInformation += @{Data = "     Restrict to tag"; Value = $RestartSchedule.RestrictToTag; }
+					}
+					
+					$tmp = ""
+					If($RestartSchedule.Frequency -eq "Daily")
+					{
+						$tmp = "Daily"
+					}
+					ElseIf($RestartSchedule.Frequency -eq "Weekly")
+					{
+						$tmp = "Every $($RestartSchedule.Day)"
+					}
+					
+					$ScriptInformation += @{Data = "     Restart frequency"; Value = $tmp; }
+					$ScriptInformation += @{Data = "     Begin restart at"; Value = "$($RestartSchedule.StartTime.Hours.ToString("00")):$($RestartSchedule.StartTime.Minutes.ToString("00"))"; }
+					
+					$xTime = 0
+					$tmp = ""
+					If($RestartSchedule.RebootDuration -eq 0)
+					{
+						$tmp = "Restart all machines at once"
+					}
+					ElseIf($RestartSchedule.RebootDuration -eq 30)
+					{
+						$tmp = "30 minutes"
+					}
+					Else
+					{
+						$xTime = $RestartSchedule.RebootDuration / 60
+						$tmp = "$($xTime) hours"
+					}
+					$ScriptInformation += @{Data = "     Restart duration"; Value = $tmp; }
+					$xTime = $Null
+					$tmp = $Null
+					
+					$tmp = ""
+					If($RestartSchedule.WarningDuration -eq 0)
+					{
+						$tmp = "Do not send a notification"
+						$ScriptInformation += @{Data = "     Send notification to users"; Value = $tmp; }
+					}
+					Else
+					{
+						$tmp = "$($RestartSchedule.WarningDuration) minutes before user is logged off"
+						$ScriptInformation += @{Data = "     Send notification to users"; Value = $tmp; }
+						$ScriptInformation += @{Data = "     Notification message"; Value = $RestartSchedule.WarningMessage; }
+					}
+					$ScriptInformation += @{Data = "     Notification frequency"; Value = $RestartScheduleWarningRepeatInterval; }
 				}
-				
-				$tmp = ""
-				If($RestartSchedule.Frequency -eq "Daily")
-				{
-					$tmp = "Daily"
-				}
-				ElseIf($RestartSchedule.Frequency -eq "Weekly")
-				{
-					$tmp = "Every $($RestartSchedule.Day)"
-				}
-				
-				$ScriptInformation += @{Data = "Restart frequency"; Value = $tmp; }
-				$ScriptInformation += @{Data = "Begin restart at"; Value = "$($RestartSchedule.StartTime.Hours.ToString("00")):$($RestartSchedule.StartTime.Minutes.ToString("00"))"; }
-				
-				$xTime = 0
-				$tmp = ""
-				If($RestartSchedule.RebootDuration -eq 0)
-				{
-					$tmp = "Restart all machines at once"
-				}
-				ElseIf($RestartSchedule.RebootDuration -eq 30)
-				{
-					$tmp = "30 minutes"
-				}
-				Else
-				{
-					$xTime = $RestartSchedule.RebootDuration / 60
-					$tmp = "$($xTime) hours"
-				}
-				$ScriptInformation += @{Data = "Restart duration"; Value = $tmp; }
-				$xTime = $Null
-				$tmp = $Null
-				
-				$tmp = ""
-				If($RestartSchedule.WarningDuration -eq 0)
-				{
-					$tmp = "Do not send a notification"
-					$ScriptInformation += @{Data = "Send notification to users"; Value = $tmp; }
-				}
-				Else
-				{
-					$tmp = "$($RestartSchedule.WarningDuration) minutes before user is logged off"
-					$ScriptInformation += @{Data = "Send notification to users"; Value = $tmp; }
-					$ScriptInformation += @{Data = "Notification message"; Value = $RestartSchedule.WarningMessage; }
-				}
-				$ScriptInformation += @{Data = "Notification frequency"; Value = $RestartScheduleWarningRepeatInterval; }
 			}
 			Else
 			{
@@ -11380,47 +11411,103 @@ Function OutputDeliveryGroupDetails
 			Line 1 "Give access to unauthenticated (anonymous) users: " $SFAnonymousUsers
 		}
 
-		If($xDeliveryType -ne "Applications" -and $Null -ne $DesktopSettings)
+		If($xDeliveryType -ne "Applications")
 		{
-			Line 1 "Desktop Entitlement" ""
-			Line 2 "Display name`t`t`t`t: " $DesktopSettings.PublishedName
-			Line 2 "Description`t`t`t`t: " $DesktopSettings.Description
-			If($CanRestrictToTags)
-			{
-				Line 2 "Restrict launches to machines with tag`t: " $RestrictedToTag
-			}
-			Line 2 "Included Users`t`t`t`t: " $DesktopSettingsIncludedUsers[0]
-			$cnt = -1
-			ForEach($tmp in $DesktopSettingsIncludedUsers)
-			{
-				$cnt++
-				If($cnt -gt 0)
-				{
-					Line 7 "  " $tmp
-				}
-			}
+			#Fixed in V2.1 to handle multiple desktop entitlements
+			$DesktopSettings = $Null
+			$DesktopSettings = Get-BrokerEntitlementPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid
 			
-			If($DesktopSettingsExcludedUsers.Count -gt 0)
+			If($? -and $Null -ne $DesktopSettings)
 			{
-				Line 2 "Excluded Users`t`t`t`t: " $DesktopSettingsExcludedUsers[0]
-				$cnt = -1
-				#V2.15 changed to use correct variable name
-				ForEach($tmp in $DesktopSettingsExcludedUsers)
+				ForEach($DesktopSetting in $DesktopSettings)
 				{
-					$cnt++
-					If($cnt -gt 0)
+					$DesktopSettingIncludedUsers = @()
+					$DesktopSettingExcludedUsers = @()
+					If($CanRestrictToTags -eq $True)
 					{
-						Line 7 "  " $tmp
+						$RestrictedToTag = $DesktopSetting.RestrictToTag
 					}
+					Else
+					{
+						$RestrictedToTag = "-"
+					}
+					
+					If($DesktopSetting.IncludedUserFilterEnabled -eq $True)
+					{
+						ForEach($User in $DesktopSetting.IncludedUsers)
+						{
+							$DesktopSettingIncludedUsers += $User.Name
+						}
+						
+						[array]$DesktopSettingIncludedUsers = $DesktopSettingIncludedUsers | Sort-Object -unique
+					}
+					ElseIf($DesktopSetting.IncludedUserFilterEnabled -eq $False)
+					{
+						$DesktopSettingIncludedUsers += "Allow everyone with access to this Delivery Group to use a desktop"
+					}
+					
+					If($DesktopSetting.ExcludedUserFilterEnabled -eq $True)
+					{
+						ForEach($User in $DesktopSetting.ExcludedUsers)
+						{
+							$DesktopSettingExcludedUsers += $User.Name
+						}
+
+						[array]$DesktopSettingExcludedUsers = $DesktopSettingExcludedUsers | Sort-Object -unique
+					}
+					#added in V2.19
+					Switch ($DesktopSetting.SessionReconnection)
+					{
+						"Always" 			{$xSessionReconnection = "Always"; Break}
+						"DisconnectedOnly"	{$xSessionReconnection = "Disconnected Only"; Break}
+						"SameEndpointOnly"	{$xSessionReconnection = "Same Endpoint Only"; Break}
+						Default {$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSetting.SessionReconnection)"; Break}
+					}
+					#added in V2.19
+					If($Null -ne $DesktopSetting.SecureIcaRequired)
+					{
+						$xSecureIcaRequired = $DesktopSetting.SecureIcaRequired.ToString()
+					}
+					Line 1 "Desktop Entitlement" ""
+					Line 2 "Display name`t`t`t: " $DesktopSetting.PublishedName
+					Line 2 "Description`t`t`t: " $DesktopSetting.Description
+					If($CanRestrictToTags)
+					{
+						Line 2 "Restrict launches to machines with tag`t: " $RestrictedToTag
+					}
+					Line 2 "Included Users`t`t`t: " $DesktopSettingIncludedUsers[0]
+					$cnt = -1
+					ForEach($tmp in $DesktopSettingIncludedUsers)
+					{
+						$cnt++
+						If($cnt -gt 0)
+						{
+							Line 7 "  " $tmp
+						}
+					}
+					
+					If($DesktopSettingExcludedUsers.Count -gt 0)
+					{
+						Line 2 "Excluded Users`t`t`t: " $DesktopSettingExcludedUsers[0]
+						$cnt = -1
+						#V2.15 changed to use correct variable name
+						ForEach($tmp in $DesktopSettingExcludedUsers)
+						{
+							$cnt++
+							If($cnt -gt 0)
+							{
+								Line 7 "  " $tmp
+							}
+						}
+					}
+					Line 2 "Enable desktop`t`t`t: " $DesktopSetting.Enabled
+					#New in V2.19
+					Line 2 "Leasing behavior`t`t`t: " $DesktopSetting.LeasingBehavior
+					Line 2 "Maximum concurrent instances`t`t: " $DesktopSetting.MaxPerEntitlementInstances
+					Line 2 "SecureICA required`t`t`t: " $DesktopSetting.SecureIcaRequired
+					Line 2 "Session reconnection`t`t`t: " $xSessionReconnection
 				}
 			}
-			Line 2 "Enable desktop`t`t`t`t: " $DesktopSettings.Enabled
-			#New in V2.19
-			Line 2 "Leasing behavior`t`t`t: " $DesktopSettings.LeasingBehavior
-			Line 2 "Maximum concurrent instances`t`t: " $DesktopSettings.MaxPerEntitlementInstances.ToString()
-			Line 2 "SecureICA required`t`t`t: " $xSecureIcaRequired
-			Line 2 "Session reconnection`t`t`t: " $xSessionReconnection
-			#
 		}
 		
 		Line 1 "Scopes`t`t`t`t`t`t: " $DGScopes[0]
@@ -11481,80 +11568,84 @@ Function OutputDeliveryGroupDetails
 		
 		If($Group.SessionSupport -eq "MultiSession")
 		{
+			#Fixed in V2.21 to handle multiple restart schedules
 			If((Get-BrokerServiceAddedCapability @XDParams1) -contains "MultipleRebootSchedulesPerGroup")
 			{
 				$ChkTags = $True
-				$RestartSchedule = Get-BrokerRebootScheduleV2 @XDParams1 -DesktopGroupUid $Group.Uid
+				$RestartSchedules = Get-BrokerRebootScheduleV2 @XDParams1 -DesktopGroupUid $Group.Uid
 			}
 			Else
 			{
 				$ChkTags = $False
-				$RestartSchedule = Get-BrokerRebootSchedule @XDParams1 -DesktopGroupUid $Group.Uid
+				$RestartSchedules = Get-BrokerRebootSchedule @XDParams1 -DesktopGroupUid $Group.Uid
 			}
 			
-			If($? -and $Null -ne $RestartSchedule)
+			If($? -and $Null -ne $RestartSchedules)
 			{
-				#added in V2.21
-				Switch($RestartSchedule.WarningRepeatInterval)
+				ForEach($RestartSchedule in $RestartSchedules)
 				{
-					0	{$RestartScheduleWarningRepeatInterval = "Do not repeat"}
-					5	{$RestartScheduleWarningRepeatInterval = "Every 5 minutes"} 
-					Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
-				}
+					Line 1 "Restart Schedule"
+					#added in V2.21
+					Switch($RestartSchedule.WarningRepeatInterval)
+					{
+						0	{$RestartScheduleWarningRepeatInterval = "Do not repeat"}
+						5	{$RestartScheduleWarningRepeatInterval = "Every 5 minutes"} 
+						Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
+					}
 
-				Line 1 "Restart machines automatically`t`t`t: " "Yes"
+					Line 2 "Restart machines automatically`t`t`t: " "Yes"
 
-				If($ChkTags -eq $True)
-				{
-					Line 1 "Restrict to tag`t`t`t`t`t: " $RestartSchedule.RestrictToTag
+					If($ChkTags -eq $True)
+					{
+						Line 2 "Restrict to tag`t`t`t`t`t: " $RestartSchedule.RestrictToTag
+					}
+					
+					$tmp = ""
+					If($RestartSchedule.Frequency -eq "Daily")
+					{
+						$tmp = "Daily"
+					}
+					ElseIf($RestartSchedule.Frequency -eq "Weekly")
+					{
+						$tmp = "Every $($RestartSchedule.Day)"
+					}
+					
+					Line 2 "Restart frequency`t`t`t`t: " $tmp
+					Line 2 "Begin restart at`t`t`t`t: " "$($RestartSchedule.StartTime.Hours.ToString("00")):$($RestartSchedule.StartTime.Minutes.ToString("00"))"
+					
+					$xTime = 0
+					$tmp = ""
+					If($RestartSchedule.RebootDuration -eq 0)
+					{
+						$tmp = "Restart all machines at once"
+					}
+					ElseIf($RestartSchedule.RebootDuration -eq 30)
+					{
+						$tmp = "30 minutes"
+					}
+					Else
+					{
+						$xTime = $RestartSchedule.RebootDuration / 60
+						$tmp = "$($xTime) hours"
+					}
+					Line 2 "Restart duration`t`t`t`t: " $tmp
+					$xTime = $Null
+					$tmp = $Null
+					
+					$tmp = ""
+					If($RestartSchedule.WarningDuration -eq 0)
+					{
+						$tmp = "Do not send a notification"
+						Line 2 "Send notification to users`t`t`t: " $tmp
+					}
+					Else
+					{
+						$tmp = "$($RestartSchedule.WarningDuration) minutes before user is logged off"
+						Line 2 "Send notification to users`t`t`t: " $tmp
+						Line 2 "Notification message`t`t`t`t: " $RestartSchedule.WarningMessage
+					}
+					Line 2 "Notification frequency`t`t`t`t: " $RestartScheduleWarningRepeatInterval
 				}
-				
-				$tmp = ""
-				If($RestartSchedule.Frequency -eq "Daily")
-				{
-					$tmp = "Daily"
-				}
-				ElseIf($RestartSchedule.Frequency -eq "Weekly")
-				{
-					$tmp = "Every $($RestartSchedule.Day)"
-				}
-				
-				Line 1 "Restart frequency`t`t`t`t: " $tmp
-				Line 1 "Begin restart at`t`t`t`t: " "$($RestartSchedule.StartTime.Hours.ToString("00")):$($RestartSchedule.StartTime.Minutes.ToString("00"))"
-				
-				$xTime = 0
-				$tmp = ""
-				If($RestartSchedule.RebootDuration -eq 0)
-				{
-					$tmp = "Restart all machines at once"
-				}
-				ElseIf($RestartSchedule.RebootDuration -eq 30)
-				{
-					$tmp = "30 minutes"
-				}
-				Else
-				{
-					$xTime = $RestartSchedule.RebootDuration / 60
-					$tmp = "$($xTime) hours"
-				}
-				Line 1 "Restart duration`t`t`t`t: " $tmp
-				$xTime = $Null
-				$tmp = $Null
-				
-				$tmp = ""
-				If($RestartSchedule.WarningDuration -eq 0)
-				{
-					$tmp = "Do not send a notification"
-					Line 1 "Send notification to users`t`t`t: " $tmp
-				}
-				Else
-				{
-					$tmp = "$($RestartSchedule.WarningDuration) minutes before user is logged off"
-					Line 1 "Send notification to users`t`t`t: " $tmp
-					Line 1 "Notification message`t`t`t`t: " $RestartSchedule.WarningMessage
-				}
-				Line 1 "Notification frequency`t`t`t`t: " $RestartScheduleWarningRepeatInterval
-				
 			}
 			Else
 			{
@@ -11817,47 +11908,103 @@ Function OutputDeliveryGroupDetails
 			$rowdata += @(,('Give access to unauthenticated (anonymous) users',($htmlsilver -bor $htmlbold),$SFAnonymousUsers,$htmlwhite))
 		}
 
-		If($xDeliveryType -ne "Applications" -and $Null -ne $DesktopSettings)
+		If($xDeliveryType -ne "Applications")
 		{
-			$rowdata += @(,("Desktop Entitlement",($htmlsilver -bor $htmlbold),"",$htmlwhite))
-			$rowdata += @(,("     Display name",($htmlsilver -bor $htmlbold),$DesktopSettings.PublishedName,$htmlwhite))
-			$rowdata += @(,("     Description",($htmlsilver -bor $htmlbold),$DesktopSettings.Description,$htmlwhite))
-			If($CanRestrictToTags)
-			{
-				$rowdata += @(,("     Restrict launches to machines with tag",($htmlsilver -bor $htmlbold),$RestrictedToTag,$htmlwhite))
-			}
-			$rowdata += @(,("     Included Users",($htmlsilver -bor $htmlbold),$DesktopSettingsIncludedUsers[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $DesktopSettingsIncludedUsers)
-			{
-				$cnt++
-				If($cnt -gt 0)
-				{
-					$rowdata += @(,("",($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-				}
-			}
+			#Fixed in V2.1 to handle multiple desktop entitlements
+			$DesktopSettings = $Null
+			$DesktopSettings = Get-BrokerEntitlementPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid
 			
-			If($DesktopSettingsExcludedUsers.Count -gt 0)
+			If($? -and $Null -ne $DesktopSettings)
 			{
-				$rowdata += @(,("     Excluded Users",($htmlsilver -bor $htmlbold),$DesktopSettingsExcludedUsers[0],$htmlwhite))
-				$cnt = -1
-				#V2.15 changed to use correct variable name
-				ForEach($tmp in $DesktopSettingsExcludedUsers)
+				ForEach($DesktopSetting in $DesktopSettings)
 				{
-					$cnt++
-					If($cnt -gt 0)
+					$DesktopSettingIncludedUsers = @()
+					$DesktopSettingExcludedUsers = @()
+					If($CanRestrictToTags -eq $True)
 					{
-						$rowdata += @(,("",($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+						$RestrictedToTag = $DesktopSetting.RestrictToTag
 					}
+					Else
+					{
+						$RestrictedToTag = "-"
+					}
+					
+					If($DesktopSetting.IncludedUserFilterEnabled -eq $True)
+					{
+						ForEach($User in $DesktopSetting.IncludedUsers)
+						{
+							$DesktopSettingIncludedUsers += $User.Name
+						}
+						
+						[array]$DesktopSettingIncludedUsers = $DesktopSettingIncludedUsers | Sort-Object -unique
+					}
+					ElseIf($DesktopSetting.IncludedUserFilterEnabled -eq $False)
+					{
+						$DesktopSettingIncludedUsers += "Allow everyone with access to this Delivery Group to use a desktop"
+					}
+					
+					If($DesktopSetting.ExcludedUserFilterEnabled -eq $True)
+					{
+						ForEach($User in $DesktopSetting.ExcludedUsers)
+						{
+							$DesktopSettingExcludedUsers += $User.Name
+						}
+
+						[array]$DesktopSettingExcludedUsers = $DesktopSettingExcludedUsers | Sort-Object -unique
+					}
+					#added in V2.19
+					Switch ($DesktopSetting.SessionReconnection)
+					{
+						"Always" 			{$xSessionReconnection = "Always"; Break}
+						"DisconnectedOnly"	{$xSessionReconnection = "Disconnected Only"; Break}
+						"SameEndpointOnly"	{$xSessionReconnection = "Same Endpoint Only"; Break}
+						Default {$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSetting.SessionReconnection)"; Break}
+					}
+					#added in V2.19
+					If($Null -ne $DesktopSetting.SecureIcaRequired)
+					{
+						$xSecureIcaRequired = $DesktopSetting.SecureIcaRequired.ToString()
+					}
+					$rowdata += @(,("Desktop Entitlement",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+					$rowdata += @(,("     Display name",($htmlsilver -bor $htmlbold),$DesktopSetting.PublishedName,$htmlwhite))
+					$rowdata += @(,("     Description",($htmlsilver -bor $htmlbold),$DesktopSetting.Description,$htmlwhite))
+					If($CanRestrictToTags)
+					{
+						$rowdata += @(,("     Restrict launches to machines with tag",($htmlsilver -bor $htmlbold),$RestrictedToTag,$htmlwhite))
+					}
+					$rowdata += @(,("     Included Users",($htmlsilver -bor $htmlbold),$DesktopSettingIncludedUsers[0],$htmlwhite))
+					$cnt = -1
+					ForEach($tmp in $DesktopSettingIncludedUsers)
+					{
+						$cnt++
+						If($cnt -gt 0)
+						{
+							$rowdata += @(,("",($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+						}
+					}
+					
+					If($DesktopSettingExcludedUsers.Count -gt 0)
+					{
+						$rowdata += @(,("     Excluded Users",($htmlsilver -bor $htmlbold),$DesktopSettingExcludedUsers[0],$htmlwhite))
+						$cnt = -1
+						#V2.15 changed to use correct variable name
+						ForEach($tmp in $DesktopSettingExcludedUsers)
+						{
+							$cnt++
+							If($cnt -gt 0)
+							{
+								$rowdata += @(,("",($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+							}
+						}
+					}
+					$rowdata += @(,("     Enable desktop",($htmlsilver -bor $htmlbold),$DesktopSetting.Enabled,$htmlwhite))
+					#New in V2.19
+					$rowdata += @(,("     Leasing behavior",($htmlsilver -bor $htmlbold),$DesktopSetting.LeasingBehavior,$htmlwhite))
+					$rowdata += @(,("     Maximum concurrent instances",($htmlsilver -bor $htmlbold),$DesktopSetting.MaxPerEntitlementInstances.ToString(),$htmlwhite))
+					$rowdata += @(,("     SecureICA required",($htmlsilver -bor $htmlbold),$xSecureIcaRequired,$htmlwhite))
+					$rowdata += @(,("     Session reconnection",($htmlsilver -bor $htmlbold),$xSessionReconnection,$htmlwhite))
 				}
 			}
-			$rowdata += @(,("     Enable desktop",($htmlsilver -bor $htmlbold),$DesktopSettings.Enabled,$htmlwhite))
-			#New in V2.19
-			$rowdata += @(,("     Leasing behavior",($htmlsilver -bor $htmlbold),$DesktopSettings.LeasingBehavior,$htmlwhite))
-			$rowdata += @(,("     Maximum concurrent instances",($htmlsilver -bor $htmlbold),$DesktopSettings.MaxPerEntitlementInstances.ToString(),$htmlwhite))
-			$rowdata += @(,("     SecureICA required",($htmlsilver -bor $htmlbold),$xSecureIcaRequired,$htmlwhite))
-			$rowdata += @(,("     Session reconnection",($htmlsilver -bor $htmlbold),$xSessionReconnection,$htmlwhite))
-			#
 		}
 		
 		$rowdata += @(,('Scopes',($htmlsilver -bor $htmlbold),$DGScopes[0],$htmlwhite))
@@ -11918,79 +12065,85 @@ Function OutputDeliveryGroupDetails
 			
 		If($Group.SessionSupport -eq "MultiSession")
 		{
+			#Fixed in V2.21 to handle multiple restart schedules
 			If((Get-BrokerServiceAddedCapability @XDParams1) -contains "MultipleRebootSchedulesPerGroup")
 			{
 				$ChkTags = $True
-				$RestartSchedule = Get-BrokerRebootScheduleV2 @XDParams1 -DesktopGroupUid $Group.Uid
+				$RestartSchedules = Get-BrokerRebootScheduleV2 @XDParams1 -DesktopGroupUid $Group.Uid
 			}
 			Else
 			{
 				$ChkTags = $False
-				$RestartSchedule = Get-BrokerRebootSchedule @XDParams1 -DesktopGroupUid $Group.Uid
+				$RestartSchedules = Get-BrokerRebootSchedule @XDParams1 -DesktopGroupUid $Group.Uid
 			}
 			
-			If($? -and $Null -ne $RestartSchedule)
+			If($? -and $Null -ne $RestartSchedules)
 			{
-				#added in V2.21
-				Switch($RestartSchedule.WarningRepeatInterval)
+				ForEach($RestartSchedule in $RestartSchedules)
 				{
-					0	{$RestartScheduleWarningRepeatInterval = "Do not repeat"}
-					5	{$RestartScheduleWarningRepeatInterval = "Every 5 minutes"} 
-					Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
-				}
+					$rowdata += @(,('Restart Schedule',($htmlsilver -bor $htmlbold),"",$htmlwhite))
+					#added in V2.21
+					Switch($RestartSchedule.WarningRepeatInterval)
+					{
+						0	{$RestartScheduleWarningRepeatInterval = "Do not repeat"}
+						5	{$RestartScheduleWarningRepeatInterval = "Every 5 minutes"} 
+						Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
+					}
 
-				$rowdata += @(,('Restart machines automatically',($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
+					$rowdata += @(,('     Restart machines automatically',($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
 
-				If($ChkTags -eq $True)
-				{
-					$rowdata += @(,('Restrict to tag',($htmlsilver -bor $htmlbold),$RestartSchedule.RestrictToTag,$htmlwhite))
+					If($ChkTags -eq $True)
+					{
+						$rowdata += @(,('     Restrict to tag',($htmlsilver -bor $htmlbold),$RestartSchedule.RestrictToTag,$htmlwhite))
+					}
+					
+					$tmp = ""
+					If($RestartSchedule.Frequency -eq "Daily")
+					{
+						$tmp = "Daily"
+					}
+					ElseIf($RestartSchedule.Frequency -eq "Weekly")
+					{
+						$tmp = "Every $($RestartSchedule.Day)"
+					}
+					
+					$rowdata += @(,('     Restart frequency',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('     Begin restart at',($htmlsilver -bor $htmlbold),"$($RestartSchedule.StartTime.Hours.ToString("00")):$($RestartSchedule.StartTime.Minutes.ToString("00"))",$htmlwhite))
+					
+					$xTime = 0
+					$tmp = ""
+					If($RestartSchedule.RebootDuration -eq 0)
+					{
+						$tmp = "Restart all machines at once"
+					}
+					ElseIf($RestartSchedule.RebootDuration -eq 30)
+					{
+						$tmp = "30 minutes"
+					}
+					Else
+					{
+						$xTime = $RestartSchedule.RebootDuration / 60
+						$tmp = "$($xTime) hours"
+					}
+					$rowdata += @(,('     Restart duration',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$xTime = $Null
+					$tmp = $Null
+					
+					$tmp = ""
+					If($RestartSchedule.WarningDuration -eq 0)
+					{
+						$tmp = "Do not send a notification"
+						$rowdata += @(,('     Send notification to users',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					}
+					Else
+					{
+						$tmp = "$($RestartSchedule.WarningDuration) minutes before user is logged off"
+						$rowdata += @(,('     Send notification to users',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+						$rowdata += @(,('     Notification message',($htmlsilver -bor $htmlbold),$RestartSchedule.WarningMessage,$htmlwhite))
+					}
+					#added in V2.21
+					$rowdata += @(,('     Notification frequency',($htmlsilver -bor $htmlbold),$RestartScheduleWarningRepeatInterval,$htmlwhite))
 				}
-				
-				$tmp = ""
-				If($RestartSchedule.Frequency -eq "Daily")
-				{
-					$tmp = "Daily"
-				}
-				ElseIf($RestartSchedule.Frequency -eq "Weekly")
-				{
-					$tmp = "Every $($RestartSchedule.Day)"
-				}
-				
-				$rowdata += @(,('Restart frequency',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-				$rowdata += @(,('Begin restart at',($htmlsilver -bor $htmlbold),"$($RestartSchedule.StartTime.Hours.ToString("00")):$($RestartSchedule.StartTime.Minutes.ToString("00"))",$htmlwhite))
-				
-				$xTime = 0
-				$tmp = ""
-				If($RestartSchedule.RebootDuration -eq 0)
-				{
-					$tmp = "Restart all machines at once"
-				}
-				ElseIf($RestartSchedule.RebootDuration -eq 30)
-				{
-					$tmp = "30 minutes"
-				}
-				Else
-				{
-					$xTime = $RestartSchedule.RebootDuration / 60
-					$tmp = "$($xTime) hours"
-				}
-				$rowdata += @(,('Restart duration',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-				$xTime = $Null
-				$tmp = $Null
-				
-				$tmp = ""
-				If($RestartSchedule.WarningDuration -eq 0)
-				{
-					$tmp = "Do not send a notification"
-					$rowdata += @(,('Send notification to users',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-				}
-				Else
-				{
-					$tmp = "$($RestartSchedule.WarningDuration) minutes before user is logged off"
-					$rowdata += @(,('Send notification to users',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-					$rowdata += @(,('Notification message',($htmlsilver -bor $htmlbold),$RestartSchedule.WarningMessage,$htmlwhite))
-				}
-					$rowdata += @(,('Notification frequency',($htmlsilver -bor $htmlbold),$RestartScheduleWarningRepeatInterval,$htmlwhite))
 			}
 			Else
 			{
@@ -31281,6 +31434,7 @@ Function OutputControllerRegistryKeys
 
 		FindWordDocumentEnd
 		$Table = $Null
+		WriteWordLine 0 0 " " #blank line added in V2.21
 	}
 	ElseIf($Text)
 	{
