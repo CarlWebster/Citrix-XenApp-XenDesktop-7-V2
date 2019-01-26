@@ -151,9 +151,11 @@ The help text explains all the parameters the script accepts.
 PS C:\Scripts> get-help .\XD7_Inventory_V2.ps1 -full
 
 NAME
+
     C:\Scripts\XD7_Inventory_V2.ps1
 
 SYNOPSIS
+
     Creates an inventory of a Citrix XenDesktop 7.8+ Site.
 
 SYNTAX
@@ -205,6 +207,7 @@ SYNTAX
 
 
 DESCRIPTION
+
     Creates an inventory of a Citrix XenDesktop 7.8+ Site using Microsoft PowerShell, Word,
     plain text, or HTML.
 
@@ -274,6 +277,7 @@ DESCRIPTION
 
 
 PARAMETERS
+
     -HTML [<SwitchParameter>]
         Creates an HTML file with an .html extension.
         This parameter is disabled by default.
@@ -922,10 +926,12 @@ PARAMETERS
         about_CommonParameters (https:/go.microsoft.com/fwlink/?LinkID=113216).
 
 INPUTS
+
     None.  You cannot pipe objects to this script.
 
 
 OUTPUTS
+
     No objects are output from this script.
     This script creates a Word, PDF, plain text, or HTML document.
 
