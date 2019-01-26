@@ -937,12 +937,12 @@ OUTPUTS
 
 NOTES
 
-        NAME: 	XD7_Inventory_V2.ps1
-        
+	NAME: 	XD7_Inventory_V2.ps1
+
 	VERSION: 2.21
-        
+
 	AUTHOR: Carl Webster
-        
+
 	LASTEDIT: January 26, 2019
 	
 
