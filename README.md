@@ -936,10 +936,21 @@ OUTPUTS
     This script creates a Word, PDF, plain text, or HTML document.
 
 NOTES
-        NAME: XD7_Inventory_V2.ps1
-        VERSION: 2.21
-        AUTHOR: Carl Webster
-        LASTEDIT: January 26, 2019
+        NAME: 
+	
+	XD7_Inventory_V2.ps1
+        
+	VERSION: 
+	
+	2.21
+        
+	AUTHOR: 
+	
+	Carl Webster
+        
+	LASTEDIT: 
+	
+	January 26, 2019
 
     -------------------------- EXAMPLE 1 --------------------------
 
