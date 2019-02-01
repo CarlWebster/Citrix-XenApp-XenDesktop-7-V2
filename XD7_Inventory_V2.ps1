@@ -990,7 +990,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.21
 	AUTHOR: Carl Webster
-	LASTEDIT: January 26, 2019
+	LASTEDIT: February 1, 2019
 #>
 
 #endregion
@@ -1188,7 +1188,10 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.21
+#Version 2.21 1-Feb-2019
+#	Added additional VDA registry key data to Machine details for Local Text Echo added back in VDA 1811
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender\UseDirect3D
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender\PresentDevice
 #	Added License Server version
 #	Added missing data in the hosting section for Networks, Standard Storage, Personal vDisk Storage, and Temporary Storage
 #	Added test to catch multiple output parameters used
@@ -8004,6 +8007,10 @@ Function GetVDARegistryKeys
 
 	If($xType -eq "Server")
 	{
+		#added in V2.21 for Local Text Echo added back in VDA 1811
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender" "UseDirect3D" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender" "PresentDevice" $ComputerName $xType
+		
 		#From the 1811 docs
 		Get-VDARegKeyToObject "HKLM:\System\Currentcontrolset\services\picadm\Parameters" "DisableFullStreamWrite" $ComputerName $xType
 		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Control\SCMConfig" "EnableSvchostMitigationPolicy" $ComputerName $xType
@@ -8062,6 +8069,10 @@ Function GetVDARegistryKeys
 	}
 	ElseIf($xType -eq "Desktop")
 	{
+		#added in V2.21 for Local Text Echo added back in VDA 1811
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender" "UseDirect3D" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender" "PresentDevice" $ComputerName $xType
+		
 		#From What's New and Fixed in 7.18
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Citrix Virtual Desktop Agent" "DisableLogonUISuppression" $ComputerName $xType
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\SmartCard" "EnableSCardHookVcResponseTimeout" $ComputerName $xType
@@ -32247,7 +32258,6 @@ Function OutputDesktopOSMachine
 {
 	Param([object]$Desktop)
 
-	$xName = ""
 	$xMaintMode = ""
 	$xUserChanges = ""
 	
@@ -32416,7 +32426,6 @@ Function OutputServerOSMachine
 	Param([object]$Server)
 	
 	Write-Verbose "$(Get-Date): `t`t`tOutput server $($Server.DNSName)"
-	$xName = ""
 	$xMaintMode = ""
 	$xUserChanges = ""
 

@@ -3,7 +3,10 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
-#Version 2.21
+#Version 2.21 1-Feb-2019
+#	Added additional VDA registry key data to Machine details for Local Text Echo added back in VDA 1811
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender\UseDirect3D
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender\PresentDevice
 #	Added License Server version
 #	Added missing data in the hosting section for Networks, Standard Storage, Personal vDisk Storage, and Temporary Storage
 #	Added test to catch multiple output parameters used
