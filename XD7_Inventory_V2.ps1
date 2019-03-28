@@ -221,6 +221,18 @@
 	The default value is Sideline.
 	This parameter has an alias of CP.
 	This parameter is only valid with the MSWORD and PDF output parameters.
+.PARAMETER Controllers
+	As of version 2.22, adds the following information to the Controllers section:
+		List of installed Microsoft Hotfixes and Updates
+		List of Citrix installed components
+		List of Windows installed Roles and Features
+		Appendix C List of installed Microsoft Hotfixes and Updates for all 
+		Controllers
+		Appendix D List of Citrix installed components for all Controllers
+		Appendix E List of Windows installed Roles and Features for all Controllers
+	
+	This parameter is disabled by default.
+	This parameter has an alias of DDC.
 .PARAMETER DeliveryGroups
 	Gives detailed information on all desktops in all Desktop (Delivery) Groups.
 	
@@ -308,7 +320,7 @@
 		AppDisks
 		Applications
 		BrokerRegistryKeys
-		VDARegistryKeys
+		Controllers
 		DeliveryGroups
 		HardWare
 		Hosting
@@ -316,6 +328,7 @@
 		MachineCatalogs
 		Policies
 		StoreFront
+		VDARegistryKeys
 
 	Does not change the value of NoADPolicies.
 	
@@ -345,8 +358,10 @@
 	Using the Policies parameter can cause the report to take a very long time 
 	to complete and can generate an extremely long report.
 	
-	Note: The Citrix Group Policy PowerShell module will not load from an elevated PowerShell session. 
-	If the module is manually imported, the module is not detected from an elevated PowerShell session.
+	Note: The Citrix Group Policy PowerShell module will not load from an elevated 
+	PowerShell session. 
+	If the module is manually imported, the module is not detected from an elevated 
+	PowerShell session.
 	
 	There are three related parameters: Policies, NoPolicies, and NoADPolicies.
 	
@@ -949,7 +964,7 @@
 		AppDisks            = True
 		Applications        = True
 		BrokerRegistryKeys  = True
-		VDARegistryKeys		= True
+		Controllers         = True
 		DeliveryGroups      = True
 		HardWare            = True
 		Hosting             = True
@@ -957,9 +972,11 @@
 		MachineCatalogs     = True
 		Policies            = True
 		StoreFront          = True
+		VDARegistryKeys		= True
 		
 		NoPolicies          = False
 		Section             = "All"
+		
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Dev -ScriptInfo -Log
 	
@@ -988,9 +1005,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.21
+	VERSION: 2.22
 	AUTHOR: Carl Webster
-	LASTEDIT: February 1, 2019
+	LASTEDIT: March 28, 2019
 #>
 
 #endregion
@@ -1083,6 +1100,10 @@ Param(
 	[ValidateNotNullOrEmpty()]
 	[string]$CoverPage="Sideline", 
 
+	[parameter(Mandatory=$False)] 
+	[Alias("DDC")]
+	[Switch]$Controllers=$False,	
+	
 	[parameter(Mandatory=$False)] 
 	[Alias("DG")]
 	[Switch]$DeliveryGroups=$False,	
@@ -1187,6 +1208,26 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.22 28-Mar-2019
+#	Add new parameter -Controllers
+#	In the functions ProcessControllers and OutputControllers, change function variable $Controllers 
+#		to $DDCs for the new $Controllers parameter
+#	For Delivery Controllers, add the following when -Controllers is used:
+#		List of installed Microsoft Hotfixes and Updates
+#		List of Citrix installed components
+#		List of Windows installed Roles and Features
+#		Added Appendix C List of installed Microsoft Hotfixes and Updates for all Controllers
+#		Added Appendix D List of Citrix installed components for all Controllers
+#		Added Appendix E List of Windows installed Roles and Features for all Controllers
+#	In the Controllers section added the following:
+#		Controller State
+#		Warning if there is only one Controller
+#	Updated Help Text
+#	Updated the version checking process.
+#		If the script ran from a computer with a different Studio version than the delivery controller 
+#		version, the Studio version was reported as the Site version. If the $AdminAddress parameter 
+#		is used, get the version info from that delivery controller.
 
 #Version 2.21 1-Feb-2019
 #	Added additional VDA registry key data to Machine details for Local Text Echo added back in VDA 1811
@@ -1814,7 +1855,7 @@ If($MaxDetails)
 	$AppDisks			= $True
 	$Applications		= $True
 	$BrokerRegistryKeys	= $True
-	$VDARegistryKeys	= $True
+	$Controllers		= $True
 	$DeliveryGroups		= $True
 	$HardWare			= $True
 	$Hosting			= $True
@@ -1822,6 +1863,7 @@ If($MaxDetails)
 	$MachineCatalogs	= $True
 	$Policies			= $True
 	$StoreFront			= $True
+	$VDARegistryKeys	= $True
 	
 	$NoPolicies			= $False
 	$Section			= "All"
@@ -5746,6 +5788,7 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): Company Fax        : $($CompanyFax)"
 	Write-Verbose "$(Get-Date): Company Phone      : $($CompanyPhone)"
 	Write-Verbose "$(Get-Date): Cover Page         : $($CoverPage)"
+	Write-Verbose "$(Get-Date): Controllers        : $($Controllers)"
 	Write-Verbose "$(Get-Date): DeliveryGroups     : $($DeliveryGroups)"
 	If($Dev)
 	{
@@ -30846,13 +30889,14 @@ Function ProcessControllers
 	$Script:ControllerRegistryItems = New-Object System.Collections.ArrayList
 	$Script:AllControllerRegistryItems = New-Object System.Collections.ArrayList	
 	
-	$Controllers = Get-BrokerController @XDParams2 -SortBy DNSName
+	#V2.22 change variable from $Controllers to $DDCs so a new parameter can be added to the script
+	$DDCs = Get-BrokerController @XDParams2 -SortBy DNSName
 
-	If($? -and ($Null -ne $Controllers))
+	If($? -and ($Null -ne $DDCs))
 	{
-		OutputControllers $Controllers
+		OutputControllers $DDCs
 	}
-	ElseIf($? -and ($Null -eq $Controllers))
+	ElseIf($? -and ($Null -eq $DDCs))
 	{
 		$txt = "There are no Controllers"
 		OutputWarning $txt
@@ -30867,9 +30911,22 @@ Function ProcessControllers
 
 Function OutputControllers
 {
-	Param([object]$Controllers)
+	Param([object]$DDCs)
 	
 	Write-Verbose "$(Get-Date): `tOutput Controllers"
+	
+	#added in V2.22
+	[int]$DDCCount = 0
+	
+	If($DDCs -is [array])
+	{
+		$DDCCount = $DDCs.Count
+	}
+	Else
+	{
+		$DDCCount = 1
+	}
+	
 	If($MSWord -or $PDF)
 	{
 		$Selection.InsertNewPage()
@@ -30883,14 +30940,21 @@ Function OutputControllers
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 1 0 "Controllers"
-		$rowdata = @()
+	}
+
+	#added in V2.22
+	If($Controllers)
+	{
+		$Script:MSHotfixes = New-Object System.Collections.ArrayList	
+		$Script:CtxInstalledComponents = New-Object System.Collections.ArrayList	
+		$Script:WinInstalledComponents = New-Object System.Collections.ArrayList	
 	}
 	
-	ForEach($Controller in $Controllers)
+	ForEach($Controller in $DDCs)
 	{
 		Write-Verbose "$(Get-Date): `t`tOutput Controller $($Controller.DNSName)"
 		$Script:TotalControllers++
-
+		
 		If($MSWord -or $PDF)
 		{
 			$ScriptInformation = New-Object System.Collections.ArrayList
@@ -30898,6 +30962,7 @@ Function OutputControllers
 			$ScriptInformation.Add(@{Data = "Version"; Value = $Controller.ControllerVersion; }) > $Null
 			$ScriptInformation.Add(@{Data = "Last updated"; Value = $Controller.LastActivityTime; }) > $Null
 			$ScriptInformation.Add(@{Data = "Registered desktops"; Value = $Controller.DesktopsRegistered; }) > $Null
+			$ScriptInformation.Add(@{Data = "State"; Value = $Controller.State; }) > $Null #added in V2.22
 
 			$Table = AddWordTable -Hashtable $ScriptInformation `
 			-Columns Data,Value `
@@ -30922,18 +30987,458 @@ Function OutputControllers
 			Line 1 "Version`t`t`t: " $Controller.ControllerVersion
 			Line 1 "Last updated`t`t: " $Controller.LastActivityTime
 			Line 1 "Registered desktops`t: " $Controller.DesktopsRegistered
+			Line 1 "State`t`t`t: " $Controller.State #added in V2.22
 			Line 0 ""
 		}
 		ElseIf($HTML)
 		{
+			$rowdata = @() #moved to here in V2.22
 			$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Controller.DNSName,$htmlwhite)
 			$rowdata += @(,('Version',($htmlsilver -bor $htmlbold),$Controller.ControllerVersion,$htmlwhite))
 			$rowdata += @(,('Last updated',($htmlsilver -bor $htmlbold),$Controller.LastActivityTime,$htmlwhite))
 			$rowdata += @(,('Registered desktops',($htmlsilver -bor $htmlbold),$Controller.DesktopsRegistered,$htmlwhite))
+			$rowdata += @(,('State',($htmlsilver -bor $htmlbold),$Controller.State,$htmlwhite)) #added in V2.22
 			$msg = ""
 			$columnWidths = @("100px","250px")
 			FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
 			WriteHTMLLine 0 0 "" #added V2.21
+		}
+		
+		If($DDCCount -eq 1) #added in V2.22
+		{
+			If($MSWord -or $PDF)
+			{
+				WriteWordLine 0 0 "Warning: There is only one delivery controller in this Site" "" $Null 0 $False $True
+			}
+			ElseIf($Text)
+			{
+				Line 0 "Warning: There is only one delivery controller in this Site"
+			}
+			ElseIf($HTML)
+			{
+				WriteHTMLLine 0 0 "Warning: There is only one delivery controller in this Site" "" $Null 2 $htmlbold
+			}
+		}
+
+		If($Controllers)
+		{
+			#added V2.22 get installed Microsoft Hotfixes and Updates
+			Write-Verbose "$(Get-Date): `t`t`tRetrieving Microsoft hotfixes and updates"
+			[bool]$GotMSHotfixes = $True
+			
+			Try
+			{
+				$results = Get-HotFix -computername $Controller.DNSName | Select-Object CSName,Caption,Description,HotFixID,InstalledBy,InstalledOn
+				$MSInstalledHotfixes = $results | Sort-Object HotFixID
+				$results = $Null
+			}
+			
+			Catch
+			{
+				$GotMSHotfixes = $False
+			}
+			
+			If($MSWord -or $PDF)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tOutput Microsoft hotfixes and updates"
+				If($GotMSHotfixes -eq $False)
+				{
+					WriteWordLine 0 0 "No installed Microsoft hotfixes or updates were found"
+				}
+				Else
+				{
+					WriteWordLine 2 0 "Microsoft Hotfixes and Updates"
+					$WordTable = @()
+					ForEach($Hotfix in $MSInstalledHotfixes)
+					{
+						$obj1 = New-Object -TypeName PSObject
+						$obj1 | Add-Member -MemberType NoteProperty -Name HotFixID		-Value $Hotfix.HotFixID
+						$obj1 | Add-Member -MemberType NoteProperty -Name CSName		-Value $Hotfix.CSName
+						$obj1 | Add-Member -MemberType NoteProperty -Name Caption		-Value $Hotfix.Caption
+						$obj1 | Add-Member -MemberType NoteProperty -Name Description	-Value $Hotfix.Description
+						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledBy	-Value $Hotfix.InstalledBy
+						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledOn	-Value $Hotfix.InstalledOn
+						$Script:MSHotfixes.Add($obj1) > $Null
+						
+						$WordTable += @{
+						HotFixID = $Hotfix.HotFixID; 
+						Caption = $Hotfix.Caption; 
+						Description = $Hotfix.Description; 
+						InstalledBy = $Hotfix.InstalledBy; 
+						InstalledOn = $Hotfix.InstalledOn
+						}
+					}
+
+					$Table = AddWordTable -Hashtable $WordTable `
+					-Columns  HotFixID, Caption, Description, InstalledBy, InstalledOn `
+					-Headers  "HotFix ID", "Caption", "Description","Installed By", "Installed On"  `
+					-Format $wdTableGrid `
+					-AutoFit $wdAutoFitFixed;
+
+					SetWordCellFormat -Collection $Table -Size 9
+					SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+					$Table.Columns.Item(1).Width = 55;
+					$Table.Columns.Item(2).Width = 180;
+					$Table.Columns.Item(3).Width = 55;
+					$Table.Columns.Item(4).Width = 110;
+					$Table.Columns.Item(5).Width = 110;
+
+					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+					FindWordDocumentEnd
+					$Table = $Null
+					WriteWordLine 0 0 " "
+				}
+			}
+			ElseIf($Text)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tOutput Microsoft hotfixes and updates"
+				If($GotMSHotfixes -eq $False)
+				{
+					Line 1 "No installed Microsoft hotfixes or updates were found"
+				}
+				Else
+				{
+					Line 1 "Microsoft Hotfixes and Updates"
+					ForEach($Hotfix in $MSInstalledHotfixes)
+					{
+						$obj1 = New-Object -TypeName PSObject
+						$obj1 | Add-Member -MemberType NoteProperty -Name CSName		-Value $Hotfix.CSName
+						$obj1 | Add-Member -MemberType NoteProperty -Name Caption		-Value $Hotfix.Caption
+						$obj1 | Add-Member -MemberType NoteProperty -Name Description	-Value $Hotfix.Description
+						$obj1 | Add-Member -MemberType NoteProperty -Name HotFixID		-Value $Hotfix.HotFixID
+						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledBy	-Value $Hotfix.InstalledBy
+						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledOn	-Value $Hotfix.InstalledOn
+						$Script:MSHotfixes.Add($obj1) > $Null
+						
+						Line 2 "HotFix ID`t: " $Hotfix.HotFixID
+						Line 2 "Caption`t`t: " $Hotfix.Caption
+						Line 2 "Description`t: " $Hotfix.Description
+						Line 2 "Installed By`t: " $Hotfix.InstalledBy
+						Line 2 "Installed On`t: " $Hotfix.InstalledOn
+						Line 0 ""
+					}
+				}
+			}
+			ElseIf($HTML)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tOutput Microsoft hotfixes and updates"
+				If($GotMSHotfixes -eq $False)
+				{
+					WriteHTMLLine 0 0 "No installed Microsoft hotfixes or updates were found"
+				}
+				Else
+				{
+					$rowdata = @()
+					ForEach($Hotfix in $MSInstalledHotfixes)
+					{
+						$obj1 = New-Object -TypeName PSObject
+						$obj1 | Add-Member -MemberType NoteProperty -Name CSName		-Value $Hotfix.CSName
+						$obj1 | Add-Member -MemberType NoteProperty -Name Caption		-Value $Hotfix.Caption
+						$obj1 | Add-Member -MemberType NoteProperty -Name Description	-Value $Hotfix.Description
+						$obj1 | Add-Member -MemberType NoteProperty -Name HotFixID		-Value $Hotfix.HotFixID
+						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledBy	-Value $Hotfix.InstalledBy
+						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledOn	-Value $Hotfix.InstalledOn
+						$Script:MSHotfixes.Add($obj1) > $Null
+						
+						$rowdata += @(,(
+						$Hotfix.HotFixID,$htmlwhite,
+						$Hotfix.Caption,$htmlwhite,
+						$Hotfix.Description,$htmlwhite,
+						$Hotfix.InstalledBy,$htmlwhite,
+						$Hotfix.InstalledOn,$htmlwhite))
+					}
+
+					$columnHeaders = @(
+					'HotFix ID',($htmlsilver -bor $htmlbold),
+					'Caption',($htmlsilver -bor $htmlbold),
+					'Description',($htmlsilver -bor $htmlbold),
+					'Installed By',($htmlsilver -bor $htmlbold),
+					'Installed On',($htmlsilver -bor $htmlbold)
+					)
+
+					$msg = "Microsoft Hotfixes and Updates"
+					FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
+					WriteHTMLLine 0 0 " "
+				}
+			}
+			
+			#added V2.22 get Citrix Installed Components
+			Write-Verbose "$(Get-Date): `t`t`tRetrieving Citrix Installed Components"
+			[bool]$GotCtxComponents = $True
+			
+			If($AdminAddress -eq "LocalHost")
+			{
+				$results = Get-ChildItem HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall|`
+				ForEach-Object{Get-ItemProperty $_.pspath}|`
+				Where-Object {$_.Publisher -like 'Citrix*'}|`
+				Select-Object DisplayName, DisplayVersion
+			}
+			Else
+			{
+				$results = Invoke-Command -ComputerName $Controller.DNSName -ScriptBlock `
+				{Get-ChildItem HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall|`
+				ForEach-Object{Get-ItemProperty $_.pspath}|`
+				Where-Object {$_.Publisher -like 'Citrix*'}|`
+				Select-Object DisplayName, DisplayVersion}
+			}
+			
+			If(!$?)
+			{
+				$GotCtxComponents = $False
+			}
+			Else
+			{
+				$CtxComponents = $results
+				$results = $Null
+				
+				If($AdminAddress -eq "LocalHost")
+				{
+					$results = Get-ChildItem HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall|`
+					ForEach-Object{Get-ItemProperty $_.pspath}|`
+					Where-Object {$_.Publisher -like 'Citrix*'}|`
+					Select-Object DisplayName, DisplayVersion
+				}
+				Else
+				{
+					$results = Invoke-Command -ComputerName $Controller.DNSName -ScriptBlock `
+					{Get-ChildItem HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall|`
+					ForEach-Object{Get-ItemProperty $_.pspath}|`
+					Where-Object {$_.Publisher -like 'Citrix*'}|`
+					Select-Object DisplayName, DisplayVersion}
+				}
+				If($?)
+				{
+					$CtxComponents += $results
+				}
+				
+				$CtxComponents = $CtxComponents | Sort-Object DisplayName
+			}
+		
+			If($MSWord -or $PDF)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tOutput Citrix Installed Components"
+				If($GotCtxComponents -eq $False)
+				{
+					WriteWordLine 0 0 "No Citrix Installed Components were found"
+				}
+				Else
+				{
+					WriteWordLine 2 0 "Citrix Installed Components"
+					$WordTable = @()
+					ForEach($Component in $CtxComponents)
+					{
+						$obj1 = New-Object -TypeName PSObject
+						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName			-Value $Controller.DNSName
+						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName		-Value $Component.DisplayName
+						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayVersion	-Value $Component.DisplayVersion
+						$Script:CtxInstalledComponents.Add($obj1) > $Null
+
+						$WordTable += @{
+						DisplayName = $Component.DisplayName; 
+						DisplayVersion = $Component.DisplayVersion
+						}
+					}
+
+					$Table = AddWordTable -Hashtable $WordTable `
+					-Columns  DisplayName, DisplayVersion `
+					-Headers  "Display Name", "Display Version" `
+					-Format $wdTableGrid `
+					-AutoFit $wdAutoFitFixed;
+
+					SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+					$Table.Columns.Item(1).Width = 300;
+					$Table.Columns.Item(2).Width = 100;
+
+					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+					FindWordDocumentEnd
+					$Table = $Null
+					WriteWordLine 0 0 " "
+				}
+			}
+			ElseIf($Text)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tOutput Citrix Installed Components"
+				If($GotCtxComponents -eq $False)
+				{
+					Line 1 "No Citrix Installed Components were found"
+				}
+				Else
+				{
+					Line 1 "Citrix Installed Components"
+					ForEach($Component in $CtxComponents)
+					{
+						$obj1 = New-Object -TypeName PSObject
+						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName			-Value $Controller.DNSName
+						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName		-Value $Component.DisplayName
+						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayVersion	-Value $Component.DisplayVersion
+						$Script:CtxInstalledComponents.Add($obj1) > $Null
+
+						Line 2 "Display Name`t: " $Component.DisplayName
+						Line 2 "Display Version`t: " $Component.DisplayVersion
+						Line 0 ""
+					}
+				}
+			}
+			ElseIf($HTML)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tOutput Citrix Installed Components"
+				If($GotCtxComponents -eq $False)
+				{
+					WriteHTMLLine 0 0 "No Citrix Installed Components were found"
+				}
+				Else
+				{
+					$rowdata = @()
+					ForEach($Component in $CtxComponents)
+					{
+						$obj1 = New-Object -TypeName PSObject
+						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName			-Value $Controller.DNSName
+						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName		-Value $Component.DisplayName
+						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayVersion	-Value $Component.DisplayVersion
+						$Script:CtxInstalledComponents.Add($obj1) > $Null
+
+						$rowdata += @(,(
+						$Component.DisplayName,$htmlwhite,
+						$Component.DisplayVersion,$htmlwhite))
+					}
+
+					$columnHeaders = @(
+					'Display Name',($htmlsilver -bor $htmlbold),
+					'Display Version',($htmlsilver -bor $htmlbold)
+					)
+
+					$msg = "Citrix Installed Components"
+					FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
+					WriteHTMLLine 0 0 " "
+				}
+			}
+			
+			#added V2.22 get Windows installed Roles and Features
+			Write-Verbose "$(Get-Date): `t`t`tRetrieving Windows installed Roles and Features"
+			[bool]$GotWinComponents = $True
+			
+			$results = Get-WindowsFeature -ComputerName $Controller.DNSName -EA 0 4> $Null
+			
+			If(!$?)
+			{
+				$GotWinComponents = $False
+			}
+			
+			$WinComponents = $results | Where-Object Installed | Select-Object DisplayName,Name,FeatureType | Sort-Object DisplayName 
+			
+		
+			If($MSWord -or $PDF)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tOutput Windows installed Roles and Features"
+				If($GotWinComponents -eq $False)
+				{
+					WriteWordLine 0 0 "No Windows installed Roles and Features were found"
+				}
+				Else
+				{
+					WriteWordLine 2 0 "Windows Installed Roles and Features"
+					$WordTable = @()
+					ForEach($Component in $WinComponents)
+					{
+						$obj1 = New-Object -TypeName PSObject
+						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName		-Value $Controller.DNSName
+						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName	-Value $Component.DisplayName
+						$obj1 | Add-Member -MemberType NoteProperty -Name Name			-Value $Component.Name
+						$obj1 | Add-Member -MemberType NoteProperty -Name FeatureType	-Value $Component.FeatureType
+						$Script:WinInstalledComponents.Add($obj1) > $Null
+
+						$WordTable += @{
+						DisplayName = $Component.DisplayName; 
+						Name = $Component.Name; 
+						FeatureType = $Component.FeatureType
+						}
+					}
+
+					$Table = AddWordTable -Hashtable $WordTable `
+					-Columns  DisplayName, Name, FeatureType `
+					-Headers  "Display Name", "Name", "Feature Type" `
+					-Format $wdTableGrid `
+					-AutoFit $wdAutoFitFixed;
+
+					SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+					$Table.Columns.Item(1).Width = 200;
+					$Table.Columns.Item(2).Width = 150;
+					$Table.Columns.Item(3).Width = 100;
+
+					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+					FindWordDocumentEnd
+					$Table = $Null
+					WriteWordLine 0 0 " "
+				}
+			}
+			ElseIf($Text)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tOutput Windows installed Roles and Features"
+				If($GotWinComponents -eq $False)
+				{
+					Line 1 "No Windows installed Roles and Features were found"
+				}
+				Else
+				{
+					Line 1 "Windows installed Roles and Features"
+					ForEach($Component in $WinComponents)
+					{
+						$obj1 = New-Object -TypeName PSObject
+						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName		-Value $Controller.DNSName
+						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName	-Value $Component.DisplayName
+						$obj1 | Add-Member -MemberType NoteProperty -Name Name			-Value $Component.Name
+						$obj1 | Add-Member -MemberType NoteProperty -Name FeatureType	-Value $Component.FeatureType
+						$Script:WinInstalledComponents.Add($obj1) > $Null
+
+						Line 2 "Display Name`t: " $Component.DisplayName
+						Line 2 "Name`t`t: " $Component.Name
+						Line 2 "Feature Type`t: " $Component.FeatureType
+						Line 0 ""
+					}
+				}
+			}
+			ElseIf($HTML)
+			{
+				Write-Verbose "$(Get-Date): `t`t`tOutput Windows installed Roles and Features"
+				If($GotWinComponents -eq $False)
+				{
+					WriteHTMLLine 0 0 "No Windows installed Roles and Features were found"
+				}
+				Else
+				{
+					$rowdata = @()
+					ForEach($Component in $WinComponents)
+					{
+						$obj1 = New-Object -TypeName PSObject
+						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName		-Value $Controller.DNSName
+						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName	-Value $Component.DisplayName
+						$obj1 | Add-Member -MemberType NoteProperty -Name Name			-Value $Component.Name
+						$obj1 | Add-Member -MemberType NoteProperty -Name FeatureType	-Value $Component.FeatureType
+						$Script:WinInstalledComponents.Add($obj1) > $Null
+
+						$rowdata += @(,(
+						$Component.DisplayName,$htmlwhite,
+						$Component.Name,$htmlwhite,
+						$Component.FeatureType,$htmlwhite))
+					}
+
+					$columnHeaders = @(
+					'Display Name',($htmlsilver -bor $htmlbold),
+					'Name',($htmlsilver -bor $htmlbold),
+					'Feature Type',($htmlsilver -bor $htmlbold)
+					)
+
+					$msg = "Windows installed Roles and Features"
+					FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
+					WriteHTMLLine 0 0 " "
+				}
+			}
 		}
 		
 		If($BrokerRegistryKeys)
@@ -30948,7 +31453,7 @@ Function OutputControllers
 
 	If($Hardware)
 	{
-		ForEach($Controller in $Controllers)
+		ForEach($Controller in $DDCs)
 		{
 			If($MSWord -or $PDF)
 			{
@@ -34194,16 +34699,23 @@ Function ProcessScriptSetup
 		AbortScript
 	}
 
-	#changed 18-dec-2016 to allow 32-bit PoSH to get the data in the 64-bit registry location
-	#initial idea from WC at Citrix and also from http://stackoverflow.com/questions/630382/how-to-access-the-64-bit-registry-from-a-32-bit-powershell-instance reply from SergVro
-	$key = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, [Microsoft.Win32.RegistryView]::Registry64)
-	$subKey =  $key.OpenSubKey("SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Citrix Desktop Delivery Controller")
-
+	#V2.22 add test for $AdminAddress
+	If($AdminAddress -eq "LocalHost")
+	{
+		#changed 18-dec-2016 to allow 32-bit PoSH to get the data in the 64-bit registry location
+		#initial idea from WC at Citrix and also from http://stackoverflow.com/questions/630382/how-to-access-the-64-bit-registry-from-a-32-bit-powershell-instance reply from SergVro
+		$key = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, [Microsoft.Win32.RegistryView]::Registry64)
+		$subKey =  $key.OpenSubKey("SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Citrix Desktop Delivery Controller")
+	}
+	Else
+	{
+		$subKey = $Null
+	}
+	
 	#new test added 23-Jun-2017
 	#if subkey is Null, then check the -AdminAddress computer for the key
 	If($Null -eq $subkey)
 	{
-		Write-Verbose "$(Get-Date): Could not find the version information on $($env:ComputerName), testing $($AdminAddress) now"
 		$key = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $AdminAddress)
 		$subKey =  $key.OpenSubKey("SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Citrix Desktop Delivery Controller")
 		
@@ -34213,12 +34725,6 @@ Function ProcessScriptSetup
 			Write-Verbose "$(Get-Date): Could not find the version information on $($AdminAddress),`n`nScript cannot continue`n "
 			AbortScript
 		}
-		
-		$value = $subKey.GetValue("DisplayVersion")
-		$Script:XDSiteVersion = $value.Substring(0,4)
-		$tmp = $Script:XDSiteVersion.Split(".")
-		[int]$MajorVersion = $tmp[0]
-		[int]$MinorVersion = $tmp[1]
 	}
 	Else
 	{
@@ -34226,14 +34732,19 @@ Function ProcessScriptSetup
 	}
 	
 	$value = $subKey.GetValue("DisplayVersion")
-	$Script:XDSiteVersion = $value.Substring(0,4)
+	#$Script:XDSiteVersion = $value.Substring(0,4) #V2.22
+	$Script:XDSiteVersion = $value #V2.22
 	$tmp = $Script:XDSiteVersion.Split(".")
 	[int]$MajorVersion = $tmp[0]
 	[int]$MinorVersion = $tmp[1]
+	[int]$RevisionVersion = $tmp[2] #added in V2.22
+	[int]$BuildVersion = $tmp[3] #added in V2.22
 	
-	Write-Verbose "$(Get-Date): You are running version $($value)"
-	Write-Verbose "$(Get-Date): Major version $($MajorVersion)"
-	Write-Verbose "$(Get-Date): Minor version $($MinorVersion)"
+	Write-Verbose "$(Get-Date): You are running version $value"
+	Write-Verbose "$(Get-Date): Major version: $MajorVersion"
+	Write-Verbose "$(Get-Date): Minor version: $MinorVersion"
+	Write-Verbose "$(Get-Date): Revision     : $RevisionVersion" #V2.22
+	Write-Verbose "$(Get-Date): Build        : $BuildVersion" #V2.22
 
 	#first check to make sure this is a 7.x Site or 1808+ Site
 	
@@ -34356,6 +34867,7 @@ Function ProcessScriptEnd
 			Out-File -FilePath $SIFile -Append -InputObject "Company Phone      : $($CompanyPhone)" 4>$Null		
 			Out-File -FilePath $SIFile -Append -InputObject "Cover Page         : $($CoverPage)" 4>$Null
 		}
+		Out-File -FilePath $SIFile -Append -InputObject "Controllers        : $($Controllers)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "DeliveryGroups     : $($DeliveryGroups)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Dev                : $($Dev)" 4>$Null
 		If($Dev)
@@ -34449,7 +34961,7 @@ Function OutputAppendixA
 	If($MSWord -or $PDF)
 	{
 		$selection.InsertNewPage()
-		WriteWordLine 3 0 "Appendix A - VDA Registry Items"
+		WriteWordLine 1 0 "Appendix A - VDA Registry Items"
 		WriteWordLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
 		WriteWordLine 0 0 "Linux VDAs are excluded"
 		WriteWordLine 0 0 "These items may or may not be needed"
@@ -34542,7 +35054,7 @@ Function OutputAppendixA
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 3 0 "Appendix A - VDA Registry Items"
+		WriteHTMLLine 1 0 "Appendix A - VDA Registry Items"
 		WriteHTMLLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on VDAs"
 		WriteHTMLLine 0 0 "Linux VDAs are excluded"
 		WriteHTMLLine 0 0 "These items may or may not be needed"
@@ -34608,7 +35120,7 @@ Function OutputAppendixB
 	If($MSWord -or $PDF)
 	{
 		$selection.InsertNewPage()
-		WriteWordLine 3 0 "Appendix B - Controller Registry Items"
+		WriteWordLine 1 0 "Appendix B - Controller Registry Items"
 		WriteWordLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on Controllers"
 		WriteWordLine 0 0 "These items may or may not be needed"
 		WriteWordLine 0 0 "This Appendix is for Controller comparison only"
@@ -34696,7 +35208,7 @@ Function OutputAppendixB
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 3 0 "Appendix B - Controller Registry Items"
+		WriteHTMLLine 1 0 "Appendix B - Controller Registry Items"
 		WriteHTMLLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on Controllers"
 		WriteHTMLLine 0 0 "These items may or may not be needed"
 		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
@@ -34742,6 +35254,441 @@ Function OutputAppendixB
 	}
 
 	Write-Verbose "$(Get-Date): Finished Creating Appendix B Controller Registry Items"
+	Write-Verbose "$(Get-Date): "
+}
+#endregion
+
+#region AppendixC
+Function OutputAppendixC
+{
+	#added in V2.22
+	Write-Verbose "$(Get-Date): Create Appendix C Microsoft Hotfixes and Updates"
+
+	#sort the array by hotfixid and servername
+	$Script:MSHotfixes = $Script:MSHotfixes | Sort-Object HotFixID, CSName
+	
+	If($MSWord -or $PDF)
+	{
+		$selection.InsertNewPage()
+		WriteWordLine 1 0 "Appendix C - Microsoft Hotfixes and Updates"
+		WriteWordLine 0 0 "This Appendix is for Controller comparison only"
+		WriteWordLine 0 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:MSHotfixes)
+		{
+			$AppendixWordTable = @()
+			ForEach($Item in $Script:MSHotfixes)
+			{
+				If(!$First -and $Save -ne "$($Item.HotFixID)")
+				{
+					$AppendixWordTable += @{ 
+					HotFixID = "";
+					CSName = "";
+					Caption = "";
+					Description = "";
+					InstalledBy = "";
+					InstalledOn = ""
+					}
+				}
+
+				$AppendixWordTable += @{ 
+				HotFixID = $Item.HotFixID;
+				CSName = $Item.CSName;
+				Caption = $Item.Caption;
+				Description = $Item.Description;
+				InstalledBy = $Item.InstalledBy;
+				InstalledOn = $Item.InstalledOn
+				}
+				$Save = "$($Item.HotFixID)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$Table = AddWordTable -Hashtable $AppendixWordTable `
+			-Columns HotFixID, CSName, Caption, Description, InstalledBy, InstalledOn `
+			-Headers "Hotfix ID", "DDC Name", "Caption", "Description", "Installed By", "Installed On" `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
+
+			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
+		}
+	}
+	ElseIf($Text)
+	{
+		Line 0 "Appendix C - Microsoft Hotfixes and Updates"
+		Line 0 "This Appendix is for Controller comparison only"
+		Line 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:MSHotfixes)
+		{
+			ForEach($Item in $Script:MSHotfixes)
+			{
+				If(!$First -and $Save -ne "$($Item.HotFixID)")
+				{
+					Line 0 ""
+				}
+
+				Line 1 "Hotfix ID`t: " $Item.HotFixID
+				Line 1 "DDC Name`t: " $Item.CSName
+				Line 1 "Caption`t`t: " $Item.Caption
+				Line 1 "Description`t: " $Item.Description
+				Line 1 "Installed By`t: " $Item.InstalledBy
+				Line 1 "Installed On`t: " $Item.InstalledOn
+				$Save = "$($Item.HotFixID)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+		}
+		Else
+		{
+			Line 1 "<None found>"
+		}
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 "Appendix C - Microsoft Hotfixes and Updates"
+		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
+		WriteHTMLLine 0 0 ""
+		$rowdata = @()
+		
+		$Save = ""
+		$First = $True
+		If($Script:MSHotfixes)
+		{
+			ForEach($Item in $Script:MSHotfixes)
+			{
+				If(!$First -and $Save -ne "$($Item.HotFixID)")
+				{
+					$rowdata += @(,("",$htmlwhite))
+				}
+
+				$rowdata += @(,(
+				$Item.HotFixID,$htmlwhite,
+				$Item.CSName,$htmlwhite,
+				$Item.Caption,$htmlwhite,
+				$Item.Description,$htmlwhite,
+				$Item.InstalledBy,$htmlwhite,
+				$Item.InstalledOn,$htmlwhite))
+				$Save = "$($Item.HotFixID)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$columnHeaders = @(
+			'Hotfix ID',($htmlsilver -bor $htmlbold),
+			'DDC Name',($htmlsilver -bor $htmlbold),
+			'Caption',($htmlsilver -bor $htmlbold),
+			'Description',($htmlsilver -bor $htmlbold),
+			'Installed By',($htmlsilver -bor $htmlbold),
+			'Installed On',($htmlsilver -bor $htmlbold))
+
+			$msg = ""
+			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		}
+		Else
+		{
+			WriteHTMLLine 1 "None found"
+		}
+		WriteHTMLLine 0 ""
+	}
+
+	Write-Verbose "$(Get-Date): Finished Creating Appendix C Microsoft Hotfixes and Updates"
+	Write-Verbose "$(Get-Date): "
+}
+#endregion
+
+#region AppendixD
+Function OutputAppendixD
+{
+	#added in V2.22
+	Write-Verbose "$(Get-Date): Create Appendix D Citrix Installed Components"
+
+	$Script:CtxInstalledComponents = $Script:CtxInstalledComponents | Sort-Object DisplayName, DDCName
+	
+	If($MSWord -or $PDF)
+	{
+		$selection.InsertNewPage()
+		WriteWordLine 1 0 "Appendix D - Citrix Installed Components"
+		WriteWordLine 0 0 "This Appendix is for Controller comparison only"
+		WriteWordLine 0 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:CtxInstalledComponents)
+		{
+			$AppendixWordTable = @()
+			ForEach($Item in $Script:CtxInstalledComponents)
+			{
+				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				{
+					$AppendixWordTable += @{ 
+					DisplayName = "";
+					DisplayVersion = "";
+					DDCName = "";
+					}
+				}
+
+				$AppendixWordTable += @{ 
+				DisplayName = $Item.DisplayName;
+				DisplayVersion = $Item.DisplayVersion;
+				DDCName = $Item.DDCName;
+				}
+				$Save = "$($Item.DisplayName)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$Table = AddWordTable -Hashtable $AppendixWordTable `
+			-Columns DisplayName, DisplayVersion, DDCName `
+			-Headers "Display Name", "Display Version", "DDC Name" `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
+
+			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
+		}
+	}
+	ElseIf($Text)
+	{
+		Line 0 "Appendix D - Citrix Installed Components"
+		Line 0 "This Appendix is for Controller comparison only"
+		Line 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:CtxInstalledComponents)
+		{
+			ForEach($Item in $Script:CtxInstalledComponents)
+			{
+				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				{
+					Line 0 ""
+				}
+
+				Line 1 "Display Name`t: " $Item.DisplayName
+				Line 1 "Display Version`t: " $Item.DisplayVersion
+				Line 1 "DDC Name`t: " $Item.DDCName
+				$Save = "$($Item.DisplayName)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+		}
+		Else
+		{
+			Line 1 "<None found>"
+		}
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 "Appendix D - Citrix Installed Components"
+		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
+		WriteHTMLLine 0 0 ""
+		$rowdata = @()
+		
+		$Save = ""
+		$First = $True
+		If($Script:CtxInstalledComponents)
+		{
+			ForEach($Item in $Script:CtxInstalledComponents)
+			{
+				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				{
+					$rowdata += @(,("",$htmlwhite))
+				}
+
+				$rowdata += @(,(
+				$Item.DisplayName,$htmlwhite,
+				$Item.DisplayVersion,$htmlwhite,
+				$Item.DDCName,$htmlwhite))
+				$Save = "$($Item.DisplayName)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$columnHeaders = @(
+			'Display Name',($htmlsilver -bor $htmlbold),
+			'Display Version',($htmlsilver -bor $htmlbold),
+			'DDC Name',($htmlsilver -bor $htmlbold))
+
+			$msg = ""
+			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		}
+		Else
+		{
+			WriteHTMLLine 1 "None found"
+		}
+		WriteHTMLLine 0 ""
+	}
+
+	Write-Verbose "$(Get-Date): Finished Creating Appendix D Citrix Installed Components"
+	Write-Verbose "$(Get-Date): "
+}
+#endregion
+
+#region AppendixE
+Function OutputAppendixE
+{
+	#added in V2.22
+	Write-Verbose "$(Get-Date): Create Appendix E Windows Installed Components"
+
+	$Script:WinInstalledComponents = $Script:WinInstalledComponents | Sort-Object DisplayName, DDCName
+	
+	If($MSWord -or $PDF)
+	{
+		$selection.InsertNewPage()
+		WriteWordLine 1 0 "Appendix E - Windows Installed Components"
+		WriteWordLine 0 0 "This Appendix is for Controller comparison only"
+		WriteWordLine 0 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:WinInstalledComponents)
+		{
+			$AppendixWordTable = @()
+			ForEach($Item in $Script:WinInstalledComponents)
+			{
+				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				{
+					$AppendixWordTable += @{ 
+					DisplayName = "";
+					DDCName = "";
+					Name = "";
+					FeatureType = "";
+					}
+				}
+
+				$AppendixWordTable += @{ 
+				DisplayName = $Item.DisplayName;
+				DDCName = $Item.DDCName;
+				Name = $Item.Name;
+				FeatureType = $Item.FeatureType;
+				}
+				$Save = "$($Item.DisplayName)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$Table = AddWordTable -Hashtable $AppendixWordTable `
+			-Columns DisplayName, DDCName, Name, FeatureType `
+			-Headers "Display Name", "DDC Name", "Name", "Feature Type"  `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitContent;
+
+			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
+		}
+	}
+	ElseIf($Text)
+	{
+		Line 0 "Appendix E - Windows Installed Components"
+		Line 0 "This Appendix is for Controller comparison only"
+		Line 0 ""
+		
+		$Save = ""
+		$First = $True
+		If($Script:WinInstalledComponents)
+		{
+			ForEach($Item in $Script:WinInstalledComponents)
+			{
+				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				{
+					Line 0 ""
+				}
+
+				Line 1 "Display Name`t: " $Item.DisplayName
+				Line 1 "DDC Name`t: " $Item.DDCName
+				Line 1 "Name`t`t: " $Item.Name
+				Line 1 "Feature Type`t: " $Item.FeatureType
+				$Save = "$($Item.DisplayName)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+		}
+		Else
+		{
+			Line 1 "<None found>"
+		}
+		Line 0 ""
+	}
+	ElseIf($HTML)
+	{
+		WriteHTMLLine 1 0 "Appendix E - Windows Installed Components"
+		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
+		WriteHTMLLine 0 0 ""
+		$rowdata = @()
+		
+		$Save = ""
+		$First = $True
+		If($Script:WinInstalledComponents)
+		{
+			ForEach($Item in $Script:WinInstalledComponents)
+			{
+				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				{
+					$rowdata += @(,("",$htmlwhite))
+				}
+
+				$rowdata += @(,(
+				$Item.DisplayName,$htmlwhite,
+				$Item.DDCName,$htmlwhite,
+				$Item.Name,$htmlwhite,
+				$Item.FeatureType,$htmlwhite))
+				$Save = "$($Item.DisplayName)"
+				If($First)
+				{
+					$First = $False
+				}
+			}
+			$columnHeaders = @(
+			'Display Name',($htmlsilver -bor $htmlbold),
+			'DDC Name',($htmlsilver -bor $htmlbold),
+			'Name',($htmlsilver -bor $htmlbold),
+			'Feature Type',($htmlsilver -bor $htmlbold))
+
+			$msg = ""
+			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
+		}
+		Else
+		{
+			WriteHTMLLine 1 "None found"
+		}
+		WriteHTMLLine 0 ""
+	}
+
+	Write-Verbose "$(Get-Date): Finished Creating Appendix E Windows Installed Components"
 	Write-Verbose "$(Get-Date): "
 }
 #endregion
@@ -34855,6 +35802,15 @@ If($BrokerRegistryKeys)
 {
 	OutputAppendixB	#V2.20
 }
+
+#added in V2.22
+If($Controllers)
+{
+	OutputAppendixC #ms hotfixes
+	OutputAppendixD #ctx components
+	OutputAppendixE #win features
+}
+
 #endregion
 
 #region finish script
