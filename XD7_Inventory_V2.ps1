@@ -226,7 +226,8 @@
 		List of installed Microsoft Hotfixes and Updates
 		List of Citrix installed components
 		List of Windows installed Roles and Features
-		Appendix C List of installed Microsoft Hotfixes and Updates for all Controllers
+		Appendix C List of installed Microsoft Hotfixes and Updates for all 
+		Controllers
 		Appendix D List of Citrix installed components for all Controllers
 		Appendix E List of Windows installed Roles and Features for all Controllers
 	
@@ -357,8 +358,10 @@
 	Using the Policies parameter can cause the report to take a very long time 
 	to complete and can generate an extremely long report.
 	
-	Note: The Citrix Group Policy PowerShell module will not load from an elevated PowerShell session. 
-	If the module is manually imported, the module is not detected from an elevated PowerShell session.
+	Note: The Citrix Group Policy PowerShell module will not load from an elevated 
+	PowerShell session. 
+	If the module is manually imported, the module is not detected from an elevated 
+	PowerShell session.
 	
 	There are three related parameters: Policies, NoPolicies, and NoADPolicies.
 	
@@ -1004,7 +1007,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.22
 	AUTHOR: Carl Webster
-	LASTEDIT: March 27, 2019
+	LASTEDIT: March 28, 2019
 #>
 
 #endregion
@@ -1206,7 +1209,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.22
+#Version 2.22 28-Mar-2019
 #	Add new parameter -Controllers
 #	In the functions ProcessControllers and OutputControllers, change function variable $Controllers 
 #		to $DDCs for the new $Controllers parameter
