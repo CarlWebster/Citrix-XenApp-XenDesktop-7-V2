@@ -233,6 +233,20 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of DDC.
+.PARAMETER CSV
+	Will create a CSV file for each Appendix.
+	The default value is False.
+	
+	Output CSV filename is in the format:
+	
+	CVADSiteName_Documentation_Appendix#_NameOfAppendix.csv
+	
+	For example:
+		CVADSiteName_Documentation_AppendixA_VDARegistryItems.csv
+		CVADSiteName_Documentation_AppendixB_ControllerRegistryItems.csv
+		CVADSiteName_Documentation_AppendixC_MicrosoftHotfixesandUpdates.csv
+		CVADSiteName_Documentation_AppendixD_CitrixInstalledComponents.csv
+		CVADSiteName_Documentation_AppendixE_WindowsInstalledComponents.csv	
 .PARAMETER DeliveryGroups
 	Gives detailed information on all desktops in all Desktop (Delivery) Groups.
 	
@@ -944,7 +958,7 @@
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
-	Adds the information on VDA registry keys to the Machine Details section.
+	Adds the information on VDA registry keys to Appendix A.
 	Forces the MachineCatalogs parameter to $True
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MaxDetails
@@ -972,7 +986,7 @@
 		MachineCatalogs     = True
 		Policies            = True
 		StoreFront          = True
-		VDARegistryKeys		= True
+		VDARegistryKeys     = True
 		
 		NoPolicies          = False
 		Section             = "All"
@@ -998,6 +1012,12 @@
 	
 	Creates a text file for transcript logging named 
 	XDV2DocScriptTranscript_yyyy-MM-dd_HHmm.txt.
+.EXAMPLE
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -CSV
+	
+	Will use all Default values.
+	LocalHost for AdminAddress.
+	Creates a CSV file for each Appendix.
 .INPUTS
 	None.  You cannot pipe objects to this script.
 .OUTPUTS
@@ -1005,9 +1025,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.22
+	VERSION: 2.23
 	AUTHOR: Carl Webster
-	LASTEDIT: March 28, 2019
+	LASTEDIT: April 6, 2019
 #>
 
 #endregion
@@ -1104,6 +1124,9 @@ Param(
 	[Alias("DDC")]
 	[Switch]$Controllers=$False,	
 	
+	[parameter(Mandatory=$False)] 
+	[switch]$CSV=$False,
+
 	[parameter(Mandatory=$False)] 
 	[Alias("DG")]
 	[Switch]$DeliveryGroups=$False,	
@@ -1208,6 +1231,37 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.23
+#	Add -CSV parameter
+#	Add to Hosting Connection output, IntelliCache setting
+#	Fixed all WriteHTMLLine lines that were supposed to be in bold. Wrong parameters were used.
+#	If both -MachineCatalogs and -DeliveryGroups parameters are used, only output the machine details for catalogs, not delivery groups
+#	In Function OutputNicItem, change how $powerMgmt is retrieved
+#		Will now show "Not Supported" instead of "N/A" if the NIC driver does not support Power Management (i.e. XenServer)
+#	Sort Appendix E data by Display Name, Name, and DDCName, and change output to match
+#	Remove from report output, the individual listings for:
+#		Citrix Installed Components
+#		Controller Registry keys
+#		Microsoft Hotfixes
+#		VDA Registry Keys
+#		Windows Installed Roles and Features
+#
+#		These will now only show in the Appendixes to keep the report length shorter
+#		Remove Function OutputControllerRegistryKeys
+#		Remove Function OutputVDARegistryKeys
+#	Update each function that outputs each appendix to output a CSV file if -CSV is used
+#		Output CSV filename is in the format:
+#		CVADSiteName_Documentation_Appendix#_NameOfAppendix.csv
+#		For example:
+#			CVADSiteName_Documentation_AppendixA_VDARegistryItems.csv
+#			CVADSiteName_Documentation_AppendixB_ControllerRegistryItems.csv
+#			CVADSiteName_Documentation_AppendixC_MicrosoftHotfixesandUpdates.csv
+#			CVADSiteName_Documentation_AppendixD_CitrixInstalledComponents.csv
+#			CVADSiteName_Documentation_AppendixE_WindowsInstalledComponents.csv	
+#	Update Function OutputNicItem with a $ComputerName parameter
+#		Update Function GetComputerWMIInfo to pass the computer name parameter to the OutputNicItem function
+#	Update help text
 
 #Version 2.22 28-Mar-2019
 #	Add new parameter -Controllers
@@ -2165,10 +2219,10 @@ Function GetComputerWMIInfo
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 2 "Get-WmiObject win32_computersystem failed for $($RemoteComputerName)" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
+			WriteHTMLLine 0 2 "Get-WmiObject win32_computersystem failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 		}
 	}
 	Else
@@ -2184,7 +2238,7 @@ Function GetComputerWMIInfo
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 2 "No results Returned for Computer information" "" $Null 0 $False $True
+			WriteHTMLLine 0 2 "No results Returned for Computer information" "" "" $Null 2 $htmlbold
 		}
 	}
 	
@@ -2248,10 +2302,10 @@ Function GetComputerWMIInfo
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 2 "Get-WmiObject Win32_LogicalDisk failed for $($RemoteComputerName)" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
+			WriteHTMLLine 0 2 "Get-WmiObject Win32_LogicalDisk failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 		}
 	}
 	Else
@@ -2267,7 +2321,7 @@ Function GetComputerWMIInfo
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 2 "No results Returned for Drive information" "" $Null 0 $False $True
+			WriteHTMLLine 0 2 "No results Returned for Drive information" "" $Null 2 $htmlbold
 		}
 	}
 	
@@ -2328,10 +2382,10 @@ Function GetComputerWMIInfo
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 2 "Get-WmiObject win32_Processor failed for $($RemoteComputerName)" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
+			WriteHTMLLine 0 2 "Get-WmiObject win32_Processor failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 		}
 	}
 	Else
@@ -2347,7 +2401,7 @@ Function GetComputerWMIInfo
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 2 "No results Returned for Processor information" "" $Null 0 $False $True
+			WriteHTMLLine 0 2 "No results Returned for Processor information" "" $Null 2 $htmlbold
 		}
 	}
 
@@ -2409,7 +2463,7 @@ Function GetComputerWMIInfo
 				
 				If($? -and $Null -ne $ThisNic)
 				{
-					OutputNicItem $Nic $ThisNic
+					OutputNicItem $Nic $ThisNic $RemoteComputerName
 				}
 				ElseIf(!$?)
 				{
@@ -2435,10 +2489,10 @@ Function GetComputerWMIInfo
 					ElseIf($HTML)
 					{
 						WriteHTMLLine 0 2 "Error retrieving NIC information" "" $Null 0 $False $True
-						WriteHTMLLine 0 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)" "" $Null 0 $False $True
-						WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-						WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
-						WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
+						WriteHTMLLine 0 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
+						WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
+						WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+						WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 					}
 				}
 				Else
@@ -2454,7 +2508,7 @@ Function GetComputerWMIInfo
 					}
 					ElseIf($HTML)
 					{
-						WriteHTMLLine 0 2 "No results Returned for NIC information" "" $Null 0 $False $True
+						WriteHTMLLine 0 2 "No results Returned for NIC information" "" $Null 2 $htmlbold
 					}
 				}
 			}
@@ -2483,11 +2537,11 @@ Function GetComputerWMIInfo
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 2 "Error retrieving NIC configuration information" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
-			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
+			WriteHTMLLine 0 2 "Error retrieving NIC configuration information" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 		}
 	}
 	Else
@@ -2503,7 +2557,7 @@ Function GetComputerWMIInfo
 		}
 		ElseIf($HTML)
 		{
-			WriteHTMLLine 0 2 "No results Returned for NIC configuration information" "" $Null 0 $False $True
+			WriteHTMLLine 0 2 "No results Returned for NIC configuration information" "" $Null 2 $htmlbold
 		}
 	}
 	
@@ -2837,24 +2891,37 @@ Function OutputProcessorItem
 
 Function OutputNicItem
 {
-	Param([object]$Nic, [object]$ThisNic)
+	Param([object]$Nic, [object]$ThisNic, [string] $ComputerName)
 	
-	$powerMgmt = Get-WmiObject MSPower_DeviceEnable -Namespace root\wmi | Where-Object {$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
-
-	If($? -and $Null -ne $powerMgmt)
+	#V2.23 change how $powerMgmt is retrieved
+	If(validObject $ThisNic PowerManagementSupported)
 	{
-		If($powerMgmt.Enable -eq $True)
+		$powerMgmt = $ThisNic.PowerManagementSupported
+	}
+	
+	If($powerMgmt)
+	{
+		$powerMgmt = Get-WmiObject -ComputerName MSPower_DeviceEnable -Namespace root\wmi | Where-Object {$_.InstanceName -match [regex]::Escape($ThisNic.PNPDeviceID)}
+
+		If($? -and $Null -ne $powerMgmt)
 		{
-			$PowerSaving = "Enabled"
+			If($powerMgmt.Enable -eq $True)
+			{
+				$PowerSaving = "Enabled"
+			}
+			Else
+			{
+				$PowerSaving = "Disabled"
+			}
 		}
 		Else
 		{
-			$PowerSaving = "Disabled"
+			$PowerSaving = "N/A"
 		}
 	}
 	Else
 	{
-        $PowerSaving = "N/A"
+		$PowerSaving = "Not Supported"
 	}
 	
 	$xAvailability = ""
@@ -5652,26 +5719,26 @@ Function SetFileName1andFileName2
 	
 	If($Folder -eq "")
 	{
-		$pwdpath = $pwd.Path
+		$Script:pwdpath = $pwd.Path
 	}
 	Else
 	{
-		$pwdpath = $Folder
+		$Script:pwdpath = $Folder
 	}
 
-	If($pwdpath.EndsWith("\"))
+	If($Script:pwdpath.EndsWith("\"))
 	{
 		#remove the trailing \
-		$pwdpath = $pwdpath.SubString(0, ($pwdpath.Length - 1))
+		$Script:pwdpath = $Script:pwdpath.SubString(0, ($Script:pwdpath.Length - 1))
 	}
 
 	#set $Script:Filename1 and $Script:Filename2 with no file extension
 	If($AddDateTime)
 	{
-		[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName)"
+		[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName)"
 		If($PDF)
 		{
-			[string]$Script:FileName2 = "$($pwdpath)\$($OutputFileName)"
+			[string]$Script:FileName2 = "$($Script:pwdpath)\$($OutputFileName)"
 		}
 	}
 
@@ -5686,10 +5753,10 @@ Function SetFileName1andFileName2
 
 		If(!$AddDateTime)
 		{
-			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).docx"
+			[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).docx"
 			If($PDF)
 			{
-				[string]$Script:FileName2 = "$($pwdpath)\$($OutputFileName).pdf"
+				[string]$Script:FileName2 = "$($Script:pwdpath)\$($OutputFileName).pdf"
 			}
 		}
 
@@ -5699,7 +5766,7 @@ Function SetFileName1andFileName2
 	{
 		If(!$AddDateTime)
 		{
-			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).txt"
+			[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).txt"
 		}
 		ShowScriptOptions
 	}
@@ -5707,7 +5774,7 @@ Function SetFileName1andFileName2
 	{
 		If(!$AddDateTime)
 		{
-			[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).html"
+			[string]$Script:FileName1 = "$($Script:pwdpath)\$($OutputFileName).html"
 		}
 		SetupHTML
 		ShowScriptOptions
@@ -5789,6 +5856,7 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date): Company Phone      : $($CompanyPhone)"
 	Write-Verbose "$(Get-Date): Cover Page         : $($CoverPage)"
 	Write-Verbose "$(Get-Date): Controllers        : $($Controllers)"
+	Write-Verbose "$(Get-Date): CSV                : $($CSV)"
 	Write-Verbose "$(Get-Date): DeliveryGroups     : $($DeliveryGroups)"
 	If($Dev)
 	{
@@ -8167,10 +8235,10 @@ Function Get-VDARegKeyToObject
     $val = Get-RegistryValue2 $RegPath $RegKey $ComputerName
 	
     $obj1 = New-Object -TypeName PSObject
-	$obj1 | Add-Member -MemberType NoteProperty -Name ComputerName	-Value $ComputerName
-	$obj1 | Add-Member -MemberType NoteProperty -Name VDAType		-Value $xType
 	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey		-Value $RegPath
 	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue		-Value $RegKey
+	$obj1 | Add-Member -MemberType NoteProperty -Name VDAType		-Value $xType
+	$obj1 | Add-Member -MemberType NoteProperty -Name ComputerName	-Value $ComputerName
     If($Null -eq $val) 
 	{
         $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value "Not set"
@@ -8182,126 +8250,11 @@ Function Get-VDARegKeyToObject
     $Script:VDARegistryItems.Add($obj1) > $Null
 }
 
-Function OutputVDARegistryKeys
-{
-	#V2.11 sort the array by regkey and regvalue and change the output to match
-	Write-Verbose "$(Get-Date): `t`t`tOutput Registry Key data"
-	$Script:VDARegistryItems = $Script:VDARegistryItems | Sort-Object RegValue, RegKey
-	
-	$txt = "Machine Registry Items"
-	#v2.11 change heading from "2" to "3"
-	If($MSWord -or $PDF)
-	{
-		WriteWordLine 3 0 $txt
-	}
-	ElseIf($Text)
-	{
-		Line 0 $txt
-	}
-	ElseIf($HTML)
-	{
-		WriteHTMLLine 3 0 $txt
-	}
-
-	If($MSWord -or $PDF)
-	{
-		$WordTable = @()
-	}
-	ElseIf($HTML)
-	{
-		$rowdata = @()
-	}
-	
-	If($Script:VDARegistryItems)
-	{
-		If($Text)
-		{
-			Line 1 "Registry Key                                                                  Registry Value                                     Data            " 
-			Line 1 "================================================================================================================================================="
-		}
-
-		ForEach($Item in $Script:VDARegistryItems)
-		{
-			If($MSWord -or $PDF)
-			{
-				$WordTable += @{
-				RegKey = $Item.RegKey; 
-				RegValue = $Item.RegValue; 
-				Value = $Item.Value
-				}
-			}
-			ElseIf($Text)
-			{
-				Line 1 ( "{0,-77} {1,-50} {2,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value)
-			}
-			ElseIf($HTML)
-			{
-				$rowdata += @(,(
-				$Item.RegKey,$htmlwhite,
-				$Item.RegValue,$htmlwhite,
-				$Item.Value,$htmlwhite))
-			}
-		}
-	}
-	Else
-	{
-		If($MSWord -or $PDF)
-		{
-			WriteWordLine 0 1 "<None found>"
-		}
-		ElseIf($Text)
-		{
-			Line 1 "<None found>"
-		}
-		ElseIf($HTML)
-		{
-			WriteHTMLLine 0 1 "None found"
-		}
-	}
-
-	If($MSWord -or $PDF)
-	{
-		$Table = AddWordTable -Hashtable $WordTable `
-		-Columns  RegKey, RegValue, Value `
-		-Headers  "Registry Key", "Registry Value", "Value" `
-		-Format $wdTableGrid `
-		-AutoFit $wdAutoFitFixed;
-
-		SetWordCellFormat -Collection $Table -Size 9
-		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-		$Table.Columns.Item(1).Width = 230;
-		$Table.Columns.Item(2).Width = 210;
-		$Table.Columns.Item(3).Width = 60;
-
-		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-		FindWordDocumentEnd
-		$Table = $Null
-	}
-	ElseIf($Text)
-	{
-		Line 0 ""
-	}
-	ElseIf($HTML)
-	{
-		$columnHeaders = @(
-		'Registry Key',($htmlsilver -bor $htmlbold),
-		'Registry Value',($htmlsilver -bor $htmlbold),
-		'Value',($htmlsilver -bor $htmlbold)
-		)
-
-		$msg = ""
-		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
-	}
-}
-
 Function OutputMachineDetails
 {
 	Param([object] $Machine)
 	
-	#V2.10 22-Jan-2018, if HostedMachineName is empty, like for RemotePC and unregistered machines, use the first part of DNSName
+	#V2.10 10-Feb-2018, if HostedMachineName is empty, like for RemotePC and unregistered machines, use the first part of DNSName
 	$tmp = $Machine.DNSName.Split(".")
 	$xMachineName = $tmp[0]
 	$tmp = $Null
@@ -8753,7 +8706,7 @@ Function OutputMachineDetails
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Server"
-				OutputVDARegistryKeys
+				#V2.23 remove output from here and use only in Appendix
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
@@ -9045,7 +8998,7 @@ Function OutputMachineDetails
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Desktop"
-				OutputVDARegistryKeys
+				#V2.23 remove output from here and use only in Appendix
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
@@ -9338,7 +9291,7 @@ Function OutputMachineDetails
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Server"
-				OutputVDARegistryKeys
+				#V2.23 remove output from here and use only in Appendix
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
@@ -9494,7 +9447,7 @@ Function OutputMachineDetails
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Desktop"
-				OutputVDARegistryKeys
+				#V2.23 remove output from here and use only in Appendix
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
@@ -9672,7 +9625,7 @@ Function OutputMachineDetails
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Server"
-				OutputVDARegistryKeys
+				#V2.23 remove output from here and use only in Appendix
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
@@ -9869,7 +9822,7 @@ Function OutputMachineDetails
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
 				GetVDARegistryKeys $Machine.DNSName "Desktop"
-				OutputVDARegistryKeys
+				#V2.23 remove output from here and use only in Appendix
 				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
 				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
 			}
@@ -10353,9 +10306,24 @@ Function OutputDeliveryGroup
 			{
 				WriteHTMLLine 4 0 "Desktops"
 			}
-			ForEach($Machine in $Machines)
+			
+			#V2.23 if both -MachineCatalogs and -DeliveryGroups parameters are used, only output the machine details for catalogs, not delivery groups
+			If($MachineCatalogs -and $DeliveryGroups)
 			{
-				OutputMachineDetails $Machine
+				#do not do machine details for delivery groups if both -MachineCatalogs and -DeliveryGroups parameters are used
+				Write-Verbose "Skipping machine details in OutputDeliveryGroup since both -MachineCatalogs and -DeliveryGroups parameters are used"
+			}
+			ElseIf($DeliveryGroups -and -not $MachineCatalogs)
+			{
+				ForEach($Machine in $Machines)
+				{
+					OutputMachineDetails $Machine
+				}
+			}
+			ElseIf(-not $DeliveryGroups -and $MachineCatalogs)
+			{
+				#shouldn't be here
+				Write-Error "OOPS!!! An error that should not occur has occured in Function OutputDeliveryGroup.`n`nPlease send an email to webster@carlwebster.com"
 			}
 		}
 		ElseIf($? -and $Null -eq $Machines)
@@ -10643,14 +10611,14 @@ Function OutputDeliveryGroupDetails
 	}
 	
 	#get a desktop in an associated delivery group to get the catalog
-	#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 	#V2.15 change from the deprecated Get-BrokerDesktop to Get-BrokerMachine
 	#$Desktop = Get-BrokerDesktop @XDParams2 -DesktopGroupUid $Group.Uid -Property CatalogName
 	$Desktop = Get-BrokerMachine @XDParams2 -DesktopGroupUid $Group.Uid -Property CatalogName
 	
 	If($? -and $Null -ne $Desktop)
 	{
-		#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 		$Catalog = Get-BrokerCatalog @XDParams2 -Name $Desktop[0].CatalogName
 		
 		If($? -and $Null -ne $Catalog)
@@ -10678,7 +10646,7 @@ Function OutputDeliveryGroupDetails
 
 	If($PwrMgmt2 -or $PwrMgmt3)
 	{
-		#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 		$PwrMgmts = Get-BrokerPowerTimeScheme @XDParams2 -DesktopGroupUid $Group.Uid 
 	}
 	
@@ -10774,7 +10742,7 @@ Function OutputDeliveryGroupDetails
 	}
 
 	$SFAnonymousUsers = $False
-	#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 	$Results = Get-BrokerAccessPolicyRule -DesktopGroupUid $Group.Uid @XDParams2
 	
 	If($? -and $Null -ne $Results)
@@ -10872,7 +10840,7 @@ Function OutputDeliveryGroupDetails
 		{
 			#static desktops have a maxdesktops count stored as a property
 			$xMaxDesktops = 0
-			#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 			$MaxDesktops = Get-BrokerAssignmentPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid
 			
 			If($? -and $Null -ne $MaxDesktops)
@@ -10884,7 +10852,7 @@ Function OutputDeliveryGroupDetails
 		{
 			#random desktops are a count of the number of entitlement policy rules
 			$xMaxDesktops = 0
-			#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 			$MaxDesktops = Get-BrokerEntitlementPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid
 			
 			If($? -and $Null -ne $MaxDesktops)
@@ -12532,7 +12500,7 @@ Function OutputDeliveryGroupCatalogs
 {
 	Param([object] $Group)
 	
-	#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 	#V2.15 change from the deprecated Get-BrokerDesktop to Get-BrokerMachine and add -SortBy CatalogName
 	#$MCs = Get-BrokerDesktop @XDParams2 -DesktopGroupUid $Group.Uid -Property CatalogName
 	$MCs = @(Get-BrokerMachine @XDParams2 -DesktopGroupUid $Group.Uid -Property CatalogName -SortBy CatalogName)
@@ -12567,7 +12535,7 @@ Function OutputDeliveryGroupCatalogs
 		{
 			Write-Verbose "$(Get-Date): `t`t`tAdding catalog $($MC.CatalogName)"
 
-			#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 			$Catalog = Get-BrokerCatalog @XDParams2 -Name $MC.CatalogName
 			If($? -and $Null -ne $Catalog)
 			{
@@ -12962,7 +12930,7 @@ Function OutputDeliveryGroupTags
 		$Tags = @()
 		ForEach($Tag in $GroupTags)
 		{
-			#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 			$Result = Get-BrokerTag @XDParams2 -Name $Tag
 			
 			If($? -and $Null -ne $Result)
@@ -13068,7 +13036,7 @@ Function OutputDeliveryGroupApplicationGroups
 		$rowdata = @()
 	}
 	
-	#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 	$ApplicationGroups = Get-BrokerApplicationGroup @XDParams2 -AssociatedDesktopGroupUid $Group.Uid | Sort-Object Name
 	
 	If($? -and $Null -ne $ApplicationGroups)
@@ -13389,7 +13357,7 @@ Function OutputApplicationDetails
 	}
 	
 	$RedirectedFileTypes = @()
-	#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 	$Results = Get-BrokerConfiguredFTA -ApplicationUid $Application.Uid @XDParams2
 	If($? -and $Null -ne $Results)
 	{
@@ -13836,7 +13804,7 @@ Function OutputApplicationSessions
 		WriteHTMLLine 3 0 $txt
 	}
 
-	#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 	$Sessions = Get-BrokerSession -ApplicationUid $Application.Uid @XDParams2 -SortBy UserName
 	
 	If($? -and $Null -ne $Sessions)
@@ -13855,7 +13823,7 @@ Function OutputApplicationSessions
 		{
 			#get desktop by Session Uid
 			$xMachineName = ""
-			#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 			#V2.15 change from the deprecated Get-BrokerDesktop to Get-BrokerMachine
 			#$Desktop = Get-BrokerDesktop -SessionUid $Session.Uid @XDParams2
 			$Desktop = Get-BrokerMachine -SessionUid $Session.Uid @XDParams2
@@ -14108,7 +14076,7 @@ Function ProcessApplicationGroupDetails
 		WriteHTMLLine 1 0 $txt
 	}
 
-	#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 	$ApplicationGroups = Get-BrokerApplicationGroup @XDParams2 -SortBy Name
 	
 	If($? -and $Null -ne $ApplicationGroups)
@@ -31047,8 +31015,7 @@ Function OutputControllers
 				}
 				Else
 				{
-					WriteWordLine 2 0 "Microsoft Hotfixes and Updates"
-					$WordTable = @()
+					#V2.23 remove ooutput from here and use only in Appendix
 					ForEach($Hotfix in $MSInstalledHotfixes)
 					{
 						$obj1 = New-Object -TypeName PSObject
@@ -31059,36 +31026,7 @@ Function OutputControllers
 						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledBy	-Value $Hotfix.InstalledBy
 						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledOn	-Value $Hotfix.InstalledOn
 						$Script:MSHotfixes.Add($obj1) > $Null
-						
-						$WordTable += @{
-						HotFixID = $Hotfix.HotFixID; 
-						Caption = $Hotfix.Caption; 
-						Description = $Hotfix.Description; 
-						InstalledBy = $Hotfix.InstalledBy; 
-						InstalledOn = $Hotfix.InstalledOn
-						}
 					}
-
-					$Table = AddWordTable -Hashtable $WordTable `
-					-Columns  HotFixID, Caption, Description, InstalledBy, InstalledOn `
-					-Headers  "HotFix ID", "Caption", "Description","Installed By", "Installed On"  `
-					-Format $wdTableGrid `
-					-AutoFit $wdAutoFitFixed;
-
-					SetWordCellFormat -Collection $Table -Size 9
-					SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-					$Table.Columns.Item(1).Width = 55;
-					$Table.Columns.Item(2).Width = 180;
-					$Table.Columns.Item(3).Width = 55;
-					$Table.Columns.Item(4).Width = 110;
-					$Table.Columns.Item(5).Width = 110;
-
-					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-					FindWordDocumentEnd
-					$Table = $Null
-					WriteWordLine 0 0 " "
 				}
 			}
 			ElseIf($Text)
@@ -31100,7 +31038,7 @@ Function OutputControllers
 				}
 				Else
 				{
-					Line 1 "Microsoft Hotfixes and Updates"
+					#V2.23 remove ooutput from here and use only in Appendix
 					ForEach($Hotfix in $MSInstalledHotfixes)
 					{
 						$obj1 = New-Object -TypeName PSObject
@@ -31111,13 +31049,6 @@ Function OutputControllers
 						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledBy	-Value $Hotfix.InstalledBy
 						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledOn	-Value $Hotfix.InstalledOn
 						$Script:MSHotfixes.Add($obj1) > $Null
-						
-						Line 2 "HotFix ID`t: " $Hotfix.HotFixID
-						Line 2 "Caption`t`t: " $Hotfix.Caption
-						Line 2 "Description`t: " $Hotfix.Description
-						Line 2 "Installed By`t: " $Hotfix.InstalledBy
-						Line 2 "Installed On`t: " $Hotfix.InstalledOn
-						Line 0 ""
 					}
 				}
 			}
@@ -31130,7 +31061,7 @@ Function OutputControllers
 				}
 				Else
 				{
-					$rowdata = @()
+					#V2.23 remove ooutput from here and use only in Appendix
 					ForEach($Hotfix in $MSInstalledHotfixes)
 					{
 						$obj1 = New-Object -TypeName PSObject
@@ -31141,26 +31072,7 @@ Function OutputControllers
 						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledBy	-Value $Hotfix.InstalledBy
 						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledOn	-Value $Hotfix.InstalledOn
 						$Script:MSHotfixes.Add($obj1) > $Null
-						
-						$rowdata += @(,(
-						$Hotfix.HotFixID,$htmlwhite,
-						$Hotfix.Caption,$htmlwhite,
-						$Hotfix.Description,$htmlwhite,
-						$Hotfix.InstalledBy,$htmlwhite,
-						$Hotfix.InstalledOn,$htmlwhite))
 					}
-
-					$columnHeaders = @(
-					'HotFix ID',($htmlsilver -bor $htmlbold),
-					'Caption',($htmlsilver -bor $htmlbold),
-					'Description',($htmlsilver -bor $htmlbold),
-					'Installed By',($htmlsilver -bor $htmlbold),
-					'Installed On',($htmlsilver -bor $htmlbold)
-					)
-
-					$msg = "Microsoft Hotfixes and Updates"
-					FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
-					WriteHTMLLine 0 0 " "
 				}
 			}
 			
@@ -31225,8 +31137,7 @@ Function OutputControllers
 				}
 				Else
 				{
-					WriteWordLine 2 0 "Citrix Installed Components"
-					$WordTable = @()
+					#V2.23 remove ooutput from here and use only in Appendix
 					ForEach($Component in $CtxComponents)
 					{
 						$obj1 = New-Object -TypeName PSObject
@@ -31234,29 +31145,7 @@ Function OutputControllers
 						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName		-Value $Component.DisplayName
 						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayVersion	-Value $Component.DisplayVersion
 						$Script:CtxInstalledComponents.Add($obj1) > $Null
-
-						$WordTable += @{
-						DisplayName = $Component.DisplayName; 
-						DisplayVersion = $Component.DisplayVersion
-						}
 					}
-
-					$Table = AddWordTable -Hashtable $WordTable `
-					-Columns  DisplayName, DisplayVersion `
-					-Headers  "Display Name", "Display Version" `
-					-Format $wdTableGrid `
-					-AutoFit $wdAutoFitFixed;
-
-					SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-					$Table.Columns.Item(1).Width = 300;
-					$Table.Columns.Item(2).Width = 100;
-
-					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-					FindWordDocumentEnd
-					$Table = $Null
-					WriteWordLine 0 0 " "
 				}
 			}
 			ElseIf($Text)
@@ -31268,7 +31157,7 @@ Function OutputControllers
 				}
 				Else
 				{
-					Line 1 "Citrix Installed Components"
+					#V2.23 remove ooutput from here and use only in Appendix
 					ForEach($Component in $CtxComponents)
 					{
 						$obj1 = New-Object -TypeName PSObject
@@ -31276,10 +31165,6 @@ Function OutputControllers
 						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName		-Value $Component.DisplayName
 						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayVersion	-Value $Component.DisplayVersion
 						$Script:CtxInstalledComponents.Add($obj1) > $Null
-
-						Line 2 "Display Name`t: " $Component.DisplayName
-						Line 2 "Display Version`t: " $Component.DisplayVersion
-						Line 0 ""
 					}
 				}
 			}
@@ -31292,7 +31177,7 @@ Function OutputControllers
 				}
 				Else
 				{
-					$rowdata = @()
+					#V2.23 remove ooutput from here and use only in Appendix
 					ForEach($Component in $CtxComponents)
 					{
 						$obj1 = New-Object -TypeName PSObject
@@ -31300,20 +31185,7 @@ Function OutputControllers
 						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName		-Value $Component.DisplayName
 						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayVersion	-Value $Component.DisplayVersion
 						$Script:CtxInstalledComponents.Add($obj1) > $Null
-
-						$rowdata += @(,(
-						$Component.DisplayName,$htmlwhite,
-						$Component.DisplayVersion,$htmlwhite))
 					}
-
-					$columnHeaders = @(
-					'Display Name',($htmlsilver -bor $htmlbold),
-					'Display Version',($htmlsilver -bor $htmlbold)
-					)
-
-					$msg = "Citrix Installed Components"
-					FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
-					WriteHTMLLine 0 0 " "
 				}
 			}
 			
@@ -31329,7 +31201,6 @@ Function OutputControllers
 			}
 			
 			$WinComponents = $results | Where-Object Installed | Select-Object DisplayName,Name,FeatureType | Sort-Object DisplayName 
-			
 		
 			If($MSWord -or $PDF)
 			{
@@ -31340,41 +31211,16 @@ Function OutputControllers
 				}
 				Else
 				{
-					WriteWordLine 2 0 "Windows Installed Roles and Features"
-					$WordTable = @()
+					#V2.23 remove the output from here and use only in Appendix
 					ForEach($Component in $WinComponents)
 					{
 						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName		-Value $Controller.DNSName
 						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName	-Value $Component.DisplayName
 						$obj1 | Add-Member -MemberType NoteProperty -Name Name			-Value $Component.Name
+						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName		-Value $Controller.DNSName
 						$obj1 | Add-Member -MemberType NoteProperty -Name FeatureType	-Value $Component.FeatureType
 						$Script:WinInstalledComponents.Add($obj1) > $Null
-
-						$WordTable += @{
-						DisplayName = $Component.DisplayName; 
-						Name = $Component.Name; 
-						FeatureType = $Component.FeatureType
-						}
 					}
-
-					$Table = AddWordTable -Hashtable $WordTable `
-					-Columns  DisplayName, Name, FeatureType `
-					-Headers  "Display Name", "Name", "Feature Type" `
-					-Format $wdTableGrid `
-					-AutoFit $wdAutoFitFixed;
-
-					SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-					$Table.Columns.Item(1).Width = 200;
-					$Table.Columns.Item(2).Width = 150;
-					$Table.Columns.Item(3).Width = 100;
-
-					$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-					FindWordDocumentEnd
-					$Table = $Null
-					WriteWordLine 0 0 " "
 				}
 			}
 			ElseIf($Text)
@@ -31386,7 +31232,7 @@ Function OutputControllers
 				}
 				Else
 				{
-					Line 1 "Windows installed Roles and Features"
+					#V2.23 remove the output from here and use only in Appendix
 					ForEach($Component in $WinComponents)
 					{
 						$obj1 = New-Object -TypeName PSObject
@@ -31395,11 +31241,6 @@ Function OutputControllers
 						$obj1 | Add-Member -MemberType NoteProperty -Name Name			-Value $Component.Name
 						$obj1 | Add-Member -MemberType NoteProperty -Name FeatureType	-Value $Component.FeatureType
 						$Script:WinInstalledComponents.Add($obj1) > $Null
-
-						Line 2 "Display Name`t: " $Component.DisplayName
-						Line 2 "Name`t`t: " $Component.Name
-						Line 2 "Feature Type`t: " $Component.FeatureType
-						Line 0 ""
 					}
 				}
 			}
@@ -31412,7 +31253,7 @@ Function OutputControllers
 				}
 				Else
 				{
-					$rowdata = @()
+					#V2.23 remove the output from here and use only in Appendix
 					ForEach($Component in $WinComponents)
 					{
 						$obj1 = New-Object -TypeName PSObject
@@ -31421,22 +31262,7 @@ Function OutputControllers
 						$obj1 | Add-Member -MemberType NoteProperty -Name Name			-Value $Component.Name
 						$obj1 | Add-Member -MemberType NoteProperty -Name FeatureType	-Value $Component.FeatureType
 						$Script:WinInstalledComponents.Add($obj1) > $Null
-
-						$rowdata += @(,(
-						$Component.DisplayName,$htmlwhite,
-						$Component.Name,$htmlwhite,
-						$Component.FeatureType,$htmlwhite))
 					}
-
-					$columnHeaders = @(
-					'Display Name',($htmlsilver -bor $htmlbold),
-					'Name',($htmlsilver -bor $htmlbold),
-					'Feature Type',($htmlsilver -bor $htmlbold)
-					)
-
-					$msg = "Windows installed Roles and Features"
-					FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
-					WriteHTMLLine 0 0 " "
 				}
 			}
 		}
@@ -31444,7 +31270,7 @@ Function OutputControllers
 		If($BrokerRegistryKeys)
 		{
 			GetControllerRegistryKeys $Controller.DNSName
-			OutputControllerRegistryKeys
+			#V2.23 remove the output from here and use only in Appendix
 			#Fix V2.20.1
 			$Script:AllControllerRegistryItems += $Script:ControllerRegistryItems
 			$Script:ControllerRegistryItems = New-Object System.Collections.ArrayList
@@ -31857,118 +31683,6 @@ Function GetControllerRegistryKeys
 	#end
 	Get-RegKeyToObject "HKLM:\Software\Citrix\Broker\Service\State\LHC" "OutageModeEntered" $ComputerName
 }
-
-Function OutputControllerRegistryKeys
-{
-	#V2.11 sort the array by regkey and regvalue and change the output to match
-	Write-Verbose "$(Get-Date): `t`t`tOutput Registry Key data"
-	$Script:ControllerRegistryItems = $Script:ControllerRegistryItems | Sort-Object RegValue, RegKey
-	
-	$txt = "Controller Registry Items"
-	#v2.11 change heading from "2" to "3"
-	If($MSWord -or $PDF)
-	{
-		WriteWordLine 3 0 $txt
-	}
-	ElseIf($Text)
-	{
-		Line 0 $txt
-		Line 1 "Registry Key                                                                  Registry Value                                     Data            " 
-		Line 1 "================================================================================================================================================="
-	}
-	ElseIf($HTML)
-	{
-		WriteHTMLLine 3 0 $txt
-	}
-
-	If($MSWord -or $PDF)
-	{
-		$WordTable = @()
-	}
-	ElseIf($HTML)
-	{
-		$rowdata = @()
-	}
-	
-	If($Script:ControllerRegistryItems)
-	{
-		ForEach($Item in $Script:ControllerRegistryItems)
-		{
-			If($MSWord -or $PDF)
-			{
-				$WordTable += @{
-				RegKey = $Item.RegKey; 
-				RegValue = $Item.RegValue; 
-				Value = $Item.Value
-				}
-			}
-			ElseIf($Text)
-			{
-				Line 1 ( "{0,-77} {1,-50} {2,-15}" -f $Item.RegKey, $Item.RegValue, $Item.Value)
-			}
-			ElseIf($HTML)
-			{
-				$rowdata += @(,(
-				$Item.RegKey,$htmlwhite,
-				$Item.RegValue,$htmlwhite,
-				$Item.Value,$htmlwhite))
-			}
-		}
-	}
-	Else
-	{
-		If($MSWord -or $PDF)
-		{
-			WriteWordLine 0 1 "<None found>"
-		}
-		ElseIf($Text)
-		{
-			Line 1 "<None found>"
-		}
-		ElseIf($HTML)
-		{
-			WriteHTMLLine 0 1 "None found"
-		}
-	}
-
-	If($MSWord -or $PDF)
-	{
-		$Table = AddWordTable -Hashtable $WordTable `
-		-Columns  RegKey, RegValue, Value `
-		-Headers  "Registry Key", "Registry Value", "Value" `
-		-Format $wdTableGrid `
-		-AutoFit $wdAutoFitFixed;
-
-		SetWordCellFormat -Collection $Table -Size 9
-		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-		$Table.Columns.Item(1).Width = 230;
-		$Table.Columns.Item(2).Width = 210;
-		$Table.Columns.Item(3).Width = 60;
-
-		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-		FindWordDocumentEnd
-		$Table = $Null
-		WriteWordLine 0 0 " " #blank line added in V2.21
-	}
-	ElseIf($Text)
-	{
-		Line 0 ""
-	}
-	ElseIf($HTML)
-	{
-		$columnHeaders = @(
-		'Registry Key',($htmlsilver -bor $htmlbold),
-		'Registry Value',($htmlsilver -bor $htmlbold),
-		'Value',($htmlsilver -bor $htmlbold)
-		)
-
-		$msg = ""
-		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
-	}
-}
 #endregion
 
 #region Hosting functions
@@ -31998,6 +31712,7 @@ Function ProcessHosting
 	$pvdstorage = @()
 	$tmpstorage = @() #added V2.21
 	$vmnetwork = @()
+	$IntelliCache = @() #added V2.23
 
 	Write-Verbose "$(Get-Date): `tProcessing Hosting Units"
 	$HostingUnits = Get-ChildItem @XDParams1 -path 'xdhyp:\hostingunits' 4>$Null
@@ -32024,6 +31739,13 @@ Function ProcessHosting
 			{	
 				$vmnetwork += $network
 			}
+			
+			#added V2.23
+            $obj1 = New-Object -TypeName PSObject
+	        $obj1 | Add-Member -MemberType NoteProperty -Name hypName	-Value $item.RootPath
+	        $obj1 | Add-Member -MemberType NoteProperty -Name IC		-Value $item.UseLocalStorageCaching
+
+			$IntelliCache += $obj1
 		}
 	}
 	ElseIf($? -and $Null -eq $HostingUnits)
@@ -32038,7 +31760,7 @@ Function ProcessHosting
 	}
 
 	Write-Verbose "$(Get-Date): `tProcessing Hypervisors"
-	#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+	#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 	$Hypervisors = Get-BrokerHypervisorConnection @XDParams2
 	If($? -and $Null -ne $Hypervisors)
 	{
@@ -32047,6 +31769,7 @@ Function ProcessHosting
 			$hypvmstorage = @()
 			$hyppvdstorage = @()
 			$hypnetwork = @()
+			$hypIntelliCache = @()
 			#V2.21 fixed bug where the comparison for $Hypervisor.Name was done incorrectly
 			ForEach($storage in $vmstorage)
 			{
@@ -32088,6 +31811,18 @@ Function ProcessHosting
 				If($tmpHypName -eq $Hypervisor.Name)
 				{
 					$hypnetwork += $network
+				}
+				$tmpArray = $Null
+				$tmpHypName = $Null
+			}
+			#added V2.23
+			ForEach($ICItem in $IntelliCache)
+			{
+                $tmpArray = $ICItem.hypName.Split("\")
+                $tmpHypName = $tmpArray[2]
+				If($tmpHypName -eq $Hypervisor.Name)
+				{
+					$hypIntelliCache += $ICItem
 				}
 				$tmpArray = $Null
 				$tmpHypName = $Null
@@ -32147,10 +31882,11 @@ Function ProcessHosting
 				$txt = "Unable to retrieve Hosting Connections"
 				OutputWarning $txt
 			}
+			#added V2.23 added $hypIntelliCache
 			OutputHosting $Hypervisor $xConnectionType $xAddress $xState `
 			$xUserName $xMaintMode $xStorageName $xHAAddress `
 			$xPowerActions $xScopes $xZoneName $hypvmstorage `
-			$hyppvdstorage $hypnetwork $hyptmpstorage
+			$hyppvdstorage $hypnetwork $hyptmpstorage $hypIntelliCache
 		}
 	}
 	ElseIf($? -and $Null -eq $Hypervisors)
@@ -32176,14 +31912,17 @@ Function OutputHosting
 	[bool] $xMaintMode, 
 	[string] $xStorageName, 
 	[array] $xHAAddress, 
-	[array]$xPowerActions, 
+	[array] $xPowerActions, 
 	[string] $xScopes, 
 	[string] $xZoneName, 
 	[array] $hypvmstorage, 
 	[array] $hyppvdstorage, 
 	[array] $hypnetwork,
-	[array] $hyptmpstorage)
+	[array] $hyptmpstorage,
+	[array] $hypIntelliCache)
 
+	#added V2.23 added $hypIntelliCache
+	
 	$xHAAddress = $xHAAddress | Sort-Object 
 	
 	#get array of standard storage - added in V2.21
@@ -32244,6 +31983,21 @@ Function OutputHosting
 			$tmp3 = $tmp.Split(".")
 			$HypNetworkName += $tmp3[0]
 		}
+	}
+
+	#get array of IntelliCache options - added in V2.23
+	$HypICName = @()
+	ForEach($item in $hypIntelliCache)
+	{
+		If($item.IC)
+		{
+			$ICState = "Enabled"
+		}
+		Else
+		{
+			$ICState = "Disabled"
+		}
+		$HypICName += $ICState
 	}
 	
 	$xxConnectionType = ""
@@ -32352,6 +32106,11 @@ Function OutputHosting
 					$ScriptInformation.Add(@{Data = ""; Value = $item; }) > $Null
 				}
 			}
+		}
+		#added in V2.23
+		If($HypICName.Length -gt 0)
+		{
+			$ScriptInformation.Add(@{Data = "IntelliCache:"; Value = $HypICName[0]; }) > $Null
 		}
 
 		$Table = AddWordTable -Hashtable $ScriptInformation `
@@ -32489,6 +32248,11 @@ Function OutputHosting
 				}
 			}
 		}
+		#added in V2.23
+		If($HypICName.Length -gt 0)
+		{
+			Line 1 "IntelliCache`t`t: " $HypICName[0]
+		}
 		Line 0 ""
 		
 		Line 1 "Advanced"
@@ -32589,6 +32353,11 @@ Function OutputHosting
 					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$item,$htmlwhite))
 				}
 			}
+		}
+		#added in V2.23
+		If($HypICName.Length -gt 0)
+		{
+			$rowdata += @(,('IntelliCache:',($htmlsilver -bor $htmlbold),$HypICName[0],$htmlwhite))
 		}
 
 		$msg = ""
@@ -32722,7 +32491,7 @@ Function OutputHosting
 		}
 
 		Write-Verbose "$(Get-Date): `tProcessing Sessions Data"
-		#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 		$Sessions = @(Get-BrokerSession @XDParams2 -hypervisorconnectionname $Hypervisor.Name -SortBy UserName)
 		If($? -and ($Null -ne $Sessions))
 		{
@@ -33100,7 +32869,7 @@ Function OutputHostingSessions
 	ForEach($Session in $Sessions)
 	{
 		Write-Verbose "$(Get-Date): `t`t`tOutput session $($Session.UserName)"
-		#V2.10 22-jan-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+		#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
 		#V2.20 remove all the desktop code as it is not used in this function
 		
 		If($Session.SessionSupport -eq "SingleSession")
@@ -34868,6 +34637,7 @@ Function ProcessScriptEnd
 			Out-File -FilePath $SIFile -Append -InputObject "Cover Page         : $($CoverPage)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "Controllers        : $($Controllers)" 4>$Null
+		Out-File -FilePath $SIFile -Append -InputObject "CSV                : $($CSV)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "DeliveryGroups     : $($DeliveryGroups)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "Dev                : $($Dev)" 4>$Null
 		If($Dev)
@@ -34957,6 +34727,12 @@ Function OutputAppendixA
 
 	#sort the array by regkey, regvalue and servername
 	$Script:ALLVDARegistryItems = $Script:ALLVDARegistryItems | Sort-Object RegKey, RegValue, VDAType, ComputerName
+	
+	If($CSV)
+	{
+		$File = "$($Script:pwdpath)\$($XDSiteName)_Documentation_AppendixA_VDARegistryItems.csv"
+		$Script:ALLVDARegistryItems | Export-CSV -Force -Encoding ASCII -NoTypeInformation -Path $File *> $Null
+	}
 	
 	If($MSWord -or $PDF)
 	{
@@ -35117,6 +34893,12 @@ Function OutputAppendixB
 	#Fix V2.20.1
 	$Script:AllControllerRegistryItems = $Script:AllControllerRegistryItems | Sort-Object RegKey, RegValue, ComputerName
 	
+	If($CSV)
+	{
+		$File = "$($Script:pwdpath)\$($XDSiteName)_Documentation_AppendixB_ControllerRegistryItems.csv"
+		$Script:AllControllerRegistryItems | Export-CSV -Force -Encoding ASCII -NoTypeInformation -Path $File *> $Null
+	}
+	
 	If($MSWord -or $PDF)
 	{
 		$selection.InsertNewPage()
@@ -35266,6 +35048,12 @@ Function OutputAppendixC
 
 	#sort the array by hotfixid and servername
 	$Script:MSHotfixes = $Script:MSHotfixes | Sort-Object HotFixID, CSName
+	
+	If($CSV)
+	{
+		$File = "$($Script:pwdpath)\$($XDSiteName)_Documentation_AppendixC_MicrosoftHotfixesandUpdates.csv"
+		$Script:MSHotfixes | Export-CSV -Force -Encoding ASCII -NoTypeInformation -Path $File *> $Null
+	}
 	
 	If($MSWord -or $PDF)
 	{
@@ -35420,6 +35208,12 @@ Function OutputAppendixD
 
 	$Script:CtxInstalledComponents = $Script:CtxInstalledComponents | Sort-Object DisplayName, DDCName
 	
+	If($CSV)
+	{
+		$File = "$($Script:pwdpath)\$($XDSiteName)_Documentation_AppendixD_CitrixInstalledComponents.csv"
+		$Script:CtxInstalledComponents | Export-CSV -Force -Encoding ASCII -NoTypeInformation -Path $File *> $Null
+	}
+	
 	If($MSWord -or $PDF)
 	{
 		$selection.InsertNewPage()
@@ -35556,7 +35350,15 @@ Function OutputAppendixE
 	#added in V2.22
 	Write-Verbose "$(Get-Date): Create Appendix E Windows Installed Components"
 
-	$Script:WinInstalledComponents = $Script:WinInstalledComponents | Sort-Object DisplayName, DDCName
+	#V2.23 add sorting by Name.
+	#ASP.NET 4.5 has two different Names but the same Display Name
+	$Script:WinInstalledComponents = $Script:WinInstalledComponents | Sort-Object DisplayName, Name, DDCName
+	
+	If($CSV)
+	{
+		$File = "$($Script:pwdpath)\$($XDSiteName)_Documentation_AppendixE_WindowsInstalledComponents.csv"
+		$Script:WinInstalledComponents | Export-CSV -Force -Encoding ASCII -NoTypeInformation -Path $File *> $Null
+	}
 	
 	If($MSWord -or $PDF)
 	{
@@ -35572,31 +35374,31 @@ Function OutputAppendixE
 			$AppendixWordTable = @()
 			ForEach($Item in $Script:WinInstalledComponents)
 			{
-				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				If(!$First -and $Save -ne "$($Item.DisplayName)$($Item.Name)")
 				{
 					$AppendixWordTable += @{ 
 					DisplayName = "";
-					DDCName = "";
 					Name = "";
+					DDCName = "";
 					FeatureType = "";
 					}
 				}
 
 				$AppendixWordTable += @{ 
 				DisplayName = $Item.DisplayName;
-				DDCName = $Item.DDCName;
 				Name = $Item.Name;
+				DDCName = $Item.DDCName;
 				FeatureType = $Item.FeatureType;
 				}
-				$Save = "$($Item.DisplayName)"
+				$Save = "$($Item.DisplayName)$($Item.Name)"
 				If($First)
 				{
 					$First = $False
 				}
 			}
 			$Table = AddWordTable -Hashtable $AppendixWordTable `
-			-Columns DisplayName, DDCName, Name, FeatureType `
-			-Headers "Display Name", "DDC Name", "Name", "Feature Type"  `
+			-Columns DisplayName, Name, DDCName, FeatureType `
+			-Headers "Display Name", "Name", "DDC Name", "Feature Type"  `
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitContent;
 
@@ -35621,16 +35423,16 @@ Function OutputAppendixE
 		{
 			ForEach($Item in $Script:WinInstalledComponents)
 			{
-				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				If(!$First -and $Save -ne "$($Item.DisplayName)$($Item.Name)")
 				{
 					Line 0 ""
 				}
 
 				Line 1 "Display Name`t: " $Item.DisplayName
-				Line 1 "DDC Name`t: " $Item.DDCName
 				Line 1 "Name`t`t: " $Item.Name
+				Line 1 "DDC Name`t: " $Item.DDCName
 				Line 1 "Feature Type`t: " $Item.FeatureType
-				$Save = "$($Item.DisplayName)"
+				$Save = "$($Item.DisplayName)$($Item.Name)"
 				If($First)
 				{
 					$First = $False
@@ -35656,17 +35458,17 @@ Function OutputAppendixE
 		{
 			ForEach($Item in $Script:WinInstalledComponents)
 			{
-				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				If(!$First -and $Save -ne "$($Item.DisplayName)$($Item.Name)")
 				{
 					$rowdata += @(,("",$htmlwhite))
 				}
 
 				$rowdata += @(,(
 				$Item.DisplayName,$htmlwhite,
-				$Item.DDCName,$htmlwhite,
 				$Item.Name,$htmlwhite,
+				$Item.DDCName,$htmlwhite,
 				$Item.FeatureType,$htmlwhite))
-				$Save = "$($Item.DisplayName)"
+				$Save = "$($Item.DisplayName)$($Item.Name)"
 				If($First)
 				{
 					$First = $False
@@ -35674,8 +35476,8 @@ Function OutputAppendixE
 			}
 			$columnHeaders = @(
 			'Display Name',($htmlsilver -bor $htmlbold),
-			'DDC Name',($htmlsilver -bor $htmlbold),
 			'Name',($htmlsilver -bor $htmlbold),
+			'DDC Name',($htmlsilver -bor $htmlbold),
 			'Feature Type',($htmlsilver -bor $htmlbold))
 
 			$msg = ""

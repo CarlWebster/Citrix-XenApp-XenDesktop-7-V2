@@ -3,6 +3,37 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.23
+#	Add -CSV parameter
+#	Add to Hosting Connection output, IntelliCache setting
+#	Fixed all WriteHTMLLine lines that were supposed to be in bold. Wrong parameters were used.
+#	If both -MachineCatalogs and -DeliveryGroups parameters are used, only output the machine details for catalogs, not delivery groups
+#	In Function OutputNicItem, change how $powerMgmt is retrieved
+#		Will now show "Not Supported" instead of "N/A" if the NIC driver does not support Power Management (i.e. XenServer)
+#	Sort Appendix E data by Display Name, Name, and DDCName, and change output to match
+#	Remove from report output, the individual listings for:
+#		Citrix Installed Components
+#		Controller Registry keys
+#		Microsoft Hotfixes
+#		VDA Registry Keys
+#		Windows Installed Roles and Features
+#
+#		These will now only show in the Appendixes to keep the report length shorter
+#		Remove Function OutputControllerRegistryKeys
+#		Remove Function OutputVDARegistryKeys
+#	Update each function that outputs each appendix to output a CSV file if -CSV is used
+#		Output CSV filename is in the format:
+#		CVADSiteName_Documentation_Appendix#_NameOfAppendix.csv
+#		For example:
+#			CVADSiteName_Documentation_AppendixA_VDARegistryItems.csv
+#			CVADSiteName_Documentation_AppendixB_ControllerRegistryItems.csv
+#			CVADSiteName_Documentation_AppendixC_MicrosoftHotfixesandUpdates.csv
+#			CVADSiteName_Documentation_AppendixD_CitrixInstalledComponents.csv
+#			CVADSiteName_Documentation_AppendixE_WindowsInstalledComponents.csv	
+#	Update Function OutputNicItem with a $ComputerName parameter
+#		Update Function GetComputerWMIInfo to pass the computer name parameter to the OutputNicItem function
+#	Update help text
+
 #Version 2.22 28-Mar-2019
 #	Add new parameter -Controllers
 #	In the functions ProcessControllers and OutputControllers, change function variable $Controllers 
