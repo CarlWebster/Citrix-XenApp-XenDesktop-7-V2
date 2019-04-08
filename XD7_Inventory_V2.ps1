@@ -1243,7 +1243,7 @@ Param(
 #		ICA\Printing\Universal Print Server\SSL Protocol Version
 #		ICA\Printing\Universal Print Server\SSL Universal Print Server encrypted print data stream (CGP) port
 #		ICA\Printing\Universal Print Server\SSL Universal Print Server encrypted web service (HTTPS/SOAP) port
-#	Added new VDA registry keys
+#	Added new VDA registry keys for CVAD VDA 1903
 #		HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF\EnablePostscriptSimulation
 #		HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF\EnableFullFontEmbedding
 #	Fixed all WriteHTMLLine lines that were supposed to be in bold. Wrong parameters were used.
