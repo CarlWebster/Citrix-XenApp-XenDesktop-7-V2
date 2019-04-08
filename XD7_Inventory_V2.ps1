@@ -1027,7 +1027,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.23
 	AUTHOR: Carl Webster
-	LASTEDIT: April 6, 2019
+	LASTEDIT: April 8, 2019
 #>
 
 #endregion
@@ -1233,14 +1233,26 @@ Param(
 # This script is based on the 1.20 script
 
 #Version 2.23
-#	Add -CSV parameter
-#	Add to Hosting Connection output, IntelliCache setting
+#	Added -CSV parameter
+#	Added to the Hosting Connection output, IntelliCache setting
+#	Added new Computer policy settings for CVAD 1903
+#		ICA\Printing\Universal Print Server\SSL Cipher Suite
+#		ICA\Printing\Universal Print Server\SSL Compliance Mode
+#		ICA\Printing\Universal Print Server\SSL Enabled
+#		ICA\Printing\Universal Print Server\SSL FIPS Mode
+#		ICA\Printing\Universal Print Server\SSL Protocol Version
+#		ICA\Printing\Universal Print Server\SSL Universal Print Server encrypted print data stream (CGP) port
+#		ICA\Printing\Universal Print Server\SSL Universal Print Server encrypted web service (HTTPS/SOAP) port
+#	Added new VDA registry keys
+#		HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF\EnablePostscriptSimulation
+#		HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF\EnableFullFontEmbedding
 #	Fixed all WriteHTMLLine lines that were supposed to be in bold. Wrong parameters were used.
 #	If both -MachineCatalogs and -DeliveryGroups parameters are used, only output the machine details for catalogs, not delivery groups
+#		This will help keep the report length shorter
 #	In Function OutputNicItem, change how $powerMgmt is retrieved
 #		Will now show "Not Supported" instead of "N/A" if the NIC driver does not support Power Management (i.e. XenServer)
 #	Sort Appendix E data by Display Name, Name, and DDCName, and change output to match
-#	Remove from report output, the individual listings for:
+#	Removed from report output, the individual listings for:
 #		Citrix Installed Components
 #		Controller Registry keys
 #		Microsoft Hotfixes
@@ -1248,9 +1260,9 @@ Param(
 #		Windows Installed Roles and Features
 #
 #		These will now only show in the Appendixes to keep the report length shorter
-#		Remove Function OutputControllerRegistryKeys
-#		Remove Function OutputVDARegistryKeys
-#	Update each function that outputs each appendix to output a CSV file if -CSV is used
+#		Removed Function OutputControllerRegistryKeys
+#		Removed Function OutputVDARegistryKeys
+#	Updated each function that outputs each appendix to output a CSV file if -CSV is used
 #		Output CSV filename is in the format:
 #		CVADSiteName_Documentation_Appendix#_NameOfAppendix.csv
 #		For example:
@@ -1259,9 +1271,9 @@ Param(
 #			CVADSiteName_Documentation_AppendixC_MicrosoftHotfixesandUpdates.csv
 #			CVADSiteName_Documentation_AppendixD_CitrixInstalledComponents.csv
 #			CVADSiteName_Documentation_AppendixE_WindowsInstalledComponents.csv	
-#	Update Function OutputNicItem with a $ComputerName parameter
-#		Update Function GetComputerWMIInfo to pass the computer name parameter to the OutputNicItem function
-#	Update help text
+#	Updated Function OutputNicItem with a $ComputerName parameter
+#		Updated Function GetComputerWMIInfo to pass the computer name parameter to the OutputNicItem function
+#	Updated help text
 
 #Version 2.22 28-Mar-2019
 #	Add new parameter -Controllers
@@ -8118,6 +8130,10 @@ Function GetVDARegistryKeys
 
 	If($xType -eq "Server")
 	{
+		#added in V2.23 for 1903
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnablePostscriptSimulation" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnableFullFontEmbedding" $ComputerName $xType
+		
 		#added in V2.21 for Local Text Echo added back in VDA 1811
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender" "UseDirect3D" $ComputerName $xType
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender" "PresentDevice" $ComputerName $xType
@@ -8180,6 +8196,10 @@ Function GetVDARegistryKeys
 	}
 	ElseIf($xType -eq "Desktop")
 	{
+		#added in V2.23 for 1903
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnablePostscriptSimulation" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnableFullFontEmbedding" $ComputerName $xType
+		
 		#added in V2.21 for Local Text Echo added back in VDA 1811
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender" "UseDirect3D" $ComputerName $xType
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender" "PresentDevice" $ComputerName $xType
@@ -20002,8 +20022,184 @@ Function ProcessCitrixPolicies
 						}
 						$tmp = $Null
 					}
-
+					
 					Write-Verbose "$(Get-Date): `t`t`tICA\Printing\Universal Print Server"
+					If((validStateProp $Setting UpcSslCipherSuite State ) -and ($Setting.UpcSslCipherSuite.State -ne "NotConfigured"))
+					{
+						#Added V2.23
+						$txt = "ICA\Printing\Universal Print Server\SSL Cipher Suite"
+						Switch ($Setting.UpcSslCipherSuite.Value)
+						{
+							"All"	{$tmp = "All"; Break}
+							"COM"	{$tmp = "COM"; Break}
+							"GOV"	{$tmp = "GOV"; Break}
+							Default	{$tmp = "Universal Print Server SSL Cipher Suite value could not be determined: $($Setting.UpcSslCipherSuite.Value)"; Break}
+						}
+						
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $tmp;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp 
+						}
+					}
+					If((validStateProp $Setting UpcSslComplianceMode State ) -and ($Setting.UpcSslComplianceMode.State -ne "NotConfigured"))
+					{
+						#Added V2.23
+						$txt = "ICA\Printing\Universal Print Server\SSL Compliance Mode"
+						Switch ($Setting.UpcSslComplianceMode.Value)
+						{
+							"None"	{$tmp = "None"; Break}
+							"SP800_52"	{$tmp = "SP800-52"; Break}
+							Default	{$tmp = "Universal Print Server SSL Compliance Mode value could not be determined: $($Setting.UpcSslComplianceMode.Value)"; Break}
+						}
+						
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $tmp;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp 
+						}
+					}
+					If((validStateProp $Setting UpcSslEnable State ) -and ($Setting.UpcSslEnable.State -ne "NotConfigured"))
+					{
+						$txt = "ICA\Printing\Universal Print Server\SSL Enabled"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.UpcSslEnable.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.UpcSslEnable.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.UpcSslEnable.State 
+						}
+					}
+					If((validStateProp $Setting UpcSslFips State ) -and ($Setting.UpcSslFips.State -ne "NotConfigured"))
+					{
+						$txt = "ICA\Printing\Universal Print Server\SSL FIPS Mode"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.UpcSslFips.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.UpcSslFips.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.UpcSslFips.State 
+						}
+					}
+					If((validStateProp $Setting UpcSslProtocolVersion State ) -and ($Setting.UpcSslProtocolVersion.State -ne "NotConfigured"))
+					{
+						#Added V2.23
+						$txt = "ICA\Printing\Universal Print Server\SSL Protocol Version"
+						Switch ($Setting.UpcSslProtocolVersion.Value)
+						{
+							"All"	{$tmp = "All"; Break}
+							"TLS1"	{$tmp = "TLSv1"; Break}
+							"TLS11"	{$tmp = "TLSv1.1"; Break}
+							"TLS12"	{$tmp = "TLSv1.2"; Break}
+							Default	{$tmp = "Universal Print Server SSL Protocol Version value could not be determined: $($Setting.UpcSslProtocolVersion.Value)"; Break}
+						}
+						
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $tmp;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp 
+						}
+					}
+					If((validStateProp $Setting UpcSslCgpPort State ) -and ($Setting.UpcSslCgpPort.State -ne "NotConfigured"))
+					{
+						#Added V2.23
+						$txt = "ICA\Printing\Universal Print Server\SSL Universal Print Server encrypted print data stream (CGP) port"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.UpcSslCgpPort.Value;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.UpcSslCgpPort.Value,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.UpcSslCgpPort.Value 
+						}
+					}
+					If((validStateProp $Setting UpcSslHttpsPort State ) -and ($Setting.UpcSslHttpsPort.State -ne "NotConfigured"))
+					{
+						#Added V2.23
+						$txt = "ICA\Printing\Universal Print Server\SSL Universal Print Server encrypted web service (HTTPS/SOAP) port"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.UpcSslHttpsPort.Value;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.UpcSslHttpsPort.Value,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.UpcSslHttpsPort.Value 
+						}
+					}
 					If((validStateProp $Setting UpsEnable State ) -and ($Setting.UpsEnable.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Printing\Universal Print Server\Universal Print Server enable"
