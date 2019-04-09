@@ -1273,6 +1273,7 @@ Param(
 #			CVADSiteName_Documentation_AppendixE_WindowsInstalledComponents.csv	
 #	Updated Function OutputNicItem with a $ComputerName parameter
 #		Updated Function GetComputerWMIInfo to pass the computer name parameter to the OutputNicItem function
+#	Updated Function SendEmail with corrections made by MBS
 #	Updated help text
 
 #Version 2.22 28-Mar-2019
@@ -6146,51 +6147,57 @@ $Script:Title is attached.
 		-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To *>$Null
 	}
 
-	$e = $error[0]
-
-	If($e.Exception.ToString().Contains("5.7.57"))
+	#V2.23 Check ( $? ) before looking at $error
+	If(!$?)
 	{
-		#The server response was: 5.7.57 SMTP; Client was not authenticated to send anonymous mail during MAIL FROM
-		Write-Verbose "$(Get-Date): Current user's credentials failed. Ask for usable credentials."
-
-		If($Dev)
-		{
-			Out-File -FilePath $Script:DevErrorFile -InputObject $error -Append 4>$Null
-		}
-
-		$error.Clear()
-
-		$emailCredentials = Get-Credential -Message "Enter the email account and password to send email"
-
-		If($UseSSL)
-		{
-			Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
-			-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
-			-UseSSL -credential $emailCredentials *>$Null 
-		}
-		Else
-		{
-			Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
-			-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
-			-credential $emailCredentials *>$Null 
-		}
-
 		$e = $error[0]
 
-		If($? -and $Null -eq $e)
+		If(($null -ne $e.Exception -and $e.Exception.ToString().Contains("5.7.57"))
 		{
-			Write-Verbose "$(Get-Date): Email successfully sent using new credentials"
+			#The server response was: 5.7.57 SMTP; Client was not authenticated to send anonymous mail during MAIL FROM
+			Write-Verbose "$(Get-Date): Current user's credentials failed. Ask for usable credentials."
+
+			If($Dev)
+			{
+				Out-File -FilePath $Script:DevErrorFile -InputObject $error -Append 4>$Null
+			}
+
+			$error.Clear()
+
+			$emailCredentials = Get-Credential -Message "Enter the email account and password to send email"
+
+			If($UseSSL)
+			{
+				Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
+				-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
+				-UseSSL -credential $emailCredentials *>$Null 
+			}
+			Else
+			{
+				Send-MailMessage -Attachments $emailAttachment -Body $emailBody -BodyAsHtml -From $From `
+				-Port $SmtpPort -SmtpServer $SmtpServer -Subject $emailSubject -To $To `
+				-credential $emailCredentials *>$Null 
+			}
+
+			#V2.23 Check ( $? ) before looking at $error
+		
+			If($?)
+			{
+				Write-Verbose "$(Get-Date): Email successfully sent using new credentials"
+			}
+			ElseIf(!$?)
+			{
+				$e = $error[0]
+
+				Write-Verbose "$(Get-Date): Email was not sent:"
+				Write-Warning "$(Get-Date): Exception: $e.Exception" 
+			}
 		}
 		Else
 		{
 			Write-Verbose "$(Get-Date): Email was not sent:"
 			Write-Warning "$(Get-Date): Exception: $e.Exception" 
 		}
-	}
-	Else
-	{
-		Write-Verbose "$(Get-Date): Email was not sent:"
-		Write-Warning "$(Get-Date): Exception: $e.Exception" 
 	}
 }
 #endregion
