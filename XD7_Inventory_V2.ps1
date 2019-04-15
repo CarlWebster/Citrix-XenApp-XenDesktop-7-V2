@@ -21,6 +21,9 @@
 	
 	This script supports versions of XenApp/XenDesktop starting with 7.8.
 	
+	NOTE: The account used to run this script must have at least Read access to the SQL 
+	Server(s) that hold(s) the Citrix Site, Monitoring, and Logging databases.
+	
 	By default, only gives summary information for:
 		Administrators
 		App-V Publishing
@@ -28,6 +31,7 @@
 		AppDNA
 		Application Groups
 		Applications
+		Controllers
 		Delivery Groups
 		Hosting
 		Logging
@@ -43,6 +47,7 @@
 		Applications
 		Policies
 		Logging
+		Controllers
 		Administrators
 		Hosting
 		StoreFront
@@ -1027,7 +1032,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.23
 	AUTHOR: Carl Webster
-	LASTEDIT: April 8, 2019
+	LASTEDIT: April 12, 2019
 #>
 
 #endregion
@@ -1232,8 +1237,18 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.23
+#Version 2.23 15-Apr-2019
 #	Added -CSV parameter
+#		Updated each function that outputs each appendix to output a CSV file if -CSV is used
+#			Output CSV filename is in the format:
+#			CVADSiteName_Documentation_Appendix#_NameOfAppendix.csv
+#			For example:
+#				CVADSiteName_Documentation_AppendixA_VDARegistryItems.csv
+#				CVADSiteName_Documentation_AppendixB_ControllerRegistryItems.csv
+#				CVADSiteName_Documentation_AppendixC_MicrosoftHotfixesandUpdates.csv
+#				CVADSiteName_Documentation_AppendixD_CitrixInstalledComponents.csv
+#				CVADSiteName_Documentation_AppendixE_WindowsInstalledComponents.csv	
+#	Added tests for SQL Server 2019 and Azure SQL
 #	Added to the Hosting Connection output, IntelliCache setting
 #	Added new Computer policy settings for CVAD 1903
 #		ICA\Printing\Universal Print Server\SSL Cipher Suite
@@ -1251,7 +1266,7 @@ Param(
 #		This will help keep the report length shorter
 #	In Function OutputNicItem, change how $powerMgmt is retrieved
 #		Will now show "Not Supported" instead of "N/A" if the NIC driver does not support Power Management (i.e. XenServer)
-#	Sort Appendix E data by Display Name, Name, and DDCName, and change output to match
+#	In the Summary Page, change Word/PDF and HTML output to use tables for better formatting
 #	Removed from report output, the individual listings for:
 #		Citrix Installed Components
 #		Controller Registry keys
@@ -1262,19 +1277,24 @@ Param(
 #		These will now only show in the Appendixes to keep the report length shorter
 #		Removed Function OutputControllerRegistryKeys
 #		Removed Function OutputVDARegistryKeys
-#	Updated each function that outputs each appendix to output a CSV file if -CSV is used
-#		Output CSV filename is in the format:
-#		CVADSiteName_Documentation_Appendix#_NameOfAppendix.csv
-#		For example:
-#			CVADSiteName_Documentation_AppendixA_VDARegistryItems.csv
-#			CVADSiteName_Documentation_AppendixB_ControllerRegistryItems.csv
-#			CVADSiteName_Documentation_AppendixC_MicrosoftHotfixesandUpdates.csv
-#			CVADSiteName_Documentation_AppendixD_CitrixInstalledComponents.csv
-#			CVADSiteName_Documentation_AppendixE_WindowsInstalledComponents.csv	
+#	Rewrote AddHTMLTable, FormatHTMLTable, and WriteHTMLLine for speed and accuracy (MBS)
+#	Rewrote Line to use StringBuilder for speed (MBS)
+#	Rewrote the Text output for the following sections:
+#		Machine Catalog Summary
+#		Delivery Group Summary
+#		Appendix A
+#		Appendix B
+#		Appendix C
+#		Appendix D
+#		Appendix E
+#	Sort Appendix E data by Display Name, Name, and DDCName, and change output to match
+#	Stop using a switch statement for HTML colors, and use a pre-calculated HTML array for speed (MBS)
+#	Updated expired ShareFile links in error messages
 #	Updated Function OutputNicItem with a $ComputerName parameter
 #		Updated Function GetComputerWMIInfo to pass the computer name parameter to the OutputNicItem function
 #	Updated Function SendEmail with corrections made by MBS
 #	Updated help text
+#	Went to Set-StrictMode -Version Latest, from Version 2 and cleaned up all related errors (MBS)
 
 #Version 2.22 28-Mar-2019
 #	Add new parameter -Controllers
@@ -1785,7 +1805,7 @@ Param(
 #endregion
 
 #region initial variable testing and setup
-Set-StrictMode -Version 2
+Set-StrictMode -Version Latest
 
 #force  on
 $PSDefaultParameterValues = @{"*:Verbose"=$True}
@@ -2110,48 +2130,75 @@ Else
 
 If($HTML)
 {
-    Set-Variable htmlredmask         -Option AllScope -Value "#FF0000" 4>$Null
-    Set-Variable htmlcyanmask        -Option AllScope -Value "#00FFFF" 4>$Null
-    Set-Variable htmlbluemask        -Option AllScope -Value "#0000FF" 4>$Null
-    Set-Variable htmldarkbluemask    -Option AllScope -Value "#0000A0" 4>$Null
-    Set-Variable htmllightbluemask   -Option AllScope -Value "#ADD8E6" 4>$Null
-    Set-Variable htmlpurplemask      -Option AllScope -Value "#800080" 4>$Null
-    Set-Variable htmlyellowmask      -Option AllScope -Value "#FFFF00" 4>$Null
-    Set-Variable htmllimemask        -Option AllScope -Value "#00FF00" 4>$Null
-    Set-Variable htmlmagentamask     -Option AllScope -Value "#FF00FF" 4>$Null
-    Set-Variable htmlwhitemask       -Option AllScope -Value "#FFFFFF" 4>$Null
-    Set-Variable htmlsilvermask      -Option AllScope -Value "#C0C0C0" 4>$Null
-    Set-Variable htmlgraymask        -Option AllScope -Value "#808080" 4>$Null
-    Set-Variable htmlblackmask       -Option AllScope -Value "#000000" 4>$Null
-    Set-Variable htmlorangemask      -Option AllScope -Value "#FFA500" 4>$Null
-    Set-Variable htmlmaroonmask      -Option AllScope -Value "#800000" 4>$Null
-    Set-Variable htmlgreenmask       -Option AllScope -Value "#008000" 4>$Null
-    Set-Variable htmlolivemask       -Option AllScope -Value "#808000" 4>$Null
+	#V2.23 Prior versions used Set-Variable. That hid the variables
+	#from @code. So MBS switched to using $global:
 
-    Set-Variable htmlbold        -Option AllScope -Value 1 4>$Null
-    Set-Variable htmlitalics     -Option AllScope -Value 2 4>$Null
-    Set-Variable htmlred         -Option AllScope -Value 4 4>$Null
-    Set-Variable htmlcyan        -Option AllScope -Value 8 4>$Null
-    Set-Variable htmlblue        -Option AllScope -Value 16 4>$Null
-    Set-Variable htmldarkblue    -Option AllScope -Value 32 4>$Null
-    Set-Variable htmllightblue   -Option AllScope -Value 64 4>$Null
-    Set-Variable htmlpurple      -Option AllScope -Value 128 4>$Null
-    Set-Variable htmlyellow      -Option AllScope -Value 256 4>$Null
-    Set-Variable htmllime        -Option AllScope -Value 512 4>$Null
-    Set-Variable htmlmagenta     -Option AllScope -Value 1024 4>$Null
-    Set-Variable htmlwhite       -Option AllScope -Value 2048 4>$Null
-    Set-Variable htmlsilver      -Option AllScope -Value 4096 4>$Null
-    Set-Variable htmlgray        -Option AllScope -Value 8192 4>$Null
-    Set-Variable htmlolive       -Option AllScope -Value 16384 4>$Null
-    Set-Variable htmlorange      -Option AllScope -Value 32768 4>$Null
-    Set-Variable htmlmaroon      -Option AllScope -Value 65536 4>$Null
-    Set-Variable htmlgreen       -Option AllScope -Value 131072 4>$Null
-    Set-Variable htmlblack       -Option AllScope -Value 262144 4>$Null
+    $global:htmlredmask       = "#FF0000" 4>$Null
+    $global:htmlcyanmask      = "#00FFFF" 4>$Null
+    $global:htmlbluemask      = "#0000FF" 4>$Null
+    $global:htmldarkbluemask  = "#0000A0" 4>$Null
+    $global:htmllightbluemask = "#ADD8E6" 4>$Null
+    $global:htmlpurplemask    = "#800080" 4>$Null
+    $global:htmlyellowmask    = "#FFFF00" 4>$Null
+    $global:htmllimemask      = "#00FF00" 4>$Null
+    $global:htmlmagentamask   = "#FF00FF" 4>$Null
+    $global:htmlwhitemask     = "#FFFFFF" 4>$Null
+    $global:htmlsilvermask    = "#C0C0C0" 4>$Null
+    $global:htmlgraymask      = "#808080" 4>$Null
+    $global:htmlblackmask     = "#000000" 4>$Null
+    $global:htmlorangemask    = "#FFA500" 4>$Null
+    $global:htmlmaroonmask    = "#800000" 4>$Null
+    $global:htmlgreenmask     = "#008000" 4>$Null
+    $global:htmlolivemask     = "#808000" 4>$Null
+
+    $global:htmlbold        = 1 4>$Null
+    $global:htmlitalics     = 2 4>$Null
+    $global:htmlred         = 4 4>$Null
+    $global:htmlcyan        = 8 4>$Null
+    $global:htmlblue        = 16 4>$Null
+    $global:htmldarkblue    = 32 4>$Null
+    $global:htmllightblue   = 64 4>$Null
+    $global:htmlpurple      = 128 4>$Null
+    $global:htmlyellow      = 256 4>$Null
+    $global:htmllime        = 512 4>$Null
+    $global:htmlmagenta     = 1024 4>$Null
+    $global:htmlwhite       = 2048 4>$Null
+    $global:htmlsilver      = 4096 4>$Null
+    $global:htmlgray        = 8192 4>$Null
+    $global:htmlolive       = 16384 4>$Null
+    $global:htmlorange      = 32768 4>$Null
+    $global:htmlmaroon      = 65536 4>$Null
+    $global:htmlgreen       = 131072 4>$Null
+	$global:htmlblack       = 262144 4>$Null
+
+	$global:htmlsb          = ( $htmlsilver -bor $htmlBold ) ## point optimization
+
+	$global:htmlColor = 
+	@{
+		$htmlred       = $htmlredmask
+		$htmlcyan      = $htmlcyanmask
+		$htmlblue      = $htmlbluemask
+		$htmldarkblue  = $htmldarkbluemask
+		$htmllightblue = $htmllightbluemask
+		$htmlpurple    = $htmlpurplemask
+		$htmlyellow    = $htmlyellowmask
+		$htmllime      = $htmllimemask
+		$htmlmagenta   = $htmlmagentamask
+		$htmlwhite     = $htmlwhitemask
+		$htmlsilver    = $htmlsilvermask
+		$htmlgray      = $htmlgraymask
+		$htmlolive     = $htmlolivemask
+		$htmlorange    = $htmlorangemask
+		$htmlmaroon    = $htmlmaroonmask
+		$htmlgreen     = $htmlgreenmask
+		$htmlblack     = $htmlblackmask
+	}
 }
 
 If($TEXT)
 {
-	$Script:output = ""
+	#V2.23 - switch to using a StringBuilder for $global:Output
+	[System.Text.StringBuilder] $global:Output = New-Object System.Text.StringBuilder( 16384 )
 }
 #endregion
 
@@ -2634,13 +2681,13 @@ Function OutputComputerItem
 	ElseIf($HTML)
 	{
 		$rowdata = @()
-		$columnHeaders = @("Manufacturer",($htmlsilver -bor $htmlbold),$Item.manufacturer,$htmlwhite)
-		$rowdata += @(,('Model',($htmlsilver -bor $htmlbold),$Item.model,$htmlwhite))
-		$rowdata += @(,('Domain',($htmlsilver -bor $htmlbold),$Item.domain,$htmlwhite))
-		$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),$OS,$htmlwhite))
-		$rowdata += @(,('Total Ram',($htmlsilver -bor $htmlbold),"$($Item.totalphysicalram) GB",$htmlwhite))
-		$rowdata += @(,('Physical Processors (sockets)',($htmlsilver -bor $htmlbold),$Item.NumberOfProcessors,$htmlwhite))
-		$rowdata += @(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Item.NumberOfLogicalProcessors,$htmlwhite))
+		$columnHeaders = @("Manufacturer",($global:htmlsb),$Item.manufacturer,$htmlwhite)
+		$rowdata += @(,('Model',($global:htmlsb),$Item.model,$htmlwhite))
+		$rowdata += @(,('Domain',($global:htmlsb),$Item.domain,$htmlwhite))
+		$rowdata += @(,('Operating System',($global:htmlsb),$OS,$htmlwhite))
+		$rowdata += @(,('Total Ram',($global:htmlsb),"$($Item.totalphysicalram) GB",$htmlwhite))
+		$rowdata += @(,('Physical Processors (sockets)',($global:htmlsb),$Item.NumberOfProcessors,$htmlwhite))
+		$rowdata += @(,('Logical Processors (cores w/HT)',($global:htmlsb),$Item.NumberOfLogicalProcessors,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
@@ -2749,27 +2796,27 @@ Function OutputDriveItem
 	ElseIf($HTML)
 	{
 		$rowdata = @()
-		$columnHeaders = @("Caption",($htmlsilver -bor $htmlbold),$Drive.caption,$htmlwhite)
-		$rowdata += @(,('Size',($htmlsilver -bor $htmlbold),"$($drive.drivesize) GB",$htmlwhite))
+		$columnHeaders = @("Caption",($global:htmlsb),$Drive.caption,$htmlwhite)
+		$rowdata += @(,('Size',($global:htmlsb),"$($drive.drivesize) GB",$htmlwhite))
 
 		If(![String]::IsNullOrEmpty($drive.filesystem))
 		{
-			$rowdata += @(,('File System',($htmlsilver -bor $htmlbold),$Drive.filesystem,$htmlwhite))
+			$rowdata += @(,('File System',($global:htmlsb),$Drive.filesystem,$htmlwhite))
 		}
-		$rowdata += @(,('Free Space',($htmlsilver -bor $htmlbold),"$($drive.drivefreespace) GB",$htmlwhite))
+		$rowdata += @(,('Free Space',($global:htmlsb),"$($drive.drivefreespace) GB",$htmlwhite))
 		If(![String]::IsNullOrEmpty($drive.volumename))
 		{
-			$rowdata += @(,('Volume Name',($htmlsilver -bor $htmlbold),$Drive.volumename,$htmlwhite))
+			$rowdata += @(,('Volume Name',($global:htmlsb),$Drive.volumename,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($drive.volumedirty))
 		{
-			$rowdata += @(,('Volume is Dirty',($htmlsilver -bor $htmlbold),$xVolumeDirty,$htmlwhite))
+			$rowdata += @(,('Volume is Dirty',($global:htmlsb),$xVolumeDirty,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($drive.volumeserialnumber))
 		{
-			$rowdata += @(,('Volume Serial Number',($htmlsilver -bor $htmlbold),$Drive.volumeserialnumber,$htmlwhite))
+			$rowdata += @(,('Volume Serial Number',($global:htmlsb),$Drive.volumeserialnumber,$htmlwhite))
 		}
-		$rowdata += @(,('Drive Type',($htmlsilver -bor $htmlbold),$xDriveType,$htmlwhite))
+		$rowdata += @(,('Drive Type',($global:htmlsb),$xDriveType,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
@@ -2873,27 +2920,27 @@ Function OutputProcessorItem
 	ElseIf($HTML)
 	{
 		$rowdata = @()
-		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Processor.name,$htmlwhite)
-		$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Processor.description,$htmlwhite))
+		$columnHeaders = @("Name",($global:htmlsb),$Processor.name,$htmlwhite)
+		$rowdata += @(,('Description',($global:htmlsb),$Processor.description,$htmlwhite))
 
-		$rowdata += @(,('Max Clock Speed',($htmlsilver -bor $htmlbold),"$($processor.maxclockspeed) MHz",$htmlwhite))
+		$rowdata += @(,('Max Clock Speed',($global:htmlsb),"$($processor.maxclockspeed) MHz",$htmlwhite))
 		If($processor.l2cachesize -gt 0)
 		{
-			$rowdata += @(,('L2 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l2cachesize) KB",$htmlwhite))
+			$rowdata += @(,('L2 Cache Size',($global:htmlsb),"$($processor.l2cachesize) KB",$htmlwhite))
 		}
 		If($processor.l3cachesize -gt 0)
 		{
-			$rowdata += @(,('L3 Cache Size',($htmlsilver -bor $htmlbold),"$($processor.l3cachesize) KB",$htmlwhite))
+			$rowdata += @(,('L3 Cache Size',($global:htmlsb),"$($processor.l3cachesize) KB",$htmlwhite))
 		}
 		If($processor.numberofcores -gt 0)
 		{
-			$rowdata += @(,('Number of Cores',($htmlsilver -bor $htmlbold),$Processor.numberofcores,$htmlwhite))
+			$rowdata += @(,('Number of Cores',($global:htmlsb),$Processor.numberofcores,$htmlwhite))
 		}
 		If($processor.numberoflogicalprocessors -gt 0)
 		{
-			$rowdata += @(,('Number of Logical Processors (cores w/HT)',($htmlsilver -bor $htmlbold),$Processor.numberoflogicalprocessors,$htmlwhite))
+			$rowdata += @(,('Number of Logical Processors (cores w/HT)',($global:htmlsb),$Processor.numberoflogicalprocessors,$htmlwhite))
 		}
-		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
+		$rowdata += @(,('Availability',($global:htmlsb),$xAvailability,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
@@ -3235,97 +3282,97 @@ Function OutputNicItem
 	ElseIf($HTML)
 	{
 		$rowdata = @()
-		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$ThisNic.Name,$htmlwhite)
+		$columnHeaders = @("Name",($global:htmlsb),$ThisNic.Name,$htmlwhite)
 		If($ThisNic.Name -ne $nic.description)
 		{
-			$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Nic.description,$htmlwhite))
+			$rowdata += @(,('Description',($global:htmlsb),$Nic.description,$htmlwhite))
 		}
-		$rowdata += @(,('Connection ID',($htmlsilver -bor $htmlbold),$ThisNic.NetConnectionID,$htmlwhite))
+		$rowdata += @(,('Connection ID',($global:htmlsb),$ThisNic.NetConnectionID,$htmlwhite))
 		If(validObject $Nic Manufacturer)
 		{
-			$rowdata += @(,('Manufacturer',($htmlsilver -bor $htmlbold),$Nic.manufacturer,$htmlwhite))
+			$rowdata += @(,('Manufacturer',($global:htmlsb),$Nic.manufacturer,$htmlwhite))
 		}
-		$rowdata += @(,('Availability',($htmlsilver -bor $htmlbold),$xAvailability,$htmlwhite))
-		$rowdata += @(,('Allow the computer to turn off this device to save power',($htmlsilver -bor $htmlbold),$PowerSaving,$htmlwhite))
-		$rowdata += @(,('Physical Address',($htmlsilver -bor $htmlbold),$Nic.macaddress,$htmlwhite))
-		$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$xIPAddress[0],$htmlwhite))
+		$rowdata += @(,('Availability',($global:htmlsb),$xAvailability,$htmlwhite))
+		$rowdata += @(,('Allow the computer to turn off this device to save power',($global:htmlsb),$PowerSaving,$htmlwhite))
+		$rowdata += @(,('Physical Address',($global:htmlsb),$Nic.macaddress,$htmlwhite))
+		$rowdata += @(,('IP Address',($global:htmlsb),$xIPAddress[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xIPAddress)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata += @(,('IP Address',($global:htmlsb),$tmp,$htmlwhite))
 			}
 		}
-		$rowdata += @(,('Default Gateway',($htmlsilver -bor $htmlbold),$Nic.Defaultipgateway[0],$htmlwhite))
-		$rowdata += @(,('Subnet Mask',($htmlsilver -bor $htmlbold),$xIPSubnet[0],$htmlwhite))
+		$rowdata += @(,('Default Gateway',($global:htmlsb),$Nic.Defaultipgateway[0],$htmlwhite))
+		$rowdata += @(,('Subnet Mask',($global:htmlsb),$xIPSubnet[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xIPSubnet)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('Subnet Mask',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata += @(,('Subnet Mask',($global:htmlsb),$tmp,$htmlwhite))
 			}
 		}
 		If($nic.dhcpenabled)
 		{
 			$DHCPLeaseObtainedDate = $nic.ConvertToDateTime($nic.dhcpleaseobtained)
 			$DHCPLeaseExpiresDate = $nic.ConvertToDateTime($nic.dhcpleaseexpires)
-			$rowdata += @(,('DHCP Enabled',($htmlsilver -bor $htmlbold),$Nic.dhcpenabled,$htmlwhite))
-			$rowdata += @(,('DHCP Lease Obtained',($htmlsilver -bor $htmlbold),$dhcpleaseobtaineddate,$htmlwhite))
-			$rowdata += @(,('DHCP Lease Expires',($htmlsilver -bor $htmlbold),$dhcpleaseexpiresdate,$htmlwhite))
-			$rowdata += @(,('DHCP Server',($htmlsilver -bor $htmlbold),$Nic.dhcpserver,$htmlwhite))
+			$rowdata += @(,('DHCP Enabled',($global:htmlsb),$Nic.dhcpenabled,$htmlwhite))
+			$rowdata += @(,('DHCP Lease Obtained',($global:htmlsb),$dhcpleaseobtaineddate,$htmlwhite))
+			$rowdata += @(,('DHCP Lease Expires',($global:htmlsb),$dhcpleaseexpiresdate,$htmlwhite))
+			$rowdata += @(,('DHCP Server',($global:htmlsb),$Nic.dhcpserver,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($nic.dnsdomain))
 		{
-			$rowdata += @(,('DNS Domain',($htmlsilver -bor $htmlbold),$Nic.dnsdomain,$htmlwhite))
+			$rowdata += @(,('DNS Domain',($global:htmlsb),$Nic.dnsdomain,$htmlwhite))
 		}
 		If($Null -ne $nic.dnsdomainsuffixsearchorder -and $nic.dnsdomainsuffixsearchorder.length -gt 0)
 		{
-			$rowdata += @(,('DNS Search Suffixes',($htmlsilver -bor $htmlbold),$xnicdnsdomainsuffixsearchorder[0],$htmlwhite))
+			$rowdata += @(,('DNS Search Suffixes',($global:htmlsb),$xnicdnsdomainsuffixsearchorder[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xnicdnsdomainsuffixsearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
 		}
-		$rowdata += @(,('DNS WINS Enabled',($htmlsilver -bor $htmlbold),$xdnsenabledforwinsresolution,$htmlwhite))
+		$rowdata += @(,('DNS WINS Enabled',($global:htmlsb),$xdnsenabledforwinsresolution,$htmlwhite))
 		If($Null -ne $nic.dnsserversearchorder -and $nic.dnsserversearchorder.length -gt 0)
 		{
-			$rowdata += @(,('DNS Servers',($htmlsilver -bor $htmlbold),$xnicdnsserversearchorder[0],$htmlwhite))
+			$rowdata += @(,('DNS Servers',($global:htmlsb),$xnicdnsserversearchorder[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xnicdnsserversearchorder)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
 		}
-		$rowdata += @(,('NetBIOS Setting',($htmlsilver -bor $htmlbold),$xTcpipNetbiosOptions,$htmlwhite))
-		$rowdata += @(,('WINS: Enabled LMHosts',($htmlsilver -bor $htmlbold),$xwinsenablelmhostslookup,$htmlwhite))
+		$rowdata += @(,('NetBIOS Setting',($global:htmlsb),$xTcpipNetbiosOptions,$htmlwhite))
+		$rowdata += @(,('WINS: Enabled LMHosts',($global:htmlsb),$xwinsenablelmhostslookup,$htmlwhite))
 		If(![String]::IsNullOrEmpty($nic.winshostlookupfile))
 		{
-			$rowdata += @(,('Host Lookup File',($htmlsilver -bor $htmlbold),$Nic.winshostlookupfile,$htmlwhite))
+			$rowdata += @(,('Host Lookup File',($global:htmlsb),$Nic.winshostlookupfile,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($nic.winsprimaryserver))
 		{
-			$rowdata += @(,('Primary Server',($htmlsilver -bor $htmlbold),$Nic.winsprimaryserver,$htmlwhite))
+			$rowdata += @(,('Primary Server',($global:htmlsb),$Nic.winsprimaryserver,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($nic.winssecondaryserver))
 		{
-			$rowdata += @(,('Secondary Server',($htmlsilver -bor $htmlbold),$Nic.winssecondaryserver,$htmlwhite))
+			$rowdata += @(,('Secondary Server',($global:htmlsb),$Nic.winssecondaryserver,$htmlwhite))
 		}
 		If(![String]::IsNullOrEmpty($nic.winsscopeid))
 		{
-			$rowdata += @(,('Scope ID',($htmlsilver -bor $htmlbold),$Nic.winsscopeid,$htmlwhite))
+			$rowdata += @(,('Scope ID',($global:htmlsb),$Nic.winsscopeid,$htmlwhite))
 		}
 
 		$msg = ""
@@ -4307,40 +4354,60 @@ Function Get-RegKeyToObject
 	
     $val = Get-RegistryValue2 $RegPath $RegKey $ComputerName
 	
-    $obj1 = New-Object -TypeName PSObject
-	$obj1 | Add-Member -MemberType NoteProperty -Name ComputerName	-Value $ComputerName
-	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey		-Value $RegPath
-	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue		-Value $RegKey
     If($Null -eq $val) 
 	{
-        $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value "Not set"
+        $tmp = "Not set"
     } 
 	Else 
 	{
-	    $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value $val
+	    $tmp = $val
     }
-    $Script:ControllerRegistryItems.Add($obj1) > $Null
+	
+	$obj1 = [PSCustomObject] @{
+		ComputerName = $ComputerName	
+		RegKey       = $RegPath	
+		RegValue     = $RegKey	
+		Value        = $tmp
+	}
+	$null = $Script:ControllerRegistryItems.Add($obj1)
 }
 #endregion
 
 #region Word, text, and HTML line output functions
 Function line
 #function created by Michael B. Smith, Exchange MVP
-#@essentialexchange on Twitter
-#http://TheEssentialExchange.com
+#@essentialexch on Twitter
+#https://essential.exchange/blog
 #for creating the formatted text report
 #created March 2011
 #updated March 2014
+# updated March 2019 to use StringBuilder (about 100 times more efficient than simple strings)
 {
-	Param( [int]$tabs = 0, [string]$name = '', [string]$value = '', [string]$newline = "`r`n", [switch]$nonewline )
-	While( $tabs -gt 0 ) { $Script:Output += "`t"; $tabs--; }
+	Param
+	(
+		[Int]    $tabs = 0, 
+		[String] $name = '', 
+		[String] $value = '', 
+		[String] $newline = [System.Environment]::NewLine, 
+		[Switch] $nonewline
+	)
+
+	while( $tabs -gt 0 )
+	{
+		#V2.23 - switch to using a StringBuilder for $global:Output
+		$null = $global:Output.Append( "`t" )
+		$tabs--
+	}
+
 	If( $nonewline )
 	{
-		$Script:Output += $name + $value
+		#V2.23 - switch to using a StringBuilder for $global:Output
+		$null = $global:Output.Append( $name + $value )
 	}
 	Else
 	{
-		$Script:Output += $name + $value + $newline
+		#V2.23 - switch to using a StringBuilder for $global:Output
+		$null = $global:Output.AppendLine( $name + $value )
 	}
 }
 	
@@ -4443,12 +4510,12 @@ Function WriteWordLine
 	Writes a line omitting font and font size and setting the italics attribute
 
 .EXAMPLE
-	WriteHTMLLine 0 0 "This is a regular line of text in the default font in bold" "" $Null 0 $htmlbold
+	WriteHTMLLine 0 0 "This is a regular line of text in the default font in bold" "" $Null 0 $htmlBold
 
 	Writes a line omitting font and font size and setting the bold attribute
 
 .EXAMPLE
-	WriteHTMLLine 0 0 "This is a regular line of text in the default font in bold italics" "" $Null 0 ($htmlbold -bor $htmlitalics)
+	WriteHTMLLine 0 0 "This is a regular line of text in the default font in bold italics" "" $Null 0 ($htmlBold -bor $htmlitalics)
 
 	Writes a line omitting font and font size and setting both italics and bold options
 
@@ -4463,7 +4530,7 @@ Function WriteWordLine
 	Writes a line using Courier New Font and 0 font point size (default = 2 if set to 0)
 
 .EXAMPLE	
-	WriteHTMLLine 0 0 "This is a regular line of RED text indented 0 tab stops with the computer name as data in 10 point Courier New bold italics: " $env:computername "Courier New" 2 ($htmlbold -bor $htmlred -bor $htmlitalics)
+	WriteHTMLLine 0 0 "This is a regular line of RED text indented 0 tab stops with the computer name as data in 10 point Courier New bold italics: " $env:computername "Courier New" 2 ($htmlBold -bor $htmlred -bor $htmlitalics)
 
 	Writes a line using Courier New Font with first and second string values to be used, also uses 10 point font with bold, italics and red color options set.
 
@@ -4480,8 +4547,9 @@ Function WriteWordLine
 		7 - 36 point
 	Any number larger than 7 defaults to 7
 
-	Style - Refers to the headers that are used with output and resemble the headers in word, HTML supports headers h1-h6 and h1-h4 are more commonly used.  Unlike word, H1 will not give you
-	a blue colored font, you will have to set that yourself.
+	Style - Refers to the headers that are used with output and resemble the headers in word, 
+	HTML supports headers h1-h6 and h1-h4 are more commonly used.  Unlike word, H1 will not 
+	give you a blue colored font, you will have to set that yourself.
 
 	Colors and Bold/Italics Flags are:
 
@@ -4506,110 +4574,131 @@ Function WriteWordLine
 		htmlblack       
 #>
 
+#V2.23
+# to suppress $crlf in HTML documents, replace this with '' (empty string)
+# but this was added to make the HTML readable
+$crlf = [System.Environment]::NewLine
+
 Function WriteHTMLLine
 #Function created by Ken Avram
 #Function created to make output to HTML easy in this script
 #headings fixed 12-Oct-2016 by Webster
 #errors with $HTMLStyle fixed 7-Dec-2017 by Webster
+# re-implemented/re-based for v2.23 by Michael B. Smith
 {
-	Param([int]$style=0, 
-	[int]$tabs = 0, 
-	[string]$name = '', 
-	[string]$value = '', 
-	[string]$fontName="Calibri",
-	[int]$fontSize=1,
-	[int]$options=$htmlblack)
+	Param
+	(
+		[Int]    $style    = 0, 
+		[Int]    $tabs     = 0, 
+		[String] $name     = '', 
+		[String] $value    = '', 
+		[String] $fontName = $null,
+		[Int]    $fontSize = 1,
+		[Int]    $options  = $htmlblack
+	)
 
+	#V2.23 - FIXME - long story short, this function was wrong and had been wrong for a long time. 
+	## The function generated invalid HTML, and ignored fontname and fontsize parameters. I fixed
+	## those items, but that made the report unreadable, because all of the formatting had been based
+	## on this function not working properly.
 
-	#Build output style
-	[string]$output = ""
+	## here is a typical H1 previously generated:
+	## <h1>///&nbsp;&nbsp;Forest Information&nbsp;&nbsp;\\\<font face='Calibri' color='#000000' size='1'></h1></font>
 
-	If([String]::IsNullOrEmpty($Name))	
+	## fixing the function generated this (unreadably small):
+	## <h1><font face='Calibri' color='#000000' size='1'>///&nbsp;&nbsp;Forest Information&nbsp;&nbsp;\\\</font></h1>
+
+	## So I took all the fixes out. This routine now generates valid HTML, but the fontName, fontSize,
+	## and options parameters are ignored; so the routine generates equivalent output as before. I took
+	## the fixes out instead of fixing all the call sites, because there are 225 call sites! If you are
+	## willing to update all the call sites, you can easily re-instate the fixes. They have only been
+	## commented out with '##' below.
+
+	## if( [String]::IsNullOrEmpty( $fontName ) )
+	## {
+	##	$fontName = 'Calibri'
+	## }
+	## if( $fontSize -le 0 )
+	## {
+	##	$fontSize = 1
+	## }
+
+	## ## output data is stored here
+	## [String] $output = ''
+	[System.Text.StringBuilder] $sb = New-Object System.Text.StringBuilder( 1024 )
+
+	If( [String]::IsNullOrEmpty( $name ) )	
 	{
-		$HTMLBody = "<p></p>"
+		## $HTMLBody = '<p></p>'
+		$null = $sb.Append( '<p></p>' )
 	}
 	Else
 	{
-		$color = CheckHTMLColor $options
+		## #V2.23
+		[Bool] $ital = $options -band $htmlitalics
+		[Bool] $bold = $options -band $htmlBold
+		## $color = $global:htmlColor[ $options -band 0xffffc ]
 
-		#build # of tabs
+		## ## build the HTML output string
+##		$HTMLBody = ''
+##		if( $ital ) { $HTMLBody += '<i>' }
+##		if( $bold ) { $HTMLBody += '<b>' } 
+		if( $ital ) { $null = $sb.Append( '<i>' ) }
+		if( $bold ) { $null = $sb.Append( '<b>' ) } 
 
-		While($tabs -gt 0)
-		{ 
-			$output += "&nbsp;&nbsp;&nbsp;&nbsp;"; $tabs--; 
+		switch( $style )
+		{
+			1 { $HTMLOpen = '<h1>'; $HTMLClose = '</h1>'; Break }
+			2 { $HTMLOpen = '<h2>'; $HTMLClose = '</h2>'; Break }
+			3 { $HTMLOpen = '<h3>'; $HTMLClose = '</h3>'; Break }
+			4 { $HTMLOpen = '<h4>'; $HTMLClose = '</h4>'; Break }
+			Default { $HTMLOpen = ''; $HTMLClose = ''; Break }
 		}
 
-		$HTMLFontName = $fontName		
+		## $HTMLBody += $HTMLOpen
+		$null = $sb.Append( $HTMLOpen )
 
-		$HTMLBody = ""
-
-		If($options -band $htmlitalics) 
-		{
-			$HTMLBody += "<i>"
-		} 
-
-		If($options -band $htmlbold) 
-		{
-			$HTMLBody += "<b>"
-		} 
-
-		#output the rest of the parameters.
-		$output += $name + $value
-
-		Switch ($style)
-		{
-			1 {$HTMLStyle = "<h1>"; Break}
-			2 {$HTMLStyle = "<h2>"; Break}
-			3 {$HTMLStyle = "<h3>"; Break}
-			4 {$HTMLStyle = "<h4>"; Break}
-			Default {$HTMLStyle = ""; Break}
-		}
-
-		$HTMLBody += $HTMLStyle + $output
-
-		Switch ($style)
-		{
-			1 {$HTMLStyle = "</h1>"; Break}
-			2 {$HTMLStyle = "</h2>"; Break}
-			3 {$HTMLStyle = "</h3>"; Break}
-			4 {$HTMLStyle = "</h4>"; Break}
-			Default {$HTMLStyle = ""; Break}
-		}
-
-		#added by webster 12-oct-2016
-		#if a heading, don't add the <br>
-		#moved to after the two switch statements on 7-Dec-2017 to fix $HTMLStyle has not been set error
-		If($HTMLStyle -eq "")
-		{
-			$HTMLBody += "<br><font face='" + $HTMLFontName + "' " + "color='" + $color + "' size='"  + $fontsize + "'>"
-		}
-		Else
-		{
-			$HTMLBody += "<font face='" + $HTMLFontName + "' " + "color='" + $color + "' size='"  + $fontsize + "'>"
-		}
+		## if($HTMLClose -eq '')
+		## {
+		##	$HTMLBody += "<br><font face='" + $fontName + "' " + "color='" + $color + "' size='"  + $fontSize + "'>"
+		## }
+		## else
+		## {
+		##	$HTMLBody += "<font face='" + $fontName + "' " + "color='" + $color + "' size='"  + $fontSize + "'>"
+		## }
 		
-		$HTMLBody += $HTMLStyle +  "</font>"
+##		while( $tabs -gt 0 )
+##		{ 
+##			$output += '&nbsp;&nbsp;&nbsp;&nbsp;'
+##			$tabs--
+##		}
+		## output the rest of the parameters.
+##		$output += $name + $value
+		## $HTMLBody += $output
+		$null = $sb.Append( ( '&nbsp;&nbsp;&nbsp;&nbsp;' * $tabs ) + $name + $value )
 
-		If($options -band $htmlitalics) 
-		{
-			$HTMLBody += "</i>"
-		} 
+		## $HTMLBody += '</font>'
+##		if( $HTMLClose -eq '' ) { $HTMLBody += '<br>'     }
+##		else                    { $HTMLBody += $HTMLClose }
 
-		If($options -band $htmlbold) 
-		{
-			$HTMLBody += "</b>"
-		} 
+##		if( $ital ) { $HTMLBody += '</i>' }
+##		if( $bold ) { $HTMLBody += '</b>' } 
 
-		#added by webster 12-oct-2016
-		#if a heading, don't add the <br />
-		#moved to inside the Else statement on 7-Dec-2017 to fix $HTMLStyle has not been set error
-		If($HTMLStyle -eq "")
-		{
-			$HTMLBody += "<br />"
-		}
+##		if( $HTMLClose -eq '' ) { $HTMLBody += '<br />' }
+
+		if( $HTMLClose -eq '' ) { $null = $sb.Append( '<br>' )     }
+		else                    { $null = $sb.Append( $HTMLClose ) }
+
+		if( $ital ) { $null = $sb.Append( '</i>' ) }
+		if( $bold ) { $null = $sb.Append( '</b>' ) } 
+
+		if( $HTMLClose -eq '' ) { $null = $sb.Append( '<br />' ) }
 	}
+	##$HTMLBody += $crlf
+	$null = $sb.AppendLine( '' )
 
-	out-file -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null
+##	Out-File -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null
+	Out-File -FilePath $Script:FileName1 -Append -InputObject $sb.ToString() 4>$Null
 }
 #endregion
 
@@ -4618,110 +4707,255 @@ Function WriteHTMLLine
 # AddHTMLTable - Called from FormatHTMLTable function
 # Created by Ken Avram
 # modified by Jake Rutski
+# re-implemented by Michael B. Smith for v2.23. Also made the documentation match reality.
 #***********************************************************************************************************
 Function AddHTMLTable
 {
-	Param([string]$fontName="Calibri",
-	[int]$fontSize=2,
-	[int]$colCount=0,
-	[int]$rowCount=0,
-	[object[]]$rowInfo=@(),
-	[object[]]$fixedInfo=@())
+	Param
+	(
+		[String]   $fontName  = 'Calibri',
+		[Int]      $fontSize  = 2,
+		[Int]      $colCount  = 0,
+		[Int]      $rowCount  = 0,
+		[Object[]] $rowInfo   = $null,
+		[Object[]] $fixedInfo = $null
+	)
+	#V2.23 - Use StringBuilder - MBS
+	## In the normal case, tables are only a few dozen cells. But in the case
+	## of Sites, OUs, and Users - there may be many hundreds of thousands of 
+	## cells. Using normal strings is too slow.
 
-	For($rowidx = $RowIndex;$rowidx -le $rowCount;$rowidx++)
+	#V2.23
+	## if( $ExtraSpecialVerbose )
+	## {
+	##	$global:rowInfo1 = $rowInfo
+	## }
+<#
+	if( $SuperVerbose )
 	{
-		$rd = @($rowInfo[$rowidx - 2])
-		$htmlbody = $htmlbody + "<tr>"
-		For($columnIndex = 0; $columnIndex -lt $colCount; $columnindex+=2)
+		wv "AddHTMLTable: fontName '$fontName', fontsize $fontSize, colCount $colCount, rowCount $rowCount"
+		if( $null -ne $rowInfo -and $rowInfo.Count -gt 0 )
 		{
-			$tmp = CheckHTMLColor $rd[$columnIndex+1]
-
-			If($fixedInfo.Length -eq 0)
+			wv "AddHTMLTable: rowInfo has $( $rowInfo.Count ) elements"
+			if( $ExtraSpecialVerbose )
 			{
-				$htmlbody += "<td style=""background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
-			}
-			Else
-			{
-				$htmlbody += "<td style=""width:$($fixedInfo[$columnIndex/2]); background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
-			}
-
-			If($rd[$columnIndex+1] -band $htmlbold)
-			{
-				$htmlbody += "<b>"
-			}
-			If($rd[$columnIndex+1] -band $htmlitalics)
-			{
-				$htmlbody += "<i>"
-			}
-			If($Null -ne $rd[$columnIndex])
-			{
-				$cell = $rd[$columnIndex].tostring()
-				If($cell -eq " " -or $cell.length -eq 0)
+				wv "AddHTMLTable: rowInfo length $( $rowInfo.Length )"
+				for( $ii = 0; $ii -lt $rowInfo.Length; $ii++ )
 				{
-					$htmlbody += "&nbsp;&nbsp;&nbsp;"
-				}
-				Else
-				{
-					For($i=0;$i -lt $cell.length;$i++)
+					$row = $rowInfo[ $ii ]
+					wv "AddHTMLTable: index $ii, type $( $row.GetType().FullName ), length $( $row.Length )"
+					for( $yyy = 0; $yyy -lt $row.Length; $yyy++ )
 					{
-						If($cell[$i] -eq " ")
-						{
-							$htmlbody += "&nbsp;"
-						}
-						If($cell[$i] -ne " ")
-						{
-							Break
-						}
+						wv "AddHTMLTable: index $ii, yyy = $yyy, val = '$( $row[ $yyy ] )'"
 					}
-					$htmlbody += $cell
+					wv "AddHTMLTable: done"
 				}
 			}
-			Else
-			{
-				$htmlbody += "&nbsp;&nbsp;&nbsp;"
-			}
-			If($rd[$columnIndex+1] -band $htmlbold)
-			{
-				$htmlbody += "</b>"
-			}
-			If($rd[$columnIndex+1] -band $htmlitalics)
-			{
-				$htmlbody += "</i>"
-			}
-			$htmlbody += "</font></td>"
 		}
-		$htmlbody += "</tr>"
+		else
+		{
+			wv "AddHTMLTable: rowInfo is empty"
+		}
+		if( $null -ne $fixedInfo -and $fixedInfo.Count -gt 0 )
+		{
+			wv "AddHTMLTable: fixedInfo has $( $fixedInfo.Count ) elements"
+		}
+		else
+		{
+			wv "AddHTMLTable: fixedInfo is empty"
+		}
 	}
-	out-file -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null 
+#>
+
+	##$htmlbody = ''
+	[System.Text.StringBuilder] $sb = New-Object System.Text.StringBuilder( 8192 )
+
+	if( $rowInfo -and $rowInfo.Length -lt $rowCount )
+	{
+##		$oldCount = $rowCount
+		$rowCount = $rowInfo.Length
+##		if( $SuperVerbose )
+##		{
+##			wv "AddHTMLTable: updated rowCount to $rowCount from $oldCount, based on rowInfo.Length"
+##		}
+	}
+
+	for( $rowCountIndex = 0; $rowCountIndex -lt $rowCount; $rowCountIndex++ )
+	{
+		$null = $sb.AppendLine( '<tr>' )
+		## $htmlbody += '<tr>'
+		## $htmlbody += $crlf #V2.23 - make the HTML readable
+
+		## each row of rowInfo is an array
+		## each row consists of tuples: an item of text followed by an item of formatting data
+<#		
+		$row = $rowInfo[ $rowCountIndex ]
+		if( $ExtraSpecialVerbose )
+		{
+			wv "!!!!! AddHTMLTable: rowCountIndex = $rowCountIndex, row.Length = $( $row.Length ), row gettype = $( $row.GetType().FullName )"
+			wv "!!!!! AddHTMLTable: colCount $colCount"
+			wv "!!!!! AddHTMLTable: row[0].Length $( $row[0].Length )"
+			wv "!!!!! AddHTMLTable: row[0].GetType $( $row[0].GetType().FullName )"
+			$subRow = $row
+			if( $subRow -is [Array] -and $subRow[ 0 ] -is [Array] )
+			{
+				$subRow = $subRow[ 0 ]
+				wv "!!!!! AddHTMLTable: deref subRow.Length $( $subRow.Length ), subRow.GetType $( $subRow.GetType().FullName )"
+			}
+
+			for( $columnIndex = 0; $columnIndex -lt $subRow.Length; $columnIndex += 2 )
+			{
+				$item = $subRow[ $columnIndex ]
+				wv "!!!!! AddHTMLTable: item.GetType $( $item.GetType().FullName )"
+				## if( !( $item -is [String] ) -and $item -is [Array] )
+##				if( $item -is [Array] -and $item[ 0 ] -is [Array] )				
+##				{
+##					$item = $item[ 0 ]
+##					wv "!!!!! AddHTMLTable: dereferenced item.GetType $( $item.GetType().FullName )"
+##				}
+				wv "!!!!! AddHTMLTable: rowCountIndex = $rowCountIndex, columnIndex = $columnIndex, val '$item'"
+			}
+			wv "!!!!! AddHTMLTable: done"
+		}
+#>
+
+		## reset
+		$row = $rowInfo[ $rowCountIndex ]
+
+		$subRow = $row
+		if( $subRow -is [Array] -and $subRow[ 0 ] -is [Array] )
+		{
+			$subRow = $subRow[ 0 ]
+			## wv "***** AddHTMLTable: deref rowCountIndex $rowCountIndex, subRow.Length $( $subRow.Length ), subRow.GetType $( $subRow.GetType().FullName )"
+		}
+
+		$subRowLength = $subRow.Length
+		for( $columnIndex = 0; $columnIndex -lt $colCount; $columnIndex += 2 )
+		{
+			$item = if( $columnIndex -lt $subRowLength ) { $subRow[ $columnIndex ] } else { 0 }
+			## if( !( $item -is [String] ) -and $item -is [Array] )
+##			if( $item -is [Array] -and $item[ 0 ] -is [Array] )
+##			{
+##				$item = $item[ 0 ]
+##			}
+
+			$text   = if( $item ) { $item.ToString() } else { '' }
+			$format = if( ( $columnIndex + 1 ) -lt $subRowLength ) { $subRow[ $columnIndex + 1 ] } else { 0 }
+			## item, text, and format ALWAYS have values, even if empty values
+			$color  = $global:htmlColor[ $format -band 0xffffc ]
+			[Bool] $bold = $format -band $htmlBold
+			[Bool] $ital = $format -band $htmlitalics
+<#			
+			if( $ExtraSpecialVerbose )
+			{
+				wv "***** columnIndex $columnIndex, subRow.Length $( $subRow.Length ), item GetType $( $item.GetType().FullName ), item '$item'"
+				wv "***** format $format, color $color, text '$text'"
+				wv "***** format gettype $( $format.GetType().Fullname ), text gettype $( $text.GetType().Fullname )"
+			}
+#>
+
+			if( $null -eq $fixedInfo -or $fixedInfo.Length -eq 0 )
+			{
+				$null = $sb.Append( "<td style=""background-color:$( $color )""><font face='$( $fontName )' size='$( $fontSize )'>" )
+				##$htmlbody += "<td style=""background-color:$( $color )""><font face='$( $fontName )' size='$( $fontSize )'>"
+			}
+			else
+			{
+				$null = $sb.Append( "<td style=""width:$( $fixedInfo[ $columnIndex / 2 ] ); background-color:$( $color )""><font face='$( $fontName )' size='$( $fontSize )'>" )
+				##$htmlbody += "<td style=""width:$( $fixedInfo[ $columnIndex / 2 ] ); background-color:$( $color )""><font face='$( $fontName )' size='$( $fontSize )'>"
+			}
+
+			##if( $bold ) { $htmlbody += '<b>' }
+			##if( $ital ) { $htmlbody += '<i>' }
+			if( $bold ) { $null = $sb.Append( '<b>' ) }
+			if( $ital ) { $null = $sb.Append( '<i>' ) }
+
+			if( $text -eq ' ' -or $text.length -eq 0)
+			{
+				##$htmlbody += '&nbsp;&nbsp;&nbsp;'
+				$null = $sb.Append( '&nbsp;&nbsp;&nbsp;' )
+			}
+			else
+			{
+				for ($inx = 0; $inx -lt $text.length; $inx++ )
+				{
+					if( $text[ $inx ] -eq ' ' )
+					{
+						##$htmlbody += '&nbsp;'
+						$null = $sb.Append( '&nbsp;' )
+					}
+					else
+					{
+						break
+					}
+				}
+				##$htmlbody += $text
+				$null = $sb.Append( $text )
+			}
+
+##			if( $bold ) { $htmlbody += '</b>' }
+##			if( $ital ) { $htmlbody += '</i>' }
+			if( $bold ) { $null = $sb.Append( '</b>' ) }
+			if( $ital ) { $null = $sb.Append( '</i>' ) }
+
+			$null = $sb.AppendLine( '</font></td>' )
+##			$htmlbody += '</font></td>'
+##			$htmlbody += $crlf
+		}
+
+		$null = $sb.AppendLine( '</tr>' )
+##		$htmlbody += '</tr>'
+##		$htmlbody += $crlf
+	}
+
+##	if( $ExtraSpecialVerbose )
+##	{
+##		$global:rowInfo = $rowInfo
+##		wv "!!!!! AddHTMLTable: HTML = '$htmlbody'"
+##	}
+
+##	Out-File -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null 
+	Out-File -FilePath $Script:FileName1 -Append -InputObject $sb.ToString() 4>$Null 
 }
 
 #***********************************************************************************************************
 # FormatHTMLTable 
 # Created by Ken Avram
 # modified by Jake Rutski
+# reworked by Michael B. Smith for v2.23
 #***********************************************************************************************************
 
 <#
 .Synopsis
-	Format table for HTML output document
+	Format table for a HTML output document.
 .DESCRIPTION
-	This function formats a table for HTML from an array of strings
+	This function formats a table for HTML from multiple arrays of strings.
 .PARAMETER noBorder
-	If set to $true, a table will be generated without a border (border='0')
+	If set to $true, a table will be generated without a border (border = '0'). Otherwise the table will be generated
+	with a border (border = '1').
 .PARAMETER noHeadCols
-	This parameter should be used when generating tables without column headers
-	Set this parameter equal to the number of columns in the table
+	This parameter should be used when generating tables which do not have a separate array containing column headers
+	(columnArray is not specified). Set this parameter equal to the number of columns in the table.
 .PARAMETER rowArray
-	This parameter contains the row data array for the table
+	This parameter contains the row data array for the table.
 .PARAMETER columnArray
-	This parameter contains column header data for the table
+	This parameter contains column header data for the table.
 .PARAMETER fixedWidth
 	This parameter contains widths for columns in pixel format ("100px") to override auto column widths
 	The variable should contain a width for each column you wish to override the auto-size setting
-	For example: $columnWidths = @("100px","110px","120px","130px","140px")
+	For example: $fixedWidth = @("100px","110px","120px","130px","140px")
+.PARAMETER tableHeader
+	A string containing the header for the table (printed at the top of the table, left justified). The
+	default is a blank string.
+.PARAMETER tableWidth
+	The width of the table in pixels, or 'auto'. The default is 'auto'.
+.PARAMETER fontName
+	The name of the font to use in the table. The default is 'Calibri'.
+.PARAMETER fontSize
+	The size of the font to use in the table. The default is 2. Note that this is the HTML size, not the pixel size.
 
 .USAGE
-	FormatHTMLTable <Table Header> <Table Format> <Font Name> <Font Size>
+	FormatHTMLTable <Table Header> <Table Width> <Font Name> <Font Size>
 
 .EXAMPLE
 	FormatHTMLTable "Table Heading" "auto" "Calibri" 3
@@ -4754,7 +4988,7 @@ Function AddHTMLTable
 	Then Load the array.  If you are using column headers then load those into the column headers array, otherwise the first line of the table goes into the column headers array
 	and the second and subsequent lines go into the $rowdata table as shown below:
 
-	$columnHeaders = @('Display Name',($htmlsilver -bor $htmlbold),'Status',($htmlsilver -bor $htmlbold),'Startup Type',($htmlsilver -bor $htmlbold))
+	$columnHeaders = @('Display Name',$htmlsb,'Status',$htmlsb,'Startup Type',$htmlsb)
 
 	The first column is the actual name to display, the second are the attributes of the column i.e. color anded with bold or italics.  For the anding, parens are required or it will
 	not format correctly.
@@ -4762,18 +4996,18 @@ Function AddHTMLTable
 	This is following by adding rowdata as shown below.  As more columns are added the columns will auto adjust to fit the size of the page.
 
 	$rowdata = @()
-	$columnHeaders = @("User Name",($htmlsilver -bor $htmlbold),$UserName,$htmlwhite)
-	$rowdata += @(,('Save as PDF',($htmlsilver -bor $htmlbold),$PDF.ToString(),$htmlwhite))
-	$rowdata += @(,('Save as TEXT',($htmlsilver -bor $htmlbold),$TEXT.ToString(),$htmlwhite))
-	$rowdata += @(,('Save as WORD',($htmlsilver -bor $htmlbold),$MSWORD.ToString(),$htmlwhite))
-	$rowdata += @(,('Save as HTML',($htmlsilver -bor $htmlbold),$HTML.ToString(),$htmlwhite))
-	$rowdata += @(,('Add DateTime',($htmlsilver -bor $htmlbold),$AddDateTime.ToString(),$htmlwhite))
-	$rowdata += @(,('Hardware Inventory',($htmlsilver -bor $htmlbold),$Hardware.ToString(),$htmlwhite))
-	$rowdata += @(,('Computer Name',($htmlsilver -bor $htmlbold),$ComputerName,$htmlwhite))
-	$rowdata += @(,('Filename1',($htmlsilver -bor $htmlbold),$Script:FileName1,$htmlwhite))
-	$rowdata += @(,('OS Detected',($htmlsilver -bor $htmlbold),$Script:RunningOS,$htmlwhite))
-	$rowdata += @(,('PSUICulture',($htmlsilver -bor $htmlbold),$PSCulture,$htmlwhite))
-	$rowdata += @(,('PoSH version',($htmlsilver -bor $htmlbold),$Host.Version.ToString(),$htmlwhite))
+	$columnHeaders = @("User Name",$htmlsb,$UserName,$htmlwhite)
+	$rowdata += @(,('Save as PDF',$htmlsb,$PDF.ToString(),$htmlwhite))
+	$rowdata += @(,('Save as TEXT',$htmlsb,$TEXT.ToString(),$htmlwhite))
+	$rowdata += @(,('Save as WORD',$htmlsb,$MSWORD.ToString(),$htmlwhite))
+	$rowdata += @(,('Save as HTML',$htmlsb,$HTML.ToString(),$htmlwhite))
+	$rowdata += @(,('Add DateTime',$htmlsb,$AddDateTime.ToString(),$htmlwhite))
+	$rowdata += @(,('Hardware Inventory',$htmlsb,$Hardware.ToString(),$htmlwhite))
+	$rowdata += @(,('Computer Name',$htmlsb,$ComputerName,$htmlwhite))
+	$rowdata += @(,('Filename1',$htmlsb,$Script:FileName1,$htmlwhite))
+	$rowdata += @(,('OS Detected',$htmlsb,$Script:RunningOS,$htmlwhite))
+	$rowdata += @(,('PSUICulture',$htmlsb,$PSCulture,$htmlwhite))
+	$rowdata += @(,('PoSH version',$htmlsb,$Host.Version.ToString(),$htmlwhite))
 	FormatHTMLTable "Example of Horizontal AutoFitContents HTML Table" -rowArray $rowdata
 
 	The 'rowArray' paramater is mandatory to build the table, but it is not set as such in the function - if nothing is passed, the table will be empty.
@@ -4804,19 +5038,56 @@ Function AddHTMLTable
 
 Function FormatHTMLTable
 {
-	Param([string]$tableheader,
-	[string]$tablewidth="auto",
-	[string]$fontName="Calibri",
-	[int]$fontSize=2,
-	[switch]$noBorder=$false,
-	[int]$noHeadCols=1,
-	[object[]]$rowArray=@(),
-	[object[]]$fixedWidth=@(),
-	[object[]]$columnArray=@())
+	Param
+	(
+		[String]   $tableheader = '',
+		[String]   $tablewidth  = 'auto',
+		[String]   $fontName    = 'Calibri',
+		[Int]      $fontSize    = 2,
+		[Switch]   $noBorder    = $false,
+		[Int]      $noHeadCols  = 1,
+		[Object[]] $rowArray    = $null,
+		[Object[]] $fixedWidth  = $null,
+		[Object[]] $columnArray = $null
+	)
 
-	$HTMLBody = "<b><font face='" + $fontname + "' size='" + ($fontsize + 1) + "'>" + $tableheader + "</font></b>"
+	## FIXME - the help text for this function is wacky wrong - MBS
+	## FIXME - Use StringBuilder - MBS - this only builds the table header - benefit relatively small
+<#
+	if( $SuperVerbose )
+	{
+		wv "FormatHTMLTable: fontname '$fontname', size $fontSize, tableheader '$tableheader'"
+		wv "FormatHTMLTable: noborder $noborder, noheadcols $noheadcols"
+		if( $rowarray -and $rowarray.count -gt 0 )
+		{
+			wv "FormatHTMLTable: rowarray has $( $rowarray.count ) elements"
+		}
+		else
+		{
+			wv "FormatHTMLTable: rowarray is empty"
+		}
+		if( $columnarray -and $columnarray.count -gt 0 )
+		{
+			wv "FormatHTMLTable: columnarray has $( $columnarray.count ) elements"
+		}
+		else
+		{
+			wv "FormatHTMLTable: columnarray is empty"
+		}
+		if( $fixedwidth -and $fixedwidth.count -gt 0 )
+		{
+			wv "FormatHTMLTable: fixedwidth has $( $fixedwidth.count ) elements"
+		}
+		else
+		{
+			wv "FormatHTMLTable: fixedwidth is empty"
+		}
+	}
+#>
 
-	If($columnArray.Length -eq 0)
+	$HTMLBody = "<b><font face='" + $fontname + "' size='" + ($fontsize + 1) + "'>" + $tableheader + "</font></b>" + $crlf
+
+	If( $null -eq $columnArray -or $columnArray.Length -eq 0)
 	{
 		$NumCols = $noHeadCols + 1
 	}  # means we have no column headers, just a table
@@ -4825,7 +5096,7 @@ Function FormatHTMLTable
 		$NumCols = $columnArray.Length
 	}  # need to add one for the color attrib
 
-	If($Null -ne $rowArray)
+	If( $null -ne $rowArray )
 	{
 		$NumRows = $rowArray.length + 1
 	}
@@ -4834,94 +5105,121 @@ Function FormatHTMLTable
 		$NumRows = 1
 	}
 
-	If($noBorder)
+	If( $noBorder )
 	{
-		$htmlbody += "<table border='0' width='" + $tablewidth + "'>"
+		$HTMLBody += "<table border='0' width='" + $tablewidth + "'>"
 	}
 	Else
 	{
-		$htmlbody += "<table border='1' width='" + $tablewidth + "'>"
+		$HTMLBody += "<table border='1' width='" + $tablewidth + "'>"
 	}
+	$HTMLBody += $crlf
 
-	If(!($columnArray.Length -eq 0))
+	if( $columnArray -and $columnArray.Length -gt 0 )
 	{
-		$htmlbody += "<tr>"
+		$HTMLBody += '<tr>' + $crlf
 
-		For($columnIndex = 0; $columnIndex -lt $NumCols; $columnindex+=2)
+		for( $columnIndex = 0; $columnIndex -lt $NumCols; $columnindex += 2 )
 		{
-			$tmp = CheckHTMLColor $columnArray[$columnIndex+1]
-			If($fixedWidth.Length -eq 0)
+			#V2.23
+			$val = $columnArray[ $columnIndex + 1 ]
+			$tmp = $global:htmlColor[ $val -band 0xffffc ]
+			[Bool] $bold = $val -band $htmlBold
+			[Bool] $ital = $val -band $htmlitalics
+
+			if( $null -eq $fixedWidth -or $fixedWidth.Length -eq 0 )
 			{
-				$htmlbody += "<td style=""background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
+				$HTMLBody += "<td style=""background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
 			}
-			Else
+			else
 			{
-				$htmlbody += "<td style=""width:$($fixedWidth[$columnIndex/2]); background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
+				$HTMLBody += "<td style=""width:$($fixedWidth[$columnIndex/2]); background-color:$($tmp)""><font face='$($fontName)' size='$($fontSize)'>"
 			}
 
-			If($columnArray[$columnIndex+1] -band $htmlbold)
+			if( $bold ) { $HTMLBody += '<b>' }
+			if( $ital ) { $HTMLBody += '<i>' }
+
+			$array = $columnArray[ $columnIndex ]
+			if( $array )
 			{
-				$htmlbody += "<b>"
-			}
-			If($columnArray[$columnIndex+1] -band $htmlitalics)
-			{
-				$htmlbody += "<i>"
-			}
-			If($Null -ne $columnArray[$columnIndex])
-			{
-				If($columnArray[$columnIndex] -eq " " -or $columnArray[$columnIndex].length -eq 0)
+				if( $array -eq ' ' -or $array.Length -eq 0 )
 				{
-					$htmlbody += "&nbsp;&nbsp;&nbsp;"
+					$HTMLBody += '&nbsp;&nbsp;&nbsp;'
 				}
-				Else
+				else
 				{
-					For($i=0;$i -lt $columnArray[$columnIndex].length;$i+=2)
+					for( $i = 0; $i -lt $array.Length; $i += 2 )
 					{
-						If($columnArray[$columnIndex][$i] -eq " ")
+						if( $array[ $i ] -eq ' ' )
 						{
-							$htmlbody += "&nbsp;"
+							$HTMLBody += '&nbsp;'
 						}
-						If($columnArray[$columnIndex][$i] -ne " ")
+						else
 						{
-							Break
+							break
 						}
 					}
-					$htmlbody += $columnArray[$columnIndex]
+					$HTMLBody += $array
 				}
 			}
-			Else
+			else
 			{
-				$htmlbody += "&nbsp;&nbsp;&nbsp;"
+				$HTMLBody += '&nbsp;&nbsp;&nbsp;'
 			}
-			If($columnArray[$columnIndex+1] -band $htmlbold)
-			{
-				$htmlbody += "</b>"
-			}
-			If($columnArray[$columnIndex+1] -band $htmlitalics)
-			{
-				$htmlbody += "</i>"
-			}
-			$htmlbody += "</font></td>"
+			
+			if( $bold ) { $HTMLBody += '</b>' }
+			if( $ital ) { $HTMLBody += '</i>' }
 		}
-		$htmlbody += "</tr>"
+
+		$HTMLBody += '</font></td>'
+		$HTMLBody += $crlf
 	}
-	$rowindex = 2
-	If($Null -ne $rowArray)
+
+	$HTMLBody += '</tr>' + $crlf
+
+	#V2.23
+	Out-File -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null 
+	$HTMLBody = ''
+
+	##$rowindex = 2
+	If( $rowArray )
 	{
-		AddHTMLTable $fontName $fontSize -colCount $numCols -rowCount $NumRows -rowInfo $rowArray -fixedInfo $fixedWidth
-		$rowArray = @()
-		$htmlbody = "</table>"
+<#
+		if( $ExtraSpecialVerbose )
+		{
+			wv "***** FormatHTMLTable: rowarray length $( $rowArray.Length )"
+			for( $ii = 0; $ii -lt $rowArray.Length; $ii++ )
+			{
+				$row = $rowArray[ $ii ]
+				wv "***** FormatHTMLTable: index $ii, type $( $row.GetType().FullName ), length $( $row.Length )"
+				for( $yyy = 0; $yyy -lt $row.Length; $yyy++ )
+				{
+					wv "***** FormatHTMLTable: index $ii, yyy = $yyy, val = '$( $row[ $yyy ] )'"
+				}
+				wv "***** done"
+			}
+			wv "***** FormatHTMLTable: rowCount $NumRows"
+		}
+#>
+
+		AddHTMLTable -fontName $fontName -fontSize $fontSize `
+			-colCount $numCols -rowCount $NumRows `
+			-rowInfo $rowArray -fixedInfo $fixedWidth
+		##$rowArray = @()
+		$rowArray = $null
+		$HTMLBody = '</table>'
 	}
 	Else
 	{
-		$HTMLBody += "</table>"
-	}	
+		$HTMLBody += '</table>'
+	}
 
 	Out-File -FilePath $Script:FileName1 -Append -InputObject $HTMLBody 4>$Null 
 }
 #endregion
 
 #region other HTML functions
+<#
 #***********************************************************************************************************
 # CheckHTMLColor - Called from AddHTMLTable WriteHTMLLine and FormatHTMLTable
 #***********************************************************************************************************
@@ -4929,6 +5227,8 @@ Function CheckHTMLColor
 {
 	Param($hash)
 
+	#V2.23 -- this is really slow. several ways to fixit. so fixit. MBS
+	#V2.23 - obsolete. replaced by using $global:htmlColor lookup table
 	If($hash -band $htmlwhite)
 	{
 		Return $htmlwhitemask
@@ -4998,19 +5298,23 @@ Function CheckHTMLColor
 		Return $htmlolivemask
 	}
 }
+#>
 
 Function SetupHTML
 {
 	Write-Verbose "$(Get-Date): Setting up HTML"
-	If($AddDateTime)
+	If(!$AddDateTime)
 	{
-		$Script:FileName1 += "_$(Get-Date -f yyyy-MM-dd_HHmm).html"
+		[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName).html"
+	}
+	ElseIf($AddDateTime)
+	{
+		[string]$Script:FileName1 = "$($pwdpath)\$($OutputFileName)_$(Get-Date -f yyyy-MM-dd_HHmm).html"
 	}
 
 	$htmlhead = "<html><head><meta http-equiv='Content-Language' content='da'><title>" + $Script:Title + "</title></head><body>"
 	out-file -FilePath $Script:Filename1 -Force -InputObject $HTMLHead 4>$Null
-}
-#endregion
+}#endregion
 
 #region Iain's Word table functions
 
@@ -5718,7 +6022,8 @@ Function SaveandCloseTextDocument
 		$Script:FileName1 += "_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
 	}
 
-	Write-Output $Script:Output | Out-File $Script:Filename1 4>$Null
+	#V2.23 - switch to using a StringBuilder for $global:Output
+	Write-Output $global:Output.ToString() | Out-File $Script:Filename1 4>$Null
 }
 
 Function SaveandCloseHTMLDocument
@@ -5881,7 +6186,7 @@ Function ShowScriptOptions
 	{
 		Write-Verbose "$(Get-Date): Filename2          : $($Script:Filename2)"
 	}
-	Write-Verbose "$(Get-Date): Folder             : $($Folder)"
+	Write-Verbose "$(Get-Date): Folder             : $($Script:pwdpath)" #fixed in 2.23
 	Write-Verbose "$(Get-Date): From               : $($From)"
 	Write-Verbose "$(Get-Date): Hosting            : $($Hosting)"
 	Write-Verbose "$(Get-Date): HW Inventory       : $($Hardware)"
@@ -6050,9 +6355,9 @@ Function OutputAdminsForDetails
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'Administrator Name',($htmlsilver -bor $htmlbold),
-		'Role',($htmlsilver -bor $htmlbold),
-		'Status',($htmlsilver -bor $htmlbold))
+		'Administrator Name',($global:htmlsb),
+		'Role',($global:htmlsb),
+		'Status',($global:htmlsb))
 
 		$msg = ""
 		$columnWidths = @("225","200","60")
@@ -6152,7 +6457,7 @@ $Script:Title is attached.
 	{
 		$e = $error[0]
 
-		If(($null -ne $e.Exception -and $e.Exception.ToString().Contains("5.7.57"))
+		If($null -ne $e.Exception -and $e.Exception.ToString().Contains("5.7.57"))
 		{
 			#The server response was: 5.7.57 SMTP; Client was not authenticated to send anonymous mail during MAIL FROM
 			Write-Verbose "$(Get-Date): Current user's credentials failed. Ask for usable credentials."
@@ -6366,6 +6671,14 @@ Function OutputMachines
 	{
 		[System.Collections.Hashtable[]] $WordTable = @();
 	}
+	ElseIf($Text)
+	{
+		Line 0 "                                                                   No. of   Allocated Allocation                                            "
+		Line 0 "Machine Catalog                           Machine Type             Machines Machines  Type       User Data         Provisioning Method      "
+		Line 0 "============================================================================================================================================"
+		#       1234567890123456789012345678901234567890S1234567890123456789012345S12345678S12345678SS1234567890S12345678901234567S1234567890123456789012345
+		#                                                                                                        On personal vDisk Machine creation services
+	}
 	ElseIf($HTML)
 	{
 		$rowdata = @()
@@ -6446,14 +6759,8 @@ Function OutputMachines
 		}
 		ElseIf($Text)
 		{
-			Line 0 "Machine Catalog`t`t: " $Catalog.Name
-			Line 0 "Machine type`t`t: " $xCatalogType
-			Line 0 "No. of machines`t`t: " $NumberOfMachines
-			Line 0 "Allocated machines`t: " $Catalog.UsedCount
-			Line 0 "Allocation type`t`t: " $xAllocationType
-			Line 0 "User data`t`t: " $xPersistType
-			Line 0 "Provisioning method`t: " $xProvisioningType
-			Line 0 ""
+			Line 0 ( "{0,-40} {1,-25} {2,8} {3,8}  {4,-10} {5,-17} {6,-25}" -f `
+			$Catalog.Name, $xCatalogType, $NumberOfMachines.ToString(), $Catalog.UsedCount.ToString(), $xAllocationType, $xPersistType, $xProvisioningType)
 		}
 		ElseIf($HTML)
 		{
@@ -6492,16 +6799,20 @@ Function OutputMachines
 		FindWordDocumentEnd
 		$Table = $Null
 	}
+	ElseIf($Text)
+	{
+		Line 0 ""
+	}
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'Machine Catalog',($htmlsilver -bor $htmlbold),
-		'Machine type',($htmlsilver -bor $htmlbold),
-		'No. of machines',($htmlsilver -bor $htmlbold),
-		'Allocated machines',($htmlsilver -bor $htmlbold),
-		'Allocation Type',($htmlsilver -bor $htmlbold),
-		'User data',($htmlsilver -bor $htmlbold),
-		'Provisioning method',($htmlsilver -bor $htmlbold)
+		'Machine Catalog',($global:htmlsb),
+		'Machine type',($global:htmlsb),
+		'No. of machines',($global:htmlsb),
+		'Allocated machines',($global:htmlsb),
+		'Allocation Type',($global:htmlsb),
+		'User data',($global:htmlsb),
+		'Provisioning method',($global:htmlsb)
 		)
 
 		$columnWidths = @("105","100","75","50","55","50","65")
@@ -7129,54 +7440,54 @@ Function OutputMachines
 		{
 			WriteHTMLLine 2 0 "Machine Catalog: $($Catalog.Name)"
 			$rowdata = @()
-			$columnHeaders = @("Machine type",($htmlsilver -bor $htmlbold),$xCatalogType,$htmlwhite)
+			$columnHeaders = @("Machine type",($global:htmlsb),$xCatalogType,$htmlwhite)
 			If($Catalog.ProvisioningType -eq "MCS")
 			{
-				$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Catalog.Description,$htmlwhite))
-				$rowdata += @(,('Machine Type',($htmlsilver -bor $htmlbold),$xCatalogType,$htmlwhite))
-				$rowdata += @(,('No. of machines',($htmlsilver -bor $htmlbold),$NumberOfMachines,$htmlwhite))
-				$rowdata += @(,('Allocated machines',($htmlsilver -bor $htmlbold),$Catalog.UsedCount,$htmlwhite))
-				$rowdata += @(,('Allocation type',($htmlsilver -bor $htmlbold),$xAllocationType,$htmlwhite))
-				$rowdata += @(,('User data',($htmlsilver -bor $htmlbold),$xPersistType,$htmlwhite))
-				$rowdata += @(,('Provisioning method',($htmlsilver -bor $htmlbold),$xProvisioningType,$htmlwhite))
+				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
+				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
+				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines,$htmlwhite))
+				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount,$htmlwhite))
+				$rowdata += @(,('Allocation type',($global:htmlsb),$xAllocationType,$htmlwhite))
+				$rowdata += @(,('User data',($global:htmlsb),$xPersistType,$htmlwhite))
+				$rowdata += @(,('Provisioning method',($global:htmlsb),$xProvisioningType,$htmlwhite))
 				#V2.17 add identity pool data
-				$rowdata += @(,("Account naming scheme",($htmlsilver -bor $htmlbold),$IdentityNamingScheme,$htmlwhite))
-				$rowdata += @(,("Naming scheme type",($htmlsilver -bor $htmlbold),$IdentityNamingSchemeType,$htmlwhite))
-				$rowdata += @(,("AD Domain",($htmlsilver -bor $htmlbold),$IdentityDomain,$htmlwhite))
-				$rowdata += @(,("AD Location",($htmlsilver -bor $htmlbold),$IdentityOU,$htmlwhite))
+				$rowdata += @(,("Account naming scheme",($global:htmlsb),$IdentityNamingScheme,$htmlwhite))
+				$rowdata += @(,("Naming scheme type",($global:htmlsb),$IdentityNamingSchemeType,$htmlwhite))
+				$rowdata += @(,("AD Domain",($global:htmlsb),$IdentityDomain,$htmlwhite))
+				$rowdata += @(,("AD Location",($global:htmlsb),$IdentityOU,$htmlwhite))
 				#end of identity pool data
-				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
-				$rowdata += @(,('Resources',($htmlsilver -bor $htmlbold),$MachineData.HostingUnitName,$htmlwhite))
+				$rowdata += @(,('Set to VDA version',($global:htmlsb),$xVDAVersion,$htmlwhite))
+				$rowdata += @(,('Resources',($global:htmlsb),$MachineData.HostingUnitName,$htmlwhite))
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
-					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
+					$rowdata += @(,('Zone',($global:htmlsb),$Catalog.ZoneName,$htmlwhite))
 				}
 				
 				If($Null -ne $MachineData)
 				{
-					$rowdata += @(,('Master VM',($htmlsilver -bor $htmlbold),$MasterVM,$htmlwhite))
-					$rowdata += @(,('Disk Image',($htmlsilver -bor $htmlbold),$xDiskImage,$htmlwhite))
-					$rowdata += @(,('Virtual CPUs',($htmlsilver -bor $htmlbold),$MachineData.CpuCount,$htmlwhite))
-					$rowdata += @(,('Memory',($htmlsilver -bor $htmlbold),"$($MachineData.MemoryMB) MB",$htmlwhite))
-					$rowdata += @(,('Hard disk',($htmlsilver -bor $htmlbold),"$($MachineData.DiskSize) GB",$htmlwhite))
+					$rowdata += @(,('Master VM',($global:htmlsb),$MasterVM,$htmlwhite))
+					$rowdata += @(,('Disk Image',($global:htmlsb),$xDiskImage,$htmlwhite))
+					$rowdata += @(,('Virtual CPUs',($global:htmlsb),$MachineData.CpuCount,$htmlwhite))
+					$rowdata += @(,('Memory',($global:htmlsb),"$($MachineData.MemoryMB) MB",$htmlwhite))
+					$rowdata += @(,('Hard disk',($global:htmlsb),"$($MachineData.DiskSize) GB",$htmlwhite))
 					If($xAllocationType -eq "Permanent" -and $xPersistType -eq "On personal vDisk" )
 					{
-						$rowdata += @(,('Personal vDisk size',($htmlsilver -bor $htmlbold),"$($xPvDSize) GB",$htmlwhite))
-						$rowdata += @(,('Personal vDisk drive letter',($htmlsilver -bor $htmlbold),$xPvDDriveLetter,$htmlwhite))
+						$rowdata += @(,('Personal vDisk size',($global:htmlsb),"$($xPvDSize) GB",$htmlwhite))
+						$rowdata += @(,('Personal vDisk drive letter',($global:htmlsb),$xPvDDriveLetter,$htmlwhite))
 					}
 				}
 				ElseIf($Null -eq $MachineData)
 				{
-					$rowdata += @(,('Master VM',($htmlsilver -bor $htmlbold),$MasterVM,$htmlwhite))
-					$rowdata += @(,('Disk Image',($htmlsilver -bor $htmlbold),$xDiskImage,$htmlwhite))
-					$rowdata += @(,('Virtual CPUs',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
-					$rowdata += @(,('Memory',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
-					$rowdata += @(,('Hard disk',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Master VM',($global:htmlsb),$MasterVM,$htmlwhite))
+					$rowdata += @(,('Disk Image',($global:htmlsb),$xDiskImage,$htmlwhite))
+					$rowdata += @(,('Virtual CPUs',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Memory',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Hard disk',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					If($xAllocationType -eq "Permanent" -and $xPersistType -eq "On personal vDisk" )
 					{
-						$rowdata += @(,('Personal vDisk size',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
-						$rowdata += @(,('Personal vDisk drive letter',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
+						$rowdata += @(,('Personal vDisk size',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+						$rowdata += @(,('Personal vDisk drive letter',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					}
 				}
 				
@@ -7184,108 +7495,108 @@ Function OutputMachines
 				(($xAllocationType -eq "Random") -or 
 				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
-					$rowdata += @(,('Temporary memory cache size',($htmlsilver -bor $htmlbold),"$($TempMemoryCacheSize) MB",$htmlwhite))
-					$rowdata += @(,('Temporary disk cache size',($htmlsilver -bor $htmlbold), "$($TempDiskCacheSize) GB",$htmlwhite))
+					$rowdata += @(,('Temporary memory cache size',($global:htmlsb),"$($TempMemoryCacheSize) MB",$htmlwhite))
+					$rowdata += @(,('Temporary disk cache size',($global:htmlsb), "$($TempDiskCacheSize) GB",$htmlwhite))
 				}
 
 				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
 				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
 				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
-					$rowdata += @(,('VM copy mode',($htmlsilver -bor $htmlbold),$VMCopyMode,$htmlwhite))
+					$rowdata += @(,('VM copy mode',($global:htmlsb),$VMCopyMode,$htmlwhite))
 				}
 				
 				If($Null -ne $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($htmlsilver -bor $htmlbold),$Machines[0].AgentVersion,$htmlwhite))
-					$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),$Machines[0].OSType,$htmlwhite))
+					$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
+					$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
 				}
 				ElseIf($Null -eq $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
-					$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
 				}
 			}
 			ElseIf($Catalog.ProvisioningType -eq "PVS")
 			{
-				$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Catalog.Description,$htmlwhite))
-				$rowdata += @(,('Machine Type',($htmlsilver -bor $htmlbold),$xCatalogType,$htmlwhite))
-				$rowdata += @(,('Provisioning method',($htmlsilver -bor $htmlbold),$xProvisioningType,$htmlwhite))
-				$rowdata += @(,('PVS address',($htmlsilver -bor $htmlbold),$Catalog.PvsAddress,$htmlwhite))
-				$rowdata += @(,('Allocation type',($htmlsilver -bor $htmlbold),$xAllocationType,$htmlwhite))
-				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
-				$rowdata += @(,('Resources',($htmlsilver -bor $htmlbold),$MachineData.HostingUnitName,$htmlwhite))
+				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
+				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
+				$rowdata += @(,('Provisioning method',($global:htmlsb),$xProvisioningType,$htmlwhite))
+				$rowdata += @(,('PVS address',($global:htmlsb),$Catalog.PvsAddress,$htmlwhite))
+				$rowdata += @(,('Allocation type',($global:htmlsb),$xAllocationType,$htmlwhite))
+				$rowdata += @(,('Set to VDA version',($global:htmlsb),$xVDAVersion,$htmlwhite))
+				$rowdata += @(,('Resources',($global:htmlsb),$MachineData.HostingUnitName,$htmlwhite))
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
-					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
+					$rowdata += @(,('Zone',($global:htmlsb),$Catalog.ZoneName,$htmlwhite))
 				}
 				
 				If($Null -ne $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($htmlsilver -bor $htmlbold),$Machines[0].AgentVersion,$htmlwhite))
-					$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),$Machines[0].OSType,$htmlwhite))
+					$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
+					$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
 				}
 				ElseIf($Null -eq $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
-					$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
 				}
 			}
 			ElseIf($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -eq $True)
 			{
-				$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Catalog.Description,$htmlwhite))
-				$rowdata += @(,('Organizational Units',($htmlsilver -bor $htmlbold),$RemotePCOU,$htmlwhite))
-				$rowdata += @(,('Allow subfolder matches',($htmlsilver -bor $htmlbold),$RemotePCSubOU,$htmlwhite))
-				$rowdata += @(,('Machine Type',($htmlsilver -bor $htmlbold),$xCatalogType,$htmlwhite))
-				$rowdata += @(,('No. of machines',($htmlsilver -bor $htmlbold),$NumberOfMachines,$htmlwhite))
-				$rowdata += @(,('Allocated machines',($htmlsilver -bor $htmlbold),$Catalog.UsedCount,$htmlwhite))
-				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
+				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
+				$rowdata += @(,('Organizational Units',($global:htmlsb),$RemotePCOU,$htmlwhite))
+				$rowdata += @(,('Allow subfolder matches',($global:htmlsb),$RemotePCSubOU,$htmlwhite))
+				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
+				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines,$htmlwhite))
+				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount,$htmlwhite))
+				$rowdata += @(,('Set to VDA version',($global:htmlsb),$xVDAVersion,$htmlwhite))
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
-					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
+					$rowdata += @(,('Zone',($global:htmlsb),$Catalog.ZoneName,$htmlwhite))
 				}
 				
 				If($Null -ne $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($htmlsilver -bor $htmlbold),$Machines[0].AgentVersion,$htmlwhite))
-					$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),$Machines[0].OSType,$htmlwhite))
+					$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
+					$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
 				}
 				ElseIf($Null -eq $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
-					$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
 				}
 			}
 			ElseIf($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -ne $True)
 			{
-				$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$Catalog.Description,$htmlwhite))
-				$rowdata += @(,('Machine Type',($htmlsilver -bor $htmlbold),$xCatalogType,$htmlwhite))
-				$rowdata += @(,('No. of machines',($htmlsilver -bor $htmlbold),$NumberOfMachines,$htmlwhite))
-				$rowdata += @(,('Allocated machines',($htmlsilver -bor $htmlbold),$Catalog.UsedCount,$htmlwhite))
-				$rowdata += @(,('Allocation type',($htmlsilver -bor $htmlbold),$xAllocationType,$htmlwhite))
-				$rowdata += @(,('User data',($htmlsilver -bor $htmlbold),$xPersistType,$htmlwhite))
-				$rowdata += @(,('Provisioning method',($htmlsilver -bor $htmlbold),$xProvisioningType,$htmlwhite))
-				$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
+				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
+				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
+				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines,$htmlwhite))
+				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount,$htmlwhite))
+				$rowdata += @(,('Allocation type',($global:htmlsb),$xAllocationType,$htmlwhite))
+				$rowdata += @(,('User data',($global:htmlsb),$xPersistType,$htmlwhite))
+				$rowdata += @(,('Provisioning method',($global:htmlsb),$xProvisioningType,$htmlwhite))
+				$rowdata += @(,('Set to VDA version',($global:htmlsb),$xVDAVersion,$htmlwhite))
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
-					$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Catalog.ZoneName,$htmlwhite))
+					$rowdata += @(,('Zone',($global:htmlsb),$Catalog.ZoneName,$htmlwhite))
 				}
 				
 				If($Null -ne $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($htmlsilver -bor $htmlbold),$Machines[0].AgentVersion,$htmlwhite))
-					$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),$Machines[0].OSType,$htmlwhite))
+					$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
+					$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
 				}
 				ElseIf($Null -eq $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
-					$rowdata += @(,('Operating System',($htmlsilver -bor $htmlbold),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
 				}
 			}
@@ -7302,7 +7613,7 @@ Function OutputMachines
 					{
 						$value = "Not set"
 					}
-					$rowdata += @(,($itemKey,($htmlsilver -bor $htmlbold),$value,$htmlwhite))
+					$rowdata += @(,($itemKey,($global:htmlsb),$value,$htmlwhite))
 				}
 			}
 			
@@ -7328,7 +7639,7 @@ Function OutputMachines
 					{
 						$value = "Not set"
 					}
-					$rowdata += @(,($itemKey,($htmlsilver -bor $htmlbold),$value,$htmlwhite))
+					$rowdata += @(,($itemKey,($global:htmlsb),$value,$htmlwhite))
 				}
 			}
 
@@ -7379,7 +7690,7 @@ Function OutputMachines
 				$rowdata += @(,("All",$htmlwhite))
 
 				$columnHeaders = @(
-				'Scopes',($htmlsilver -bor $htmlbold))
+				'Scopes',($global:htmlsb))
 
 				$msg = ""
 				$columnWidths = @("225")
@@ -7440,7 +7751,7 @@ Function OutputMachines
 					$rowdata += @(,($Scope.ScopeName,$htmlwhite))
 				}
 				$columnHeaders = @(
-				'Scopes',($htmlsilver -bor $htmlbold))
+				'Scopes',($global:htmlsb))
 
 				$msg = ""
 				$columnWidths = @("225")
@@ -7528,7 +7839,7 @@ Function OutputMachines
 				ElseIf($HTML)
 				{
 					$columnHeaders = @(
-					'Machine Names',($htmlsilver -bor $htmlbold))
+					'Machine Names',($global:htmlsb))
 
 					$msg = ""
 					$columnWidths = @("225")
@@ -7691,8 +8002,8 @@ Function OutputAppDiskTable
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'Name',($htmlsilver -bor $htmlbold),
-		'State',($htmlsilver -bor $htmlbold)
+		'Name',($global:htmlsb),
+		'State',($global:htmlsb)
 		)
 
 		$msg = ""
@@ -7853,27 +8164,27 @@ Function OutputAppDiskDetails
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 4 0 "Details"
-		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$AppDisk.AppDiskName,$htmlwhite)
-		$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$AppDisk.Description,$htmlwhite))
-		$rowdata += @(,('Resources',($htmlsilver -bor $htmlbold),$AppDisk.HostingUnitName[0],$htmlwhite))
+		$columnHeaders = @("Name",($global:htmlsb),$AppDisk.AppDiskName,$htmlwhite)
+		$rowdata += @(,('Description',($global:htmlsb),$AppDisk.Description,$htmlwhite))
+		$rowdata += @(,('Resources',($global:htmlsb),$AppDisk.HostingUnitName[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $AppDisk.HostingUnitName)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('Resources',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata += @(,('Resources',($global:htmlsb),$tmp,$htmlwhite))
 			}
 		}
-		$rowdata += @(,('Compatibility',($htmlsilver -bor $htmlbold),$xCompatibility,$htmlwhite))
+		$rowdata += @(,('Compatibility',($global:htmlsb),$xCompatibility,$htmlwhite))
 		$msg = ""
 		$columnWidths = @("100px","250px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
 		
 		WriteHTMLLine 4 0 "Preparation machine"
-		$columnHeaders = @("Machine name",($htmlsilver -bor $htmlbold),$PrepMachineName,$htmlwhite)
-		$rowdata += @(,('Power state',($htmlsilver -bor $htmlbold),$PrepMachinePowerState,$htmlwhite))
-		$rowdata += @(,('Registration state',($htmlsilver -bor $htmlbold),$PrepMachineRegistrationState,$htmlwhite))
+		$columnHeaders = @("Machine name",($global:htmlsb),$PrepMachineName,$htmlwhite)
+		$rowdata += @(,('Power state',($global:htmlsb),$PrepMachinePowerState,$htmlwhite))
+		$rowdata += @(,('Registration state',($global:htmlsb),$PrepMachineRegistrationState,$htmlwhite))
 		$msg = ""
 		$columnWidths = @("100px","250px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
@@ -7951,7 +8262,7 @@ Function OutputApplicationsOnStartMenu
 		}
 
 		$columnHeaders = @(
-		'Name',($htmlsilver -bor $htmlbold))
+		'Name',($global:htmlsb))
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -8012,9 +8323,9 @@ Function OutputInstalledPackages
 							$App.Version,$htmlwhite))
 		}
 
-		$columnHeaders = @('Name',($htmlsilver -bor $htmlbold),
-							'Publisher',($htmlsilver -bor $htmlbold),
-							'Version',($htmlsilver -bor $htmlbold))
+		$columnHeaders = @('Name',($global:htmlsb),
+							'Publisher',($global:htmlsb),
+							'Version',($global:htmlsb))
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -8085,7 +8396,7 @@ Function OutputAppDiskDeliveryGroups
 			}
 
 			$columnHeaders = @(
-			'Name',($htmlsilver -bor $htmlbold))
+			'Name',($global:htmlsb))
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -8261,20 +8572,22 @@ Function Get-VDARegKeyToObject
 	
     $val = Get-RegistryValue2 $RegPath $RegKey $ComputerName
 	
-    $obj1 = New-Object -TypeName PSObject
-	$obj1 | Add-Member -MemberType NoteProperty -Name RegKey		-Value $RegPath
-	$obj1 | Add-Member -MemberType NoteProperty -Name RegValue		-Value $RegKey
-	$obj1 | Add-Member -MemberType NoteProperty -Name VDAType		-Value $xType
-	$obj1 | Add-Member -MemberType NoteProperty -Name ComputerName	-Value $ComputerName
     If($Null -eq $val) 
 	{
-        $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value "Not set"
+        $tmp = "Not set"
     } 
 	Else 
 	{
-	    $obj1 | Add-Member -MemberType NoteProperty -Name Value	-Value $val
+	    $tmp = $val
     }
-    $Script:VDARegistryItems.Add($obj1) > $Null
+	$obj1 = [PSCustomObject] @{
+		RegKey       = $RegPath	
+		RegValue     = $RegKey	
+		VDAType      = $xType	
+		ComputerName = $ComputerName	
+		Value        = $tmp
+	}
+	$null = $Script:VDARegistryItems.Add($obj1)
 }
 
 Function OutputMachineDetails
@@ -9574,74 +9887,74 @@ Function OutputMachineDetails
 			WriteHTMLLine 4 0 "Machine"
 			$rowdata = @()
 
-			$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Machine.DNSName,$htmlwhite)
-			$rowdata += @(,('Machine Catalog',($htmlsilver -bor $htmlbold),$Machine.CatalogName,$htmlwhite))
-			$rowdata += @(,('Delivery Group',($htmlsilver -bor $htmlbold),$Machine.DesktopGroupName,$htmlwhite))
-			$rowdata += @(,('User Display Name',($htmlsilver -bor $htmlbold),$xAssociatedUserFullNames[0],$htmlwhite))
+			$columnHeaders = @("Name",($global:htmlsb),$Machine.DNSName,$htmlwhite)
+			$rowdata += @(,('Machine Catalog',($global:htmlsb),$Machine.CatalogName,$htmlwhite))
+			$rowdata += @(,('Delivery Group',($global:htmlsb),$Machine.DesktopGroupName,$htmlwhite))
+			$rowdata += @(,('User Display Name',($global:htmlsb),$xAssociatedUserFullNames[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xAssociatedUserFullNames)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('User',($htmlsilver -bor $htmlbold),$xAssociatedUserNames[0],$htmlwhite))
+			$rowdata += @(,('User',($global:htmlsb),$xAssociatedUserNames[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xAssociatedUserNames)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('UPN',($htmlsilver -bor $htmlbold),$xAssociatedUserUPNs[0],$htmlwhite))
+			$rowdata += @(,('UPN',($global:htmlsb),$xAssociatedUserUPNs[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xAssociatedUserUPNs)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Desktop Conditions',($htmlsilver -bor $htmlbold),$xDesktopConditions[0],$htmlwhite))
+			$rowdata += @(,('Desktop Conditions',($global:htmlsb),$xDesktopConditions[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xDesktopConditions)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Allocation Type',($htmlsilver -bor $htmlbold),$xAllocationType,$htmlwhite))
-			$rowdata += @(,('Maintenance Mode',($htmlsilver -bor $htmlbold),$xInMaintenanceMode,$htmlwhite))
-			$rowdata += @(,('Windows Connection Setting',($htmlsilver -bor $htmlbold),$xWindowsConnectionSetting,$htmlwhite))
-			$rowdata += @(,('Is Assigned',($htmlsilver -bor $htmlbold),$Machine.IsAssigned,$htmlwhite))
-			$rowdata += @(,('Is Physical',($htmlsilver -bor $htmlbold),$xIsPhysical,$htmlwhite))
-			$rowdata += @(,('Provisioning Type',($htmlsilver -bor $htmlbold),$Machine.ProvisioningType,$htmlwhite))
-			$rowdata += @(,('PvD State',($htmlsilver -bor $htmlbold),$xPvdStage,$htmlwhite))
-			$rowdata += @(,('Scheduled Reboot',($htmlsilver -bor $htmlbold),$Machine.ScheduledReboot,$htmlwhite))
+			$rowdata += @(,('Allocation Type',($global:htmlsb),$xAllocationType,$htmlwhite))
+			$rowdata += @(,('Maintenance Mode',($global:htmlsb),$xInMaintenanceMode,$htmlwhite))
+			$rowdata += @(,('Windows Connection Setting',($global:htmlsb),$xWindowsConnectionSetting,$htmlwhite))
+			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned,$htmlwhite))
+			$rowdata += @(,('Is Physical',($global:htmlsb),$xIsPhysical,$htmlwhite))
+			$rowdata += @(,('Provisioning Type',($global:htmlsb),$Machine.ProvisioningType,$htmlwhite))
+			$rowdata += @(,('PvD State',($global:htmlsb),$xPvdStage,$htmlwhite))
+			$rowdata += @(,('Scheduled Reboot',($global:htmlsb),$Machine.ScheduledReboot,$htmlwhite))
 			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
 			{
-				$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Machine.ZoneName,$htmlwhite))
+				$rowdata += @(,('Zone',($global:htmlsb),$Machine.ZoneName,$htmlwhite))
 			}
-			$rowdata += @(,('Summary State',($htmlsilver -bor $htmlbold),$xSummaryState,$htmlwhite))
-			$rowdata += @(,('Tags',($htmlsilver -bor $htmlbold),$xTags[0],$htmlwhite))
+			$rowdata += @(,('Summary State',($global:htmlsb),$xSummaryState,$htmlwhite))
+			$rowdata += @(,('Tags',($global:htmlsb),$xTags[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xTags)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Load Index',($htmlsilver -bor $htmlbold),$Machine.LoadIndex,$htmlwhite))
+			$rowdata += @(,('Load Index',($global:htmlsb),$Machine.LoadIndex,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9663,9 +9976,9 @@ Function OutputMachineDetails
 			
 			WriteHTMLLine 4 0 "Machine Details"
 			$rowdata = @()
-			$columnHeaders = @("Agent Version",($htmlsilver -bor $htmlbold),$Machine.AgentVersion,$htmlwhite)
-			$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$Machine.IPAddress,$htmlwhite))
-			$rowdata += @(,('Is Assigned',($htmlsilver -bor $htmlbold),$Machine.IsAssigned,$htmlwhite))
+			$columnHeaders = @("Agent Version",($global:htmlsb),$Machine.AgentVersion,$htmlwhite)
+			$rowdata += @(,('IP Address',($global:htmlsb),$Machine.IPAddress,$htmlwhite))
+			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9674,24 +9987,24 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Applications"
 			$rowdata = @()
-			$columnHeaders = @("Applications In Use",($htmlsilver -bor $htmlbold),$xApplicationsInUse[0],$htmlwhite)
+			$columnHeaders = @("Applications In Use",($global:htmlsb),$xApplicationsInUse[0],$htmlwhite)
 			$cnt = -1
 			ForEach($tmp in $xApplicationsInUSe)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Published Applications',($htmlsilver -bor $htmlbold),$xPublishedApplications[0],$htmlwhite))
+			$rowdata += @(,('Published Applications',($global:htmlsb),$xPublishedApplications[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xPublishedApplications)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
 
@@ -9702,11 +10015,11 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Registration"
 			$rowdata = @()
-			$columnHeaders = @("Broker",($htmlsilver -bor $htmlbold),$Machine.ControllerDNSName,$htmlwhite)
-			$rowdata += @(,('Last registration failure',($htmlsilver -bor $htmlbold),$xLastDeregistrationReason,$htmlwhite))
-			$rowdata += @(,('Last registration failure time',($htmlsilver -bor $htmlbold),$Machine.LastDeregistrationTime,$htmlwhite))
-			$rowdata += @(,('Registration State',($htmlsilver -bor $htmlbold),$Machine.RegistrationState,$htmlwhite))
-			$rowdata += @(,('Fault State',($htmlsilver -bor $htmlbold),$xMachineFaultState,$htmlwhite))
+			$columnHeaders = @("Broker",($global:htmlsb),$Machine.ControllerDNSName,$htmlwhite)
+			$rowdata += @(,('Last registration failure',($global:htmlsb),$xLastDeregistrationReason,$htmlwhite))
+			$rowdata += @(,('Last registration failure time',($global:htmlsb),$Machine.LastDeregistrationTime,$htmlwhite))
+			$rowdata += @(,('Registration State',($global:htmlsb),$Machine.RegistrationState,$htmlwhite))
+			$rowdata += @(,('Fault State',($global:htmlsb),$xMachineFaultState,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9715,13 +10028,13 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Hosting"
 			$rowdata = @()
-			$columnHeaders = @("VM",($htmlsilver -bor $htmlbold),$Machine.HostedMachineName,$htmlwhite)
-			$rowdata += @(,('Hosting Server Name',($htmlsilver -bor $htmlbold),$Machine.HostingServerName,$htmlwhite))
-			$rowdata += @(,('Connection',($htmlsilver -bor $htmlbold),$Machine.HypervisorConnectionName,$htmlwhite))
-			$rowdata += @(,('Pending Update',($htmlsilver -bor $htmlbold),$Machine.ImageOutOfDate,$htmlwhite))
-			$rowdata += @(,('Persist User Changes',($htmlsilver -bor $htmlbold),$xPersistUserChanges,$htmlwhite))
-			$rowdata += @(,('Power Action Pending',($htmlsilver -bor $htmlbold),$Machine.PowerActionPending,$htmlwhite))
-			$rowdata += @(,('Power State',($htmlsilver -bor $htmlbold),$Machine.PowerState,$htmlwhite))
+			$columnHeaders = @("VM",($global:htmlsb),$Machine.HostedMachineName,$htmlwhite)
+			$rowdata += @(,('Hosting Server Name',($global:htmlsb),$Machine.HostingServerName,$htmlwhite))
+			$rowdata += @(,('Connection',($global:htmlsb),$Machine.HypervisorConnectionName,$htmlwhite))
+			$rowdata += @(,('Pending Update',($global:htmlsb),$Machine.ImageOutOfDate,$htmlwhite))
+			$rowdata += @(,('Persist User Changes',($global:htmlsb),$xPersistUserChanges,$htmlwhite))
+			$rowdata += @(,('Power Action Pending',($global:htmlsb),$Machine.PowerActionPending,$htmlwhite))
+			$rowdata += @(,('Power State',($global:htmlsb),$Machine.PowerState,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9730,9 +10043,9 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Connection"
 			$rowdata = @()
-			$columnHeaders = @("Last Connection Time",($htmlsilver -bor $htmlbold),$xLastConnectionTime,$htmlwhite)
-			$rowdata += @(,('Last Connection User',($htmlsilver -bor $htmlbold),$Machine.LastConnectionUser,$htmlwhite))
-			$rowdata += @(,('Secure ICA Active',($htmlsilver -bor $htmlbold),$xSessionSecureIcaActive,$htmlwhite))
+			$columnHeaders = @("Last Connection Time",($global:htmlsb),$xLastConnectionTime,$htmlwhite)
+			$rowdata += @(,('Last Connection User',($global:htmlsb),$Machine.LastConnectionUser,$htmlwhite))
+			$rowdata += @(,('Secure ICA Active',($global:htmlsb),$xSessionSecureIcaActive,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9741,16 +10054,16 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Session Details"
 			$rowdata = @()
-			$columnHeaders = @("Launched Via",($htmlsilver -bor $htmlbold),$xSessionLaunchedViaHostName,$htmlwhite)
-			$rowdata += @(,('Launched Via (IP)',($htmlsilver -bor $htmlbold),$xSessionLaunchedViaIP,$htmlwhite))
-			$rowdata += @(,('SmartAccess Filters',($htmlsilver -bor $htmlbold),$xSessionSmartAccessTags[0],$htmlwhite))
+			$columnHeaders = @("Launched Via",($global:htmlsb),$xSessionLaunchedViaHostName,$htmlwhite)
+			$rowdata += @(,('Launched Via (IP)',($global:htmlsb),$xSessionLaunchedViaIP,$htmlwhite))
+			$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$xSessionSmartAccessTags[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xSessionSmartAccessTags)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
 
@@ -9761,7 +10074,7 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Session"
 			$rowdata = @()
-			$columnHeaders = @("Session Count",($htmlsilver -bor $htmlbold),$Machine.SessionCount.ToString(),$htmlwhite)
+			$columnHeaders = @("Session Count",($global:htmlsb),$Machine.SessionCount.ToString(),$htmlwhite)
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9773,70 +10086,70 @@ Function OutputMachineDetails
 			WriteHTMLLine 4 0 "Machine"
 			$rowdata = @()
 
-			$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Machine.DNSName,$htmlwhite)
-			$rowdata += @(,('Machine Catalog',($htmlsilver -bor $htmlbold),$Machine.CatalogName,$htmlwhite))
-			$rowdata += @(,('Delivery Group',($htmlsilver -bor $htmlbold),$Machine.DesktopGroupName,$htmlwhite))
-			$rowdata += @(,('User Display Name',($htmlsilver -bor $htmlbold),$xAssociatedUserFullNames[0],$htmlwhite))
+			$columnHeaders = @("Name",($global:htmlsb),$Machine.DNSName,$htmlwhite)
+			$rowdata += @(,('Machine Catalog',($global:htmlsb),$Machine.CatalogName,$htmlwhite))
+			$rowdata += @(,('Delivery Group',($global:htmlsb),$Machine.DesktopGroupName,$htmlwhite))
+			$rowdata += @(,('User Display Name',($global:htmlsb),$xAssociatedUserFullNames[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xAssociatedUserFullNames)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('User',($htmlsilver -bor $htmlbold),$xAssociatedUserNames[0],$htmlwhite))
+			$rowdata += @(,('User',($global:htmlsb),$xAssociatedUserNames[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xAssociatedUserNames)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('UPN',($htmlsilver -bor $htmlbold),$xAssociatedUserUPNs[0],$htmlwhite))
+			$rowdata += @(,('UPN',($global:htmlsb),$xAssociatedUserUPNs[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xAssociatedUserUPNs)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Desktop Conditions',($htmlsilver -bor $htmlbold),$xDesktopConditions[0],$htmlwhite))
+			$rowdata += @(,('Desktop Conditions',($global:htmlsb),$xDesktopConditions[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xDesktopConditions)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Allocation Type',($htmlsilver -bor $htmlbold),$xAllocationType,$htmlwhite))
-			$rowdata += @(,('Maintenance Mode',($htmlsilver -bor $htmlbold),$xInMaintenanceMode,$htmlwhite))
-			$rowdata += @(,('Is Assigned',($htmlsilver -bor $htmlbold),$Machine.IsAssigned,$htmlwhite))
-			$rowdata += @(,('Is Physical',($htmlsilver -bor $htmlbold),$xIsPhysical,$htmlwhite))
-			$rowdata += @(,('Provisioning Type',($htmlsilver -bor $htmlbold),$Machine.ProvisioningType,$htmlwhite))
-			$rowdata += @(,('PvD State',($htmlsilver -bor $htmlbold),$xPvdStage,$htmlwhite))
+			$rowdata += @(,('Allocation Type',($global:htmlsb),$xAllocationType,$htmlwhite))
+			$rowdata += @(,('Maintenance Mode',($global:htmlsb),$xInMaintenanceMode,$htmlwhite))
+			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned,$htmlwhite))
+			$rowdata += @(,('Is Physical',($global:htmlsb),$xIsPhysical,$htmlwhite))
+			$rowdata += @(,('Provisioning Type',($global:htmlsb),$Machine.ProvisioningType,$htmlwhite))
+			$rowdata += @(,('PvD State',($global:htmlsb),$xPvdStage,$htmlwhite))
 			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
 			{
-				$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$Machine.ZoneName,$htmlwhite))
+				$rowdata += @(,('Zone',($global:htmlsb),$Machine.ZoneName,$htmlwhite))
 			}
-			$rowdata += @(,('Scheduled Reboot',($htmlsilver -bor $htmlbold),$Machine.ScheduledReboot,$htmlwhite))
-			$rowdata += @(,('Summary State',($htmlsilver -bor $htmlbold),$xSummaryState,$htmlwhite))
-			$rowdata += @(,('Tags',($htmlsilver -bor $htmlbold),$xTags[0],$htmlwhite))
+			$rowdata += @(,('Scheduled Reboot',($global:htmlsb),$Machine.ScheduledReboot,$htmlwhite))
+			$rowdata += @(,('Summary State',($global:htmlsb),$xSummaryState,$htmlwhite))
+			$rowdata += @(,('Tags',($global:htmlsb),$xTags[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xTags)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
 
@@ -9860,10 +10173,10 @@ Function OutputMachineDetails
 			
 			WriteHTMLLine 4 0 "Machine Details"
 			$rowdata = @()
-			$columnHeaders = @("Agent Version",($htmlsilver -bor $htmlbold),$Machine.AgentVersion,$htmlwhite)
-			$rowdata += @(,('IP Address',($htmlsilver -bor $htmlbold),$Machine.IPAddress,$htmlwhite))
-			$rowdata += @(,('Is Assigned',($htmlsilver -bor $htmlbold),$Machine.IsAssigned,$htmlwhite))
-			$rowdata += @(,('OS Type',($htmlsilver -bor $htmlbold),$Machine.OSType,$htmlwhite))
+			$columnHeaders = @("Agent Version",($global:htmlsb),$Machine.AgentVersion,$htmlwhite)
+			$rowdata += @(,('IP Address',($global:htmlsb),$Machine.IPAddress,$htmlwhite))
+			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned,$htmlwhite))
+			$rowdata += @(,('OS Type',($global:htmlsb),$Machine.OSType,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9872,24 +10185,24 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Applications"
 			$rowdata = @()
-			$columnHeaders = @("Applications In Use",($htmlsilver -bor $htmlbold),$xApplicationsInUse[0],$htmlwhite)
+			$columnHeaders = @("Applications In Use",($global:htmlsb),$xApplicationsInUse[0],$htmlwhite)
 			$cnt = -1
 			ForEach($tmp in $xApplicationsInUSe)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Published Applications',($htmlsilver -bor $htmlbold),$xPublishedApplications[0],$htmlwhite))
+			$rowdata += @(,('Published Applications',($global:htmlsb),$xPublishedApplications[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xPublishedApplications)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
 
@@ -9900,15 +10213,15 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Connection"
 			$rowdata = @()
-			$columnHeaders = @("Client (IP)",($htmlsilver -bor $htmlbold),$xSessionClientAddress,$htmlwhite)
-			$rowdata += @(,('Client',($htmlsilver -bor $htmlbold),$xSessionClientName,$htmlwhite))
-			$rowdata += @(,('Plug-in Version',($htmlsilver -bor $htmlbold),$xSessionClientVersion,$htmlwhite))
-			$rowdata += @(,('Connected Via',($htmlsilver -bor $htmlbold),$xSessionConnectedViaHostName,$htmlwhite))
-			$rowdata += @(,('Connect Via (IP)',($htmlsilver -bor $htmlbold),$xSessionConnectedViaIP,$htmlwhite))
-			$rowdata += @(,('Last Connection Time',($htmlsilver -bor $htmlbold),$xLastConnectionTime,$htmlwhite))
-			$rowdata += @(,('Last Connection User',($htmlsilver -bor $htmlbold),$Machine.LastConnectionUser,$htmlwhite))
-			$rowdata += @(,('Connection Type',($htmlsilver -bor $htmlbold),$xSessionProtocol,$htmlwhite))
-			$rowdata += @(,('Secure ICA Active',($htmlsilver -bor $htmlbold),$xSessionSecureIcaActive,$htmlwhite))
+			$columnHeaders = @("Client (IP)",($global:htmlsb),$xSessionClientAddress,$htmlwhite)
+			$rowdata += @(,('Client',($global:htmlsb),$xSessionClientName,$htmlwhite))
+			$rowdata += @(,('Plug-in Version',($global:htmlsb),$xSessionClientVersion,$htmlwhite))
+			$rowdata += @(,('Connected Via',($global:htmlsb),$xSessionConnectedViaHostName,$htmlwhite))
+			$rowdata += @(,('Connect Via (IP)',($global:htmlsb),$xSessionConnectedViaIP,$htmlwhite))
+			$rowdata += @(,('Last Connection Time',($global:htmlsb),$xLastConnectionTime,$htmlwhite))
+			$rowdata += @(,('Last Connection User',($global:htmlsb),$Machine.LastConnectionUser,$htmlwhite))
+			$rowdata += @(,('Connection Type',($global:htmlsb),$xSessionProtocol,$htmlwhite))
+			$rowdata += @(,('Secure ICA Active',($global:htmlsb),$xSessionSecureIcaActive,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9917,11 +10230,11 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Registration"
 			$rowdata = @()
-			$columnHeaders = @("Broker",($htmlsilver -bor $htmlbold),$Machine.ControllerDNSName,$htmlwhite)
-			$rowdata += @(,('Last registration failure',($htmlsilver -bor $htmlbold),$xLastDeregistrationReason,$htmlwhite))
-			$rowdata += @(,('Last registration failure time',($htmlsilver -bor $htmlbold),$Machine.LastDeregistrationTime,$htmlwhite))
-			$rowdata += @(,('Registration State',($htmlsilver -bor $htmlbold),$Machine.RegistrationState,$htmlwhite))
-			$rowdata += @(,('Fault State',($htmlsilver -bor $htmlbold),$xMachineFaultState,$htmlwhite))
+			$columnHeaders = @("Broker",($global:htmlsb),$Machine.ControllerDNSName,$htmlwhite)
+			$rowdata += @(,('Last registration failure',($global:htmlsb),$xLastDeregistrationReason,$htmlwhite))
+			$rowdata += @(,('Last registration failure time',($global:htmlsb),$Machine.LastDeregistrationTime,$htmlwhite))
+			$rowdata += @(,('Registration State',($global:htmlsb),$Machine.RegistrationState,$htmlwhite))
+			$rowdata += @(,('Fault State',($global:htmlsb),$xMachineFaultState,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9930,14 +10243,14 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Hosting"
 			$rowdata = @()
-			$columnHeaders = @("VM",($htmlsilver -bor $htmlbold),$Machine.HostedMachineName,$htmlwhite)
-			$rowdata += @(,('Hosting Server Name',($htmlsilver -bor $htmlbold),$Machine.HostingServerName,$htmlwhite))
-			$rowdata += @(,('Connection',($htmlsilver -bor $htmlbold),$Machine.HypervisorConnectionName,$htmlwhite))
-			$rowdata += @(,('Pending Update',($htmlsilver -bor $htmlbold),$Machine.ImageOutOfDate,$htmlwhite))
-			$rowdata += @(,('Persist User Changes',($htmlsilver -bor $htmlbold),$xPersistUserChanges,$htmlwhite))
-			$rowdata += @(,('Power Action Pending',($htmlsilver -bor $htmlbold),$Machine.PowerActionPending,$htmlwhite))
-			$rowdata += @(,('Power State',($htmlsilver -bor $htmlbold),$Machine.PowerState,$htmlwhite))
-			$rowdata += @(,('Will Shutdown After Use',($htmlsilver -bor $htmlbold),$xWillShutdownAfterUse,$htmlwhite))
+			$columnHeaders = @("VM",($global:htmlsb),$Machine.HostedMachineName,$htmlwhite)
+			$rowdata += @(,('Hosting Server Name',($global:htmlsb),$Machine.HostingServerName,$htmlwhite))
+			$rowdata += @(,('Connection',($global:htmlsb),$Machine.HypervisorConnectionName,$htmlwhite))
+			$rowdata += @(,('Pending Update',($global:htmlsb),$Machine.ImageOutOfDate,$htmlwhite))
+			$rowdata += @(,('Persist User Changes',($global:htmlsb),$xPersistUserChanges,$htmlwhite))
+			$rowdata += @(,('Power Action Pending',($global:htmlsb),$Machine.PowerActionPending,$htmlwhite))
+			$rowdata += @(,('Power State',($global:htmlsb),$Machine.PowerState,$htmlwhite))
+			$rowdata += @(,('Will Shutdown After Use',($global:htmlsb),$xWillShutdownAfterUse,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -9946,17 +10259,17 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Session Details"
 			$rowdata = @()
-			$columnHeaders = @("Launched Via",($htmlsilver -bor $htmlbold),$xSessionLaunchedViaHostName,$htmlwhite)
-			$rowdata += @(,('Launched Via (IP)',($htmlsilver -bor $htmlbold),$xSessionLaunchedViaIP,$htmlwhite))
-			$rowdata += @(,('Session Change Time',($htmlsilver -bor $htmlbold),$xSessionStateChangeTime,$htmlwhite))
-			$rowdata += @(,('SmartAccess Filters',($htmlsilver -bor $htmlbold),$xSessionSmartAccessTags[0],$htmlwhite))
+			$columnHeaders = @("Launched Via",($global:htmlsb),$xSessionLaunchedViaHostName,$htmlwhite)
+			$rowdata += @(,('Launched Via (IP)',($global:htmlsb),$xSessionLaunchedViaIP,$htmlwhite))
+			$rowdata += @(,('Session Change Time',($global:htmlsb),$xSessionStateChangeTime,$htmlwhite))
+			$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$xSessionSmartAccessTags[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xSessionSmartAccessTags)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
 
@@ -9967,9 +10280,9 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Session"
 			$rowdata = @()
-			$columnHeaders = @("Session State",($htmlsilver -bor $htmlbold),$xSessionState,$htmlwhite)
-			$rowdata += @(,('Current User',($htmlsilver -bor $htmlbold),$xSessionUserName,$htmlwhite))
-			$rowdata += @(,('Start Time',($htmlsilver -bor $htmlbold),$xSessionStateChangeTime,$htmlwhite))
+			$columnHeaders = @("Session State",($global:htmlsb),$xSessionState,$htmlwhite)
+			$rowdata += @(,('Current User',($global:htmlsb),$xSessionUserName,$htmlwhite))
+			$rowdata += @(,('Start Time',($global:htmlsb),$xSessionStateChangeTime,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -10039,6 +10352,22 @@ Function OutputDeliveryGroupTable
 	If($MSWord -or $PDF)
 	{
 		[System.Collections.Hashtable[]] $WordTable = @();
+	}
+	ElseIf($Text)
+	{
+		Line 1 "                                                                                                           No. of   Sessions          Machine                             "
+		Line 1 "Delivery Group                                                                   Delivering                Machines in use   AppDisks type       Unregistered Disconnected"
+		Line 1 "=========================================================================================================================================================================="
+		#       12345678901234567890123456789012345678901234567890123456789012345678901234567890S1234567890123456789012345S12345678S12345678S12345678S1234567890S123456789012S123456789012
+		#                                                                                        Applications and Desktops 99999999 99999999 99999999 Desktop OS 999999999999 999999999999
+		#$Table.Columns.Item(1).Width = 80;
+		#$Table.Columns.Item(2).Width = 25;
+		#$Table.Columns.Item(3).Width = 8;
+		#$Table.Columns.Item(4).Width = 8;
+		#$Table.Columns.Item(5).Width = 8;
+		#$Table.Columns.Item(6).Width = 10;
+		#$Table.Columns.Item(7).Width = 12;
+		#$Table.Columns.Item(8).Width = 12;
 	}
 	ElseIf($HTML)
 	{
@@ -10122,15 +10451,9 @@ Function OutputDeliveryGroupTable
 		}
 		ElseIf($Text)
 		{
-			Line 1 "Delivery Group`t`t: " $xGroupName
-			Line 1 "Delivering`t`t: " $xDeliveryType
-			Line 1 "No. of machines`t`t: " $Group.TotalDesktops
-			Line 1 "Sessions in use`t`t: " $Group.Sessions
-			Line 1 "AppDisks`t`t: " $xAppDisks
-			Line 1 "Machine type`t`t: " $xSingleSession
-			Line 1 "Unregistered`t`t: " $Group.DesktopsUnregistered
-			Line 1 "Disconnected`t`t: " $Group.DesktopsDisconnected
-			Line 0 ""
+			Line 1 ( "{0,-80} {1,-25} {2,8} {3,8} {4,8} {5,-10} {6,12} {7,12}" -f `
+			$xGroupName, $xDeliveryType, $Group.TotalDesktops, $Group.Sessions, `
+			$xAppDisks, $xSingleSession, $Group.DesktopsUnregistered, $Group.DesktopsDisconnected)
 		}
 		ElseIf($HTML)
 		{
@@ -10171,17 +10494,21 @@ Function OutputDeliveryGroupTable
 		FindWordDocumentEnd
 		$Table = $Null
 	}
+	ElseIf($Text)
+	{
+		Line 0 ""
+	}
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'Delivery Group',($htmlsilver -bor $htmlbold),
-		'Delivering',($htmlsilver -bor $htmlbold),
-		'No. of machines',($htmlsilver -bor $htmlbold),
-		'Sessions in use',($htmlsilver -bor $htmlbold),
-		'AppDisks',($htmlsilver -bor $htmlbold),
-		'Machine type',($htmlsilver -bor $htmlbold),
-		'Unregistered',($htmlsilver -bor $htmlbold),
-		'Disconnected',($htmlsilver -bor $htmlbold)
+		'Delivery Group',($global:htmlsb),
+		'Delivering',($global:htmlsb),
+		'No. of machines',($global:htmlsb),
+		'Sessions in use',($global:htmlsb),
+		'AppDisks',($global:htmlsb),
+		'Machine type',($global:htmlsb),
+		'Unregistered',($global:htmlsb),
+		'Disconnected',($global:htmlsb)
 		)
 
 		$columnWidths = @("135","130","50","45","50","65","60","65")
@@ -10278,17 +10605,17 @@ Function OutputDeliveryGroup
 	{
 		$rowdata = @()
 		WriteHTMLLine 2 0 "Delivery Group: " $Group.Name
-		$columnHeaders = @("Machine type",($htmlsilver -bor $htmlbold),$xSingleSession,$htmlwhite)
-		$rowdata += @(,('No. of machines',($htmlsilver -bor $htmlbold),$Group.TotalDesktops,$htmlwhite))
-		$rowdata += @(,('Sessions in use',($htmlsilver -bor $htmlbold),$Group.Sessions,$htmlwhite))
-		$rowdata += @(,('No. of applications',($htmlsilver -bor $htmlbold),$Group.TotalApplications,$htmlwhite))
-		$rowdata += @(,('State',($htmlsilver -bor $htmlbold),$xState,$htmlwhite))
-		$rowdata += @(,('Unregistered',($htmlsilver -bor $htmlbold),$Group.DesktopsUnregistered,$htmlwhite))
-		$rowdata += @(,('Disconnected',($htmlsilver -bor $htmlbold),$Group.DesktopsDisconnected,$htmlwhite))
-		$rowdata += @(,('Available',($htmlsilver -bor $htmlbold),$Group.DesktopsAvailable,$htmlwhite))
-		$rowdata += @(,('In Use',($htmlsilver -bor $htmlbold),$Group.DesktopsInUse,$htmlwhite))
-		$rowdata += @(,('Never Registered',($htmlsilver -bor $htmlbold),$Group.DesktopsNeverRegistered,$htmlwhite))
-		$rowdata += @(,('Preparing',($htmlsilver -bor $htmlbold),$Group.DesktopsPreparing,$htmlwhite))
+		$columnHeaders = @("Machine type",($global:htmlsb),$xSingleSession,$htmlwhite)
+		$rowdata += @(,('No. of machines',($global:htmlsb),$Group.TotalDesktops,$htmlwhite))
+		$rowdata += @(,('Sessions in use',($global:htmlsb),$Group.Sessions,$htmlwhite))
+		$rowdata += @(,('No. of applications',($global:htmlsb),$Group.TotalApplications,$htmlwhite))
+		$rowdata += @(,('State',($global:htmlsb),$xState,$htmlwhite))
+		$rowdata += @(,('Unregistered',($global:htmlsb),$Group.DesktopsUnregistered,$htmlwhite))
+		$rowdata += @(,('Disconnected',($global:htmlsb),$Group.DesktopsDisconnected,$htmlwhite))
+		$rowdata += @(,('Available',($global:htmlsb),$Group.DesktopsAvailable,$htmlwhite))
+		$rowdata += @(,('In Use',($global:htmlsb),$Group.DesktopsInUse,$htmlwhite))
+		$rowdata += @(,('Never Registered',($global:htmlsb),$Group.DesktopsNeverRegistered,$htmlwhite))
+		$rowdata += @(,('Preparing',($global:htmlsb),$Group.DesktopsPreparing,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("200","200")
@@ -11518,13 +11845,13 @@ Function OutputDeliveryGroupDetails
 						$xSecureIcaRequired = $DesktopSetting.SecureIcaRequired.ToString()
 					}
 					Line 1 "Desktop Entitlement" ""
-					Line 2 "Display name`t`t`t: " $DesktopSetting.PublishedName
-					Line 2 "Description`t`t`t: " $DesktopSetting.Description
+					Line 2 "Display name`t`t`t`t: " $DesktopSetting.PublishedName
+					Line 2 "Description`t`t`t`t: " $DesktopSetting.Description
 					If($CanRestrictToTags)
 					{
 						Line 2 "Restrict launches to machines with tag`t: " $RestrictedToTag
 					}
-					Line 2 "Included Users`t`t`t: " $DesktopSettingIncludedUsers[0]
+					Line 2 "Included Users`t`t`t`t: " $DesktopSettingIncludedUsers[0]
 					$cnt = -1
 					ForEach($tmp in $DesktopSettingIncludedUsers)
 					{
@@ -11537,7 +11864,7 @@ Function OutputDeliveryGroupDetails
 					
 					If($DesktopSettingExcludedUsers.Count -gt 0)
 					{
-						Line 2 "Excluded Users`t`t`t: " $DesktopSettingExcludedUsers[0]
+						Line 2 "Excluded Users`t`t`t`t: " $DesktopSettingExcludedUsers[0]
 						$cnt = -1
 						#V2.15 changed to use correct variable name
 						ForEach($tmp in $DesktopSettingExcludedUsers)
@@ -11549,7 +11876,7 @@ Function OutputDeliveryGroupDetails
 							}
 						}
 					}
-					Line 2 "Enable desktop`t`t`t: " $DesktopSetting.Enabled
+					Line 2 "Enable desktop`t`t`t:`t " $DesktopSetting.Enabled
 					#New in V2.19
 					Line 2 "Leasing behavior`t`t`t: " $DesktopSetting.LeasingBehavior
 					Line 2 "Maximum concurrent instances`t`t: " $DesktopSetting.MaxPerEntitlementInstances
@@ -11910,51 +12237,51 @@ Function OutputDeliveryGroupDetails
 	{
 		WriteHTMLLine 4 0 "Details: " $Group.Name
 		$rowdata = @()
-		$columnHeaders = @("Description",($htmlsilver -bor $htmlbold),$Group.Description,$htmlwhite)
+		$columnHeaders = @("Description",($global:htmlsb),$Group.Description,$htmlwhite)
 		If(![String]::IsNullOrEmpty($Group.PublishedName))
 		{
-			$rowdata += @(,('Display Name',($htmlsilver -bor $htmlbold),$Group.PublishedName,$htmlwhite))
+			$rowdata += @(,('Display Name',($global:htmlsb),$Group.PublishedName,$htmlwhite))
 		}
-		$rowdata += @(,('Type',($htmlsilver -bor $htmlbold),$xDGType,$htmlwhite))
-		$rowdata += @(,('Set to VDA version',($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
+		$rowdata += @(,('Type',($global:htmlsb),$xDGType,$htmlwhite))
+		$rowdata += @(,('Set to VDA version',($global:htmlsb),$xVDAVersion,$htmlwhite))
 		If($Group.SessionSupport -eq "SingleSession" -and ($xDGType -eq "Static Desktops" -or $xDGType -like "*Random*"))
 		{
-			$rowdata += @(,('Desktops per user',($htmlsilver -bor $htmlbold),$xMaxDesktops,$htmlwhite))
+			$rowdata += @(,('Desktops per user',($global:htmlsb),$xMaxDesktops,$htmlwhite))
 		}
-		$rowdata += @(,('Time zone',($htmlsilver -bor $htmlbold),$Group.TimeZone,$htmlwhite))
-		$rowdata += @(,('Enable Delivery Group',($htmlsilver -bor $htmlbold),$xEnabled,$htmlwhite))
-		$rowdata += @(,('Enable Secure ICA',($htmlsilver -bor $htmlbold),$xSecureICA,$htmlwhite))
-		$rowdata += @(,('Color Depth',($htmlsilver -bor $htmlbold),$xColorDepth,$htmlwhite))
-		$rowdata += @(,("Shutdown Desktops After Use",($htmlsilver -bor $htmlbold),$xShutdownDesktopsAfterUse,$htmlwhite))
-		$rowdata += @(,("Turn On Added Machine",($htmlsilver -bor $htmlbold),$xTurnOnAddedMachine,$htmlwhite))
-		$rowdata += @(,('Included Users',($htmlsilver -bor $htmlbold),$DGIncludedUsers[0],$htmlwhite))
+		$rowdata += @(,('Time zone',($global:htmlsb),$Group.TimeZone,$htmlwhite))
+		$rowdata += @(,('Enable Delivery Group',($global:htmlsb),$xEnabled,$htmlwhite))
+		$rowdata += @(,('Enable Secure ICA',($global:htmlsb),$xSecureICA,$htmlwhite))
+		$rowdata += @(,('Color Depth',($global:htmlsb),$xColorDepth,$htmlwhite))
+		$rowdata += @(,("Shutdown Desktops After Use",($global:htmlsb),$xShutdownDesktopsAfterUse,$htmlwhite))
+		$rowdata += @(,("Turn On Added Machine",($global:htmlsb),$xTurnOnAddedMachine,$htmlwhite))
+		$rowdata += @(,('Included Users',($global:htmlsb),$DGIncludedUsers[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $DGIncludedUsers)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 			}
 		}
 		
 		If($DGExcludedUsers.Count -gt 0)
 		{
-			$rowdata += @(,('Excluded Users',($htmlsilver -bor $htmlbold), $DGExcludedUsers[0],$htmlwhite))
+			$rowdata += @(,('Excluded Users',($global:htmlsb), $DGExcludedUsers[0],$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $DGExcludedUsers)
 			{
 				$cnt++
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
 		}
 
 		If($Group.SessionSupport -eq "MultiSession")
 		{
-			$rowdata += @(,('Give access to unauthenticated (anonymous) users',($htmlsilver -bor $htmlbold),$SFAnonymousUsers,$htmlwhite))
+			$rowdata += @(,('Give access to unauthenticated (anonymous) users',($global:htmlsb),$SFAnonymousUsers,$htmlwhite))
 		}
 
 		If($xDeliveryType -ne "Applications")
@@ -12014,27 +12341,27 @@ Function OutputDeliveryGroupDetails
 					{
 						$xSecureIcaRequired = $DesktopSetting.SecureIcaRequired.ToString()
 					}
-					$rowdata += @(,("Desktop Entitlement",($htmlsilver -bor $htmlbold),"",$htmlwhite))
-					$rowdata += @(,("     Display name",($htmlsilver -bor $htmlbold),$DesktopSetting.PublishedName,$htmlwhite))
-					$rowdata += @(,("     Description",($htmlsilver -bor $htmlbold),$DesktopSetting.Description,$htmlwhite))
+					$rowdata += @(,("Desktop Entitlement",($global:htmlsb),"",$htmlwhite))
+					$rowdata += @(,("     Display name",($global:htmlsb),$DesktopSetting.PublishedName,$htmlwhite))
+					$rowdata += @(,("     Description",($global:htmlsb),$DesktopSetting.Description,$htmlwhite))
 					If($CanRestrictToTags)
 					{
-						$rowdata += @(,("     Restrict launches to machines with tag",($htmlsilver -bor $htmlbold),$RestrictedToTag,$htmlwhite))
+						$rowdata += @(,("     Restrict launches to machines with tag",($global:htmlsb),$RestrictedToTag,$htmlwhite))
 					}
-					$rowdata += @(,("     Included Users",($htmlsilver -bor $htmlbold),$DesktopSettingIncludedUsers[0],$htmlwhite))
+					$rowdata += @(,("     Included Users",($global:htmlsb),$DesktopSettingIncludedUsers[0],$htmlwhite))
 					$cnt = -1
 					ForEach($tmp in $DesktopSettingIncludedUsers)
 					{
 						$cnt++
 						If($cnt -gt 0)
 						{
-							$rowdata += @(,("",($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+							$rowdata += @(,("",($global:htmlsb),$tmp,$htmlwhite))
 						}
 					}
 					
 					If($DesktopSettingExcludedUsers.Count -gt 0)
 					{
-						$rowdata += @(,("     Excluded Users",($htmlsilver -bor $htmlbold),$DesktopSettingExcludedUsers[0],$htmlwhite))
+						$rowdata += @(,("     Excluded Users",($global:htmlsb),$DesktopSettingExcludedUsers[0],$htmlwhite))
 						$cnt = -1
 						#V2.15 changed to use correct variable name
 						ForEach($tmp in $DesktopSettingExcludedUsers)
@@ -12042,75 +12369,75 @@ Function OutputDeliveryGroupDetails
 							$cnt++
 							If($cnt -gt 0)
 							{
-								$rowdata += @(,("",($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+								$rowdata += @(,("",($global:htmlsb),$tmp,$htmlwhite))
 							}
 						}
 					}
-					$rowdata += @(,("     Enable desktop",($htmlsilver -bor $htmlbold),$DesktopSetting.Enabled,$htmlwhite))
+					$rowdata += @(,("     Enable desktop",($global:htmlsb),$DesktopSetting.Enabled,$htmlwhite))
 					#New in V2.19
-					$rowdata += @(,("     Leasing behavior",($htmlsilver -bor $htmlbold),$DesktopSetting.LeasingBehavior,$htmlwhite))
-					$rowdata += @(,("     Maximum concurrent instances",($htmlsilver -bor $htmlbold),$DesktopSetting.MaxPerEntitlementInstances.ToString(),$htmlwhite))
-					$rowdata += @(,("     SecureICA required",($htmlsilver -bor $htmlbold),$xSecureIcaRequired,$htmlwhite))
-					$rowdata += @(,("     Session reconnection",($htmlsilver -bor $htmlbold),$xSessionReconnection,$htmlwhite))
+					$rowdata += @(,("     Leasing behavior",($global:htmlsb),$DesktopSetting.LeasingBehavior,$htmlwhite))
+					$rowdata += @(,("     Maximum concurrent instances",($global:htmlsb),$DesktopSetting.MaxPerEntitlementInstances.ToString(),$htmlwhite))
+					$rowdata += @(,("     SecureICA required",($global:htmlsb),$xSecureIcaRequired,$htmlwhite))
+					$rowdata += @(,("     Session reconnection",($global:htmlsb),$xSessionReconnection,$htmlwhite))
 				}
 			}
 		}
 		
-		$rowdata += @(,('Scopes',($htmlsilver -bor $htmlbold),$DGScopes[0],$htmlwhite))
+		$rowdata += @(,('Scopes',($global:htmlsb),$DGScopes[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $DGScopes)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 			}
 		}
 		
-		$rowdata += @(,('StoreFronts',($htmlsilver -bor $htmlbold),$DGSFServers[0],$htmlwhite))
+		$rowdata += @(,('StoreFronts',($global:htmlsb),$DGSFServers[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $DGSFServers)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 			}
 		}
 		
 		If($Group.SessionSupport -eq "MultiSession" -and $xDeliveryType -like '*App*')
 		{
-			$rowdata += @(,('Session prelaunch',($htmlsilver -bor $htmlbold),$xSessionPrelaunch,$htmlwhite))
+			$rowdata += @(,('Session prelaunch',($global:htmlsb),$xSessionPrelaunch,$htmlwhite))
 			If($xSessionPrelaunch -ne "Off")
 			{
-				$rowdata += @(,('Prelaunched session will end in',($htmlsilver -bor $htmlbold),$xEndPrelaunchSession,$htmlwhite))
+				$rowdata += @(,('Prelaunched session will end in',($global:htmlsb),$xEndPrelaunchSession,$htmlwhite))
 				
 				If($xSessionPrelaunchAvgLoad -gt 0)
 				{
-					$rowdata += @(,('When avg load on all machines exceeds (%)',($htmlsilver -bor $htmlbold),$xSessionPrelaunchAvgLoad,$htmlwhite))
+					$rowdata += @(,('When avg load on all machines exceeds (%)',($global:htmlsb),$xSessionPrelaunchAvgLoad,$htmlwhite))
 				}
 				If($xSessionPrelaunchAnyLoad -gt 0)
 				{
-					$rowdata += @(,('When load on any machines exceeds (%)',($htmlsilver -bor $htmlbold),$xSessionPrelaunchAnyLoad,$htmlwhite))
+					$rowdata += @(,('When load on any machines exceeds (%)',($global:htmlsb),$xSessionPrelaunchAnyLoad,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Session lingering',($htmlsilver -bor $htmlbold),$xSessionLinger,$htmlwhite))
+			$rowdata += @(,('Session lingering',($global:htmlsb),$xSessionLinger,$htmlwhite))
 			If($xSessionLinger -ne "Off")
 			{
-				$rowdata += @(,('Keep sessions active until after',($htmlsilver -bor $htmlbold),$xEndLinger,$htmlwhite))
+				$rowdata += @(,('Keep sessions active until after',($global:htmlsb),$xEndLinger,$htmlwhite))
 				
 				If($xSessionLingerAvgLoad -gt 0)
 				{
-					$rowdata += @(,('When avg load on all machines exceeds (%)',($htmlsilver -bor $htmlbold),$xSessionPrelaunchAvgLoad,$htmlwhite))
+					$rowdata += @(,('When avg load on all machines exceeds (%)',($global:htmlsb),$xSessionPrelaunchAvgLoad,$htmlwhite))
 				}
 				If($xSessionLingerAnyLoad -gt 0)
 				{
-					$rowdata += @(,('When load on any machines exceeds (%)',($htmlsilver -bor $htmlbold),$xSessionPrelaunchAnyLoad,$htmlwhite))
+					$rowdata += @(,('When load on any machines exceeds (%)',($global:htmlsb),$xSessionPrelaunchAnyLoad,$htmlwhite))
 				}
 			}
 		}
 		
-		$rowdata += @(,("Launch in user's home zone",($htmlsilver -bor $htmlbold),$xUsersHomeZone,$htmlwhite)) 
+		$rowdata += @(,("Launch in user's home zone",($global:htmlsb),$xUsersHomeZone,$htmlwhite)) 
 			
 		If($Group.SessionSupport -eq "MultiSession")
 		{
@@ -12130,7 +12457,7 @@ Function OutputDeliveryGroupDetails
 			{
 				ForEach($RestartSchedule in $RestartSchedules)
 				{
-					$rowdata += @(,('Restart Schedule',($htmlsilver -bor $htmlbold),"",$htmlwhite))
+					$rowdata += @(,('Restart Schedule',($global:htmlsb),"",$htmlwhite))
 					#added in V2.21
 					Switch($RestartSchedule.WarningRepeatInterval)
 					{
@@ -12139,11 +12466,11 @@ Function OutputDeliveryGroupDetails
 						Default {$RestartScheduleWarningRepeatInterval = "Notification frequency could not be determined: $($RestartSchedule.WarningRepeatInterval) "}
 					}
 
-					$rowdata += @(,('     Restart machines automatically',($htmlsilver -bor $htmlbold),"Yes",$htmlwhite))
+					$rowdata += @(,('     Restart machines automatically',($global:htmlsb),"Yes",$htmlwhite))
 
 					If($ChkTags -eq $True)
 					{
-						$rowdata += @(,('     Restrict to tag',($htmlsilver -bor $htmlbold),$RestartSchedule.RestrictToTag,$htmlwhite))
+						$rowdata += @(,('     Restrict to tag',($global:htmlsb),$RestartSchedule.RestrictToTag,$htmlwhite))
 					}
 					
 					$tmp = ""
@@ -12156,8 +12483,8 @@ Function OutputDeliveryGroupDetails
 						$tmp = "Every $($RestartSchedule.Day)"
 					}
 					
-					$rowdata += @(,('     Restart frequency',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-					$rowdata += @(,('     Begin restart at',($htmlsilver -bor $htmlbold),"$($RestartSchedule.StartTime.Hours.ToString("00")):$($RestartSchedule.StartTime.Minutes.ToString("00"))",$htmlwhite))
+					$rowdata += @(,('     Restart frequency',($global:htmlsb),$tmp,$htmlwhite))
+					$rowdata += @(,('     Begin restart at',($global:htmlsb),"$($RestartSchedule.StartTime.Hours.ToString("00")):$($RestartSchedule.StartTime.Minutes.ToString("00"))",$htmlwhite))
 					
 					$xTime = 0
 					$tmp = ""
@@ -12174,7 +12501,7 @@ Function OutputDeliveryGroupDetails
 						$xTime = $RestartSchedule.RebootDuration / 60
 						$tmp = "$($xTime) hours"
 					}
-					$rowdata += @(,('     Restart duration',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+					$rowdata += @(,('     Restart duration',($global:htmlsb),$tmp,$htmlwhite))
 					$xTime = $Null
 					$tmp = $Null
 					
@@ -12182,53 +12509,53 @@ Function OutputDeliveryGroupDetails
 					If($RestartSchedule.WarningDuration -eq 0)
 					{
 						$tmp = "Do not send a notification"
-						$rowdata += @(,('     Send notification to users',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+						$rowdata += @(,('     Send notification to users',($global:htmlsb),$tmp,$htmlwhite))
 					}
 					Else
 					{
 						$tmp = "$($RestartSchedule.WarningDuration) minutes before user is logged off"
-						$rowdata += @(,('     Send notification to users',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
-						$rowdata += @(,('     Notification message',($htmlsilver -bor $htmlbold),$RestartSchedule.WarningMessage,$htmlwhite))
+						$rowdata += @(,('     Send notification to users',($global:htmlsb),$tmp,$htmlwhite))
+						$rowdata += @(,('     Notification message',($global:htmlsb),$RestartSchedule.WarningMessage,$htmlwhite))
 					}
 					#added in V2.21
-					$rowdata += @(,('     Notification frequency',($htmlsilver -bor $htmlbold),$RestartScheduleWarningRepeatInterval,$htmlwhite))
+					$rowdata += @(,('     Notification frequency',($global:htmlsb),$RestartScheduleWarningRepeatInterval,$htmlwhite))
 				}
 			}
 			Else
 			{
-				$rowdata += @(,('Restart machines automatically',($htmlsilver -bor $htmlbold),"No",$htmlwhite))
+				$rowdata += @(,('Restart machines automatically',($global:htmlsb),"No",$htmlwhite))
 			}
 		}
 		
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "MultiTypeLicensing")
 		{
-			$rowdata += @(,('License model',($htmlsilver -bor $htmlbold),$LicenseModel,$htmlwhite))
-			$rowdata += @(,('Product code',($htmlsilver -bor $htmlbold),$ProductCode,$htmlwhite))
+			$rowdata += @(,('License model',($global:htmlsb),$LicenseModel,$htmlwhite))
+			$rowdata += @(,('Product code',($global:htmlsb),$ProductCode,$htmlwhite))
 		}
 		
 		#added in V2.13
 		#this data has been collected for a long time, I simple forgot to add it to the output
-		$rowdata += @(,( "Off Peak Buffer Size Percent",($htmlsilver -bor $htmlbold),$xOffPeakBufferSizePercent,$htmlwhite))
-		$rowdata += @(,( "Off Peak Disconnect Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xOffPeakDisconnectTimeout,$htmlwhite))
-		$rowdata += @(,( "Off Peak Extended Disconnect Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xOffPeakExtendedDisconnectTimeout,$htmlwhite))
-		$rowdata += @(,( "Off Peak LogOff Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xOffPeakLogOffTimeout,$htmlwhite))
-		$rowdata += @(,( "Peak Buffer Size Percent",($htmlsilver -bor $htmlbold),$xPeakBufferSizePercent,$htmlwhite))
-		$rowdata += @(,( "Peak Disconnect Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xPeakDisconnectTimeout,$htmlwhite))
-		$rowdata += @(,( "Peak Extended Disconnect Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xPeakExtendedDisconnectTimeout,$htmlwhite))
-		$rowdata += @(,( "Peak LogOff Timeout (Minutes)",($htmlsilver -bor $htmlbold),$xPeakLogOffTimeout,$htmlwhite))
-		$rowdata += @(,( "Settlement Period Before Autoshutdown (HH:MM:SS)",($htmlsilver -bor $htmlbold),$xSettlementPeriodBeforeAutoShutdown,$htmlwhite))
-		$rowdata += @(,( "Settlement Period Before Use (HH:MM:SS)",($htmlsilver -bor $htmlbold),$xSettlementPeriodBeforeUse,$htmlwhite))
+		$rowdata += @(,( "Off Peak Buffer Size Percent",($global:htmlsb),$xOffPeakBufferSizePercent,$htmlwhite))
+		$rowdata += @(,( "Off Peak Disconnect Timeout (Minutes)",($global:htmlsb),$xOffPeakDisconnectTimeout,$htmlwhite))
+		$rowdata += @(,( "Off Peak Extended Disconnect Timeout (Minutes)",($global:htmlsb),$xOffPeakExtendedDisconnectTimeout,$htmlwhite))
+		$rowdata += @(,( "Off Peak LogOff Timeout (Minutes)",($global:htmlsb),$xOffPeakLogOffTimeout,$htmlwhite))
+		$rowdata += @(,( "Peak Buffer Size Percent",($global:htmlsb),$xPeakBufferSizePercent,$htmlwhite))
+		$rowdata += @(,( "Peak Disconnect Timeout (Minutes)",($global:htmlsb),$xPeakDisconnectTimeout,$htmlwhite))
+		$rowdata += @(,( "Peak Extended Disconnect Timeout (Minutes)",($global:htmlsb),$xPeakExtendedDisconnectTimeout,$htmlwhite))
+		$rowdata += @(,( "Peak LogOff Timeout (Minutes)",($global:htmlsb),$xPeakLogOffTimeout,$htmlwhite))
+		$rowdata += @(,( "Settlement Period Before Autoshutdown (HH:MM:SS)",($global:htmlsb),$xSettlementPeriodBeforeAutoShutdown,$htmlwhite))
+		$rowdata += @(,( "Settlement Period Before Use (HH:MM:SS)",($global:htmlsb),$xSettlementPeriodBeforeUse,$htmlwhite))
 
 		If($PwrMgmt1)
 		{
-			$rowdata += @(,("During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xPeakDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During peak extended hours, when disconnected $($Group.PeakExtendedDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xPeakExtendedDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xOffPeakDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xOffPeakExtendedDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins",($global:htmlsb),$xPeakDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During peak extended hours, when disconnected $($Group.PeakExtendedDisconnectTimeout) mins",($global:htmlsb),$xPeakExtendedDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins",($global:htmlsb),$xOffPeakDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins",($global:htmlsb),$xOffPeakExtendedDisconnectAction,$htmlwhite))
 		}
 		If($PwrMgmt2)
 		{
-			$rowdata += @(,('Weekday Peak hours',($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			$rowdata += @(,('Weekday Peak hours',($global:htmlsb),"",$htmlwhite))
 			$val = 0
 			ForEach($PwrMgmt in $PwrMgmts)
 			{
@@ -12239,7 +12566,7 @@ Function OutputDeliveryGroupDetails
 						If($PwrMgmt.PeakHours[$i])
 						{
 							$val++
-							$rowdata += @(,('',($htmlsilver -bor $htmlbold),"$($i.ToString("00")):00",$htmlwhite))
+							$rowdata += @(,('',($global:htmlsb),"$($i.ToString("00")):00",$htmlwhite))
 						}
 					}
 				}
@@ -12247,10 +12574,10 @@ Function OutputDeliveryGroupDetails
 
 			If($val -eq 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),"none",$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),"none",$htmlwhite))
 			}
 
-			$rowdata += @(,('Weekend Peak hours',($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			$rowdata += @(,('Weekend Peak hours',($global:htmlsb),"",$htmlwhite))
 			$val = 0
 			ForEach($PwrMgmt in $PwrMgmts)
 			{
@@ -12261,7 +12588,7 @@ Function OutputDeliveryGroupDetails
 						If($PwrMgmt.PeakHours[$i])
 						{
 							$val++
-							$rowdata += @(,('',($htmlsilver -bor $htmlbold),"$($i.ToString("00")):00",$htmlwhite))
+							$rowdata += @(,('',($global:htmlsb),"$($i.ToString("00")):00",$htmlwhite))
 						}
 					}
 				}
@@ -12269,20 +12596,20 @@ Function OutputDeliveryGroupDetails
 
 			If($val -eq 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),"none",$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),"none",$htmlwhite))
 			}
 
-			$rowdata += @(,("During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xPeakDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During peak extended hours, when disconnected $($Group.PeakExtendedDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xPeakExtendedDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During peak hours, when logged off $($Group.PeakLogOffTimeout) mins",($htmlsilver -bor $htmlbold),$xPeakLogOffAction,$htmlwhite))
-			$rowdata += @(,("During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xOffPeakDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xOffPeakExtendedDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During off-peak hours, when logged off $($Group.OffPeakLogOffTimeout) mins",($htmlsilver -bor $htmlbold),$xOffPeakLogOffAction,$htmlwhite))
-			$rowdata += @(,("During off-peak extended hours, when logged off $($Group.OffPeakExtendedLogOffTimeout) mins",($htmlsilver -bor $htmlbold),$xOffPeakExtendedLogOffAction,$htmlwhite))
+			$rowdata += @(,("During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins",($global:htmlsb),$xPeakDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During peak extended hours, when disconnected $($Group.PeakExtendedDisconnectTimeout) mins",($global:htmlsb),$xPeakExtendedDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During peak hours, when logged off $($Group.PeakLogOffTimeout) mins",($global:htmlsb),$xPeakLogOffAction,$htmlwhite))
+			$rowdata += @(,("During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins",($global:htmlsb),$xOffPeakDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins",($global:htmlsb),$xOffPeakExtendedDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During off-peak hours, when logged off $($Group.OffPeakLogOffTimeout) mins",($global:htmlsb),$xOffPeakLogOffAction,$htmlwhite))
+			$rowdata += @(,("During off-peak extended hours, when logged off $($Group.OffPeakExtendedLogOffTimeout) mins",($global:htmlsb),$xOffPeakExtendedLogOffAction,$htmlwhite))
 		}
 		If($PwrMgmt3)
 		{
-			$rowdata += @(,('Weekday number machines powered on, and when',($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			$rowdata += @(,('Weekday number machines powered on, and when',($global:htmlsb),"",$htmlwhite))
 			$val = 0
 			ForEach($PwrMgmt in $PwrMgmts)
 			{
@@ -12293,7 +12620,7 @@ Function OutputDeliveryGroupDetails
 						If($PwrMgmt.PoolSize[$i] -gt 0)
 						{
 							$val++
-							$rowdata += @(,('',($htmlsilver -bor $htmlbold),"$($PwrMgmt.PoolSize[$i].ToString("####0")) - $($i.ToString("00")):00",$htmlwhite))
+							$rowdata += @(,('',($global:htmlsb),"$($PwrMgmt.PoolSize[$i].ToString("####0")) - $($i.ToString("00")):00",$htmlwhite))
 						}
 					}
 				}
@@ -12301,10 +12628,10 @@ Function OutputDeliveryGroupDetails
 
 			If($val -eq 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),"none",$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),"none",$htmlwhite))
 			}
 
-			$rowdata += @(,('Weekend number machines powered on, and when',($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			$rowdata += @(,('Weekend number machines powered on, and when',($global:htmlsb),"",$htmlwhite))
 			$val = 0
 			ForEach($PwrMgmt in $PwrMgmts)
 			{
@@ -12315,7 +12642,7 @@ Function OutputDeliveryGroupDetails
 						If($PwrMgmt.PoolSize[$i] -gt 0)
 						{
 							$val++
-							$rowdata += @(,('',($htmlsilver -bor $htmlbold),"$($PwrMgmt.PoolSize[$i].ToString("####0")) - $($i.ToString("00")):00",$htmlwhite))
+							$rowdata += @(,('',($global:htmlsb),"$($PwrMgmt.PoolSize[$i].ToString("####0")) - $($i.ToString("00")):00",$htmlwhite))
 						}
 					}
 				}
@@ -12323,10 +12650,10 @@ Function OutputDeliveryGroupDetails
 
 			If($val -eq 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),"none",$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),"none",$htmlwhite))
 			}
 
-			$rowdata += @(,('Weekday Peak hours',($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			$rowdata += @(,('Weekday Peak hours',($global:htmlsb),"",$htmlwhite))
 			$val = 0
 			ForEach($PwrMgmt in $PwrMgmts)
 			{
@@ -12337,7 +12664,7 @@ Function OutputDeliveryGroupDetails
 						If($PwrMgmt.PeakHours[$i])
 						{
 							$val++
-							$rowdata += @(,('',($htmlsilver -bor $htmlbold),"$($i.ToString("00")):00",$htmlwhite))
+							$rowdata += @(,('',($global:htmlsb),"$($i.ToString("00")):00",$htmlwhite))
 						}
 					}
 				}
@@ -12345,10 +12672,10 @@ Function OutputDeliveryGroupDetails
 
 			If($val -eq 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),"none",$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),"none",$htmlwhite))
 			}
 
-			$rowdata += @(,('Weekend Peak hours',($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			$rowdata += @(,('Weekend Peak hours',($global:htmlsb),"",$htmlwhite))
 			$val = 0
 			ForEach($PwrMgmt in $PwrMgmts)
 			{
@@ -12359,7 +12686,7 @@ Function OutputDeliveryGroupDetails
 						If($PwrMgmt.PeakHours[$i])
 						{
 							$val++
-							$rowdata += @(,('',($htmlsilver -bor $htmlbold),"$($i.ToString("00")):00",$htmlwhite))
+							$rowdata += @(,('',($global:htmlsb),"$($i.ToString("00")):00",$htmlwhite))
 						}
 					}
 				}
@@ -12367,40 +12694,40 @@ Function OutputDeliveryGroupDetails
 
 			If($val -eq 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),"None",$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),"None",$htmlwhite))
 			}
 
-			$rowdata += @(,("During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xPeakDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During peak extended hours, when disconnected $($Group.PeakExtendedDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xPeakExtendedDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xOffPeakDisconnectAction,$htmlwhite))
-			$rowdata += @(,("During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins",($htmlsilver -bor $htmlbold),$xOffPeakExtendedDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During peak hours, when disconnected $($Group.PeakDisconnectTimeout) mins",($global:htmlsb),$xPeakDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During peak extended hours, when disconnected $($Group.PeakExtendedDisconnectTimeout) mins",($global:htmlsb),$xPeakExtendedDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins",($global:htmlsb),$xOffPeakDisconnectAction,$htmlwhite))
+			$rowdata += @(,("During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins",($global:htmlsb),$xOffPeakExtendedDisconnectAction,$htmlwhite))
 		}
 		
-		$rowdata += @(,("Automatic power on for assigned",($htmlsilver -bor $htmlbold), $xAutoPowerOnForAssigned,$htmlwhite))
-		$rowdata += @(,("Automatic power on for assigned during peak",($htmlsilver -bor $htmlbold), $xAutoPowerOnForAssignedDuringPeak,$htmlwhite))
+		$rowdata += @(,("Automatic power on for assigned",($global:htmlsb), $xAutoPowerOnForAssigned,$htmlwhite))
+		$rowdata += @(,("Automatic power on for assigned during peak",($global:htmlsb), $xAutoPowerOnForAssignedDuringPeak,$htmlwhite))
 		#Added V2.14
 		If(validObject $Group ReuseMachinesWithoutShutdownInOutage)
 		{
 			If($Group.ReuseMachinesWithoutShutdownInOutage -eq $Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed)
 			{
-				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($htmlsilver -bor $htmlbold),$Group.ReuseMachinesWithoutShutdownInOutage,$htmlwhite))
+				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($global:htmlsb),$Group.ReuseMachinesWithoutShutdownInOutage,$htmlwhite))
 			}
 			Else
 			{
-				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($htmlsilver -bor $htmlbold),"$($Group.ReuseMachinesWithoutShutdownInOutage) (Doesn't match Site setting)",$htmlwhite))
+				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($global:htmlsb),"$($Group.ReuseMachinesWithoutShutdownInOutage) (Doesn't match Site setting)",$htmlwhite))
 			}
 		}
 
-		$rowdata += @(,('All connections not through NetScaler Gateway',($htmlsilver -bor $htmlbold),$xAllConnections,$htmlwhite))
-		$rowdata += @(,('Connections through NetScaler Gateway',($htmlsilver -bor $htmlbold),$xNSConnection,$htmlwhite))
-		$rowdata += @(,('Connections meeting any of the following filters',($htmlsilver -bor $htmlbold),$xAGFilters[0],$htmlwhite))
+		$rowdata += @(,('All connections not through NetScaler Gateway',($global:htmlsb),$xAllConnections,$htmlwhite))
+		$rowdata += @(,('Connections through NetScaler Gateway',($global:htmlsb),$xNSConnection,$htmlwhite))
+		$rowdata += @(,('Connections meeting any of the following filters',($global:htmlsb),$xAGFilters[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xAGFilters)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 			}
 		}
 
@@ -12510,10 +12837,10 @@ Function OutputDeliveryGroupApplicationDetails
 		ElseIf($HTML)
 		{
 			$columnHeaders = @(
-			'Name',($htmlsilver -bor $htmlbold),
-			'Description',($htmlsilver -bor $htmlbold),
-			'Location',($htmlsilver -bor $htmlbold),
-			'State',($htmlsilver -bor $htmlbold))
+			'Name',($global:htmlsb),
+			'Description',($global:htmlsb),
+			'Location',($global:htmlsb),
+			'State',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("175","170","100","55")
@@ -12626,10 +12953,10 @@ Function OutputDeliveryGroupCatalogs
 		ElseIf($HTML)
 		{
 			$columnHeaders = @(
-			'Machine Catalog name',($htmlsilver -bor $htmlbold),
-			'Machine Catalog type',($htmlsilver -bor $htmlbold),
-			'Desktops total',($htmlsilver -bor $htmlbold),
-			'Desktops free',($htmlsilver -bor $htmlbold))
+			'Machine Catalog name',($global:htmlsb),
+			'Machine Catalog type',($global:htmlsb),
+			'Desktops total',($global:htmlsb),
+			'Desktops free',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("175","150","100","75")
@@ -12664,19 +12991,19 @@ Function OutputDeliveryGroupAppDisks
 	
 	If($GroupAppDisks.Count -gt 0)
 	{
-		$AppDisks = @()
+		$AppDisks = New-Object System.Collections.ArrayList
 		ForEach($AppDisk in $GroupAppDisks)
 		{
 			$Result = Get-AppLibAppDisk @XDParams1 -AppDiskUid $AppDisk.Guid
 			
 			If($? -and $Null -ne $Result)
 			{
-				$obj = New-Object -TypeName PSObject
-				$obj | Add-Member -MemberType NoteProperty -Name Name        -Value $Result.AppDiskName
-				$obj | Add-Member -MemberType NoteProperty -Name Description -Value $Result.Description
-				$obj | Add-Member -MemberType NoteProperty -Name State       -Value $Result.State
-				
-				$AppDisks += $obj
+				$obj = [PSCustomObject] @{
+					Name        = $Result.AppDiskName				
+					Description = $Result.Description				
+					State       = $Result.State				
+				}
+				$null = $AppDisks.Add($obj)
 			}
 		}
 		
@@ -12733,9 +13060,9 @@ Function OutputDeliveryGroupAppDisks
 		ElseIf($HTML)
 		{
 			$columnHeaders = @(
-			'Name',($htmlsilver -bor $htmlbold),
-			'Description',($htmlsilver -bor $htmlbold),
-			'State',($htmlsilver -bor $htmlbold))
+			'Name',($global:htmlsb),
+			'Description',($global:htmlsb),
+			'State',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("150","150","150")
@@ -12954,7 +13281,7 @@ Function OutputDeliveryGroupTags
 	
 	If($GroupTags.Count -gt 0)
 	{
-		$Tags = @()
+		$Tags = New-Object System.Collections.ArrayList
 		ForEach($Tag in $GroupTags)
 		{
 			#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
@@ -12962,12 +13289,12 @@ Function OutputDeliveryGroupTags
 			
 			If($? -and $Null -ne $Result)
 			{
-				$obj = New-Object -TypeName PSObject
-				$obj | Add-Member -MemberType NoteProperty -Name Name        -Value $Result.Name
-				$obj | Add-Member -MemberType NoteProperty -Name Description -Value $Result.Description
-				$obj | Add-Member -MemberType NoteProperty -Name AppliedTo   -Value "Delivery Group"
-				
-				$Tags += $obj
+				$obj = [PSCustomObject] @{
+					Name        = $Result.Name				
+					Description = $Result.Description				
+					AppliedTo   = "Delivery Group"				
+				}
+				$null = $Tags.Add($obj)
 			}
 		}
 		
@@ -13025,9 +13352,9 @@ Function OutputDeliveryGroupTags
 		ElseIf($HTML)
 		{
 			$columnHeaders = @(
-			'Name',($htmlsilver -bor $htmlbold),
-			'Description',($htmlsilver -bor $htmlbold),
-			'Applied to',($htmlsilver -bor $htmlbold))
+			'Name',($global:htmlsb),
+			'Description',($global:htmlsb),
+			'Applied to',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("150","150","150")
@@ -13119,9 +13446,9 @@ Function OutputDeliveryGroupApplicationGroups
 		ElseIf($HTML)
 		{
 			$columnHeaders = @(
-			'Name',($htmlsilver -bor $htmlbold),
-			'Description',($htmlsilver -bor $htmlbold),
-			'Applications',($htmlsilver -bor $htmlbold))
+			'Name',($global:htmlsb),
+			'Description',($global:htmlsb),
+			'Applications',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("150","150","150")
@@ -13279,11 +13606,11 @@ Function OutputApplications
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'Folder',($htmlsilver -bor $htmlbold),
-		'Name',($htmlsilver -bor $htmlbold),
-		'Description',($htmlsilver -bor $htmlbold),
-		'Location',($htmlsilver -bor $htmlbold),
-		'State',($htmlsilver -bor $htmlbold))
+		'Folder',($global:htmlsb),
+		'Name',($global:htmlsb),
+		'Description',($global:htmlsb),
+		'Location',($global:htmlsb),
+		'State',($global:htmlsb))
 
 		$msg = ""
 		$columnWidths = @("100","145","125","80","50")
@@ -13686,72 +14013,72 @@ Function OutputApplicationDetails
 	ElseIf($HTML)
 	{
 		$rowdata = @()
-		$columnHeaders = @("Name (for administrator)",($htmlsilver -bor $htmlbold),$Application.Name,$htmlwhite)
-		$rowdata += @(,('Name (for user)',($htmlsilver -bor $htmlbold),$Application.PublishedName,$htmlwhite))
-		$rowdata += @(,('Description and keywords',($htmlsilver -bor $htmlbold),$Application.Description,$htmlwhite))
-		$rowdata += @(,('Delivery Group',($htmlsilver -bor $htmlbold),$DeliveryGroups[0],$htmlwhite))
+		$columnHeaders = @("Name (for administrator)",($global:htmlsb),$Application.Name,$htmlwhite)
+		$rowdata += @(,('Name (for user)',($global:htmlsb),$Application.PublishedName,$htmlwhite))
+		$rowdata += @(,('Description and keywords',($global:htmlsb),$Application.Description,$htmlwhite))
+		$rowdata += @(,('Delivery Group',($global:htmlsb),$DeliveryGroups[0],$htmlwhite))
 		$cnt = -1
 		ForEach($Group in $DeliveryGroups)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),$Group,$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),$Group,$htmlwhite))
 			}
 		}
-		$rowdata += @(,('Folder (for administrators)',($htmlsilver -bor $htmlbold),$Application.AdminFolderName,$htmlwhite))
+		$rowdata += @(,('Folder (for administrators)',($global:htmlsb),$Application.AdminFolderName,$htmlwhite))
 		#V2.12 change from "Folder (for user)" to "Application category (optional)". 
 		#This changed in XA/X 7.8 and I never noticed it and no one reported it.
 		#Thanks to lbates for bringing it to my attention.
-		$rowdata += @(,('Application category (optional)',($htmlsilver -bor $htmlbold),$Application.ClientFolder,$htmlwhite))
-		$rowdata += @(,('Visibility',($htmlsilver -bor $htmlbold),$xVisibility[0],$htmlwhite))
+		$rowdata += @(,('Application category (optional)',($global:htmlsb),$Application.ClientFolder,$htmlwhite))
+		$rowdata += @(,('Visibility',($global:htmlsb),$xVisibility[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xVisibility)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),$xVisibility[$cnt],$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),$xVisibility[$cnt],$htmlwhite))
 			}
 		}
-		$rowdata += @(,('Application Path',($htmlsilver -bor $htmlbold),$Application.CommandLineExecutable,$htmlwhite))
-		$rowdata += @(,('Command Line arguments',($htmlsilver -bor $htmlbold),$Application.CommandLineArguments,$htmlwhite))
-		$rowdata += @(,('Working directory',($htmlsilver -bor $htmlbold),$Application.WorkingDirectory,$htmlwhite))
+		$rowdata += @(,('Application Path',($global:htmlsb),$Application.CommandLineExecutable,$htmlwhite))
+		$rowdata += @(,('Command Line arguments',($global:htmlsb),$Application.CommandLineArguments,$htmlwhite))
+		$rowdata += @(,('Working directory',($global:htmlsb),$Application.WorkingDirectory,$htmlwhite))
 		$tmp1 = ""
 		ForEach($tmp in $RedirectedFileTypes)
 		{
 			$tmp1 += "$($tmp); "
 		}
-		$rowdata += @(,('Redirected file types',($htmlsilver -bor $htmlbold),$tmp1,$htmlwhite))
+		$rowdata += @(,('Redirected file types',($global:htmlsb),$tmp1,$htmlwhite))
 		$tmp1 = $Null
-		$rowdata += @(,('Tags',($htmlsilver -bor $htmlbold),$xTags[0],$htmlwhite))
+		$rowdata += @(,('Tags',($global:htmlsb),$xTags[0],$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xTags)
 		{
 			$cnt++
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 			}
 		}
 
 		If($Application.Visible -eq $False)
 		{
-			$rowdata += @(,('Hidden',($htmlsilver -bor $htmlbold),"Application is hidden",$htmlwhite))
+			$rowdata += @(,('Hidden',($global:htmlsb),"Application is hidden",$htmlwhite))
 		}
 
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "ApplicationUsageLimits")
 		{
 			#change wording in V2.19 to match the text in Studio
-			$rowdata += @(,("How do you want to control the use of this application?",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+			$rowdata += @(,("How do you want to control the use of this application?",($global:htmlsb),"",$htmlwhite))
 			
 			If($Application.MaxTotalInstances -eq 0)
 			{
-				$rowdata += @(,("",($htmlsilver -bor $htmlbold),"Allow unlimited use",$htmlwhite))
+				$rowdata += @(,("",($global:htmlsb),"Allow unlimited use",$htmlwhite))
 			}
 			Else
 			{
-				$rowdata += @(,("     Limit the number of instances running at the same time to",($htmlsilver -bor $htmlbold),$Application.MaxTotalInstances.ToString(),$htmlwhite))
+				$rowdata += @(,("     Limit the number of instances running at the same time to",($global:htmlsb),$Application.MaxTotalInstances.ToString(),$htmlwhite))
 			}
 			
 			If($Application.MaxPerUserInstances -eq 0)
@@ -13759,7 +14086,7 @@ Function OutputApplicationDetails
 			}
 			Else
 			{
-				$rowdata += @(,("     Limit to one instance per user",($htmlsilver -bor $htmlbold),"",$htmlwhite))
+				$rowdata += @(,("     Limit to one instance per user",($global:htmlsb),"",$htmlwhite))
 			}
 			
 			#New property in 1808, added in script V2.19
@@ -13767,43 +14094,43 @@ Function OutputApplicationDetails
 			{
 				If($Application.MaxPerMachineInstances -eq 0)
 				{
-					$rowdata += @(,("     Limit the number of instances per machine to",($htmlsilver -bor $htmlbold),"Unlimited",$htmlwhite))
+					$rowdata += @(,("     Limit the number of instances per machine to",($global:htmlsb),"Unlimited",$htmlwhite))
 				}
 				Else
 				{
-					$rowdata += @(,("     Limit the number of instances per machine to",($htmlsilver -bor $htmlbold),$Application.MaxPerMachineInstances.ToString(),$htmlwhite))
+					$rowdata += @(,("     Limit the number of instances per machine to",($global:htmlsb),$Application.MaxPerMachineInstances.ToString(),$htmlwhite))
 				}
 			}
 		}
 
 		#added in 2.14
-		$rowdata += @(,("Application Type",($htmlsilver -bor $htmlbold),$ApplicationType,$htmlwhite))
-		$rowdata += @(,("CPU Priority Level",($htmlsilver -bor $htmlbold),$CPUPriorityLevel,$htmlwhite))
+		$rowdata += @(,("Application Type",($global:htmlsb),$ApplicationType,$htmlwhite))
+		$rowdata += @(,("CPU Priority Level",($global:htmlsb),$CPUPriorityLevel,$htmlwhite))
 		If(validObject $Application HomeZoneName)
 		{
-			$rowdata += @(,("Home Zone Name",($htmlsilver -bor $htmlbold),$Application.HomeZoneName,$htmlwhite))
+			$rowdata += @(,("Home Zone Name",($global:htmlsb),$Application.HomeZoneName,$htmlwhite))
 		}
 		If(validObject $Application HomeZoneOnly)
 		{
-			$rowdata += @(,("Home Zone Only",($htmlsilver -bor $htmlbold),$Application.HomeZoneOnly.ToString(),$htmlwhite))
+			$rowdata += @(,("Home Zone Only",($global:htmlsb),$Application.HomeZoneOnly.ToString(),$htmlwhite))
 		}
 		If(validObject $Application IgnoreUserHomeZone)
 		{
-			$rowdata += @(,("Ignore User Home Zone",($htmlsilver -bor $htmlbold),$Application.IgnoreUserHomeZone.ToString(),$htmlwhite))
+			$rowdata += @(,("Ignore User Home Zone",($global:htmlsb),$Application.IgnoreUserHomeZone.ToString(),$htmlwhite))
 		}
-		$rowdata += @(,("Icon from Client",($htmlsilver -bor $htmlbold),$Application.IconFromClient,$htmlwhite))
+		$rowdata += @(,("Icon from Client",($global:htmlsb),$Application.IconFromClient,$htmlwhite))
 		If(validObject $Application LocalLaunchDisabled)
 		{
-			$rowdata += @(,("Local Launch Disabled",($htmlsilver -bor $htmlbold),$Application.LocalLaunchDisabled.ToString(),$htmlwhite))
+			$rowdata += @(,("Local Launch Disabled",($global:htmlsb),$Application.LocalLaunchDisabled.ToString(),$htmlwhite))
 		}
-		$rowdata += @(,("Secure Command Line Arguments Enabled",($htmlsilver -bor $htmlbold),$Application.SecureCmdLineArgumentsEnabled.ToString(),$htmlwhite))
-		$rowdata += @(,("Add shortcut to user's desktop",($htmlsilver -bor $htmlbold),$Application.ShortcutAddedToDesktop.ToString(),$htmlwhite))
-		$rowdata += @(,("Add shortcut to user's Start Menu",($htmlsilver -bor $htmlbold),$Application.ShortcutAddedToStartMenu.ToString(),$htmlwhite))
+		$rowdata += @(,("Secure Command Line Arguments Enabled",($global:htmlsb),$Application.SecureCmdLineArgumentsEnabled.ToString(),$htmlwhite))
+		$rowdata += @(,("Add shortcut to user's desktop",($global:htmlsb),$Application.ShortcutAddedToDesktop.ToString(),$htmlwhite))
+		$rowdata += @(,("Add shortcut to user's Start Menu",($global:htmlsb),$Application.ShortcutAddedToStartMenu.ToString(),$htmlwhite))
 		If($Application.ShortcutAddedToStartMenu)
 		{
-			$rowdata += @(,("Start Menu Folder",($htmlsilver -bor $htmlbold),$Application.StartMenuFolder,$htmlwhite)) 
+			$rowdata += @(,("Start Menu Folder",($global:htmlsb),$Application.StartMenuFolder,$htmlwhite)) 
 		}
-		$rowdata += @(,("Wait for Printer Creation",($htmlsilver -bor $htmlbold),$Application.WaitForPrinterCreation.ToString(),$htmlwhite))
+		$rowdata += @(,("Wait for Printer Creation",($global:htmlsb),$Application.WaitForPrinterCreation.ToString(),$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("175","325")
@@ -13922,12 +14249,12 @@ Function OutputApplicationSessions
 		ElseIf($HTML)
 		{
 			$columnHeaders = @(
-			'User Name',($htmlsilver -bor $htmlbold),
-			'Client Name',($htmlsilver -bor $htmlbold),
-			'Machine Name',($htmlsilver -bor $htmlbold),
-			'State',($htmlsilver -bor $htmlbold),
-			'Application State',($htmlsilver -bor $htmlbold),
-			'Protocol',($htmlsilver -bor $htmlbold))
+			'User Name',($global:htmlsb),
+			'Client Name',($global:htmlsb),
+			'Machine Name',($global:htmlsb),
+			'State',($global:htmlsb),
+			'Application State',($global:htmlsb),
+			'Protocol',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("135","85","135","50","50","55")
@@ -14058,9 +14385,9 @@ Function OutputApplicationAdministrators
 		ElseIf($HTML)
 		{
 			$columnHeaders = @(
-			'Administrator Name',($htmlsilver -bor $htmlbold),
-			'Role',($htmlsilver -bor $htmlbold),
-			'Status',($htmlsilver -bor $htmlbold))
+			'Administrator Name',($global:htmlsb),
+			'Role',($global:htmlsb),
+			'Status',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("225","200","60")
@@ -14259,48 +14586,48 @@ Function ProcessApplicationGroupDetails
 			ElseIf($HTML)
 			{
 				$rowdata = @()
-				$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$AppGroup.Name,$htmlwhite)
-				$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$AppGroup.Description,$htmlwhite))
-				$rowdata += @(,('Applications',($htmlsilver -bor $htmlbold),$AppGroup.TotalApplications.ToString(),$htmlwhite))
+				$columnHeaders = @("Name",($global:htmlsb),$AppGroup.Name,$htmlwhite)
+				$rowdata += @(,('Description',($global:htmlsb),$AppGroup.Description,$htmlwhite))
+				$rowdata += @(,('Applications',($global:htmlsb),$AppGroup.TotalApplications.ToString(),$htmlwhite))
 				
 				If($Null -eq $AppGroup.Scopes)
 				{
-					$rowdata += @(,('Scopes',($htmlsilver -bor $htmlbold),"All",$htmlwhite))
+					$rowdata += @(,('Scopes',($global:htmlsb),"All",$htmlwhite))
 				}
 				Else
 				{
-					$rowdata += @(,('Scopes',($htmlsilver -bor $htmlbold),"All",$htmlwhite))
+					$rowdata += @(,('Scopes',($global:htmlsb),"All",$htmlwhite))
 					$cnt = -1
 					ForEach($tmp in $AppGroup.Scopes)
 					{
-						$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 					}
 				}
 				
-				$rowdata += @(,('Enabled',($htmlsilver -bor $htmlbold),$xEnabled,$htmlwhite))
-				$rowdata += @(,('Session sharing',($htmlsilver -bor $htmlbold),$xSessionSharing,$htmlwhite))
-				$rowdata += @(,('Single application per session',($htmlsilver -bor $htmlbold),$xSingleSession,$htmlwhite))
-				$rowdata += @(,('Restrict launches to machines with tag',($htmlsilver -bor $htmlbold),$AppGroup.RestrictToTag,$htmlwhite))
+				$rowdata += @(,('Enabled',($global:htmlsb),$xEnabled,$htmlwhite))
+				$rowdata += @(,('Session sharing',($global:htmlsb),$xSessionSharing,$htmlwhite))
+				$rowdata += @(,('Single application per session',($global:htmlsb),$xSingleSession,$htmlwhite))
+				$rowdata += @(,('Restrict launches to machines with tag',($global:htmlsb),$AppGroup.RestrictToTag,$htmlwhite))
 				
-				$rowdata += @(,('Delivery Groups',($htmlsilver -bor $htmlbold),$DGs[0],$htmlwhite))
+				$rowdata += @(,('Delivery Groups',($global:htmlsb),$DGs[0],$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $DGs)
 				{
 					$cnt++
 					If($cnt -gt 0)
 					{
-						$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 					}
 				}
 				
-				$rowdata += @(,('Tags',($htmlsilver -bor $htmlbold),$xTags[0],$htmlwhite))
+				$rowdata += @(,('Tags',($global:htmlsb),$xTags[0],$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xTags)
 				{
 					$cnt++
 					If($cnt -gt 0)
 					{
-						$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmp,$htmlwhite))
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 					}
 				}
 
@@ -14660,11 +14987,11 @@ Function OutputSummaryPolicyTable
 		ElseIf($HTML)
 		{
 			$columnHeaders = @(
-			'Name',($htmlsilver -bor $htmlbold),
-			'Description',($htmlsilver -bor $htmlbold),
-			'Enabled',($htmlsilver -bor $htmlbold),
-			'Type',($htmlsilver -bor $htmlbold),
-			'Priority',($htmlsilver -bor $htmlbold))
+			'Name',($global:htmlsb),
+			'Description',($global:htmlsb),
+			'Enabled',($global:htmlsb),
+			'Type',($global:htmlsb),
+			'Priority',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("155","185","55","60","45")
@@ -14855,10 +15182,10 @@ Function ProcessCitrixPolicies
 					WriteHTMLLine 2 0 "$($Policy.PolicyName) (AD, $($xPolicyType))"
 				}
 				$rowdata = @()
-				$columnHeaders = @("Description",($htmlsilver -bor $htmlbold),$Policy.Description,$htmlwhite)
-				$rowdata += @(,('Enabled',($htmlsilver -bor $htmlbold),$Policy.Enabled,$htmlwhite))
-				$rowdata += @(,('Type',($htmlsilver -bor $htmlbold),$Policy.Type,$htmlwhite))
-				$rowdata += @(,('Priority',($htmlsilver -bor $htmlbold),$Policy.Priority,$htmlwhite))
+				$columnHeaders = @("Description",($global:htmlsb),$Policy.Description,$htmlwhite)
+				$rowdata += @(,('Enabled',($global:htmlsb),$Policy.Enabled,$htmlwhite))
+				$rowdata += @(,('Type',($global:htmlsb),$Policy.Type,$htmlwhite))
+				$rowdata += @(,('Priority',($global:htmlsb),$Policy.Priority,$htmlwhite))
 
 				$msg = ""
 				$columnWidths = @("90","200")
@@ -14974,11 +15301,11 @@ Function ProcessCitrixPolicies
 					ElseIf($HTML)
 					{
 						$columnHeaders = @(
-						'Name',($htmlsilver -bor $htmlbold),
-						'Type',($htmlsilver -bor $htmlbold),
-						'Enabled',($htmlsilver -bor $htmlbold),
-						'Mode',($htmlsilver -bor $htmlbold),
-						'Value',($htmlsilver -bor $htmlbold))
+						'Name',($global:htmlsb),
+						'Type',($global:htmlsb),
+						'Enabled',($global:htmlsb),
+						'Mode',($global:htmlsb),
+						'Value',($global:htmlsb))
 
 						$msg = ""
 						$columnWidths = @("115","125","50","40","170")
@@ -27323,8 +27650,8 @@ Function ProcessCitrixPolicies
 					If($rowdata.count -gt 0)
 					{
 						$columnHeaders = @(
-						'Setting Key',($htmlsilver -bor $htmlbold),
-						'Value',($htmlsilver -bor $htmlbold))
+						'Setting Key',($global:htmlsb),
+						'Value',($global:htmlsb))
 
 						$msg = ""
 						$columnWidths = @("400","300")
@@ -27940,13 +28267,13 @@ Function OutputConfigLogPreferences
 	{
 		WriteHTMLLine 2 0 "Configuration Logging settings"
 		$rowdata = @()
-		$columnHeaders = @($PrefEnabled,($htmlsilver -bor $htmlbold),"",$htmlwhite)
-		$rowdata += @(,('   Logging database',($htmlsilver -bor $htmlbold),"",$htmlwhite))
-		$rowdata += @(,('      Database size',($htmlsilver -bor $htmlbold),$dbsize,$htmlwhite))
-		$rowdata += @(,('      Server location',($htmlsilver -bor $htmlbold),$LogSQLServerPrincipalName,$htmlwhite))
-		$rowdata += @(,('      Database name',($htmlsilver -bor $htmlbold),$LogDatabaseName,$htmlwhite))
-		$rowdata += @(,('   Security',($htmlsilver -bor $htmlbold),"",$htmlwhite))
-		$rowdata += @(,('      Allow changes when the database is disconnected',($htmlsilver -bor $htmlbold),$PrefSecurity,$htmlwhite))
+		$columnHeaders = @($PrefEnabled,($global:htmlsb),"",$htmlwhite)
+		$rowdata += @(,('   Logging database',($global:htmlsb),"",$htmlwhite))
+		$rowdata += @(,('      Database size',($global:htmlsb),$dbsize,$htmlwhite))
+		$rowdata += @(,('      Server location',($global:htmlsb),$LogSQLServerPrincipalName,$htmlwhite))
+		$rowdata += @(,('      Database name',($global:htmlsb),$LogDatabaseName,$htmlwhite))
+		$rowdata += @(,('   Security',($global:htmlsb),"",$htmlwhite))
+		$rowdata += @(,('      Allow changes when the database is disconnected',($global:htmlsb),$PrefSecurity,$htmlwhite))
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -28053,11 +28380,11 @@ Function OutputConfigLog
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'Administrator',($htmlsilver -bor $htmlbold),
-		'Main task',($htmlsilver -bor $htmlbold),
-		'Start',($htmlsilver -bor $htmlbold),
-		'End',($htmlsilver -bor $htmlbold),
-		'Status',($htmlsilver -bor $htmlbold))
+		'Administrator',($global:htmlsb),
+		'Main task',($global:htmlsb),
+		'Start',($global:htmlsb),
+		'End',($global:htmlsb),
+		'Status',($global:htmlsb))
 
 		$msg = ""
 		$columnWidths = @("120","210","60","60","50")
@@ -28202,31 +28529,31 @@ Function OutputSiteSettings
 		WriteHTMLLine 1 0 "Configuration"
 		WriteHTMLLine 2 0 "Site Settings"
 		$rowdata = @()
-		$columnHeaders = @("Site name",($htmlsilver -bor $htmlbold),$XDSiteName,$htmlwhite)
-		$rowdata += @(,('Default StoreFront address',($htmlsilver -bor $htmlbold),$DefaultStoreFrontAddress,$htmlwhite))
-		$rowdata += @(,("Base OU",($htmlsilver -bor $htmlbold),$Script:XDSite1.BaseOU,$htmlwhite))
-		$rowdata += @(,("Color Depth",($htmlsilver -bor $htmlbold),$xColorDepth,$htmlwhite))
+		$columnHeaders = @("Site name",($global:htmlsb),$XDSiteName,$htmlwhite)
+		$rowdata += @(,('Default StoreFront address',($global:htmlsb),$DefaultStoreFrontAddress,$htmlwhite))
+		$rowdata += @(,("Base OU",($global:htmlsb),$Script:XDSite1.BaseOU,$htmlwhite))
+		$rowdata += @(,("Color Depth",($global:htmlsb),$xColorDepth,$htmlwhite))
 		If(validObject $Script:XDSite1 ConnectionLeasingEnabled)
 		{
-			$rowdata += @(,("Connection Leasing Enabled",($htmlsilver -bor $htmlbold),$Script:XDSite1.ConnectionLeasingEnabled.ToString(),$htmlwhite))
+			$rowdata += @(,("Connection Leasing Enabled",($global:htmlsb),$Script:XDSite1.ConnectionLeasingEnabled.ToString(),$htmlwhite))
 		}
-		$rowdata += @(,("Default Minimum Functional Level",($htmlsilver -bor $htmlbold),$xVDAVersion,$htmlwhite))
-		$rowdata += @(,("DNS Resolution Enabled",($htmlsilver -bor $htmlbold),$Script:XDSite1.DnsResolutionEnabled.ToString(),$htmlwhite))
+		$rowdata += @(,("Default Minimum Functional Level",($global:htmlsb),$xVDAVersion,$htmlwhite))
+		$rowdata += @(,("DNS Resolution Enabled",($global:htmlsb),$Script:XDSite1.DnsResolutionEnabled.ToString(),$htmlwhite))
 		If(validObject $Script:XDSite1 IsSecondaryBroker)
 		{
-			$rowdata += @(,("Is Secondary Broker",($htmlsilver -bor $htmlbold),$Script:XDSite1.IsSecondaryBroker.ToString(),$htmlwhite))
+			$rowdata += @(,("Is Secondary Broker",($global:htmlsb),$Script:XDSite1.IsSecondaryBroker.ToString(),$htmlwhite))
 		}
 		If(validObject $Script:XDSite1 LocalHostCacheEnabled)
 		{
-			$rowdata += @(,("Local Host Cache Enabled",($htmlsilver -bor $htmlbold),$Script:XDSite1.LocalHostCacheEnabled.ToString(),$htmlwhite))
+			$rowdata += @(,("Local Host Cache Enabled",($global:htmlsb),$Script:XDSite1.LocalHostCacheEnabled.ToString(),$htmlwhite))
 		}
 		If(validObject $Script:XDSite1 ReuseMachinesWithoutShutdownInOutageAllowed)
 		{
-			$rowdata += @(,("Reuse Machines Without Shutdown in Outage Allowed",($htmlsilver -bor $htmlbold),$Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed.ToString(),$htmlwhite))
+			$rowdata += @(,("Reuse Machines Without Shutdown in Outage Allowed",($global:htmlsb),$Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed.ToString(),$htmlwhite))
 		}
-		$rowdata += @(,("Secure ICA Required",($htmlsilver -bor $htmlbold),$Script:XDSite1.SecureIcaRequired.ToString(),$htmlwhite))
-		$rowdata += @(,("Trust Managed Anonymous XML Service Requests",($htmlsilver -bor $htmlbold),$Script:XDSite1.TrustManagedAnonymousXmlServiceRequests.ToString(),$htmlwhite))
-		$rowdata += @(,("Trust Requests Sent to the XML Service Port",($htmlsilver -bor $htmlbold),$Script:XDSite1.TrustRequestsSentToTheXmlServicePort.ToString(),$htmlwhite))
+		$rowdata += @(,("Secure ICA Required",($global:htmlsb),$Script:XDSite1.SecureIcaRequired.ToString(),$htmlwhite))
+		$rowdata += @(,("Trust Managed Anonymous XML Service Requests",($global:htmlsb),$Script:XDSite1.TrustManagedAnonymousXmlServiceRequests.ToString(),$htmlwhite))
+		$rowdata += @(,("Trust Requests Sent to the XML Service Port",($global:htmlsb),$Script:XDSite1.TrustRequestsSentToTheXmlServicePort.ToString(),$htmlwhite))
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -28292,7 +28619,7 @@ Function OutputCEIPSetting
 		$rowdata += @(,($CEIP,$htmlwhite))
 
 		$columnHeaders = @(
-		'Citrix Customer Experience Improvement Program',($htmlsilver -bor $htmlbold))
+		'Citrix Customer Experience Improvement Program',($global:htmlsb))
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -28320,6 +28647,7 @@ Function GetSQLVersion
 		12                         {$SQLVer = "SQL Server 2014"; Break}
 		13                         {$SQLVer = "SQL Server 2016"; Break}
 		14                         {$SQLVer = "SQL Server 2017"; Break}
+		15                         {$SQLVer = "SQL Server 2019"; Break}
 		Default                    {$SQLVer = "Unable to determine SQL Server version. Major: $($Major) Minor: $($Minor) Edition: $($SQLEdition)"; Break}
 	}
 
@@ -28335,6 +28663,7 @@ Function GetDBCompatibilityLevel
 		https://www.spiria.com/en/blog/web-applications/understanding-sql-server-compatibility-levels
 		
 		Database Compatibility Level	Description
+		150								SQL Server 2019
 		140								SQL Server 2017
 		130								SQL Server 2016	
 		120								SQL Server 2014	
@@ -28347,6 +28676,7 @@ Function GetDBCompatibilityLevel
 	$tmp = ""
 	Switch($DBCompat)
 	{
+		"150"			{$tmp = "SQL Server 2019"}
 		"140"			{$tmp = "SQL Server 2017"}
 		"130"			{$tmp = "SQL Server 2016"}
 		"120"			{$tmp = "SQL Server 2014"}
@@ -28354,6 +28684,7 @@ Function GetDBCompatibilityLevel
 		"100"			{$tmp = "SQL Server 2008"}
 		"90"			{$tmp = "SQL Server 2005"}
 		"80"			{$tmp = "SQL Server 2000"}
+		"Version150"	{$tmp = "SQL Server 2019"}
 		"Version140"	{$tmp = "SQL Server 2017"}
 		"Version130"	{$tmp = "SQL Server 2016"}
 		"Version120"	{$tmp = "SQL Server 2014"}
@@ -28362,6 +28693,14 @@ Function GetDBCompatibilityLevel
 		"Version90"		{$tmp = "SQL Server 2005"}
 		"Version80"		{$tmp = "SQL Server 2000"}
 		Default			{$tmp = "Unable to determine Database Compatibility Level: $DBCompat"}
+	}
+	
+	#now do a specific test for Azure SQL
+	#https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql-compatibility-level?view=sql-server-2017
+	
+	If($Major -eq 12 -and (($DBCompat -eq 130 -or $DBCompat -eq "Version130") -or ($DBCompat -eq 140 -or $DBCompat -eq "Version140") -or ($DBCompat -eq 150 -or $DBCompat -eq "Version150")))
+	{
+		$tmp = "Azure SQL Database"
 	}
 	
 	Return $tmp
@@ -29388,96 +29727,96 @@ Function OutputDatastores
 		WriteHTMLLine 2 0 "Datastores"
 		
 		$rowdata = @()
-		$columnHeaders = @("Datastore",($htmlsilver -bor $htmlbold),"Site",$htmlwhite)
-		$rowdata += @(,("Database Name",($htmlsilver -bor $htmlbold),$ConfigDatabaseName,$htmlwhite))
-		$rowdata += @(,("Availability Database Synchronization State",($htmlsilver -bor $htmlbold),$ConfigDBAvailabilityDatabaseSynchronizationState,$htmlwhite))
-		$rowdata += @(,("Availability Group Name",($htmlsilver -bor $htmlbold),$ConfigDBAvailabilityGroupName,$htmlwhite))
-		$rowdata += @(,("Collation",($htmlsilver -bor $htmlbold),$ConfigDBCollation,$htmlwhite))
-		$rowdata += @(,("Compatibility Level",($htmlsilver -bor $htmlbold),$ConfigDBCompatibilityLevel,$htmlwhite))
-		$rowdata += @(,("Create Date",($htmlsilver -bor $htmlbold),$ConfigDBCreateDate,$htmlwhite))
-		$rowdata += @(,("Database Size",($htmlsilver -bor $htmlbold),$ConfigDBSize,$htmlwhite))
-		$rowdata += @(,("Last Backup Date",($htmlsilver -bor $htmlbold),$ConfigDBLastBackupDate,$htmlwhite))
-		$rowdata += @(,("Last Log Backup Date",($htmlsilver -bor $htmlbold),$ConfigDBLastLogBackupDate,$htmlwhite))
-		$rowdata += @(,("Mirror Server Address",($htmlsilver -bor $htmlbold),$ConfigSQLServerMirrorName,$htmlwhite))
-		$rowdata += @(,("Mirror Server IP Address",($htmlsilver -bor $htmlbold),$ConfigSQLServerMirrorNameIPAddress,$htmlwhite))
-		$rowdata += @(,("Mirroring Partner",($htmlsilver -bor $htmlbold),$ConfigDBMirroringPartner,$htmlwhite))
-		$rowdata += @(,("Mirroring Partner IP Address",($htmlsilver -bor $htmlbold),$ConfigDBMirroringPartnerIPAddress,$htmlwhite))
-		$rowdata += @(,("Mirroring Partner Instance",($htmlsilver -bor $htmlbold),$ConfigDBMirroringPartnerInstance,$htmlwhite))
-		$rowdata += @(,("Mirroring Safety Level",($htmlsilver -bor $htmlbold),$ConfigDBMirroringSafetyLevel,$htmlwhite))
-		$rowdata += @(,("Mirroring Status",($htmlsilver -bor $htmlbold),$ConfigDBMirroringStatus,$htmlwhite))
-		$rowdata += @(,("Mirroring Witness",($htmlsilver -bor $htmlbold),$ConfigDBMirroringWitness,$htmlwhite))
-		$rowdata += @(,("Mirroring Witness IP Address",($htmlsilver -bor $htmlbold),$ConfigDBMirroringWitnessIPAddress,$htmlwhite))
-		$rowdata += @(,("Mirroring Witness Status",($htmlsilver -bor $htmlbold),$ConfigDBMirroringWitnessStatus,$htmlwhite))
-		$rowdata += @(,("Parent",($htmlsilver -bor $htmlbold),$ConfigDBParent,$htmlwhite))
-		$rowdata += @(,("Read-Committed Snapshot",($htmlsilver -bor $htmlbold),$ConfigDBReadCommittedSnapshot,$htmlwhite))
-		$rowdata += @(,("Recovery Model",($htmlsilver -bor $htmlbold),$ConfigDBRecoveryModel,$htmlwhite))
-		$rowdata += @(,("Server Address",($htmlsilver -bor $htmlbold),$ConfigSQLServerPrincipalName,$htmlwhite))
-		$rowdata += @(,("Server IP Address",($htmlsilver -bor $htmlbold),$ConfigSQLServerPrincipalNameIPAddress,$htmlwhite))
-		$rowdata += @(,("SQL Server Version",($htmlsilver -bor $htmlbold),$ConfigDBSQLVersion,$htmlwhite))
+		$columnHeaders = @("Datastore",($global:htmlsb),"Site",$htmlwhite)
+		$rowdata += @(,("Database Name",($global:htmlsb),$ConfigDatabaseName,$htmlwhite))
+		$rowdata += @(,("Availability Database Synchronization State",($global:htmlsb),$ConfigDBAvailabilityDatabaseSynchronizationState,$htmlwhite))
+		$rowdata += @(,("Availability Group Name",($global:htmlsb),$ConfigDBAvailabilityGroupName,$htmlwhite))
+		$rowdata += @(,("Collation",($global:htmlsb),$ConfigDBCollation,$htmlwhite))
+		$rowdata += @(,("Compatibility Level",($global:htmlsb),$ConfigDBCompatibilityLevel,$htmlwhite))
+		$rowdata += @(,("Create Date",($global:htmlsb),$ConfigDBCreateDate,$htmlwhite))
+		$rowdata += @(,("Database Size",($global:htmlsb),$ConfigDBSize,$htmlwhite))
+		$rowdata += @(,("Last Backup Date",($global:htmlsb),$ConfigDBLastBackupDate,$htmlwhite))
+		$rowdata += @(,("Last Log Backup Date",($global:htmlsb),$ConfigDBLastLogBackupDate,$htmlwhite))
+		$rowdata += @(,("Mirror Server Address",($global:htmlsb),$ConfigSQLServerMirrorName,$htmlwhite))
+		$rowdata += @(,("Mirror Server IP Address",($global:htmlsb),$ConfigSQLServerMirrorNameIPAddress,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner",($global:htmlsb),$ConfigDBMirroringPartner,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner IP Address",($global:htmlsb),$ConfigDBMirroringPartnerIPAddress,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner Instance",($global:htmlsb),$ConfigDBMirroringPartnerInstance,$htmlwhite))
+		$rowdata += @(,("Mirroring Safety Level",($global:htmlsb),$ConfigDBMirroringSafetyLevel,$htmlwhite))
+		$rowdata += @(,("Mirroring Status",($global:htmlsb),$ConfigDBMirroringStatus,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness",($global:htmlsb),$ConfigDBMirroringWitness,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness IP Address",($global:htmlsb),$ConfigDBMirroringWitnessIPAddress,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness Status",($global:htmlsb),$ConfigDBMirroringWitnessStatus,$htmlwhite))
+		$rowdata += @(,("Parent",($global:htmlsb),$ConfigDBParent,$htmlwhite))
+		$rowdata += @(,("Read-Committed Snapshot",($global:htmlsb),$ConfigDBReadCommittedSnapshot,$htmlwhite))
+		$rowdata += @(,("Recovery Model",($global:htmlsb),$ConfigDBRecoveryModel,$htmlwhite))
+		$rowdata += @(,("Server Address",($global:htmlsb),$ConfigSQLServerPrincipalName,$htmlwhite))
+		$rowdata += @(,("Server IP Address",($global:htmlsb),$ConfigSQLServerPrincipalNameIPAddress,$htmlwhite))
+		$rowdata += @(,("SQL Server Version",($global:htmlsb),$ConfigDBSQLVersion,$htmlwhite))
 		$msg = ""
 		$columnWidths = @("250","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 		WriteHTMLLine 0 0 ""
 
 		$rowdata = @()
-		$columnHeaders = @("Datastore",($htmlsilver -bor $htmlbold),"Logging",$htmlwhite)
-		$rowdata += @(,("Database Name",($htmlsilver -bor $htmlbold),$LogDatabaseName,$htmlwhite))
-		$rowdata += @(,("Availability Database Synchronization State",($htmlsilver -bor $htmlbold),$LogDBAvailabilityDatabaseSynchronizationState,$htmlwhite))
-		$rowdata += @(,("Availability Group Name",($htmlsilver -bor $htmlbold),$LogDBAvailabilityGroupName,$htmlwhite))
-		$rowdata += @(,("Collation",($htmlsilver -bor $htmlbold),$LogDBCollation,$htmlwhite))
-		$rowdata += @(,("Compatibility Level",($htmlsilver -bor $htmlbold),$LogDBCompatibilityLevel,$htmlwhite))
-		$rowdata += @(,("Create Date",($htmlsilver -bor $htmlbold),$LogDBCreateDate,$htmlwhite))
-		$rowdata += @(,("Database Size",($htmlsilver -bor $htmlbold),$LogDBSize,$htmlwhite))
-		$rowdata += @(,("Last Backup Date",($htmlsilver -bor $htmlbold),$LogDBLastBackupDate,$htmlwhite))
-		$rowdata += @(,("Last Log Backup Date",($htmlsilver -bor $htmlbold),$LogDBLastLogBackupDate,$htmlwhite))
-		$rowdata += @(,("Mirror Server Address",($htmlsilver -bor $htmlbold),$LogSQLServerMirrorName,$htmlwhite))
-		$rowdata += @(,("Mirror Server IP Address",($htmlsilver -bor $htmlbold),$LogSQLServerMirrorNameIPAddress,$htmlwhite))
-		$rowdata += @(,("Mirroring Partner",($htmlsilver -bor $htmlbold),$LogDBMirroringPartner,$htmlwhite))
-		$rowdata += @(,("Mirroring Partner IP Address",($htmlsilver -bor $htmlbold),$LogDBMirroringPartnerIPAddress,$htmlwhite))
-		$rowdata += @(,("Mirroring Partner Instance",($htmlsilver -bor $htmlbold),$LogDBMirroringPartnerInstance,$htmlwhite))
-		$rowdata += @(,("Mirroring Safety Level",($htmlsilver -bor $htmlbold),$LogDBMirroringSafetyLevel,$htmlwhite))
-		$rowdata += @(,("Mirroring Status",($htmlsilver -bor $htmlbold),$LogDBMirroringStatus,$htmlwhite))
-		$rowdata += @(,("Mirroring Witness",($htmlsilver -bor $htmlbold),$LogDBMirroringWitness,$htmlwhite))
-		$rowdata += @(,("Mirroring Witness IP Address",($htmlsilver -bor $htmlbold),$LogDBMirroringWitnessIPAddress,$htmlwhite))
-		$rowdata += @(,("Mirroring Witness Status",($htmlsilver -bor $htmlbold),$LogDBMirroringWitnessStatus,$htmlwhite))
-		$rowdata += @(,("Parent",($htmlsilver -bor $htmlbold),$LogDBParent,$htmlwhite))
-		$rowdata += @(,("Read-Committed Snapshot",($htmlsilver -bor $htmlbold),$LogDBReadCommittedSnapshot,$htmlwhite))
-		$rowdata += @(,("Recovery Model",($htmlsilver -bor $htmlbold),$LogDBRecoveryModel,$htmlwhite))
-		$rowdata += @(,("Server Address",($htmlsilver -bor $htmlbold),$LogSQLServerPrincipalName,$htmlwhite))
-		$rowdata += @(,("Server IP Address",($htmlsilver -bor $htmlbold),$LogSQLServerPrincipalNameIPAddress,$htmlwhite))
-		$rowdata += @(,("SQL Server Version",($htmlsilver -bor $htmlbold),$LogDBSQLVersion,$htmlwhite))
+		$columnHeaders = @("Datastore",($global:htmlsb),"Logging",$htmlwhite)
+		$rowdata += @(,("Database Name",($global:htmlsb),$LogDatabaseName,$htmlwhite))
+		$rowdata += @(,("Availability Database Synchronization State",($global:htmlsb),$LogDBAvailabilityDatabaseSynchronizationState,$htmlwhite))
+		$rowdata += @(,("Availability Group Name",($global:htmlsb),$LogDBAvailabilityGroupName,$htmlwhite))
+		$rowdata += @(,("Collation",($global:htmlsb),$LogDBCollation,$htmlwhite))
+		$rowdata += @(,("Compatibility Level",($global:htmlsb),$LogDBCompatibilityLevel,$htmlwhite))
+		$rowdata += @(,("Create Date",($global:htmlsb),$LogDBCreateDate,$htmlwhite))
+		$rowdata += @(,("Database Size",($global:htmlsb),$LogDBSize,$htmlwhite))
+		$rowdata += @(,("Last Backup Date",($global:htmlsb),$LogDBLastBackupDate,$htmlwhite))
+		$rowdata += @(,("Last Log Backup Date",($global:htmlsb),$LogDBLastLogBackupDate,$htmlwhite))
+		$rowdata += @(,("Mirror Server Address",($global:htmlsb),$LogSQLServerMirrorName,$htmlwhite))
+		$rowdata += @(,("Mirror Server IP Address",($global:htmlsb),$LogSQLServerMirrorNameIPAddress,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner",($global:htmlsb),$LogDBMirroringPartner,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner IP Address",($global:htmlsb),$LogDBMirroringPartnerIPAddress,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner Instance",($global:htmlsb),$LogDBMirroringPartnerInstance,$htmlwhite))
+		$rowdata += @(,("Mirroring Safety Level",($global:htmlsb),$LogDBMirroringSafetyLevel,$htmlwhite))
+		$rowdata += @(,("Mirroring Status",($global:htmlsb),$LogDBMirroringStatus,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness",($global:htmlsb),$LogDBMirroringWitness,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness IP Address",($global:htmlsb),$LogDBMirroringWitnessIPAddress,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness Status",($global:htmlsb),$LogDBMirroringWitnessStatus,$htmlwhite))
+		$rowdata += @(,("Parent",($global:htmlsb),$LogDBParent,$htmlwhite))
+		$rowdata += @(,("Read-Committed Snapshot",($global:htmlsb),$LogDBReadCommittedSnapshot,$htmlwhite))
+		$rowdata += @(,("Recovery Model",($global:htmlsb),$LogDBRecoveryModel,$htmlwhite))
+		$rowdata += @(,("Server Address",($global:htmlsb),$LogSQLServerPrincipalName,$htmlwhite))
+		$rowdata += @(,("Server IP Address",($global:htmlsb),$LogSQLServerPrincipalNameIPAddress,$htmlwhite))
+		$rowdata += @(,("SQL Server Version",($global:htmlsb),$LogDBSQLVersion,$htmlwhite))
 		$msg = ""
 		$columnWidths = @("250","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 		WriteHTMLLine 0 0 ""
 
 		$rowdata = @()
-		$columnHeaders = @("Datastore",($htmlsilver -bor $htmlbold),"Monitoring",$htmlwhite)
-		$rowdata += @(,("Database Name",($htmlsilver -bor $htmlbold),$MonitorDatabaseName,$htmlwhite))
-		$rowdata += @(,("Availability Database Synchronization State",($htmlsilver -bor $htmlbold),$MonitorDBAvailabilityDatabaseSynchronizationState,$htmlwhite))
-		$rowdata += @(,("Availability Group Name",($htmlsilver -bor $htmlbold),$MonitorDBAvailabilityGroupName,$htmlwhite))
-		$rowdata += @(,("Collation",($htmlsilver -bor $htmlbold),$MonitorDBCollation,$htmlwhite))
-		$rowdata += @(,("Compatibility Level",($htmlsilver -bor $htmlbold),$MonitorDBCompatibilityLevel,$htmlwhite))
-		$rowdata += @(,("Create Date",($htmlsilver -bor $htmlbold),$MonitorDBCreateDate,$htmlwhite))
-		$rowdata += @(,("Database Size",($htmlsilver -bor $htmlbold),$MonitorDBSize,$htmlwhite))
-		$rowdata += @(,("Last Backup Date",($htmlsilver -bor $htmlbold),$MonitorDBLastBackupDate,$htmlwhite))
-		$rowdata += @(,("Last Log Backup Date",($htmlsilver -bor $htmlbold),$MonitorDBLastLogBackupDate,$htmlwhite))
-		$rowdata += @(,("Mirror Server Address",($htmlsilver -bor $htmlbold),$MonitorSQLServerMirrorName,$htmlwhite))
-		$rowdata += @(,("Mirror Server IP Address",($htmlsilver -bor $htmlbold),$MonitorSQLServerMirrorNameIPAddress,$htmlwhite))
-		$rowdata += @(,("Mirroring Partner",($htmlsilver -bor $htmlbold),$MonitorDBMirroringPartner,$htmlwhite))
-		$rowdata += @(,("Mirroring Partner IP Address",($htmlsilver -bor $htmlbold),$MonitorDBMirroringPartnerIPAddress,$htmlwhite))
-		$rowdata += @(,("Mirroring Partner Instance",($htmlsilver -bor $htmlbold),$MonitorDBMirroringPartnerInstance,$htmlwhite))
-		$rowdata += @(,("Mirroring Safety Level",($htmlsilver -bor $htmlbold),$MonitorDBMirroringSafetyLevel,$htmlwhite))
-		$rowdata += @(,("Mirroring Status",($htmlsilver -bor $htmlbold),$MonitorDBMirroringStatus,$htmlwhite))
-		$rowdata += @(,("Mirroring Witness",($htmlsilver -bor $htmlbold),$MonitorDBMirroringWitness,$htmlwhite))
-		$rowdata += @(,("Mirroring Witness IP Address",($htmlsilver -bor $htmlbold),$MonitorDBMirroringWitnessIPAddress,$htmlwhite))
-		$rowdata += @(,("Mirroring Witness Status",($htmlsilver -bor $htmlbold),$MonitorDBMirroringWitnessStatus,$htmlwhite))
-		$rowdata += @(,("Parent",($htmlsilver -bor $htmlbold),$MonitorDBParent,$htmlwhite))
-		$rowdata += @(,("Read-Committed Snapshot",($htmlsilver -bor $htmlbold),$MonitorDBReadCommittedSnapshot,$htmlwhite))
-		$rowdata += @(,("Recovery Model",($htmlsilver -bor $htmlbold),$MonitorDBRecoveryModel,$htmlwhite))
-		$rowdata += @(,("Server Address",($htmlsilver -bor $htmlbold),$MonitorSQLServerPrincipalName,$htmlwhite))
-		$rowdata += @(,("Server IP Address",($htmlsilver -bor $htmlbold),$MonitorSQLServerPrincipalNameIPAddress,$htmlwhite))
-		$rowdata += @(,("SQL Server Version",($htmlsilver -bor $htmlbold),$MonitorDBSQLVersion,$htmlwhite))
+		$columnHeaders = @("Datastore",($global:htmlsb),"Monitoring",$htmlwhite)
+		$rowdata += @(,("Database Name",($global:htmlsb),$MonitorDatabaseName,$htmlwhite))
+		$rowdata += @(,("Availability Database Synchronization State",($global:htmlsb),$MonitorDBAvailabilityDatabaseSynchronizationState,$htmlwhite))
+		$rowdata += @(,("Availability Group Name",($global:htmlsb),$MonitorDBAvailabilityGroupName,$htmlwhite))
+		$rowdata += @(,("Collation",($global:htmlsb),$MonitorDBCollation,$htmlwhite))
+		$rowdata += @(,("Compatibility Level",($global:htmlsb),$MonitorDBCompatibilityLevel,$htmlwhite))
+		$rowdata += @(,("Create Date",($global:htmlsb),$MonitorDBCreateDate,$htmlwhite))
+		$rowdata += @(,("Database Size",($global:htmlsb),$MonitorDBSize,$htmlwhite))
+		$rowdata += @(,("Last Backup Date",($global:htmlsb),$MonitorDBLastBackupDate,$htmlwhite))
+		$rowdata += @(,("Last Log Backup Date",($global:htmlsb),$MonitorDBLastLogBackupDate,$htmlwhite))
+		$rowdata += @(,("Mirror Server Address",($global:htmlsb),$MonitorSQLServerMirrorName,$htmlwhite))
+		$rowdata += @(,("Mirror Server IP Address",($global:htmlsb),$MonitorSQLServerMirrorNameIPAddress,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner",($global:htmlsb),$MonitorDBMirroringPartner,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner IP Address",($global:htmlsb),$MonitorDBMirroringPartnerIPAddress,$htmlwhite))
+		$rowdata += @(,("Mirroring Partner Instance",($global:htmlsb),$MonitorDBMirroringPartnerInstance,$htmlwhite))
+		$rowdata += @(,("Mirroring Safety Level",($global:htmlsb),$MonitorDBMirroringSafetyLevel,$htmlwhite))
+		$rowdata += @(,("Mirroring Status",($global:htmlsb),$MonitorDBMirroringStatus,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness",($global:htmlsb),$MonitorDBMirroringWitness,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness IP Address",($global:htmlsb),$MonitorDBMirroringWitnessIPAddress,$htmlwhite))
+		$rowdata += @(,("Mirroring Witness Status",($global:htmlsb),$MonitorDBMirroringWitnessStatus,$htmlwhite))
+		$rowdata += @(,("Parent",($global:htmlsb),$MonitorDBParent,$htmlwhite))
+		$rowdata += @(,("Read-Committed Snapshot",($global:htmlsb),$MonitorDBReadCommittedSnapshot,$htmlwhite))
+		$rowdata += @(,("Recovery Model",($global:htmlsb),$MonitorDBRecoveryModel,$htmlwhite))
+		$rowdata += @(,("Server Address",($global:htmlsb),$MonitorSQLServerPrincipalName,$htmlwhite))
+		$rowdata += @(,("Server IP Address",($global:htmlsb),$MonitorSQLServerPrincipalNameIPAddress,$htmlwhite))
+		$rowdata += @(,("SQL Server Version",($global:htmlsb),$MonitorDBSQLVersion,$htmlwhite))
 		$msg = ""
 		$columnWidths = @("250","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
@@ -29485,28 +29824,28 @@ Function OutputDatastores
 
 		WriteHTMLLine 3 0 "Monitoring Database Details"
 		$rowdata = @()
-		$columnHeaders = @("Collect Hotfix Data",($htmlsilver -bor $htmlbold),$MonitorCollectHotfix,$htmlwhite)
-		$rowdata += @(,('Data Collection',($htmlsilver -bor $htmlbold),$MonitorDataCollection,$htmlwhite))
-		$rowdata += @(,('Detail SQL Output',($htmlsilver -bor $htmlbold),$MonitorDetailedSQL,$htmlwhite))
+		$columnHeaders = @("Collect Hotfix Data",($global:htmlsb),$MonitorCollectHotfix,$htmlwhite)
+		$rowdata += @(,('Data Collection',($global:htmlsb),$MonitorDataCollection,$htmlwhite))
+		$rowdata += @(,('Detail SQL Output',($global:htmlsb),$MonitorDetailedSQL,$htmlwhite))
 		If($MonitorConfig.ContainsKey("EnableDayLevelGranularityProcessUtilization"))
 		{
-			$rowdata += @(,('Enable Day Level Granularity',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+			$rowdata += @(,('Enable Day Level Granularity',($global:htmlsb),$MonitorConfig.FullPollStartHour,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("EnableHourLevelGranularityProcessUtilization"))
 		{
-			$rowdata += @(,('Enable Hour Level Granularity',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+			$rowdata += @(,('Enable Hour Level Granularity',($global:htmlsb),$MonitorConfig.FullPollStartHour,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("EnableMinLevelGranularityProcessUtilization"))
 		{
-			$rowdata += @(,('Enable Minute Level Granularity',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+			$rowdata += @(,('Enable Minute Level Granularity',($global:htmlsb),$MonitorConfig.FullPollStartHour,$htmlwhite))
 		}
-		$rowdata += @(,('Full Poll Start Hour',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+		$rowdata += @(,('Full Poll Start Hour',($global:htmlsb),$MonitorConfig.FullPollStartHour,$htmlwhite))
 		If($MonitorConfig.ContainsKey("MonitorQueryTimeoutSeconds"))
 		{
-			$rowdata += @(,('Monitor Query Timeout Seconds',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
+			$rowdata += @(,('Monitor Query Timeout Seconds',($global:htmlsb),$MonitorConfig.FullPollStartHour,$htmlwhite))
 		}
-		$rowdata += @(,('Resolution Poll Time Hours',($htmlsilver -bor $htmlbold),$MonitorConfig.FullPollStartHour,$htmlwhite))
-		$rowdata += @(,('Sync Poll Time Hours',($htmlsilver -bor $htmlbold),$MonitorConfig.SyncPollTimeHours,$htmlwhite))
+		$rowdata += @(,('Resolution Poll Time Hours',($global:htmlsb),$MonitorConfig.FullPollStartHour,$htmlwhite))
+		$rowdata += @(,('Sync Poll Time Hours',($global:htmlsb),$MonitorConfig.SyncPollTimeHours,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("200","50")
@@ -29520,94 +29859,94 @@ Function OutputDatastores
 		{
 			If($ch -eq $False)
 			{
-				$columnHeaders = @('Application Errors',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationErrorsRetentionDays,$htmlwhite)
+				$columnHeaders = @('Application Errors',($global:htmlsb),$MonitorConfig.GroomApplicationErrorsRetentionDays,$htmlwhite)
 				$ch = $True
 			}
 			Else
 			{
-				$rowdata += @(,('Application Errors',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationErrorsRetentionDays,$htmlwhite))
+				$rowdata += @(,('Application Errors',($global:htmlsb),$MonitorConfig.GroomApplicationErrorsRetentionDays,$htmlwhite))
 			}
 		}
 		If($MonitorConfig.ContainsKey("GroomApplicationFaultsRetentionDays"))
 		{
 			If($ch -eq $False)
 			{
-				$columnHeaders = @('Application Faults',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationFaultsRetentionDays,$htmlwhite)
+				$columnHeaders = @('Application Faults',($global:htmlsb),$MonitorConfig.GroomApplicationFaultsRetentionDays,$htmlwhite)
 				$ch = $True
 			}
 			Else
 			{
-				$rowdata += @(,('Application Faults',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationFaultsRetentionDays,$htmlwhite))
+				$rowdata += @(,('Application Faults',($global:htmlsb),$MonitorConfig.GroomApplicationFaultsRetentionDays,$htmlwhite))
 			}
 		}
 		If($ch -eq $False)
 		{
-			$columnHeaders = @('Application Instance',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationInstanceRetentionDays,$htmlwhite)
+			$columnHeaders = @('Application Instance',($global:htmlsb),$MonitorConfig.GroomApplicationInstanceRetentionDays,$htmlwhite)
 			$ch = $True
 		}
 		Else
 		{
-			$rowdata += @(,('Application Instance',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomApplicationInstanceRetentionDays,$htmlwhite))
+			$rowdata += @(,('Application Instance',($global:htmlsb),$MonitorConfig.GroomApplicationInstanceRetentionDays,$htmlwhite))
 		}
-		$rowdata += @(,('Deleted',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomDeletedRetentionDays,$htmlwhite))
-		$rowdata += @(,('Failures',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomFailuresRetentionDays,$htmlwhite))
+		$rowdata += @(,('Deleted',($global:htmlsb),$MonitorConfig.GroomDeletedRetentionDays,$htmlwhite))
+		$rowdata += @(,('Failures',($global:htmlsb),$MonitorConfig.GroomFailuresRetentionDays,$htmlwhite))
 		If($MonitorConfig.ContainsKey("GroomHourlyRetentionDays"))
 		{
-			$rowdata += @(,('Hourly Retention',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomHourlyRetentionDays,$htmlwhite))
+			$rowdata += @(,('Hourly Retention',($global:htmlsb),$MonitorConfig.GroomHourlyRetentionDays,$htmlwhite))
 		}
-		$rowdata += @(,('Load Indexes',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomLoadIndexesRetentionDays,$htmlwhite))
-		$rowdata += @(,('Machine Hotfix Log',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMachineHotfixLogRetentionDays,$htmlwhite))
+		$rowdata += @(,('Load Indexes',($global:htmlsb),$MonitorConfig.GroomLoadIndexesRetentionDays,$htmlwhite))
+		$rowdata += @(,('Machine Hotfix Log',($global:htmlsb),$MonitorConfig.GroomMachineHotfixLogRetentionDays,$htmlwhite))
 		If($MonitorConfig.ContainsKey("GroomMachineMetricDataRetentionDays"))
 		{
-			$rowdata += @(,('Machine Metric Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMachineMetricDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Machine Metric Data',($global:htmlsb),$MonitorConfig.GroomMachineMetricDataRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomMachineMetricDaySummaryDataRetentionDays"))
 		{
-			$rowdata += @(,('Machine Metric Day Summary',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Machine Metric Day Summary',($global:htmlsb),$MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays,$htmlwhite))
 		}
-		$rowdata += @(,('Minute',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomMinuteRetentionDays,$htmlwhite))
+		$rowdata += @(,('Minute',($global:htmlsb),$MonitorConfig.GroomMinuteRetentionDays,$htmlwhite))
 		If($MonitorConfig.ContainsKey("GroomNotificationLogRetentionDays"))
 		{
-			$rowdata += @(,('Notification',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomNotificationLogRetentionDays,$htmlwhite))
+			$rowdata += @(,('Notification',($global:htmlsb),$MonitorConfig.GroomNotificationLogRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomProcessUsageDayDataRetentionDays"))
 		{
-			$rowdata += @(,('Process Usage Day Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomProcessUsageDayDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Process Usage Day Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageDayDataRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomProcessUsageHourDataRetentionDays"))
 		{
-			$rowdata += @(,('Process Usage Hour Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomProcessUsageHourDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Process Usage Hour Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageHourDataRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomProcessUsageMinuteDataRetentionDays"))
 		{
-			$rowdata += @(,('Process Usage Minute Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomProcessUsageMinuteDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Process Usage Minute Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageMinuteDataRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomProcessUsageRawDataRetentionDays"))
 		{
-			$rowdata += @(,('Process Usage Raw Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomProcessUsageRawDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Process Usage Raw Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageRawDataRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomResourceUsageDayDataRetentionDays"))
 		{
-			$rowdata += @(,('Resource Usage Day Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomResourceUsageDayDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Resource Usage Day Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageDayDataRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomResourceUsageHourDataRetentionDays"))
 		{
-			$rowdata += @(,('Resource Usage Hour Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomResourceUsageHourDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Resource Usage Hour Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageHourDataRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomResourceUsageMinuteDataRetentionDays"))
 		{
-			$rowdata += @(,('Resource Usage Minute Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomResourceUsageMinuteDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Resource Usage Minute Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageMinuteDataRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomResourceUsageRawDataRetentionDays"))
 		{
-			$rowdata += @(,('Resource Usage Raw Data',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomResourceUsageRawDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Resource Usage Raw Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageRawDataRetentionDays,$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomSessionMetricsDataRetentionDays"))
 		{
-			$rowdata += @(,('Session Metrics',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomSessionMetricsDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Session Metrics',($global:htmlsb),$MonitorConfig.GroomSessionMetricsDataRetentionDays,$htmlwhite))
 		}
-		$rowdata += @(,('Sessions',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomSessionsRetentionDays,$htmlwhite))
-		$rowdata += @(,('Summaries',($htmlsilver -bor $htmlbold),$MonitorConfig.GroomSummariesRetentionDays,$htmlwhite))
+		$rowdata += @(,('Sessions',($global:htmlsb),$MonitorConfig.GroomSessionsRetentionDays,$htmlwhite))
+		$rowdata += @(,('Summaries',($global:htmlsb),$MonitorConfig.GroomSummariesRetentionDays,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("200","50")
@@ -29872,10 +30211,10 @@ Function OutputAdministrators
 			$xType,$htmlwhite))
 		}
 		$columnHeaders = @(
-		'Name',($htmlsilver -bor $htmlbold),
-		'Scope',($htmlsilver -bor $htmlbold),
-		'Role',($htmlsilver -bor $htmlbold),
-		'Status',($htmlsilver -bor $htmlbold))
+		'Name',($global:htmlsb),
+		'Scope',($global:htmlsb),
+		'Role',($global:htmlsb),
+		'Status',($global:htmlsb))
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -29961,8 +30300,8 @@ Function OutputScopes
 			$Scope.Description,$htmlwhite))
 		}
 		$columnHeaders = @(
-		'Name',($htmlsilver -bor $htmlbold),
-		'Description',($htmlsilver -bor $htmlbold))
+		'Name',($global:htmlsb),
+		'Description',($global:htmlsb))
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -30151,7 +30490,7 @@ Function OutputScopeObjects
 				}
 				$msg = ""
 				#V2.10 added $columnHeaders
-				$columnHeaders = @('Name',($htmlsilver -bor $htmlbold),'Description',($htmlsilver -bor $htmlbold))
+				$columnHeaders = @('Name',($global:htmlsb),'Description',($global:htmlsb))
 				$ColumnWidths = @("250","250")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $ColumnWidths -tablewidth "500"
 				WriteHTMLLine 0 0 " "
@@ -30172,7 +30511,7 @@ Function OutputScopeObjects
 				}
 				$msg = ""
 				#V2.10 added $columnHeaders
-				$columnHeaders = @('Name',($htmlsilver -bor $htmlbold),'Description',($htmlsilver -bor $htmlbold))
+				$columnHeaders = @('Name',($global:htmlsb),'Description',($global:htmlsb))
 				$ColumnWidths = @("250","250")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $ColumnWidths -tablewidth "500"
 				WriteHTMLLine 0 0 " "
@@ -30193,7 +30532,7 @@ Function OutputScopeObjects
 				}
 				$msg = ""
 				#V2.10 added $columnHeaders
-				$columnHeaders = @('Name',($htmlsilver -bor $htmlbold),'Description',($htmlsilver -bor $htmlbold))
+				$columnHeaders = @('Name',($global:htmlsb),'Description',($global:htmlsb))
 				$ColumnWidths = @("250","250")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $ColumnWidths -tablewidth "500"
 				WriteHTMLLine 0 0 " "
@@ -30206,7 +30545,7 @@ Function GetScopeDG
 {
 	Param([object] $Scope)
 	
-	$DG = @()
+	$DG = New-Object System.Collections.ArrayList
 	#get delivery groups
 	If($Scope.Name -eq "All")
 	{
@@ -30226,11 +30565,11 @@ Function GetScopeDG
 	{
 		ForEach($Result in $Results)
 		{
-			$obj = New-Object -TypeName PSObject
-			$obj | Add-Member -MemberType NoteProperty -Name Name        -Value $Result.Name
-			$obj | Add-Member -MemberType NoteProperty -Name Description -Value $Result.Description
-			
-			$DG += $obj
+			$obj = [PSCustomObject] @{
+				Name        = $Result.Name			
+				Description = $Result.Description			
+			}
+			$null = $DG.Add($obj)
 		}
 	}
 
@@ -30242,7 +30581,7 @@ Function GetScopeMC
 	Param([object] $Scope)
 	
 	#get machine catalogs
-	$MC = @()
+	$MC = New-Object System.Collections.ArrayList
 	
 	If($Scope.Name -eq "All")
 	{
@@ -30262,11 +30601,11 @@ Function GetScopeMC
 	{
 		ForEach($Result in $Results)
 		{
-			$obj = New-Object -TypeName PSObject
-			$obj | Add-Member -MemberType NoteProperty -Name Name        -Value $Result.Name
-			$obj | Add-Member -MemberType NoteProperty -Name Description -Value $Result.Description
-			
-			$MC += $obj
+			$obj = [PSCustomObject] @{
+				Name        = $Result.Name			
+				Description = $Result.Description			
+			}
+			$null = $MC.Add($obj)
 		}
 	}
 
@@ -30278,7 +30617,7 @@ Function GetScopeHyp
 	Param([object] $Scope)
 	
 	#get hypervisor connections
-	$Hyp = @()
+	$Hyp = New-Object System.Collections.ArrayList
 	
 	If($Scope.Name -eq "All")
 	{
@@ -30298,11 +30637,11 @@ Function GetScopeHyp
 	{
 		ForEach($Result in $Results)
 		{
-			$obj = New-Object -TypeName PSObject
-			$obj | Add-Member -MemberType NoteProperty -Name Name        -Value $Result.ObjectName
-			$obj | Add-Member -MemberType NoteProperty -Name Description -Value $Result.Description
-			
-			$Hyp += $obj
+			$obj = [PSCustomObject] @{
+				Name        = $Result.ObjectName			
+				Description = $Result.Description			
+			}
+			$null = $Hyp.Add($obj)
 		}
 	}
 
@@ -30456,9 +30795,9 @@ Function OutputScopeAdministrators
 					$xEnabled,$htmlwhite))
 				}
 				$columnHeaders = @(
-				'Administrator Name',($htmlsilver -bor $htmlbold),
-				'Role',($htmlsilver -bor $htmlbold),
-				'Status',($htmlsilver -bor $htmlbold))
+				'Administrator Name',($global:htmlsb),
+				'Role',($global:htmlsb),
+				'Status',($global:htmlsb))
 
 				$msg = ""
 				$columnWidths = @("220","225","55")
@@ -30595,9 +30934,9 @@ Function OutputRoles
 			$xType,$htmlwhite))
 		}
 		$columnHeaders = @(
-		'Role',($htmlsilver -bor $htmlbold),
-		'Description',($htmlsilver -bor $htmlbold),
-		'Type',($htmlsilver -bor $htmlbold))
+		'Role',($global:htmlsb),
+		'Description',($global:htmlsb),
+		'Type',($global:htmlsb))
 
 		$msg = ""
 		$columnWidths = @("150","300","50")
@@ -30740,8 +31079,8 @@ Function OutputRoleDefinitions
 			}
 
 			$columnHeaders = @(
-			'Folder Name',($htmlsilver -bor $htmlbold),
-			'Permissions',($htmlsilver -bor $htmlbold))
+			'Folder Name',($global:htmlsb),
+			'Permissions',($global:htmlsb))
 
 			$msg = ""
 			$ColumnWidths = @("100","400")
@@ -31025,9 +31364,9 @@ Function OutputRoleAdministrators
 					$xEnabled,$htmlwhite))
 				}
 				$columnHeaders = @(
-				'Administrator Name',($htmlsilver -bor $htmlbold),
-				'Scope',($htmlsilver -bor $htmlbold),
-				'Status',($htmlsilver -bor $htmlbold))
+				'Administrator Name',($global:htmlsb),
+				'Scope',($global:htmlsb),
+				'Status',($global:htmlsb))
 
 				$msg = ""
 				$columnWidths = @("220","225","55")
@@ -31164,11 +31503,11 @@ Function OutputControllers
 		ElseIf($HTML)
 		{
 			$rowdata = @() #moved to here in V2.22
-			$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Controller.DNSName,$htmlwhite)
-			$rowdata += @(,('Version',($htmlsilver -bor $htmlbold),$Controller.ControllerVersion,$htmlwhite))
-			$rowdata += @(,('Last updated',($htmlsilver -bor $htmlbold),$Controller.LastActivityTime,$htmlwhite))
-			$rowdata += @(,('Registered desktops',($htmlsilver -bor $htmlbold),$Controller.DesktopsRegistered,$htmlwhite))
-			$rowdata += @(,('State',($htmlsilver -bor $htmlbold),$Controller.State,$htmlwhite)) #added in V2.22
+			$columnHeaders = @("Name",($global:htmlsb),$Controller.DNSName,$htmlwhite)
+			$rowdata += @(,('Version',($global:htmlsb),$Controller.ControllerVersion,$htmlwhite))
+			$rowdata += @(,('Last updated',($global:htmlsb),$Controller.LastActivityTime,$htmlwhite))
+			$rowdata += @(,('Registered desktops',($global:htmlsb),$Controller.DesktopsRegistered,$htmlwhite))
+			$rowdata += @(,('State',($global:htmlsb),$Controller.State,$htmlwhite)) #added in V2.22
 			$msg = ""
 			$columnWidths = @("100px","250px")
 			FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
@@ -31202,6 +31541,20 @@ Function OutputControllers
 				$results = Get-HotFix -computername $Controller.DNSName | Select-Object CSName,Caption,Description,HotFixID,InstalledBy,InstalledOn
 				$MSInstalledHotfixes = $results | Sort-Object HotFixID
 				$results = $Null
+
+				#V2.23 remove ooutput from here and use only in Appendix
+				ForEach($Hotfix in $MSInstalledHotfixes)
+				{
+					$obj1 = [PSCustomObject] @{
+						HotFixID    = $Hotfix.HotFixID						
+						CSName      = $Hotfix.CSName						
+						Caption     = $Hotfix.Caption						
+						Description = $Hotfix.Description						
+						InstalledBy = $Hotfix.InstalledBy						
+						InstalledOn = $Hotfix.InstalledOn						
+					}
+					$null = $Script:MSHotfixes.Add($obj1)
+				}
 			}
 			
 			Catch
@@ -31209,73 +31562,19 @@ Function OutputControllers
 				$GotMSHotfixes = $False
 			}
 			
-			If($MSWord -or $PDF)
+			If($GotMSHotfixes -eq $False)
 			{
-				Write-Verbose "$(Get-Date): `t`t`tOutput Microsoft hotfixes and updates"
-				If($GotMSHotfixes -eq $False)
+				If($MSWord -or $PDF)
 				{
 					WriteWordLine 0 0 "No installed Microsoft hotfixes or updates were found"
 				}
-				Else
-				{
-					#V2.23 remove ooutput from here and use only in Appendix
-					ForEach($Hotfix in $MSInstalledHotfixes)
-					{
-						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name HotFixID		-Value $Hotfix.HotFixID
-						$obj1 | Add-Member -MemberType NoteProperty -Name CSName		-Value $Hotfix.CSName
-						$obj1 | Add-Member -MemberType NoteProperty -Name Caption		-Value $Hotfix.Caption
-						$obj1 | Add-Member -MemberType NoteProperty -Name Description	-Value $Hotfix.Description
-						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledBy	-Value $Hotfix.InstalledBy
-						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledOn	-Value $Hotfix.InstalledOn
-						$Script:MSHotfixes.Add($obj1) > $Null
-					}
-				}
-			}
-			ElseIf($Text)
-			{
-				Write-Verbose "$(Get-Date): `t`t`tOutput Microsoft hotfixes and updates"
-				If($GotMSHotfixes -eq $False)
+				ElseIf($Text)
 				{
 					Line 1 "No installed Microsoft hotfixes or updates were found"
 				}
-				Else
-				{
-					#V2.23 remove ooutput from here and use only in Appendix
-					ForEach($Hotfix in $MSInstalledHotfixes)
-					{
-						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name CSName		-Value $Hotfix.CSName
-						$obj1 | Add-Member -MemberType NoteProperty -Name Caption		-Value $Hotfix.Caption
-						$obj1 | Add-Member -MemberType NoteProperty -Name Description	-Value $Hotfix.Description
-						$obj1 | Add-Member -MemberType NoteProperty -Name HotFixID		-Value $Hotfix.HotFixID
-						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledBy	-Value $Hotfix.InstalledBy
-						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledOn	-Value $Hotfix.InstalledOn
-						$Script:MSHotfixes.Add($obj1) > $Null
-					}
-				}
-			}
-			ElseIf($HTML)
-			{
-				Write-Verbose "$(Get-Date): `t`t`tOutput Microsoft hotfixes and updates"
-				If($GotMSHotfixes -eq $False)
+				ElseIf($HTML)
 				{
 					WriteHTMLLine 0 0 "No installed Microsoft hotfixes or updates were found"
-				}
-				Else
-				{
-					#V2.23 remove ooutput from here and use only in Appendix
-					ForEach($Hotfix in $MSInstalledHotfixes)
-					{
-						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name CSName		-Value $Hotfix.CSName
-						$obj1 | Add-Member -MemberType NoteProperty -Name Caption		-Value $Hotfix.Caption
-						$obj1 | Add-Member -MemberType NoteProperty -Name Description	-Value $Hotfix.Description
-						$obj1 | Add-Member -MemberType NoteProperty -Name HotFixID		-Value $Hotfix.HotFixID
-						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledBy	-Value $Hotfix.InstalledBy
-						$obj1 | Add-Member -MemberType NoteProperty -Name InstalledOn	-Value $Hotfix.InstalledOn
-						$Script:MSHotfixes.Add($obj1) > $Null
-					}
 				}
 			}
 			
@@ -31330,142 +31629,69 @@ Function OutputControllers
 				
 				$CtxComponents = $CtxComponents | Sort-Object DisplayName
 			}
-		
-			If($MSWord -or $PDF)
+			
+			If($GotCtxComponents)
 			{
-				Write-Verbose "$(Get-Date): `t`t`tOutput Citrix Installed Components"
-				If($GotCtxComponents -eq $False)
+				ForEach($Component in $CtxComponents)
+				{
+					$obj1 = [PSCustomObject] @{
+						DisplayName    = $Component.DisplayName						
+						DisplayVersion = $Component.DisplayVersion						
+						DDCName        = $Controller.DNSName						
+					}
+					$null = $Script:CtxInstalledComponents.Add($obj1)
+				}
+			}
+			Else
+			{
+				If($MSWord -or $PDF)
 				{
 					WriteWordLine 0 0 "No Citrix Installed Components were found"
 				}
-				Else
-				{
-					#V2.23 remove ooutput from here and use only in Appendix
-					ForEach($Component in $CtxComponents)
-					{
-						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName			-Value $Controller.DNSName
-						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName		-Value $Component.DisplayName
-						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayVersion	-Value $Component.DisplayVersion
-						$Script:CtxInstalledComponents.Add($obj1) > $Null
-					}
-				}
-			}
-			ElseIf($Text)
-			{
-				Write-Verbose "$(Get-Date): `t`t`tOutput Citrix Installed Components"
-				If($GotCtxComponents -eq $False)
+				ElseIf($Text)
 				{
 					Line 1 "No Citrix Installed Components were found"
 				}
-				Else
-				{
-					#V2.23 remove ooutput from here and use only in Appendix
-					ForEach($Component in $CtxComponents)
-					{
-						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName			-Value $Controller.DNSName
-						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName		-Value $Component.DisplayName
-						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayVersion	-Value $Component.DisplayVersion
-						$Script:CtxInstalledComponents.Add($obj1) > $Null
-					}
-				}
-			}
-			ElseIf($HTML)
-			{
-				Write-Verbose "$(Get-Date): `t`t`tOutput Citrix Installed Components"
-				If($GotCtxComponents -eq $False)
+				ElseIf($HTML)
 				{
 					WriteHTMLLine 0 0 "No Citrix Installed Components were found"
-				}
-				Else
-				{
-					#V2.23 remove ooutput from here and use only in Appendix
-					ForEach($Component in $CtxComponents)
-					{
-						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName			-Value $Controller.DNSName
-						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName		-Value $Component.DisplayName
-						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayVersion	-Value $Component.DisplayVersion
-						$Script:CtxInstalledComponents.Add($obj1) > $Null
-					}
 				}
 			}
 			
 			#added V2.22 get Windows installed Roles and Features
 			Write-Verbose "$(Get-Date): `t`t`tRetrieving Windows installed Roles and Features"
-			[bool]$GotWinComponents = $True
 			
 			$results = Get-WindowsFeature -ComputerName $Controller.DNSName -EA 0 4> $Null
 			
 			If(!$?)
 			{
-				$GotWinComponents = $False
-			}
-			
-			$WinComponents = $results | Where-Object Installed | Select-Object DisplayName,Name,FeatureType | Sort-Object DisplayName 
-		
-			If($MSWord -or $PDF)
-			{
-				Write-Verbose "$(Get-Date): `t`t`tOutput Windows installed Roles and Features"
-				If($GotWinComponents -eq $False)
+				If($MSWord -or $PDF)
 				{
 					WriteWordLine 0 0 "No Windows installed Roles and Features were found"
 				}
-				Else
-				{
-					#V2.23 remove the output from here and use only in Appendix
-					ForEach($Component in $WinComponents)
-					{
-						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName	-Value $Component.DisplayName
-						$obj1 | Add-Member -MemberType NoteProperty -Name Name			-Value $Component.Name
-						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName		-Value $Controller.DNSName
-						$obj1 | Add-Member -MemberType NoteProperty -Name FeatureType	-Value $Component.FeatureType
-						$Script:WinInstalledComponents.Add($obj1) > $Null
-					}
-				}
-			}
-			ElseIf($Text)
-			{
-				Write-Verbose "$(Get-Date): `t`t`tOutput Windows installed Roles and Features"
-				If($GotWinComponents -eq $False)
+				ElseIf($Text)
 				{
 					Line 1 "No Windows installed Roles and Features were found"
 				}
-				Else
-				{
-					#V2.23 remove the output from here and use only in Appendix
-					ForEach($Component in $WinComponents)
-					{
-						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName		-Value $Controller.DNSName
-						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName	-Value $Component.DisplayName
-						$obj1 | Add-Member -MemberType NoteProperty -Name Name			-Value $Component.Name
-						$obj1 | Add-Member -MemberType NoteProperty -Name FeatureType	-Value $Component.FeatureType
-						$Script:WinInstalledComponents.Add($obj1) > $Null
-					}
-				}
-			}
-			ElseIf($HTML)
-			{
-				Write-Verbose "$(Get-Date): `t`t`tOutput Windows installed Roles and Features"
-				If($GotWinComponents -eq $False)
+				ElseIf($HTML)
 				{
 					WriteHTMLLine 0 0 "No Windows installed Roles and Features were found"
 				}
-				Else
+			}
+			Else
+			{
+			
+				$WinComponents = $results | Where-Object Installed | Select-Object DisplayName,Name,FeatureType | Sort-Object DisplayName 
+
+				ForEach($Component in $WinComponents)
 				{
-					#V2.23 remove the output from here and use only in Appendix
-					ForEach($Component in $WinComponents)
-					{
-						$obj1 = New-Object -TypeName PSObject
-						$obj1 | Add-Member -MemberType NoteProperty -Name DDCName		-Value $Controller.DNSName
-						$obj1 | Add-Member -MemberType NoteProperty -Name DisplayName	-Value $Component.DisplayName
-						$obj1 | Add-Member -MemberType NoteProperty -Name Name			-Value $Component.Name
-						$obj1 | Add-Member -MemberType NoteProperty -Name FeatureType	-Value $Component.FeatureType
-						$Script:WinInstalledComponents.Add($obj1) > $Null
+					$obj1 = [PSCustomObject] @{
+						DisplayName = $Component.DisplayName						
+						Name        = $Component.Name						
+						DDCName     = $Controller.DNSName						
+						FeatureType = $Component.FeatureType						
 					}
+					$null = $Script:WinInstalledComponents.Add($obj1)
 				}
 			}
 		}
@@ -31915,7 +32141,7 @@ Function ProcessHosting
 	$pvdstorage = @()
 	$tmpstorage = @() #added V2.21
 	$vmnetwork = @()
-	$IntelliCache = @() #added V2.23
+	$IntelliCache = New-Object System.Collections.ArrayList #added V2.23
 
 	Write-Verbose "$(Get-Date): `tProcessing Hosting Units"
 	$HostingUnits = Get-ChildItem @XDParams1 -path 'xdhyp:\hostingunits' 4>$Null
@@ -31944,11 +32170,11 @@ Function ProcessHosting
 			}
 			
 			#added V2.23
-            $obj1 = New-Object -TypeName PSObject
-	        $obj1 | Add-Member -MemberType NoteProperty -Name hypName	-Value $item.RootPath
-	        $obj1 | Add-Member -MemberType NoteProperty -Name IC		-Value $item.UseLocalStorageCaching
-
-			$IntelliCache += $obj1
+			$obj1 = [PSCustomObject] @{
+				hypName = $item.RootPath			
+				IC      = $item.UseLocalStorageCaching			
+			}
+			$null = $IntelliCache.Add($obj1)
 		}
 	}
 	ElseIf($? -and $Null -eq $HostingUnits)
@@ -32485,22 +32711,22 @@ Function OutputHosting
 	{
 		WriteHTMLLine 3 0 $Hypervisor.Name
 		$rowdata = @()
-		$columnHeaders = @("Connection Name",($htmlsilver -bor $htmlbold),$Hypervisor.Name,$htmlwhite)
-		$rowdata += @(,('Type',($htmlsilver -bor $htmlbold),$xxConnectionType,$htmlwhite))
-		$rowdata += @(,('Address',($htmlsilver -bor $htmlbold),$xAddress,$htmlwhite))
-		$rowdata += @(,('State',($htmlsilver -bor $htmlbold),$xxState,$htmlwhite))
-		$rowdata += @(,('Username',($htmlsilver -bor $htmlbold),$xUserName,$htmlwhite))
-		$rowdata += @(,('Scopes',($htmlsilver -bor $htmlbold),$xScopes,$htmlwhite))
-		$rowdata += @(,('Maintenance Mode',($htmlsilver -bor $htmlbold),$xxMaintMode,$htmlwhite))
+		$columnHeaders = @("Connection Name",($global:htmlsb),$Hypervisor.Name,$htmlwhite)
+		$rowdata += @(,('Type',($global:htmlsb),$xxConnectionType,$htmlwhite))
+		$rowdata += @(,('Address',($global:htmlsb),$xAddress,$htmlwhite))
+		$rowdata += @(,('State',($global:htmlsb),$xxState,$htmlwhite))
+		$rowdata += @(,('Username',($global:htmlsb),$xUserName,$htmlwhite))
+		$rowdata += @(,('Scopes',($global:htmlsb),$xScopes,$htmlwhite))
+		$rowdata += @(,('Maintenance Mode',($global:htmlsb),$xxMaintMode,$htmlwhite))
 		If((Get-ConfigServiceAddedCapability @XDParams1) -contains "ZonesSupport")
 		{
-			$rowdata += @(,('Zone',($htmlsilver -bor $htmlbold),$xZoneName,$htmlwhite))
+			$rowdata += @(,('Zone',($global:htmlsb),$xZoneName,$htmlwhite))
 		}
-		$rowdata += @(,('Storage resource name',($htmlsilver -bor $htmlbold),$xStorageName,$htmlwhite))
+		$rowdata += @(,('Storage resource name',($global:htmlsb),$xStorageName,$htmlwhite))
 		#added in V2.21
 		If($HypNetworkName.Length -gt 0)
 		{
-			$rowdata += @(,('Network',($htmlsilver -bor $htmlbold),$HypNetworkName[0],$htmlwhite))
+			$rowdata += @(,('Network',($global:htmlsb),$HypNetworkName[0],$htmlwhite))
 			$cnt = -1
 			ForEach($item in $HypNetworkName)
 			{
@@ -32508,14 +32734,14 @@ Function OutputHosting
 				
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$item,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$item,$htmlwhite))
 				}
 			}
 		}
 		#added in V2.21
 		If($HypStdStorage.Length -gt 0)
 		{
-			$rowdata += @(,('Standard storage',($htmlsilver -bor $htmlbold),$HypStdStorage[0],$htmlwhite))
+			$rowdata += @(,('Standard storage',($global:htmlsb),$HypStdStorage[0],$htmlwhite))
 			$cnt = -1
 			ForEach($item in $HypStdStorage)
 			{
@@ -32523,14 +32749,14 @@ Function OutputHosting
 				
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$item,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$item,$htmlwhite))
 				}
 			}
 		}
 		#added in V2.21
 		If($HypPersonalvDiskStorage.Length -gt 0)
 		{
-			$rowdata += @(,('Personal vDisk storage',($htmlsilver -bor $htmlbold),$HypPersonalvDiskStorage[0],$htmlwhite))
+			$rowdata += @(,('Personal vDisk storage',($global:htmlsb),$HypPersonalvDiskStorage[0],$htmlwhite))
 			$cnt = -1
 			ForEach($item in $HypPersonalvDiskStorage)
 			{
@@ -32538,14 +32764,14 @@ Function OutputHosting
 				
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$item,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$item,$htmlwhite))
 				}
 			}
 		}
 		#added in V2.21
 		If($HypTempStorage.Length -gt 0)
 		{
-			$rowdata += @(,('Temporary storage',($htmlsilver -bor $htmlbold),$HypTempStorage[0],$htmlwhite))
+			$rowdata += @(,('Temporary storage',($global:htmlsb),$HypTempStorage[0],$htmlwhite))
 			$cnt = -1
 			ForEach($item in $HypTempStorage)
 			{
@@ -32553,14 +32779,14 @@ Function OutputHosting
 				
 				If($cnt -gt 0)
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$item,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$item,$htmlwhite))
 				}
 			}
 		}
 		#added in V2.23
 		If($HypICName.Length -gt 0)
 		{
-			$rowdata += @(,('IntelliCache:',($htmlsilver -bor $htmlbold),$HypICName[0],$htmlwhite))
+			$rowdata += @(,('IntelliCache:',($global:htmlsb),$HypICName[0],$htmlwhite))
 		}
 
 		$msg = ""
@@ -32570,24 +32796,24 @@ Function OutputHosting
 		
 		WriteHTMLLine 4 0 "Advanced"
 		$rowdata = @()
-		$columnHeaders = @("High Availability Servers",($htmlsilver -bor $htmlbold),$xHAAddress[0],$htmlwhite)
+		$columnHeaders = @("High Availability Servers",($global:htmlsb),$xHAAddress[0],$htmlwhite)
 		$cnt = 0
 		ForEach($tmpaddress in $xHAAddress)
 		{
 			If($cnt -gt 0)
 			{
-				$rowdata += @(,('',($htmlsilver -bor $htmlbold),$tmpaddress,$htmlwhite))
+				$rowdata += @(,('',($global:htmlsb),$tmpaddress,$htmlwhite))
 			}
 			$cnt++
 		}
-		$rowdata += @(,('Simultaneous actions (all types) [Absolute]',($htmlsilver -bor $htmlbold),$xPowerActions[0].Value,$htmlwhite))
-		$rowdata += @(,('Simultaneous actions (all types) [Percentage]',($htmlsilver -bor $htmlbold),$xPowerActions[2].Value,$htmlwhite))
-		$rowdata += @(,('Simultaneous Personal vDisk inventory updates [Absolute]',($htmlsilver -bor $htmlbold),$xPowerActions[4].Value,$htmlwhite))
-		$rowdata += @(,('Simultaneous Personal vDisk inventory updates [Percentage]',($htmlsilver -bor $htmlbold),$xPowerActions[3].Value,$htmlwhite))
-		$rowdata += @(,('Maximum new actions per minute',($htmlsilver -bor $htmlbold),$xPowerActions[1].Value,$htmlwhite))
+		$rowdata += @(,('Simultaneous actions (all types) [Absolute]',($global:htmlsb),$xPowerActions[0].Value,$htmlwhite))
+		$rowdata += @(,('Simultaneous actions (all types) [Percentage]',($global:htmlsb),$xPowerActions[2].Value,$htmlwhite))
+		$rowdata += @(,('Simultaneous Personal vDisk inventory updates [Absolute]',($global:htmlsb),$xPowerActions[4].Value,$htmlwhite))
+		$rowdata += @(,('Simultaneous Personal vDisk inventory updates [Percentage]',($global:htmlsb),$xPowerActions[3].Value,$htmlwhite))
+		$rowdata += @(,('Maximum new actions per minute',($global:htmlsb),$xPowerActions[1].Value,$htmlwhite))
 		If($xPowerActions.Count -gt 5)
 		{
-			$rowdata += @(,('Connection options',($htmlsilver -bor $htmlbold),$xPowerActions[5].Value,$htmlwhite))
+			$rowdata += @(,('Connection options',($global:htmlsb),$xPowerActions[5].Value,$htmlwhite))
 		}
 
 		$msg = ""
@@ -32863,11 +33089,11 @@ Function OutputDesktopOSMachine
 		}
 
 		$rowdata = @()
-		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Desktop.DNSName,$htmlwhite)
-		$rowdata += @(,('Machine Catalog',($htmlsilver -bor $htmlbold),$Desktop.CatalogName,$htmlwhite))
+		$columnHeaders = @("Name",($global:htmlsb),$Desktop.DNSName,$htmlwhite)
+		$rowdata += @(,('Machine Catalog',($global:htmlsb),$Desktop.CatalogName,$htmlwhite))
 		If(![String]::IsNullOrEmpty($Desktop.DesktopGroupName))
 		{
-			$rowdata += @(,('Delivery Group',($htmlsilver -bor $htmlbold),$Desktop.DesktopGroupName,$htmlwhite))
+			$rowdata += @(,('Delivery Group',($global:htmlsb),$Desktop.DesktopGroupName,$htmlwhite))
 		}
 		#fixed in 2.21
 		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
@@ -32878,18 +33104,18 @@ Function OutputDesktopOSMachine
 				$cnt++
 				If($cnt -eq 0)
 				{
-					$rowdata += @(,('User',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
+					$rowdata += @(,('User',($global:htmlsb),$AssociatedUserName,$htmlwhite))
 				}
 				Else
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$AssociatedUserName,$htmlwhite))
 				}
 			}
 		}
-		$rowdata += @(,('Maintenance Mode',($htmlsilver -bor $htmlbold),$xMaintMode,$htmlwhite))
-		$rowdata += @(,('Persist User Changes',($htmlsilver -bor $htmlbold),$xUserChanges,$htmlwhite))
-		$rowdata += @(,('Power State',($htmlsilver -bor $htmlbold),$Desktop.PowerState,$htmlwhite))
-		$rowdata += @(,('Registration State',($htmlsilver -bor $htmlbold),$Desktop.RegistrationState,$htmlwhite))
+		$rowdata += @(,('Maintenance Mode',($global:htmlsb),$xMaintMode,$htmlwhite))
+		$rowdata += @(,('Persist User Changes',($global:htmlsb),$xUserChanges,$htmlwhite))
+		$rowdata += @(,('Power State',($global:htmlsb),$Desktop.PowerState,$htmlwhite))
+		$rowdata += @(,('Registration State',($global:htmlsb),$Desktop.RegistrationState,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150","200")
@@ -33030,11 +33256,11 @@ Function OutputServerOSMachine
 		}
 
 		$rowdata = @()
-		$columnHeaders = @("Name",($htmlsilver -bor $htmlbold),$Server.DNSName,$htmlwhite)
-		$rowdata += @(,('Machine Catalog',($htmlsilver -bor $htmlbold),$Server.CatalogName,$htmlwhite))
+		$columnHeaders = @("Name",($global:htmlsb),$Server.DNSName,$htmlwhite)
+		$rowdata += @(,('Machine Catalog',($global:htmlsb),$Server.CatalogName,$htmlwhite))
 		If(![String]::IsNullOrEmpty($Server.DesktopGroupName))
 		{
-			$rowdata += @(,('Delivery Group',($htmlsilver -bor $htmlbold),$Server.DesktopGroupName,$htmlwhite))
+			$rowdata += @(,('Delivery Group',($global:htmlsb),$Server.DesktopGroupName,$htmlwhite))
 		}
 		#fixed in 2.21
 		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
@@ -33045,18 +33271,18 @@ Function OutputServerOSMachine
 				$cnt++
 				If($cnt -eq 0)
 				{
-					$rowdata += @(,('User',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
+					$rowdata += @(,('User',($global:htmlsb),$AssociatedUserName,$htmlwhite))
 				}
 				Else
 				{
-					$rowdata += @(,('',($htmlsilver -bor $htmlbold),$AssociatedUserName,$htmlwhite))
+					$rowdata += @(,('',($global:htmlsb),$AssociatedUserName,$htmlwhite))
 				}
 			}
 		}
-		$rowdata += @(,('Maintenance Mode',($htmlsilver -bor $htmlbold),$xMaintMode,$htmlwhite))
-		$rowdata += @(,('Persist User Changes',($htmlsilver -bor $htmlbold),$xUserChanges,$htmlwhite))
-		$rowdata += @(,('Power State',($htmlsilver -bor $htmlbold),$Server.PowerState,$htmlwhite))
-		$rowdata += @(,('Registration State',($htmlsilver -bor $htmlbold),$Server.RegistrationState,$htmlwhite))
+		$rowdata += @(,('Maintenance Mode',($global:htmlsb),$xMaintMode,$htmlwhite))
+		$rowdata += @(,('Persist User Changes',($global:htmlsb),$xUserChanges,$htmlwhite))
+		$rowdata += @(,('Power State',($global:htmlsb),$Server.PowerState,$htmlwhite))
+		$rowdata += @(,('Registration State',($global:htmlsb),$Server.RegistrationState,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150","200")
@@ -33127,14 +33353,14 @@ Function OutputHostingSessions
 		ElseIf($HTML)
 		{
 			$rowdata = @()
-			$columnHeaders = @("Current User",($htmlsilver -bor $htmlbold),$Session.UserName,$htmlwhite)
-			$rowdata += @(,('Name',($htmlsilver -bor $htmlbold),$Session.ClientName,$htmlwhite))
-			$rowdata += @(,('Delivery Group',($htmlsilver -bor $htmlbold),$Session.DesktopGroupName,$htmlwhite))
-			$rowdata += @(,('Machine Catalog',($htmlsilver -bor $htmlbold),$Session.CatalogName,$htmlwhite))
-			$rowdata += @(,('Brokering Time',($htmlsilver -bor $htmlbold),$Session.BrokeringTime,$htmlwhite))
-			$rowdata += @(,('Session State',($htmlsilver -bor $htmlbold),$Session.SessionState,$htmlwhite))
-			$rowdata += @(,('Application State',($htmlsilver -bor $htmlbold),$Session.AppState,$htmlwhite))
-			$rowdata += @(,('Session Support',($htmlsilver -bor $htmlbold),$xSessionType,$htmlwhite))
+			$columnHeaders = @("Current User",($global:htmlsb),$Session.UserName,$htmlwhite)
+			$rowdata += @(,('Name',($global:htmlsb),$Session.ClientName,$htmlwhite))
+			$rowdata += @(,('Delivery Group',($global:htmlsb),$Session.DesktopGroupName,$htmlwhite))
+			$rowdata += @(,('Machine Catalog',($global:htmlsb),$Session.CatalogName,$htmlwhite))
+			$rowdata += @(,('Brokering Time',($global:htmlsb),$Session.BrokeringTime,$htmlwhite))
+			$rowdata += @(,('Session State',($global:htmlsb),$Session.SessionState,$htmlwhite))
+			$rowdata += @(,('Application State',($global:htmlsb),$Session.AppState,$htmlwhite))
+			$rowdata += @(,('Session Support',($global:htmlsb),$xSessionType,$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("150","200")
@@ -33313,15 +33539,15 @@ Function OutputLicensingOverview
 		WriteHTMLLine 1 0 "Licensing"
 		WriteHTMLLine 2 0 "Licensing Overview"
 		$rowdata = @()
-		$columnHeaders = @("Site",($htmlsilver -bor $htmlbold),$Script:XDSite1.Name,$htmlwhite)
-		$rowdata += @(,('Server',($htmlsilver -bor $htmlbold),$Script:XDSite1.LicenseServerName,$htmlwhite))
-		$rowdata += @(,("IP Address",($htmlsilver -bor $htmlbold),$LicenseServerIPAddress,$htmlwhite))
-		$rowdata += @(,('Port',($htmlsilver -bor $htmlbold),$Script:XDSite1.LicenseServerPort,$htmlwhite))
-		$rowdata += @(,('Edition',($htmlsilver -bor $htmlbold),$LicenseEditionType,$htmlwhite))
-		$rowdata += @(,('License model',($htmlsilver -bor $htmlbold),$LicenseModelType,$htmlwhite))
-		$rowdata += @(,('Required SA date',($htmlsilver -bor $htmlbold),$tmpdate,$htmlwhite))
-		$rowdata += @(,('XenDesktop license use',($htmlsilver -bor $htmlbold),$Script:XDSite1.LicensedSessionsActive,$htmlwhite))
-		$rowdata += @(,('Version',($htmlsilver -bor $htmlbold),$LicenseServerVersion,$htmlwhite))
+		$columnHeaders = @("Site",($global:htmlsb),$Script:XDSite1.Name,$htmlwhite)
+		$rowdata += @(,('Server',($global:htmlsb),$Script:XDSite1.LicenseServerName,$htmlwhite))
+		$rowdata += @(,("IP Address",($global:htmlsb),$LicenseServerIPAddress,$htmlwhite))
+		$rowdata += @(,('Port',($global:htmlsb),$Script:XDSite1.LicenseServerPort,$htmlwhite))
+		$rowdata += @(,('Edition',($global:htmlsb),$LicenseEditionType,$htmlwhite))
+		$rowdata += @(,('License model',($global:htmlsb),$LicenseModelType,$htmlwhite))
+		$rowdata += @(,('Required SA date',($global:htmlsb),$tmpdate,$htmlwhite))
+		$rowdata += @(,('XenDesktop license use',($global:htmlsb),$Script:XDSite1.LicensedSessionsActive,$htmlwhite))
+		$rowdata += @(,('Version',($global:htmlsb),$LicenseServerVersion,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150","125")
@@ -33349,12 +33575,13 @@ Function OutputXenDesktopLicenses
 			{
 				$LicModel = $Product.LicenseModel
 			}
-			$obj = New-Object -TypeName PSObject
-			$obj | Add-Member -MemberType NoteProperty -Name LicenseProduct	-Value $Product.LicenseProductName
-			$obj | Add-Member -MemberType NoteProperty -Name LicenseType	-Value $Product.LicenseEdition
-			$obj | Add-Member -MemberType NoteProperty -Name LicenseModel	-Value $LicModel
-			$obj | Add-Member -MemberType NoteProperty -Name LicenseCount	-Value $Product.LicensesAvailable
-			$Script:Licenses.Add($obj) > $Null
+			$obj = [PSCustomObject] @{
+				LicenseProduct = $Product.LicenseProductName			
+				LicenseType    = $Product.LicenseEdition			
+				LicenseModel   = $LicModel			
+				LicenseCount   = $Product.LicensesAvailable			
+			}
+			$null = $Script:Licenses.Add($obj)
 		}
 	}
 
@@ -33460,12 +33687,12 @@ Function OutputXenDesktopLicenses
 			}
 		}
 		$columnHeaders = @(
-		'Product',($htmlsilver -bor $htmlbold),
-		'Mode',($htmlsilver -bor $htmlbold),
-		'Expiration Date',($htmlsilver -bor $htmlbold),
-		'Subscription Advantage Date',($htmlsilver -bor $htmlbold),
-		'Type',($htmlsilver -bor $htmlbold),
-		'Quantity',($htmlsilver -bor $htmlbold))
+		'Product',($global:htmlsb),
+		'Mode',($global:htmlsb),
+		'Expiration Date',($global:htmlsb),
+		'Subscription Advantage Date',($global:htmlsb),
+		'Type',($global:htmlsb),
+		'Quantity',($global:htmlsb))
 
 		$msg = ""
 		$columnWidths = @("150","125","65","90","80","55")
@@ -33548,8 +33775,8 @@ Function OutputLicenseAdmins
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'Name',($htmlsilver -bor $htmlbold),
-		'Permissions',($htmlsilver -bor $htmlbold))
+		'Name',($global:htmlsb),
+		'Permissions',($global:htmlsb))
 
 		$msg = ""
 		$columnWidths = @("150","125")
@@ -33701,10 +33928,10 @@ Function OutputStoreFront
 	{
 		WriteHTMLLine 2 0 "Server: " $SFServer.Name
 		$rowdata = @()
-		$columnHeaders = @("StoreFront Server",($htmlsilver -bor $htmlbold),$SFServer.Name,$htmlwhite)
-		$rowdata += @(,('Used by # Delivery Groups',($htmlsilver -bor $htmlbold),$DGCnt,$htmlwhite))
-		$rowdata += @(,('URL',($htmlsilver -bor $htmlbold),$SFServer.Url,$htmlwhite))
-		$rowdata += @(,('Description',($htmlsilver -bor $htmlbold),$SFServer.Description,$htmlwhite))
+		$columnHeaders = @("StoreFront Server",($global:htmlsb),$SFServer.Name,$htmlwhite)
+		$rowdata += @(,('Used by # Delivery Groups',($global:htmlsb),$DGCnt,$htmlwhite))
+		$rowdata += @(,('URL',($global:htmlsb),$SFServer.Url,$htmlwhite))
+		$rowdata += @(,('Description',($global:htmlsb),$SFServer.Description,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150","250")
@@ -33779,7 +34006,7 @@ Function OutputStoreFrontDeliveryGroups
 		}
 
 		$columnHeaders = @(
-		'Delivery Group',($htmlsilver -bor $htmlbold))
+		'Delivery Group',($global:htmlsb))
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -33814,16 +34041,17 @@ Function ProcessAppV
 	{
 		Write-Verbose "$(Get-Date): `t`tRetrieving App-V server information"
 		
-		$AppVs = @()
+		$AppVs = New-Object System.Collections.ArrayList
 		ForEach($AppVConfig in $AppVConfigs)
 		{
 			$AppV = Get-CtxAppVServer -ByteArray $AppVConfig.Policy -EA 0 4>$Null
 			If($? -and ($Null -ne $AppV))
 			{
-				$obj = New-Object -TypeName PSObject
-				$obj | Add-Member -MemberType NoteProperty -Name MgmtServer	-Value $AppV.ManagementServer
-				$obj | Add-Member -MemberType NoteProperty -Name PubServer	-Value $AppV.PublishingServer
-				$AppVs += $obj
+				$obj = [PSCustomObject] @{
+					MgmtServer = $AppV.ManagementServer				
+					PubServer  = $AppV.PublishingServer				
+				}
+				$null = $AppVs.Add($obj)
 			}
 			ElseIf($? -and ($Null -eq $AppV))
 			{
@@ -33915,8 +34143,8 @@ Function OutputAppV
 	ElseIf($HTML)
 	{
 		$columnHeaders = @(
-		'App-V management server',($htmlsilver -bor $htmlbold),
-		'App-V publishing server',($htmlsilver -bor $htmlbold))
+		'App-V management server',($global:htmlsb),
+		'App-V publishing server',($global:htmlsb))
 
 		$msg = ""
 		$columnWidths = @("250","250")
@@ -34024,11 +34252,11 @@ Function OutputAppDNA
 	ElseIf($HTML)
 	{
 		$rowdata = @()
-		$columnHeaders = @("URL",($htmlsilver -bor $htmlbold),$AppDNAConfig.Address,$htmlwhite)
-		$rowdata += @(,('Database',($htmlsilver -bor $htmlbold),$AppDNAConfig.Database,$htmlwhite))
-		$rowdata += @(,('User name',($htmlsilver -bor $htmlbold),$AppDNAConfig.UserName,$htmlwhite))
-		$rowdata += @(,('State',($htmlsilver -bor $htmlbold),$AppDNAState,$htmlwhite))
-		$rowdata += @(,('Test connection',($htmlsilver -bor $htmlbold),$AppDNATest,$htmlwhite))
+		$columnHeaders = @("URL",($global:htmlsb),$AppDNAConfig.Address,$htmlwhite)
+		$rowdata += @(,('Database',($global:htmlsb),$AppDNAConfig.Database,$htmlwhite))
+		$rowdata += @(,('User name',($global:htmlsb),$AppDNAConfig.UserName,$htmlwhite))
+		$rowdata += @(,('State',($global:htmlsb),$AppDNAState,$htmlwhite))
+		$rowdata += @(,('Test connection',($global:htmlsb),$AppDNATest,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("250","250")
@@ -34062,7 +34290,7 @@ Function ProcessZones
 	#get all zone names
 	Write-Verbose "$(Get-Date): `tRetrieving All Zones"
 	$Zones = Get-ConfigZone @XDParams1 | Sort-Object Name
-	$ZoneMembers = @()
+	$ZoneMembers = New-Object System.Collections.ArrayList
 	
 	ForEach($Zone in $Zones)
 	{
@@ -34071,14 +34299,13 @@ Function ProcessZones
 		$ZoneCatalogs = Get-BrokerCatalog @XDParams2 -ZoneUid $Zone.Uid
 		ForEach($ZoneCatalog in $ZoneCatalogs)
 		{
-			$obj = New-Object -TypeName PSObject
-	
-			$obj | Add-Member -MemberType NoteProperty -Name MemName -Value $ZoneCatalog.Name
-			$obj | Add-Member -MemberType NoteProperty -Name MemDesc -Value $ZoneCatalog.Description
-			$obj | Add-Member -MemberType NoteProperty -Name MemType -Value "Machine Catalog"
-			$obj | Add-Member -MemberType NoteProperty -Name MemZone -Value $Zone.Name
-			
-			$ZoneMembers += $obj
+			$obj = [PSCustomObject] @{
+				MemName = $ZoneCatalog.Name			
+				MemDesc = $ZoneCatalog.Description			
+				MemType = "Machine Catalog"			
+				MemZone = $Zone.Name			
+			}
+			$null = $ZoneMembers.Add($obj)
 		}
 		
 		Write-Verbose "$(Get-Date): `t`tRetrieving Delivery Controllers for Zone $($Zone.Name)"
@@ -34089,14 +34316,13 @@ Function ProcessZones
 			
 			If($? -and $Null -ne $Results)
 			{
-				$obj = New-Object -TypeName PSObject
-	
-				$obj | Add-Member -MemberType NoteProperty -Name MemName -Value $ZoneController
-				$obj | Add-Member -MemberType NoteProperty -Name MemDesc -Value $Results.DNSName
-				$obj | Add-Member -MemberType NoteProperty -Name MemType -Value "Delivery Controller"
-				$obj | Add-Member -MemberType NoteProperty -Name MemZone -Value $Zone.Name
-			
-				$ZoneMembers += $obj
+				$obj = [PSCustomObject] @{
+					MemName = $ZoneController			
+					MemDesc = $Results.DNSName			
+					MemType = "Delivery Controller"		
+					MemZone = $Zone.Name			
+				}
+				$null = $ZoneMembers.Add($obj)
 			}
 		}
 
@@ -34104,14 +34330,13 @@ Function ProcessZones
 		$ZoneHosts = Get-ChildItem @XDParams1 -path 'xdhyp:\connections' 4>$Null | Where-Object{$_.ZoneUid -eq $Zone.Uid}
 		ForEach($ZoneHost in $ZoneHosts)
 		{
-			$obj = New-Object -TypeName PSObject
-			
-			$obj | Add-Member -MemberType NoteProperty -Name MemName -Value $ZoneHost.HypervisorConnectionName
-			$obj | Add-Member -MemberType NoteProperty -Name MemDesc -Value ""
-			$obj | Add-Member -MemberType NoteProperty -Name MemType -Value "Host Connection"
-			$obj | Add-Member -MemberType NoteProperty -Name MemZone -Value $Zone.Name
-			
-			$ZoneMembers += $obj
+			$obj = [PSCustomObject] @{
+				MemName = $ZoneHost.HypervisorConnectionName			
+				MemDesc = ""			
+				MemType = "Host Connection"		
+				MemZone = $Zone.Name			
+			}
+			$null = $ZoneMembers.Add($obj)
 		}
 	}
 	
@@ -34187,10 +34412,10 @@ Function OutputZoneSiteView
 		}
 		
 		$columnHeaders = @(
-		'Name',($htmlsilver -bor $htmlbold),
-		'Description',($htmlsilver -bor $htmlbold),
-		'Type',($htmlsilver -bor $htmlbold),
-		'Zone',($htmlsilver -bor $htmlbold))
+		'Name',($global:htmlsb),
+		'Description',($global:htmlsb),
+		'Type',($global:htmlsb),
+		'Zone',($global:htmlsb))
 
 		$msg = ""
 		$columnWidths = @("150","200","150","150")
@@ -34267,10 +34492,10 @@ Function OutputPerZoneView
 			}
 			
 			$columnHeaders = @(
-			'Name',($htmlsilver -bor $htmlbold),
-			'Description',($htmlsilver -bor $htmlbold),
-			'Type',($htmlsilver -bor $htmlbold),
-			'Zone',($htmlsilver -bor $htmlbold))
+			'Name',($global:htmlsb),
+			'Description',($global:htmlsb),
+			'Type',($global:htmlsb),
+			'Zone',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("150","200","150")
@@ -34291,100 +34516,307 @@ Function ProcessSummaryPage
 	If($MSWord -or $PDF)
 	{
 		$selection.InsertNewPage()
-		WriteWordLine 1 0 "XenDesktop $($Script:XDSiteVersion) $($XDSiteName) Summary Page"
+		WriteWordLine 1 0 "XenDesktop $($XDSiteName) Summary Page"
 	}
 	ElseIf($Text)
 	{
 		Line 0 ""
-		Line 0 "XenDesktop $($Script:XDSiteVersion) $($XDSiteName) Summary Page"
+		Line 0 "XenDesktop $($XDSiteName) Summary Page"
 	}
 	ElseIf($HTML)
 	{
-		WriteHTMLLine 1 0 "XenDesktop $($Script:XDSiteVersion) $($XDSiteName) Summary Page"
+		WriteHTMLLine 1 0 "XenDesktop $($XDSiteName) Summary Page"
 	}
 
 	If($MSWord -or $PDF)
 	{
 		Write-Verbose "$(Get-Date): `tAdd Machine Catalog summary info"
-		WriteWordLine 0 0 "Machine Catalogs"
-		WriteWordLine 0 1 "Total Server OS Catalogs`t: " $Script:TotalServerOSCatalogs
-		WriteWordLine 0 1 "Total Desktop OS Catalogs`t: " $Script:TotalDesktopOSCatalogs
-		WriteWordLine 0 1 "Total RemotePC Catalogs`t: " $Script:TotalRemotePCCatalogs
-		WriteWordLine 0 2 "Total Machine Catalogs`t: " ($Script:TotalServerOSCatalogs+$Script:TotalDesktopOSCatalogs+$Script:TotalRemotePCCatalogs)
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "Machine Catalogs"
+		$ScriptInformation.Add(@{Data = "Total Server OS Catalogs"; Value = $Script:TotalServerOSCatalogs.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total Desktop OS Catalogs'; Value = $Script:TotalDesktopOSCatalogs.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total RemotePC Catalogs'; Value = $Script:TotalRemotePCCatalogs.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = '     Total Machine Catalogs'; Value = ($Script:TotalServerOSCatalogs+$Script:TotalDesktopOSCatalogs+$Script:TotalRemotePCCatalogs).ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
 		WriteWordLine 0 0 ""
+		
 		Write-Verbose "$(Get-Date): `tAdd AppDisks summary info"
-		WriteWordLine 0 0 "AppDisks"
-		WriteWordLine 0 1 "Total AppDisks`t`t`t: " $Script:TotalAppDisks
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "AppDisks"
+		$ScriptInformation.Add(@{Data = "     Total AppDisks"; Value = $Script:TotalAppDisks.ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
 		WriteWordLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Delivery Group summary info"
-		WriteWordLine 0 0 "Delivery Groups"
-		WriteWordLine 0 1 "Total Application Groups`t: " $Script:TotalApplicationGroups
-		WriteWordLine 0 1 "Total Desktop Groups`t`t: " $Script:TotalDesktopGroups
-		WriteWordLine 0 1 "Total Apps & Desktop Groups`t: " $Script:TotalAppsAndDesktopGroups
-		WriteWordLine 0 2 "Total Delivery Groups`t: " ($Script:TotalApplicationGroups+$Script:TotalDesktopGroups+$Script:TotalAppsAndDesktopGroups)
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "Delivery Groups"
+		$ScriptInformation.Add(@{Data = "Total Application Groups"; Value = $Script:TotalApplicationGroups.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total Desktop Groups'; Value = $Script:TotalDesktopGroups.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total Apps & Desktop Groups'; Value = $Script:TotalAppsAndDesktopGroups.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = '     Total Delivery Groups'; Value = ($Script:TotalApplicationGroups+$Script:TotalDesktopGroups+$Script:TotalAppsAndDesktopGroups).ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
 		WriteWordLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Application summary info"
-		WriteWordLine 0 0 "Applications"
-		WriteWordLine 0 1 "Total Published Applications`t: " $Script:TotalPublishedApplications
-		WriteWordLine 0 1 "Total App-V Applications`t: " $Script:TotalAppvApplications
-		WriteWordLine 0 2 "Total Applications`t: " ($Script:TotalPublishedApplications + $Script:TotalAppvApplications)
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "Applications"
+		$ScriptInformation.Add(@{Data = "Total Published Applications"; Value = $Script:TotalPublishedApplications.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total App-V Applications'; Value = $Script:TotalAppvApplications.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = '     Total Applications'; Value = ($Script:TotalPublishedApplications + $Script:TotalAppvApplications).ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
 		WriteWordLine 0 0 ""
 		
 		If($Policies -eq $True)
 		{
 			Write-Verbose "$(Get-Date): `tAdd Policy summary info"
-			WriteWordLine 0 0 "Policies"
-			WriteWordLine 0 1 "Total Computer Policies`t`t: " $Script:TotalComputerPolicies
-			WriteWordLine 0 1 "Total User Policies`t`t: " $Script:TotalUserPolicies
-			WriteWordLine 0 2 "Total Policies`t`t: " ($Script:TotalComputerPolicies + $Script:TotalUserPolicies)
-			WriteWordLine 0 0 ""
-			WriteWordLine 0 1 "Site Policies`t`t`t: " $Script:TotalSitePolicies
 			
+			$ScriptInformation = New-Object System.Collections.ArrayList
+			WriteWordLine 4 0 "Policies"
+			$ScriptInformation.Add(@{Data = "Total Computer Policies"; Value = $Script:TotalComputerPolicies.ToString(); }) > $Null
+			$ScriptInformation.Add(@{Data = 'Total User Policies'; Value = $Script:TotalUserPolicies.ToString(); }) > $Null
+			$ScriptInformation.Add(@{Data = '     Total Policies'; Value = ($Script:TotalComputerPolicies + $Script:TotalUserPolicies).ToString(); }) > $Null
+			$ScriptInformation.Add(@{Data = ''; Value = ""; }) > $Null
+			$ScriptInformation.Add(@{Data = 'Site Policies'; Value = $Script:TotalSitePolicies.ToString(); }) > $Null
 			If($NoADPolicies -eq $False)
 			{
 				#V2.10 add a space 
-				WriteWordLine 0 1 "Citrix AD Policies Processed`t: $($Script:TotalADPolicies)`t (AD Policies can contain multiple Citrix policies)"
-				WriteWordLine 0 1 "Citrix AD Policies not Processed`t: " $Script:TotalADPoliciesNotProcessed
+				$ScriptInformation.Add(@{Data = "Citrix AD Policies Processed "; Value = "$($Script:TotalADPolicies) *"; }) > $Null
+				$ScriptInformation.Add(@{Data = 'Citrix AD Policies not Processed'; Value = $Script:TotalADPoliciesNotProcessed.ToString(); }) > $Null
 			}
+
+			$Table = AddWordTable -Hashtable $ScriptInformation `
+			-Columns Data,Value `
+			-List `
+			-Format $wdTableGrid `
+			-AutoFit $wdAutoFitFixed;
+
+			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+			$Table.Columns.Item(1).Width = 250;
+			$Table.Columns.Item(2).Width = 50;
+
+			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+			FindWordDocumentEnd
+			$Table = $Null
+			WriteWordLine 0 0 '* (AD Policies can contain multiple Citrix policies)' "" $Null 8 $False $True
 			WriteWordLine 0 0 ""
 		}
 		
 		Write-Verbose "$(Get-Date): `tAdd administrator summary info"
-		WriteWordLine 0 0 "Administrators"
-		WriteWordLine 0 1 "Total Delivery Group Admins`t: " $Script:TotalDeliveryGroupAdmins
-		WriteWordLine 0 1 "Total Full Admins`t`t: " $Script:TotalFullAdmins
-		WriteWordLine 0 1 "Total Help Desk Admins`t`t: " $Script:TotalHelpDeskAdmins
-		WriteWordLine 0 1 "Total Host Admins`t`t: " $Script:TotalHostAdmins
-		WriteWordLine 0 1 "Total Machine Catalog Admins`t: " $Script:TotalMachineCatalogAdmins
-		WriteWordLine 0 1 "Total Read Only Admins`t`t: " $Script:TotalReadOnlyAdmins
-		WriteWordLine 0 1 "Total Custom Admins`t`t: " $Script:TotalCustomAdmins
-		WriteWordLine 0 2 "Total Administrators`t: " ($Script:TotalDeliveryGroupAdmins+$Script:TotalFullAdmins+$Script:TotalHelpDeskAdmins+$Script:TotalHostAdmins+$Script:TotalMachineCatalogAdmins+$Script:TotalReadOnlyAdmins+$Script:TotalCustomAdmins)
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "Administrators"
+		$ScriptInformation.Add(@{Data = "Total Delivery Group Admins"; Value = $Script:TotalDeliveryGroupAdmins.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total Full Admins'; Value = $Script:TotalFullAdmins.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total Help Desk Admins'; Value = $Script:TotalHelpDeskAdmins.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total Host Admins'; Value = $Script:TotalHostAdmins.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total Machine Catalog Admins'; Value = $Script:TotalMachineCatalogAdmins.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total Read Only Admins'; Value = $Script:TotalReadOnlyAdmins.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = 'Total Custom Admins'; Value = $Script:TotalCustomAdmins.ToString(); }) > $Null
+		$ScriptInformation.Add(@{Data = '     Total Administrators'; Value = ($Script:TotalDeliveryGroupAdmins+$Script:TotalFullAdmins+$Script:TotalHelpDeskAdmins+$Script:TotalHostAdmins+$Script:TotalMachineCatalogAdmins+$Script:TotalReadOnlyAdmins+$Script:TotalCustomAdmins).ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
 		WriteWordLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Controller summary info"
-		WriteWordLine 0 0 "Controllers"
-		WriteWordLine 0 1 "Total Controllers`t`t: " $Script:TotalControllers
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "Controllers"
+		$ScriptInformation.Add(@{Data = "     Total Controllers"; Value = $Script:TotalControllers.ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
 		WriteWordLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Hosting Connection summary info"
-		WriteWordLine 0 0 "Hosting Connections"
-		WriteWordLine 0 1 "Total Hosting Connections`t: " $Script:TotalHostingConnections
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "Hosting Connections"
+		$ScriptInformation.Add(@{Data = "     Total Hosting Connections"; Value = $Script:TotalHostingConnections.ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
 		WriteWordLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Licensing summary info"
-		WriteWordLine 0 0 "Licensing"
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "Licensing"
 		$TotalLicenses = 0
+		$cnt = 0
 		ForEach($License in $Script:Licenses)
 		{
-			WriteWordLine 0 1 "$($License.LicenseProduct) $($License.LicenseType) $($License.LicenseModel)`t`t`t: $($License.LicenseCount)"
+			$cnt++
+			
+			If($cnt -eq 1)
+			{
+				$ScriptInformation.Add(@{Data = "$($License.LicenseProduct) $($License.LicenseType) $($License.LicenseModel)"; Value = $License.LicenseCount.ToString(); }) > $Null
+			}
+			Else
+			{
+				$ScriptInformation.Add(@{Data = "$($License.LicenseProduct) $($License.LicenseType) $($License.LicenseModel)"; Value = $License.LicenseCount.ToString(); }) > $Null
+			}
 			$TotalLicenses += $License.LicenseCount
 		}
-		WriteWordLine 0 2 "Total Licenses`t`t: " $TotalLicenses
+		$ScriptInformation.Add(@{Data = '     Total Licenses'; Value = $TotalLicenses.ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
 		WriteWordLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd StoreFront summary info"
-		WriteWordLine 0 0 "StoreFront"
-		WriteWordLine 0 1 "Total StoreFront Servers`t: " $Script:TotalStoreFrontServers
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "StoreFront"
+		$ScriptInformation.Add(@{Data = "     Total StoreFront Servers"; Value = $Script:TotalStoreFrontServers.ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
 		WriteWordLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Zone summary info"
-		WriteWordLine 0 0 "Zones"
-		WriteWordLine 0 1 "Total Zones`t`t`t: " $Script:TotalZones
+		$ScriptInformation = New-Object System.Collections.ArrayList
+		WriteWordLine 4 0 "Zones"
+		$ScriptInformation.Add(@{Data = "     Total Zones"; Value = $Script:TotalZones.ToString(); }) > $Null
+
+		$Table = AddWordTable -Hashtable $ScriptInformation `
+		-Columns Data,Value `
+		-List `
+		-Format $wdTableGrid `
+		-AutoFit $wdAutoFitFixed;
+
+		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+		$Table.Columns.Item(1).Width = 250;
+		$Table.Columns.Item(2).Width = 50;
+
+		$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+		FindWordDocumentEnd
+		$Table = $Null
+		WriteWordLine 0 0 ""
 	}
 	ElseIf($Text)
 	{
@@ -34468,89 +34900,154 @@ Function ProcessSummaryPage
 		Write-Verbose "$(Get-Date): `tAdd Zone summary info"
 		Line 0 "Zones"
 		Line 1 "Total Zones`t`t`t: " $Script:TotalZones
+		Line 0 ""
 	}
 	ElseIf($HTML)
 	{
 		Write-Verbose "$(Get-Date): `tAdd Machine Catalog summary info"
-		WriteHTMLLine 0 0 "Machine Catalogs"
-		WriteHTMLLine 0 1 "Total Server OS Catalogs: " $Script:TotalServerOSCatalogs
-		WriteHTMLLine 0 1 "Total Desktop OS Catalogs: " $Script:TotalDesktopOSCatalogs
-		WriteHTMLLine 0 1 "Total RemotePC Catalogs: " $Script:TotalRemotePCCatalogs
-		WriteHTMLLine 0 2 "Total Machine Catalogs: " ($Script:TotalServerOSCatalogs+$Script:TotalDesktopOSCatalogs+$Script:TotalRemotePCCatalogs)
+		$rowdata = @()
+		$columnHeaders = @("Total Server OS Catalogs",($global:htmlsb),$Script:TotalServerOSCatalogs.ToString(),$htmlwhite)
+		$rowdata += @(,('Total Desktop OS Catalogs',($global:htmlsb),$Script:TotalDesktopOSCatalogs.ToString(),$htmlwhite))
+		$rowdata += @(,('Total RemotePC Catalogs',($global:htmlsb),$Script:TotalRemotePCCatalogs.ToString(),$htmlwhite))
+		$rowdata += @(,('     Total Machine Catalogs',($global:htmlsb),($Script:TotalServerOSCatalogs+$Script:TotalDesktopOSCatalogs+$Script:TotalRemotePCCatalogs).ToString(),$htmlwhite))
+
+		$msg = "Machine Catalogs"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
+		
 		Write-Verbose "$(Get-Date): `tAdd AppDisks summary info"
-		WriteHTMLLine 0 0 "AppDisks"
-		WriteHTMLLine 0 1 "Total AppDisks: " $Script:TotalAppDisks
+		$rowdata = @()
+		$columnHeaders = @("     Total AppDisks",($global:htmlsb),$Script:TotalAppDisks.ToString(),$htmlwhite)
+
+		$msg = "AppDisks"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Delivery Group summary info"
-		WriteHTMLLine 0 0 "Delivery Groups"
-		WriteHTMLLine 0 1 "Total Application Groups: " $Script:TotalApplicationGroups
-		WriteHTMLLine 0 1 "Total Desktop Groups: " $Script:TotalDesktopGroups
-		WriteHTMLLine 0 1 "Total Apps & Desktop Groups: " $Script:TotalAppsAndDesktopGroups
-		WriteHTMLLine 0 2 "Total Delivery Groups: " ($Script:TotalApplicationGroups+$Script:TotalDesktopGroups+$Script:TotalAppsAndDesktopGroups)
+		$rowdata = @()
+		$columnHeaders = @("Total Application Groups",($global:htmlsb),$Script:TotalApplicationGroups.ToString(),$htmlwhite)
+		$rowdata += @(,('Total Desktop Groups',($global:htmlsb),$Script:TotalDesktopGroups.ToString(),$htmlwhite))
+		$rowdata += @(,('Total Apps & Desktop Groups',($global:htmlsb),$Script:TotalAppsAndDesktopGroups.ToString(),$htmlwhite))
+		$rowdata += @(,('     Total Delivery Groups',($global:htmlsb),($Script:TotalApplicationGroups+$Script:TotalDesktopGroups+$Script:TotalAppsAndDesktopGroups).ToString(),$htmlwhite))
+
+		$msg = "Delivery Groups"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Application summary info"
-		WriteHTMLLine 0 0 "Applications"
-		WriteHTMLLine 0 1 "Total Published Applications: " $Script:TotalPublishedApplications
-		WriteHTMLLine 0 1 "Total App-V Applications: " $Script:TotalAppvApplications
-		WriteHTMLLine 0 2 "Total Applications: " ($Script:TotalPublishedApplications + $Script:TotalAppvApplications)
+		$rowdata = @()
+		$columnHeaders = @("Total Published Applications",($global:htmlsb),$Script:TotalPublishedApplications.ToString(),$htmlwhite)
+		$rowdata += @(,('Total App-V Applications',($global:htmlsb),$Script:TotalAppvApplications.ToString(),$htmlwhite))
+		$rowdata += @(,('     Total Applications',($global:htmlsb),($Script:TotalPublishedApplications + $Script:TotalAppvApplications).ToString(),$htmlwhite))
+
+		$msg = "Applications"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
 		
 		If($Policies -eq $True)
 		{
 			Write-Verbose "$(Get-Date): `tAdd Policy summary info"
-			WriteHTMLLine 0 0 "Policies"
-			WriteHTMLLine 0 1 "Total Computer Policies: " $Script:TotalComputerPolicies
-			WriteHTMLLine 0 1 "Total User Policies: " $Script:TotalUserPolicies
-			WriteHTMLLine 0 2 "Total Policies: " ($Script:TotalComputerPolicies + $Script:TotalUserPolicies)
-			WriteHTMLLine 0 0 ""
-			WriteHTMLLine 0 1 "Site Policies: " $Script:TotalSitePolicies
 			
+			$rowdata = @()
+			$columnHeaders = @("Total Computer Policies",($global:htmlsb),$Script:TotalComputerPolicies.ToString(),$htmlwhite)
+			$rowdata += @(,('Total User Policies',($global:htmlsb),$Script:TotalUserPolicies.ToString(),$htmlwhite))
+			$rowdata += @(,('     Total Policies',($global:htmlsb),($Script:TotalComputerPolicies + $Script:TotalUserPolicies).ToString(),$htmlwhite))
+			$rowdata += @(,('',($global:htmlsb),"",$htmlwhite))
+			$rowdata += @(,('Site Policies',($global:htmlsb),$Script:TotalSitePolicies.ToString(),$htmlwhite))
 			If($NoADPolicies -eq $False)
 			{
 				#V2.10 add a space 
-				WriteHTMLLine 0 1 "Citrix AD Policies Processed: $($Script:TotalADPolicies) (AD Policies can contain multiple Citrix policies)"
-				WriteHTMLLine 0 1 "Citrix AD Policies not Processed: " $Script:TotalADPoliciesNotProcessed
+				$rowdata += @(,("Citrix AD Policies Processed ",($global:htmlsb),"$($Script:TotalADPolicies) *",$htmlwhite))
+				$rowdata += @(,('Citrix AD Policies not Processed',($global:htmlsb),$Script:TotalADPoliciesNotProcessed.ToString(),$htmlwhite))
 			}
+
+			$msg = "Policies"
+			$columnWidths = @("250","50")
+			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
+			WriteHTMLLine 0 0 '* (AD Policies can contain multiple Citrix policies)' "" "Calibri" 1 $htmlbold
 			WriteHTMLLine 0 0 ""
 		}
 		
 		Write-Verbose "$(Get-Date): `tAdd administrator summary info"
-		WriteHTMLLine 0 0 "Administrators"
-		WriteHTMLLine 0 1 "Total Delivery Group Admins: " $Script:TotalDeliveryGroupAdmins
-		WriteHTMLLine 0 1 "Total Full Admins: " $Script:TotalFullAdmins
-		WriteHTMLLine 0 1 "Total Help Desk Admins: " $Script:TotalHelpDeskAdmins
-		WriteHTMLLine 0 1 "Total Host Admins: " $Script:TotalHostAdmins
-		WriteHTMLLine 0 1 "Total Machine Catalog Admins: " $Script:TotalMachineCatalogAdmins
-		WriteHTMLLine 0 1 "Total Read Only Admins: " $Script:TotalReadOnlyAdmins
-		WriteHTMLLine 0 1 "Total Custom Admins: " $Script:TotalCustomAdmins
-		WriteHTMLLine 0 2 "Total Administrators: " ($Script:TotalDeliveryGroupAdmins+$Script:TotalFullAdmins+$Script:TotalHelpDeskAdmins+$Script:TotalHostAdmins+$Script:TotalMachineCatalogAdmins+$Script:TotalReadOnlyAdmins+$Script:TotalCustomAdmins)
+		$rowdata = @()
+		$columnHeaders = @("Total Delivery Group Admins",($global:htmlsb),$Script:TotalDeliveryGroupAdmins.ToString(),$htmlwhite)
+		$rowdata += @(,('Total Full Admins',($global:htmlsb),$Script:TotalFullAdmins.ToString(),$htmlwhite))
+		$rowdata += @(,('Total Help Desk Admins',($global:htmlsb),$Script:TotalHelpDeskAdmins.ToString(),$htmlwhite))
+		$rowdata += @(,('Total Host Admins',($global:htmlsb),$Script:TotalHostAdmins.ToString(),$htmlwhite))
+		$rowdata += @(,('Total Machine Catalog Admins',($global:htmlsb),$Script:TotalMachineCatalogAdmins.ToString(),$htmlwhite))
+		$rowdata += @(,('Total Read Only Admins',($global:htmlsb),$Script:TotalReadOnlyAdmins.ToString(),$htmlwhite))
+		$rowdata += @(,('Total Custom Admins',($global:htmlsb),$Script:TotalCustomAdmins.ToString(),$htmlwhite))
+		$rowdata += @(,('     Total Administrators',($global:htmlsb),($Script:TotalDeliveryGroupAdmins+$Script:TotalFullAdmins+$Script:TotalHelpDeskAdmins+$Script:TotalHostAdmins+$Script:TotalMachineCatalogAdmins+$Script:TotalReadOnlyAdmins+$Script:TotalCustomAdmins).ToString(),$htmlwhite))
+
+		$msg = "Administrators"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Controller summary info"
-		WriteHTMLLine 0 0 "Controllers"
-		WriteHTMLLine 0 1 "Total Controllers: " $Script:TotalControllers
+		$rowdata = @()
+		$columnHeaders = @("     Total Controllers",($global:htmlsb),$Script:TotalControllers.ToString(),$htmlwhite)
+
+		$msg = "Controllers"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Hosting Connection summary info"
-		WriteHTMLLine 0 0 "Hosting Connections"
-		WriteHTMLLine 0 1 "Total Hosting Connections: " $Script:TotalHostingConnections
+		$rowdata = @()
+		$columnHeaders = @("     Total Hosting Connections",($global:htmlsb),$Script:TotalHostingConnections.ToString(),$htmlwhite)
+
+		$msg = "Hosting Connections"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Licensing summary info"
-		WriteHTMLLine 0 0 "Licensing"
+		$rowdata = @()
 		$TotalLicenses = 0
+		$cnt = 0
 		ForEach($License in $Script:Licenses)
 		{
-			WriteHTMLLine 0 1 "$($License.LicenseProduct) $($License.LicenseType) $($License.LicenseModel): $($License.LicenseCount)"
+			$cnt++
+			
+			If($cnt -eq 1)
+			{
+				$columnHeaders = @("$($License.LicenseProduct) $($License.LicenseType) $($License.LicenseModel)",($global:htmlsb),$License.LicenseCount.ToString(),$htmlwhite)
+			}
+			Else
+			{
+				$rowdata += @(,("$($License.LicenseProduct) $($License.LicenseType) $($License.LicenseModel)",($global:htmlsb),$License.LicenseCount.ToString(),$htmlwhite))
+			}
 			$TotalLicenses += $License.LicenseCount
 		}
-		WriteHTMLLine 0 2 "Total Licenses: " $TotalLicenses
+		$rowdata += @(,('     Total Licenses',($global:htmlsb),$TotalLicenses.ToString(),$htmlwhite))
+
+		$msg = "Licensing"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd StoreFront summary info"
-		WriteHTMLLine 0 0 "StoreFront"
-		WriteHTMLLine 0 1 "Total StoreFront Servers: " $Script:TotalStoreFrontServers
+		$rowdata = @()
+		$columnHeaders = @("     Total StoreFront Servers",($global:htmlsb),$Script:TotalStoreFrontServers.ToString(),$htmlwhite)
+
+		$msg = "StoreFront"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 		WriteHTMLLine 0 0 ""
+
 		Write-Verbose "$(Get-Date): `tAdd Zone summary info"
-		WriteHTMLLine 0 0 "Zones"
-		WriteHTMLLine 0 1 "Total Zones: " $Script:TotalZones
+		$rowdata = @()
+		$columnHeaders = @("     Total Zones",($global:htmlsb),$Script:TotalZones.ToString(),$htmlwhite)
+
+		$msg = "Zones"
+		$columnWidths = @("250","50")
+		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 
 	Write-Verbose "$(Get-Date): Finished Create Summary Page"
@@ -34586,7 +35083,7 @@ Function ProcessScriptSetup
 		Write-Error "`nMissing Citrix PowerShell Snap-ins Detected, check the console above for more information. 
 		`nAre you sure you are running this script against a XenDesktop 7.8 or later Controller? 
 		`n`nIf you are running the script remotely, did you install Studio or the PowerShell snapins on $($env:computername)?
-		`n`nPlease see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s8e92231489542428).
+		`n`nPlease see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb).
 		`n`nScript will now close."
 		Exit
 	}
@@ -34600,7 +35097,7 @@ Function ProcessScriptSetup
 	ElseIf(!(Check-LoadedModule "Citrix.GroupPolicy.Commands") -and $Policies -eq $False)
 	{
 		Write-Warning "The Citrix Group Policy module Citrix.GroupPolicy.Commands.psm1 could not be loaded `n
-		Please see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s8e92231489542428). 
+		Please see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb). 
 		`nCitrix Policy documentation will not take place"
 		Write-Verbose "$(Get-Date): "
 		$Script:DoPolicies = $False
@@ -34608,7 +35105,7 @@ Function ProcessScriptSetup
 	ElseIf(!(Check-LoadedModule "Citrix.GroupPolicy.Commands") -and $Policies -eq $True)
 	{
 		Write-Error "The Citrix Group Policy module Citrix.GroupPolicy.Commands.psm1 could not be loaded 
-		`nPlease see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s8e92231489542428). 
+		`nPlease see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb). 
 		`n
 		`n
 		`t`tBecause the Policies parameter was used the script will now close.
@@ -35001,6 +35498,9 @@ Function OutputAppendixA
 		Line 0 "These items may or may not be needed"
 		Line 0 "This Appendix is for VDA comparison only"
 		Line 0 ""
+		Line 1 "Registry Key                                                                                    Registry Value                                     Data                                                                                       VDA Type DDC Name                      " 
+		Line 1 "====================================================================================================================================================================================================================================================================================="
+		#       12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345S12345678901234567890123456789012345678901234567890S123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890S12345678S123456789012345678901234567890
 		
 		$Save = ""
 		$First = $True
@@ -35013,11 +35513,9 @@ Function OutputAppendixA
 					Line 0 ""
 				}
 
-				Line 0 "Registry Key`t: " $Item.RegKey
-				Line 0 "Registry Value`t: " $Item.RegValue
-				Line 0 "Data`t`t: " $Item.Value
-				Line 0 "VDA Type`t: " $Item.VDAType
-				Line 0 "Computer Name`t: " $Item.ComputerName
+				Line 1 ( "{0,-95} {1,-50} {2,-90} {3,-8} {4,-30}" -f `
+				$Item.RegKey, $Item.RegValue, $Item.Value, $Item.VDAType, $Item.ComputerName )
+				
 				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())$($Item.VDAType)"
 				If($First)
 				{
@@ -35066,11 +35564,11 @@ Function OutputAppendixA
 				}
 			}
 			$columnHeaders = @(
-			'Registry Key',($htmlsilver -bor $htmlbold),
-			'Registry Key',($htmlsilver -bor $htmlbold),
-			'Data',($htmlsilver -bor $htmlbold),
-			'VDA Type',($htmlsilver -bor $htmlbold),
-			'Computer Name',($htmlsilver -bor $htmlbold))
+			'Registry Key',($global:htmlsb),
+			'Registry Key',($global:htmlsb),
+			'Data',($global:htmlsb),
+			'VDA Type',($global:htmlsb),
+			'Computer Name',($global:htmlsb))
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -35142,7 +35640,7 @@ Function OutputAppendixB
 			}
 			$Table = AddWordTable -Hashtable $AppendixWordTable `
 			-Columns RegKey, RegValue, RegData, ComputerName `
-			-Headers "Registry Key", "Registry Value", "Data", "Computer Name" `
+			-Headers "Registry Key", "Registry Value", "Data", "DDC Name" `
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitContent;
 
@@ -35162,6 +35660,9 @@ Function OutputAppendixB
 		Line 0 "These items may or may not be needed"
 		Line 0 "This Appendix is for Controller comparison only"
 		Line 0 ""
+		Line 1 "Registry Key                                                                                    Registry Value                                     Data                                                                                       DDC Name                      " 
+		Line 1 "============================================================================================================================================================================================================================================================================"
+		#       12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345S12345678901234567890123456789012345678901234567890S123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890S123456789012345678901234567890
 		
 		$Save = ""
 		$First = $True
@@ -35174,10 +35675,9 @@ Function OutputAppendixB
 					Line 0 ""
 				}
 
-				Line 0 "Registry Key`t: " $Item.RegKey
-				Line 0 "Registry Value`t: " $Item.RegValue
-				Line 0 "Data`t`t: " $Item.Value
-				Line 0 "Controller Name`t: " $Item.ComputerName
+				Line 1 ( "{0,-95} {1,-50} {2,-90} {3,-30}" -f `
+				$Item.RegKey, $Item.RegValue, $Item.Value, $Item.ComputerName )
+				
 				$Save = "$($Item.RegKey.ToString())$($Item.RegValue.ToString())"
 				If($First)
 				{
@@ -35223,10 +35723,10 @@ Function OutputAppendixB
 				}
 			}
 			$columnHeaders = @(
-			'Registry Key',($htmlsilver -bor $htmlbold),
-			'Registry Key',($htmlsilver -bor $htmlbold),
-			'Data',($htmlsilver -bor $htmlbold),
-			'Controller Name',($htmlsilver -bor $htmlbold))
+			'Registry Key',($global:htmlsb),
+			'Registry Key',($global:htmlsb),
+			'Data',($global:htmlsb),
+			'DDC Name',($global:htmlsb))
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -35318,6 +35818,11 @@ Function OutputAppendixC
 		Line 0 "Appendix C - Microsoft Hotfixes and Updates"
 		Line 0 "This Appendix is for Controller comparison only"
 		Line 0 ""
+		Line 1 "Hotfix ID                 Server Name     Caption                                       Description          Installed By                        Installed On Date     "
+		Line 1 "======================================================================================================================================================================="
+		#       1234567890123456789012345S123456789012345S123456789012345678901234567890123456789012345S12345678901234567890S12345678901234567890123456789012345S1234567890123456789012
+		#                                                 http://support.microsoft.com/?kbid=2727528    Security Update      XXX-XX-XDDC01\xxxx.xxxxxx           00/00/0000 00:00:00 PM
+		#		25                        15              45                                            20                   35                                  22
 		
 		$Save = ""
 		$First = $True
@@ -35330,12 +35835,9 @@ Function OutputAppendixC
 					Line 0 ""
 				}
 
-				Line 1 "Hotfix ID`t: " $Item.HotFixID
-				Line 1 "DDC Name`t: " $Item.CSName
-				Line 1 "Caption`t`t: " $Item.Caption
-				Line 1 "Description`t: " $Item.Description
-				Line 1 "Installed By`t: " $Item.InstalledBy
-				Line 1 "Installed On`t: " $Item.InstalledOn
+				Line 1 ( "{0,-25} {1,-15} {2,-45} {3,-20} {4,-35} {5,-22}" -f `
+				$Item.HotFixID, $Item.CSName, $Item.Caption, $Item.Description, $Item.InstalledBy, $Item.InstalledOn)
+				
 				$Save = "$($Item.HotFixID)"
 				If($First)
 				{
@@ -35381,12 +35883,12 @@ Function OutputAppendixC
 				}
 			}
 			$columnHeaders = @(
-			'Hotfix ID',($htmlsilver -bor $htmlbold),
-			'DDC Name',($htmlsilver -bor $htmlbold),
-			'Caption',($htmlsilver -bor $htmlbold),
-			'Description',($htmlsilver -bor $htmlbold),
-			'Installed By',($htmlsilver -bor $htmlbold),
-			'Installed On',($htmlsilver -bor $htmlbold))
+			'Hotfix ID',($global:htmlsb),
+			'DDC Name',($global:htmlsb),
+			'Caption',($global:htmlsb),
+			'Description',($global:htmlsb),
+			'Installed By',($global:htmlsb),
+			'Installed On',($global:htmlsb))
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -35431,7 +35933,7 @@ Function OutputAppendixD
 			$AppendixWordTable = @()
 			ForEach($Item in $Script:CtxInstalledComponents)
 			{
-				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				If(!$First -and $Save -ne "$($Item.DisplayName)$($Item.DisplayVersion)")
 				{
 					$AppendixWordTable += @{ 
 					DisplayName = "";
@@ -35445,7 +35947,7 @@ Function OutputAppendixD
 				DisplayVersion = $Item.DisplayVersion;
 				DDCName = $Item.DDCName;
 				}
-				$Save = "$($Item.DisplayName)"
+				$Save = "$($Item.DisplayName)$($Item.DisplayVersion)"
 				If($First)
 				{
 					$First = $False
@@ -35471,6 +35973,11 @@ Function OutputAppendixD
 		Line 0 "Appendix D - Citrix Installed Components"
 		Line 0 "This Appendix is for Controller comparison only"
 		Line 0 ""
+		Line 1 "Display Name                                                 Display Version   DDC Name                      "
+		Line 1 "============================================================================================================="
+		#       123456789012345678901234567890123456789012345678901234567890S12345678901234567S123456789012345678901234567890
+		#       Citrix Delegated Administration Service PowerShell snap-in   7.15.3000.302     DDC715.LabADDomain.com 
+		#       60                                                           17                30
 		
 		$Save = ""
 		$First = $True
@@ -35478,15 +35985,15 @@ Function OutputAppendixD
 		{
 			ForEach($Item in $Script:CtxInstalledComponents)
 			{
-				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				If(!$First -and $Save -ne "$($Item.DisplayName)$($Item.DisplayVersion)")
 				{
 					Line 0 ""
 				}
 
-				Line 1 "Display Name`t: " $Item.DisplayName
-				Line 1 "Display Version`t: " $Item.DisplayVersion
-				Line 1 "DDC Name`t: " $Item.DDCName
-				$Save = "$($Item.DisplayName)"
+				Line 1 ( "{0,-60} {1,-17} {2,-30}" -f `
+				$Item.DisplayName, $Item.DisplayVersion, $Item.DDCName)
+				
+				$Save = "$($Item.DisplayName)$($Item.DisplayVersion)"
 				If($First)
 				{
 					$First = $False
@@ -35512,7 +36019,7 @@ Function OutputAppendixD
 		{
 			ForEach($Item in $Script:CtxInstalledComponents)
 			{
-				If(!$First -and $Save -ne "$($Item.DisplayName)")
+				If(!$First -and $Save -ne "$($Item.DisplayName)$($Item.DisplayVersion)")
 				{
 					$rowdata += @(,("",$htmlwhite))
 				}
@@ -35521,16 +36028,16 @@ Function OutputAppendixD
 				$Item.DisplayName,$htmlwhite,
 				$Item.DisplayVersion,$htmlwhite,
 				$Item.DDCName,$htmlwhite))
-				$Save = "$($Item.DisplayName)"
+				$Save = "$($Item.DisplayName)$($Item.DisplayVersion)"
 				If($First)
 				{
 					$First = $False
 				}
 			}
 			$columnHeaders = @(
-			'Display Name',($htmlsilver -bor $htmlbold),
-			'Display Version',($htmlsilver -bor $htmlbold),
-			'DDC Name',($htmlsilver -bor $htmlbold))
+			'Display Name',($global:htmlsb),
+			'Display Version',($global:htmlsb),
+			'DDC Name',($global:htmlsb))
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
@@ -35619,6 +36126,11 @@ Function OutputAppendixE
 		Line 0 "Appendix E - Windows Installed Components"
 		Line 0 "This Appendix is for Controller comparison only"
 		Line 0 ""
+		Line 1 "Display Name                                       Name                           DDC Name                       Feature Type    "
+		Line 1 "================================================================================================================================="
+		#       12345678901234567890123456789012345678901234567890S123456789012345678901234567890S123456789012345678901234567890S123456789012345
+		#       Graphical Management Tools and Infrastructure      NET-Framework-45-Features     XXXXXXXXXXXXXXX                 Role Service
+		#       50                                                 30                            30                              15
 		
 		$Save = ""
 		$First = $True
@@ -35631,10 +36143,8 @@ Function OutputAppendixE
 					Line 0 ""
 				}
 
-				Line 1 "Display Name`t: " $Item.DisplayName
-				Line 1 "Name`t`t: " $Item.Name
-				Line 1 "DDC Name`t: " $Item.DDCName
-				Line 1 "Feature Type`t: " $Item.FeatureType
+				Line 1 ( "{0,-50} {1,-30} {2,-30} {3,-15}" -f `
+				$Item.DisplayName, $Item.Name, $Item.DDCName, $Item.FeatureType)
 				$Save = "$($Item.DisplayName)$($Item.Name)"
 				If($First)
 				{
@@ -35678,10 +36188,10 @@ Function OutputAppendixE
 				}
 			}
 			$columnHeaders = @(
-			'Display Name',($htmlsilver -bor $htmlbold),
-			'Name',($htmlsilver -bor $htmlbold),
-			'DDC Name',($htmlsilver -bor $htmlbold),
-			'Feature Type',($htmlsilver -bor $htmlbold))
+			'Display Name',($global:htmlsb),
+			'Name',($global:htmlsb),
+			'DDC Name',($global:htmlsb),
+			'Feature Type',($global:htmlsb))
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
