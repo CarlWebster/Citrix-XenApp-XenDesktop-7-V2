@@ -3,6 +3,14 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.24 18-Apr-2019
+#	If Policies parameter is used, check to see if PowerShell session is elevated. If it is,
+#		abort the script. This is the #2 support email. From an earlier update, which apparantly no one saw:
+#			Version 2.16 16-May-2018
+#				Added a Note to the Help Text and ReadMe file about the Citrix.GroupPolicy.Commands module:
+#				Note: The Citrix Group Policy PowerShell module will not load from an elevated PowerShell session. 
+#				If the module is manually imported, the module is not detected from an elevated PowerShell session.
+
 #Version 2.23 15-Apr-2019
 #	Added -CSV parameter
 #		Updated each function that outputs each appendix to output a CSV file if -CSV is used
