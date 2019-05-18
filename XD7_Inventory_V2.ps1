@@ -1030,9 +1030,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.23
+	VERSION: 2.24
 	AUTHOR: Carl Webster
-	LASTEDIT: April 12, 2019
+	LASTEDIT: April 18, 2019
 #>
 
 #endregion
@@ -1237,6 +1237,14 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.24 18-Apr-2019
+#	If Policies parameter is used, check to see if PowerShell session is elevated. If it is,
+#		abort the script. This is the #2 support email. From an earlier update, which apparently no one saw:
+#			Version 2.16 16-May-2018
+#				Added a Note to the Help Text and ReadMe file about the Citrix.GroupPolicy.Commands module:
+#				Note: The Citrix Group Policy PowerShell module will not load from an elevated PowerShell session. 
+#				If the module is manually imported, the module is not detected from an elevated PowerShell session.
+#
 #Version 2.23 15-Apr-2019
 #	Added -CSV parameter
 #		Updated each function that outputs each appendix to output a CSV file if -CSV is used
@@ -2049,6 +2057,51 @@ If($VDARegistryKeys)
 	#Force $MachineCatalogs to True
 	Write-Verbose "$(Get-Date): VDARegistryKeys switch is set. Forcing MachineCatalogs to True."
 	$MachineCatalogs = $True
+}
+
+#V2.24  Add check if $Policies -eq $True, see if PowerShell session is elevated
+#		If session is elevated, abort the script
+Function ElevatedSession
+{
+	#added in V2.24
+	$currentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent() )
+
+	If($currentPrincipal.IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator ))
+	{
+		Write-Verbose "$(Get-Date): This is an elevated PowerShell session"
+		Return $True
+	}
+	Else
+	{
+		Write-Verbose "$(Get-Date): This is NOT an elevated PowerShell session" -Foreground White
+		Return $False
+	}
+}
+
+If($Policies -eq $True)
+{
+	Write-Verbose "$(Get-Date): Testing for elevated PowerShell session."
+	#see if session is elevated
+	$Elevated = ElevatedSession
+	
+	If($Elevated -eq $True)
+	{
+		#abort script
+		Write-Error "
+		`n
+		`n
+		`tThe Citrix Group Policy module cannot be loaded or found in an elevated PowerShell session.
+		`n
+		`n
+		`tThe Policies parameter was used and this is an elevated PowerShell session.
+		`n
+		`n
+		`tRerun the script from a non-elevated PowerShell session. The script will now close.
+		`n
+		`n"
+		Write-Verbose "$(Get-Date): "
+		Exit
+	}
 }
 #endregion
 
