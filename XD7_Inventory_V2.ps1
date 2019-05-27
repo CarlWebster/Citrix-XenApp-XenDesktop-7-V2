@@ -1030,9 +1030,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.24
+	VERSION: 2.25
 	AUTHOR: Carl Webster
-	LASTEDIT: April 18, 2019
+	LASTEDIT: May 27, 2019
 #>
 
 #endregion
@@ -1237,6 +1237,12 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.25
+#	Updated for CVAD 1906
+#	Added new User policy settings for CVAD 1906
+#		ICA\Time Zone Control\Restore Desktop OS time zone on session disconnect or logoff
+#		ICA\Multimedia\Microsoft Teams redirection
+#
 #Version 2.24 18-Apr-2019
 #	If Policies parameter is used, check to see if PowerShell session is elevated. If it is,
 #		abort the script. This is the #2 support email. From an earlier update, which apparently no one saw:
@@ -19061,6 +19067,28 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.MaxSpeexQuality.Value 
 						}
 					}
+					If((validStateProp $Setting MSTeamsRedirection State ) -and ($Setting.MSTeamsRedirection.State -ne "NotConfigured"))
+					{
+						#added in 1906
+						$txt = "ICA\Multimedia\Microsoft Teams redirection"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.MSTeamsRedirection.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.MSTeamsRedirection.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.MSTeamsRedirection.State 
+						}
+					}
 					If((validStateProp $Setting MultimediaConferencing State ) -and ($Setting.MultimediaConferencing.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Multimedia\Multimedia conferencing"
@@ -21517,6 +21545,28 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.LocalTimeEstimation.State 
+						}
+					}
+					If((validStateProp $Setting RestoreServerTime State ) -and ($Setting.RestoreServerTime.State -ne "NotConfigured"))
+					{
+						#added in 1906
+						$txt = "ICA\Time Zone Control\Restore Desktop OS time zone on session disconnect or logoff"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.RestoreServerTime.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.RestoreServerTime.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.RestoreServerTime.State 
 						}
 					}
 					If((validStateProp $Setting SessionTimeZone State ) -and ($Setting.SessionTimeZone.State -ne "NotConfigured"))
