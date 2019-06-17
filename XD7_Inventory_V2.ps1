@@ -1032,7 +1032,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.25
 	AUTHOR: Carl Webster
-	LASTEDIT: May 27, 2019
+	LASTEDIT: June 17, 2019
 #>
 
 #endregion
@@ -1237,11 +1237,17 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.25
-#	Updated for CVAD 1906
+#Version 2.25 17-Jun-2019
+#	Added new Computer policy settings missed in earlier versions
+#		Profile Management\File system\Synchronization\Profile container - List of folders to be contained in profile disk
 #	Added new User policy settings for CVAD 1906
 #		ICA\Time Zone Control\Restore Desktop OS time zone on session disconnect or logoff
 #		ICA\Multimedia\Microsoft Teams redirection
+#	Renamed Profile Management\XenApp Optimization settings\Enable XenApp Optimization to 
+#		Profile Management\Citrix Virtual Apps Optimization settings\Enable Citrix Virtual Apps Optimization
+#	Renamed Profile Management\XenApp Optimization settings\Path to XenApp optimization definitions: to 
+#		Profile Management\Citrix Virtual Apps Optimization settings\Path to Citrix Virtual Apps optimization definitions:
+#	Updated for CVAD 1906
 #
 #Version 2.24 18-Apr-2019
 #	If Policies parameter is used, check to see if PowerShell session is elevated. If it is,
@@ -23188,6 +23194,8 @@ Function ProcessCitrixPolicies
 						}
 					}
 
+					Write-Verbose "$(Get-Date): `t`t`tProfile Management\Citrix Virtual Apps Optimization settings"
+
 					Write-Verbose "$(Get-Date): `t`t`tProfile Management\Cross-Platform settings"
 					If((validStateProp $Setting CPUserGroups_Part State ) -and ($Setting.CPUserGroups_Part.State -ne "NotConfigured"))
 					{
@@ -24611,6 +24619,107 @@ Function ProcessCitrixPolicies
 							ElseIf($Text)
 							{
 								OutputPolicySetting $txt $Setting.MirrorFoldersList_Part.State
+							}
+						}
+					}
+					If((validStateProp $Setting ProfileContainer_Part State ) -and ($Setting.ProfileContainer_Part.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\File system\Synchronization\Profile container - List of folders to be contained in profile disk"
+						If($Setting.ProfileContainer_Part.State -eq "Enabled")
+						{
+							If(validStateProp $Setting ProfileContainer_Part Values )
+							{
+								$tmpArray = $Setting.ProfileContainer_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
+								{
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
+									{
+										If($MSWord -or $PDF)
+										{
+											$SettingsWordTable += @{
+											Text = $txt;
+											Value = $tmp;
+											}
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
+									}
+									Else
+									{
+										If($MSWord -or $PDF)
+										{
+											$SettingsWordTable += @{
+											Text = "";
+											Value = $tmp;
+											}
+										}
+										ElseIf($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										ElseIf($Text)
+										{
+											OutputPolicySetting "" $tmp
+										}
+									}
+								}
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Directories to synchronize were found"
+								If($MSWord -or $PDF)
+								{
+									$SettingsWordTable += @{
+									Text = $txt;
+									Value = $tmp;
+									}
+								}
+								ElseIf($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								ElseIf($Text)
+								{
+									OutputPolicySetting $txt $tmp
+								}
+							}
+						}
+						Else
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = $Setting.ProfileContainer_Part.State;
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.ProfileContainer_Part.State,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $Setting.ProfileContainer_Part.State
 							}
 						}
 					}
@@ -26789,11 +26898,11 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.PSPendingLockTimeout.Value 
 						}
 					}
-					Write-Verbose "$(Get-Date): `t`t`tProfile Management\XenApp Optimization settings"
+					Write-Verbose "$(Get-Date): `t`t`tProfile Management\Citrix Virtual Apps Optimization settings"
 					If((validStateProp $Setting XenAppOptimizationEnable State ) -and ($Setting.XenAppOptimizationEnable.State -ne "NotConfigured"))
 					{
-						#new in 7.16
-						$txt = "Profile Management\XenApp Optimization settings\Enable XenApp Optimization"
+						#new in 7.16 and renamed in 1808
+						$txt = "Profile Management\Citrix Virtual Apps Optimization settings\Enable Citrix Virtual Apps Optimization"
 						If($MSWord -or $PDF)
 						{
 							$WordTableRowHash = @{
@@ -26815,8 +26924,8 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting XenAppOptimizationDefinitionPathData State ) -and ($Setting.XenAppOptimizationDefinitionPathData.State -ne "NotConfigured"))
 					{
-						#new in 7.16
-						$txt = "Profile Management\XenApp Optimization settings\Path to XenApp optimization definitions:"
+						#new in 7.16 and renamed in 1808
+						$txt = "Profile Management\Citrix Virtual Apps Optimization settings\Path to Citrix Virtual Apps optimization definitions:"
 						If($Setting.XenAppOptimizationDefinitionPathData.State -eq "Enabled")
 						{
 							If($MSWord -or $PDF)
