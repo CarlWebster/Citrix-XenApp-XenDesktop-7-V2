@@ -3,6 +3,10 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.26
+#	Added to Session details for Applications and Hosting, session Recording Status
+#	Fix incorrect variable names in Function OutputMachineDetails
+
 #Version 2.25 17-Jun-2019
 #	Added new Computer policy settings missed in earlier versions
 #		Profile Management\File system\Synchronization\Profile container - List of folders to be contained in profile disk
