@@ -1030,9 +1030,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.25
+	VERSION: 2.26
 	AUTHOR: Carl Webster
-	LASTEDIT: June 17, 2019
+	LASTEDIT: June 25, 2019
 #>
 
 #endregion
@@ -1237,6 +1237,10 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.26 25-Jun-2019
+#	Added to Session details for Applications and Hosting, session Recording Status
+#	Fix incorrect variable names in Function OutputMachineDetails
+#
 #Version 2.25 17-Jun-2019
 #	Added new Computer policy settings missed in earlier versions
 #		Profile Management\File system\Synchronization\Profile container - List of folders to be contained in profile disk
@@ -8677,16 +8681,16 @@ Function OutputMachineDetails
 		$LinuxVDA = $False
 		If($VDARegistryKeys)
 		{
-			Write-Verbose "$(Get-Date): `t`t`tTesting $(xMachineName)"
+			Write-Verbose "$(Get-Date): `t`t`tTesting $($xMachineName)"
 			$MachineIsOnline = $False
 			If(Test-Connection -ComputerName $xMachineName -EA 0)
 			{
-				Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is online"
+				Write-Verbose "$(Get-Date): `t`t`t`t$($xMachineName) is online"
 				$MachineIsOnline = $True
 			}
 			Else
 			{
-				Write-Verbose "$(Get-Date): `t`t`t`t$(xMachineName) is offline. VDA Registry Key data cannot be gathered."
+				Write-Verbose "$(Get-Date): `t`t`t`t$($xMachineName) is offline. VDA Registry Key data cannot be gathered."
 			}
 		}
 	}
@@ -14253,7 +14257,31 @@ Function OutputApplicationSessions
 			}
 			Else
 			{
-				$xMachineName = "Not Found"
+				If(![String]::IsNullOrEmpty($Session.MachineName))
+				{
+					$xMachineName = $Session.MachineName
+				}
+				Else
+				{
+					$xMachineName = "Not Found"
+				}
+			}
+			
+			#recording status added in 2.26
+			$RecordingStatus = "Not supported"
+			If((Get-BrokerServiceAddedCapability @XDParams1) -contains "SessionRecordingControl")
+			{
+				$result = Get-BrokerSessionRecordingStatus -Session $Session.Uid
+				
+				If($?)
+				{
+					Switch ($result)
+					{
+						"SessionBeingRecorded"	{$RecordingStatus = "Session is being recorded"}
+						"SessionNotRecorded"	{$RecordingStatus = "Session is not being recorded"}
+						Default					{$RecordingStatus = "Unable to determine session recording status: $($result)"}
+					}
+				}
 			}
 			
 			If($MSWord -or $PDF)
@@ -14265,16 +14293,18 @@ Function OutputApplicationSessions
 				State = $Session.SessionState;
 				ApplicationState = $Session.AppState;
 				Protocol = $Session.Protocol;
+				RecordingStatus = $RecordingStatus; #recording status added in 2.26
 				}
 			}
 			ElseIf($Text)
 			{
-				Line 2 "User Name`t: " $Session.UserName
-				Line 2 "Client Name`t: " $Session.ClientName
-				Line 2 "Machine Name`t: " $xMachineName
-				Line 2 "State`t`t: " $Session.SessionState
-				Line 2 "Application State`t`t: " $Session.AppState
-				Line 2 "Protocol`t: " $Session.Protocol
+				Line 2 "User Name`t`t: " $Session.UserName
+				Line 2 "Client Name`t`t: " $Session.ClientName
+				Line 2 "Machine Name`t`t: " $xMachineName
+				Line 2 "State`t`t`t: " $Session.SessionState
+				Line 2 "Application State`t: " $Session.AppState
+				Line 2 "Protocol`t`t: " $Session.Protocol
+				Line 2 "Recording Status`t: " $RecordingStatus #recording status added in 2.26
 				Line 0 ""
 			}
 			ElseIf($HTML)
@@ -14285,26 +14315,29 @@ Function OutputApplicationSessions
 				$xMachineName,$htmlwhite,
 				$Session.SessionState,$htmlwhite,
 				$Session.AppState,$htmlwhite,
-				$Session.Protocol,$htmlwhite))
+				$Session.Protocol,$htmlwhite,
+				$RecordingStatus,$htmlwhite)) #recording status added in 2.26
 			}
 		}
 		
 		If($MSWord -or $PDF)
 		{
 			$Table = AddWordTable -Hashtable $SessionsWordTable `
-			-Columns  UserName,ClientName,MachineName,State,ApplicationState,Protocol `
-			-Headers  "User Name","Client Name","Machine Name","State","Application State","Protocol" `
+			-Columns  UserName,ClientName,MachineName,State,ApplicationState,Protocol,RecordingStatus `
+			-Headers  "User Name","Client Name","Machine Name","State","Application State","Protocol","Recording Status" ` #recording status added in 2.26
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitFixed;
 
+			SetWordCellFormat -Collection $Table -Size 9
 			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-			$Table.Columns.Item(1).Width = 135;
-			$Table.Columns.Item(2).Width = 85;
-			$Table.Columns.Item(3).Width = 135;
-			$Table.Columns.Item(4).Width = 50;
-			$Table.Columns.Item(5).Width = 50;
-			$Table.Columns.Item(6).Width = 55;
+			$Table.Columns.Item(1).Width = 120;
+			$Table.Columns.Item(2).Width = 70;
+			$Table.Columns.Item(3).Width = 125;
+			$Table.Columns.Item(4).Width = 35;
+			$Table.Columns.Item(5).Width = 55;
+			$Table.Columns.Item(6).Width = 45;
+			$Table.Columns.Item(6).Width = 50; #recording status column
 
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -14319,10 +14352,11 @@ Function OutputApplicationSessions
 			'Machine Name',($global:htmlsb),
 			'State',($global:htmlsb),
 			'Application State',($global:htmlsb),
-			'Protocol',($global:htmlsb))
+			'Protocol',($global:htmlsb),
+			'Recording Status',($global:htmlsb)) #recording status added in 2.26
 
 			$msg = ""
-			$columnWidths = @("135","85","135","50","50","55")
+			$columnWidths = @("135","85","135","50","50","55","55")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "510"
 			WriteHTMLLine 0 0 " "
 		}
@@ -33522,6 +33556,23 @@ Function OutputHostingSessions
 			$xSessionType = "Multi"
 		}
 		
+		#recording status added in 2.26
+		$RecordingStatus = "Not supported"
+		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "SessionRecordingControl")
+		{
+			$result = Get-BrokerSessionRecordingStatus -Session $Session.Uid
+			
+			If($?)
+			{
+				Switch ($result)
+				{
+					"SessionBeingRecorded"	{$RecordingStatus = "Session is being recorded"}
+					"SessionNotRecorded"	{$RecordingStatus = "Session is not being recorded"}
+					Default					{$RecordingStatus = "Unable to determine session recording status: $($result)"}
+				}
+			}
+		}
+
 		If($MSWord -or $PDF)
 		{
 			$ScriptInformation = New-Object System.Collections.ArrayList
@@ -33533,6 +33584,7 @@ Function OutputHostingSessions
 			$ScriptInformation.Add(@{Data = "Session State"; Value = $Session.SessionState; }) > $Null
 			$ScriptInformation.Add(@{Data = "Application State"; Value = $Session.AppState; }) > $Null
 			$ScriptInformation.Add(@{Data = "Session Support"; Value = $xSessionType; }) > $Null
+			$ScriptInformation.Add(@{Data = "Recording Status"; Value = $RecordingStatus; }) > $Null #recording status added in 2.26
 			$Table = AddWordTable -Hashtable $ScriptInformation `
 			-Columns Data,Value `
 			-List `
@@ -33560,6 +33612,7 @@ Function OutputHostingSessions
 			Line 1 "Session State`t`t: " $Session.SessionState
 			Line 1 "Application State`t: " $Session.AppState
 			Line 1 "Session Support`t`t: " $xSessionType
+			Line 1 "Recording Status`t`t: " $RecordingStatus #recording status added in 2.26
 			Line 0 ""
 		}
 		ElseIf($HTML)
@@ -33573,6 +33626,7 @@ Function OutputHostingSessions
 			$rowdata += @(,('Session State',($global:htmlsb),$Session.SessionState,$htmlwhite))
 			$rowdata += @(,('Application State',($global:htmlsb),$Session.AppState,$htmlwhite))
 			$rowdata += @(,('Session Support',($global:htmlsb),$xSessionType,$htmlwhite))
+			$rowdata += @(,('Recording Status',($global:htmlsb),$RecordingStatus,$htmlwhite)) #recording status added in 2.26
 
 			$msg = ""
 			$columnWidths = @("150","200")
