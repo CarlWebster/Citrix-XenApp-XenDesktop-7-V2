@@ -1032,7 +1032,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.26
 	AUTHOR: Carl Webster
-	LASTEDIT: June 24, 2019
+	LASTEDIT: June 25, 2019
 #>
 
 #endregion
@@ -1237,7 +1237,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.26
+#Version 2.26 25-Jun-2019
 #	Added to Session details for Applications and Hosting, session Recording Status
 #	Fix incorrect variable names in Function OutputMachineDetails
 #
