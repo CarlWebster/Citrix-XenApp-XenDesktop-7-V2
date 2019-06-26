@@ -1237,9 +1237,10 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.26 25-Jun-2019
+#Version 2.26 27-Jun-2019
 #	Added to Session details for Applications and Hosting, session Recording Status
-#	Fix incorrect variable names in Function OutputMachineDetails
+#	Fixed incorrect variable names in Function OutputMachineDetails
+#	Fixed numerous boolean and numeric values in the HTML output that needed ToString()
 #
 #Version 2.25 17-Jun-2019
 #	Added new Computer policy settings missed in earlier versions
@@ -8836,7 +8837,7 @@ Function OutputMachineDetails
 	$xLastDeregistrationReason = ""
 	Switch ($Machine.LastDeregistrationReason)
 	{
-		$Null									{$xLastDeregistrationReason = ""; Break}
+		$Null									{$xLastDeregistrationReason = "-"; Break}
 		"AgentAddressResolutionFailed"			{$xLastDeregistrationReason = "Agent Address Resolution Failed"; Break}
 		"AgentNotContactable"					{$xLastDeregistrationReason = "Agent Not Contactable"; Break}
 		"AgentRejectedSettingsUpdate"			{$xLastDeregistrationReason = "Agent Rejected Settings Update"; Break}
@@ -10002,11 +10003,11 @@ Function OutputMachineDetails
 			$rowdata += @(,('Allocation Type',($global:htmlsb),$xAllocationType,$htmlwhite))
 			$rowdata += @(,('Maintenance Mode',($global:htmlsb),$xInMaintenanceMode,$htmlwhite))
 			$rowdata += @(,('Windows Connection Setting',($global:htmlsb),$xWindowsConnectionSetting,$htmlwhite))
-			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned,$htmlwhite))
+			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned.ToString(),$htmlwhite))
 			$rowdata += @(,('Is Physical',($global:htmlsb),$xIsPhysical,$htmlwhite))
 			$rowdata += @(,('Provisioning Type',($global:htmlsb),$Machine.ProvisioningType,$htmlwhite))
 			$rowdata += @(,('PvD State',($global:htmlsb),$xPvdStage,$htmlwhite))
-			$rowdata += @(,('Scheduled Reboot',($global:htmlsb),$Machine.ScheduledReboot,$htmlwhite))
+			$rowdata += @(,('Scheduled Reboot',($global:htmlsb),$Machine.ScheduledReboot.ToString(),$htmlwhite))
 			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
 			{
@@ -10023,7 +10024,7 @@ Function OutputMachineDetails
 					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Load Index',($global:htmlsb),$Machine.LoadIndex,$htmlwhite))
+			$rowdata += @(,('Load Index',($global:htmlsb),$Machine.LoadIndex.ToString(),$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -10047,7 +10048,7 @@ Function OutputMachineDetails
 			$rowdata = @()
 			$columnHeaders = @("Agent Version",($global:htmlsb),$Machine.AgentVersion,$htmlwhite)
 			$rowdata += @(,('IP Address',($global:htmlsb),$Machine.IPAddress,$htmlwhite))
-			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned,$htmlwhite))
+			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned.ToString(),$htmlwhite))
 
 			$msg = ""
 			$columnWidths = @("200px","250px")
@@ -10100,9 +10101,9 @@ Function OutputMachineDetails
 			$columnHeaders = @("VM",($global:htmlsb),$Machine.HostedMachineName,$htmlwhite)
 			$rowdata += @(,('Hosting Server Name',($global:htmlsb),$Machine.HostingServerName,$htmlwhite))
 			$rowdata += @(,('Connection',($global:htmlsb),$Machine.HypervisorConnectionName,$htmlwhite))
-			$rowdata += @(,('Pending Update',($global:htmlsb),$Machine.ImageOutOfDate,$htmlwhite))
+			$rowdata += @(,('Pending Update',($global:htmlsb),$Machine.ImageOutOfDate.ToString(),$htmlwhite))
 			$rowdata += @(,('Persist User Changes',($global:htmlsb),$xPersistUserChanges,$htmlwhite))
-			$rowdata += @(,('Power Action Pending',($global:htmlsb),$Machine.PowerActionPending,$htmlwhite))
+			$rowdata += @(,('Power Action Pending',($global:htmlsb),$Machine.PowerActionPending.ToString(),$htmlwhite))
 			$rowdata += @(,('Power State',($global:htmlsb),$Machine.PowerState,$htmlwhite))
 
 			$msg = ""
@@ -10200,7 +10201,7 @@ Function OutputMachineDetails
 			}
 			$rowdata += @(,('Allocation Type',($global:htmlsb),$xAllocationType,$htmlwhite))
 			$rowdata += @(,('Maintenance Mode',($global:htmlsb),$xInMaintenanceMode,$htmlwhite))
-			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned,$htmlwhite))
+			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned.ToString(),$htmlwhite))
 			$rowdata += @(,('Is Physical',($global:htmlsb),$xIsPhysical,$htmlwhite))
 			$rowdata += @(,('Provisioning Type',($global:htmlsb),$Machine.ProvisioningType,$htmlwhite))
 			$rowdata += @(,('PvD State',($global:htmlsb),$xPvdStage,$htmlwhite))
@@ -10209,7 +10210,7 @@ Function OutputMachineDetails
 			{
 				$rowdata += @(,('Zone',($global:htmlsb),$Machine.ZoneName,$htmlwhite))
 			}
-			$rowdata += @(,('Scheduled Reboot',($global:htmlsb),$Machine.ScheduledReboot,$htmlwhite))
+			$rowdata += @(,('Scheduled Reboot',($global:htmlsb),$Machine.ScheduledReboot.ToString(),$htmlwhite))
 			$rowdata += @(,('Summary State',($global:htmlsb),$xSummaryState,$htmlwhite))
 			$rowdata += @(,('Tags',($global:htmlsb),$xTags[0],$htmlwhite))
 			$cnt = -1
@@ -10244,7 +10245,7 @@ Function OutputMachineDetails
 			$rowdata = @()
 			$columnHeaders = @("Agent Version",($global:htmlsb),$Machine.AgentVersion,$htmlwhite)
 			$rowdata += @(,('IP Address',($global:htmlsb),$Machine.IPAddress,$htmlwhite))
-			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned,$htmlwhite))
+			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned.ToString(),$htmlwhite))
 			$rowdata += @(,('OS Type',($global:htmlsb),$Machine.OSType,$htmlwhite))
 
 			$msg = ""
@@ -10315,9 +10316,9 @@ Function OutputMachineDetails
 			$columnHeaders = @("VM",($global:htmlsb),$Machine.HostedMachineName,$htmlwhite)
 			$rowdata += @(,('Hosting Server Name',($global:htmlsb),$Machine.HostingServerName,$htmlwhite))
 			$rowdata += @(,('Connection',($global:htmlsb),$Machine.HypervisorConnectionName,$htmlwhite))
-			$rowdata += @(,('Pending Update',($global:htmlsb),$Machine.ImageOutOfDate,$htmlwhite))
+			$rowdata += @(,('Pending Update',($global:htmlsb),$Machine.ImageOutOfDate.ToString(),$htmlwhite))
 			$rowdata += @(,('Persist User Changes',($global:htmlsb),$xPersistUserChanges,$htmlwhite))
-			$rowdata += @(,('Power Action Pending',($global:htmlsb),$Machine.PowerActionPending,$htmlwhite))
+			$rowdata += @(,('Power Action Pending',($global:htmlsb),$Machine.PowerActionPending.ToString(),$htmlwhite))
 			$rowdata += @(,('Power State',($global:htmlsb),$Machine.PowerState,$htmlwhite))
 			$rowdata += @(,('Will Shutdown After Use',($global:htmlsb),$xWillShutdownAfterUse,$htmlwhite))
 
@@ -10529,12 +10530,12 @@ Function OutputDeliveryGroupTable
 			$rowdata += @(,(
 			$xGroupName,$htmlwhite,
 			$xDeliveryType,$htmlwhite,
-			$Group.TotalDesktops,$htmlwhite,
-			$Group.Sessions,$htmlwhite,
-			$xAppDisks,$htmlwhite,
+			$Group.TotalDesktops.ToString(),$htmlwhite,
+			$Group.Sessions.ToString(),$htmlwhite,
+			$xAppDisks.ToString(),$htmlwhite,
 			$xSingleSession,$htmlwhite,
-			$Group.DesktopsUnregistered,$htmlwhite,
-			$Group.DesktopsDisconnected,$htmlwhite))
+			$Group.DesktopsUnregistered.ToString(),$htmlwhite,
+			$Group.DesktopsDisconnected.ToString(),$htmlwhite))
 		}
 	}
 	
@@ -10675,16 +10676,16 @@ Function OutputDeliveryGroup
 		$rowdata = @()
 		WriteHTMLLine 2 0 "Delivery Group: " $Group.Name
 		$columnHeaders = @("Machine type",($global:htmlsb),$xSingleSession,$htmlwhite)
-		$rowdata += @(,('No. of machines',($global:htmlsb),$Group.TotalDesktops,$htmlwhite))
-		$rowdata += @(,('Sessions in use',($global:htmlsb),$Group.Sessions,$htmlwhite))
-		$rowdata += @(,('No. of applications',($global:htmlsb),$Group.TotalApplications,$htmlwhite))
+		$rowdata += @(,('No. of machines',($global:htmlsb),$Group.TotalDesktops.ToString(),$htmlwhite))
+		$rowdata += @(,('Sessions in use',($global:htmlsb),$Group.Sessions.ToString(),$htmlwhite))
+		$rowdata += @(,('No. of applications',($global:htmlsb),$Group.TotalApplications.ToString(),$htmlwhite))
 		$rowdata += @(,('State',($global:htmlsb),$xState,$htmlwhite))
-		$rowdata += @(,('Unregistered',($global:htmlsb),$Group.DesktopsUnregistered,$htmlwhite))
-		$rowdata += @(,('Disconnected',($global:htmlsb),$Group.DesktopsDisconnected,$htmlwhite))
-		$rowdata += @(,('Available',($global:htmlsb),$Group.DesktopsAvailable,$htmlwhite))
-		$rowdata += @(,('In Use',($global:htmlsb),$Group.DesktopsInUse,$htmlwhite))
-		$rowdata += @(,('Never Registered',($global:htmlsb),$Group.DesktopsNeverRegistered,$htmlwhite))
-		$rowdata += @(,('Preparing',($global:htmlsb),$Group.DesktopsPreparing,$htmlwhite))
+		$rowdata += @(,('Unregistered',($global:htmlsb),$Group.DesktopsUnregistered.ToString(),$htmlwhite))
+		$rowdata += @(,('Disconnected',($global:htmlsb),$Group.DesktopsDisconnected.ToString(),$htmlwhite))
+		$rowdata += @(,('Available',($global:htmlsb),$Group.DesktopsAvailable.ToString(),$htmlwhite))
+		$rowdata += @(,('In Use',($global:htmlsb),$Group.DesktopsInUse.ToString(),$htmlwhite))
+		$rowdata += @(,('Never Registered',($global:htmlsb),$Group.DesktopsNeverRegistered.ToString(),$htmlwhite))
+		$rowdata += @(,('Preparing',($global:htmlsb),$Group.DesktopsPreparing.ToString(),$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("200","200")
@@ -12315,7 +12316,7 @@ Function OutputDeliveryGroupDetails
 		$rowdata += @(,('Set to VDA version',($global:htmlsb),$xVDAVersion,$htmlwhite))
 		If($Group.SessionSupport -eq "SingleSession" -and ($xDGType -eq "Static Desktops" -or $xDGType -like "*Random*"))
 		{
-			$rowdata += @(,('Desktops per user',($global:htmlsb),$xMaxDesktops,$htmlwhite))
+			$rowdata += @(,('Desktops per user',($global:htmlsb),$xMaxDesktops.ToString(),$htmlwhite))
 		}
 		$rowdata += @(,('Time zone',($global:htmlsb),$Group.TimeZone,$htmlwhite))
 		$rowdata += @(,('Enable Delivery Group',($global:htmlsb),$xEnabled,$htmlwhite))
@@ -12350,7 +12351,7 @@ Function OutputDeliveryGroupDetails
 
 		If($Group.SessionSupport -eq "MultiSession")
 		{
-			$rowdata += @(,('Give access to unauthenticated (anonymous) users',($global:htmlsb),$SFAnonymousUsers,$htmlwhite))
+			$rowdata += @(,('Give access to unauthenticated (anonymous) users',($global:htmlsb),$SFAnonymousUsers.ToString(),$htmlwhite))
 		}
 
 		If($xDeliveryType -ne "Applications")
@@ -12442,9 +12443,9 @@ Function OutputDeliveryGroupDetails
 							}
 						}
 					}
-					$rowdata += @(,("     Enable desktop",($global:htmlsb),$DesktopSetting.Enabled,$htmlwhite))
+					$rowdata += @(,("     Enable desktop",($global:htmlsb),$DesktopSetting.Enabled.ToString(),$htmlwhite))
 					#New in V2.19
-					$rowdata += @(,("     Leasing behavior",($global:htmlsb),$DesktopSetting.LeasingBehavior,$htmlwhite))
+					$rowdata += @(,("     Leasing behavior",($global:htmlsb),$DesktopSetting.LeasingBehavior.ToString(),$htmlwhite))
 					$rowdata += @(,("     Maximum concurrent instances",($global:htmlsb),$DesktopSetting.MaxPerEntitlementInstances.ToString(),$htmlwhite))
 					$rowdata += @(,("     SecureICA required",($global:htmlsb),$xSecureIcaRequired,$htmlwhite))
 					$rowdata += @(,("     Session reconnection",($global:htmlsb),$xSessionReconnection,$htmlwhite))
@@ -12604,16 +12605,16 @@ Function OutputDeliveryGroupDetails
 		
 		#added in V2.13
 		#this data has been collected for a long time, I simple forgot to add it to the output
-		$rowdata += @(,( "Off Peak Buffer Size Percent",($global:htmlsb),$xOffPeakBufferSizePercent,$htmlwhite))
-		$rowdata += @(,( "Off Peak Disconnect Timeout (Minutes)",($global:htmlsb),$xOffPeakDisconnectTimeout,$htmlwhite))
-		$rowdata += @(,( "Off Peak Extended Disconnect Timeout (Minutes)",($global:htmlsb),$xOffPeakExtendedDisconnectTimeout,$htmlwhite))
-		$rowdata += @(,( "Off Peak LogOff Timeout (Minutes)",($global:htmlsb),$xOffPeakLogOffTimeout,$htmlwhite))
-		$rowdata += @(,( "Peak Buffer Size Percent",($global:htmlsb),$xPeakBufferSizePercent,$htmlwhite))
-		$rowdata += @(,( "Peak Disconnect Timeout (Minutes)",($global:htmlsb),$xPeakDisconnectTimeout,$htmlwhite))
-		$rowdata += @(,( "Peak Extended Disconnect Timeout (Minutes)",($global:htmlsb),$xPeakExtendedDisconnectTimeout,$htmlwhite))
-		$rowdata += @(,( "Peak LogOff Timeout (Minutes)",($global:htmlsb),$xPeakLogOffTimeout,$htmlwhite))
-		$rowdata += @(,( "Settlement Period Before Autoshutdown (HH:MM:SS)",($global:htmlsb),$xSettlementPeriodBeforeAutoShutdown,$htmlwhite))
-		$rowdata += @(,( "Settlement Period Before Use (HH:MM:SS)",($global:htmlsb),$xSettlementPeriodBeforeUse,$htmlwhite))
+		$rowdata += @(,( "Off Peak Buffer Size Percent",($global:htmlsb),$xOffPeakBufferSizePercent.ToString(),$htmlwhite))
+		$rowdata += @(,( "Off Peak Disconnect Timeout (Minutes)",($global:htmlsb),$xOffPeakDisconnectTimeout.ToString(),$htmlwhite))
+		$rowdata += @(,( "Off Peak Extended Disconnect Timeout (Minutes)",($global:htmlsb),$xOffPeakExtendedDisconnectTimeout.ToString(),$htmlwhite))
+		$rowdata += @(,( "Off Peak LogOff Timeout (Minutes)",($global:htmlsb),$xOffPeakLogOffTimeout.ToString(),$htmlwhite))
+		$rowdata += @(,( "Peak Buffer Size Percent",($global:htmlsb),$xPeakBufferSizePercent.ToString(),$htmlwhite))
+		$rowdata += @(,( "Peak Disconnect Timeout (Minutes)",($global:htmlsb),$xPeakDisconnectTimeout.ToString(),$htmlwhite))
+		$rowdata += @(,( "Peak Extended Disconnect Timeout (Minutes)",($global:htmlsb),$xPeakExtendedDisconnectTimeout.ToString(),$htmlwhite))
+		$rowdata += @(,( "Peak LogOff Timeout (Minutes)",($global:htmlsb),$xPeakLogOffTimeout.ToString(),$htmlwhite))
+		$rowdata += @(,( "Settlement Period Before Autoshutdown (HH:MM:SS)",($global:htmlsb),$xSettlementPeriodBeforeAutoShutdown.ToString(),$htmlwhite))
+		$rowdata += @(,( "Settlement Period Before Use (HH:MM:SS)",($global:htmlsb),$xSettlementPeriodBeforeUse.ToString(),$htmlwhite))
 
 		If($PwrMgmt1)
 		{
@@ -12779,11 +12780,11 @@ Function OutputDeliveryGroupDetails
 		{
 			If($Group.ReuseMachinesWithoutShutdownInOutage -eq $Script:XDSite1.ReuseMachinesWithoutShutdownInOutageAllowed)
 			{
-				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($global:htmlsb),$Group.ReuseMachinesWithoutShutdownInOutage,$htmlwhite))
+				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($global:htmlsb),$Group.ReuseMachinesWithoutShutdownInOutage.ToString(),$htmlwhite))
 			}
 			Else
 			{
-				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($global:htmlsb),"$($Group.ReuseMachinesWithoutShutdownInOutage) (Doesn't match Site setting)",$htmlwhite))
+				$rowdata += @(,("Reuse Machines Without Shutdown in Outage",($global:htmlsb),"$($Group.ReuseMachinesWithoutShutdownInOutage.ToString()) (Doesn't match Site setting)",$htmlwhite))
 			}
 		}
 
@@ -12992,8 +12993,8 @@ Function OutputDeliveryGroupCatalogs
 					$rowdata += @(,(
 					$Catalog.Name,$htmlwhite,
 					$xAllocationType,$htmlwhite,
-					$Catalog.AssignedCount,$htmlwhite,
-					$Catalog.AvailableCount,$htmlwhite))
+					$Catalog.AssignedCount.ToString(),$htmlwhite,
+					$Catalog.AvailableCount.ToString(),$htmlwhite))
 				}
 			}
 		}
@@ -15056,7 +15057,7 @@ Function OutputSummaryPolicyTable
 				$rowdata += @(,(
 				$Policy.PolicyName,$htmlwhite,
 				$Policy.Description,$htmlwhite,
-				$Policy.Enabled,$htmlwhite,
+				$Policy.Enabled.ToString(),$htmlwhite,
 				$Policy.Type,$htmlwhite,
 				$Policy.Priority,$htmlwhite))
 			}
@@ -15282,7 +15283,7 @@ Function ProcessCitrixPolicies
 				}
 				$rowdata = @()
 				$columnHeaders = @("Description",($global:htmlsb),$Policy.Description,$htmlwhite)
-				$rowdata += @(,('Enabled',($global:htmlsb),$Policy.Enabled,$htmlwhite))
+				$rowdata += @(,('Enabled',($global:htmlsb),$Policy.Enabled.ToString(),$htmlwhite))
 				$rowdata += @(,('Type',($global:htmlsb),$Policy.Type,$htmlwhite))
 				$rowdata += @(,('Priority',($global:htmlsb),$Policy.Priority,$htmlwhite))
 
@@ -15370,7 +15371,7 @@ Function ProcessCitrixPolicies
 							$rowdata += @(,(
 							$filter.FilterName,$htmlwhite,
 							$tmp,$htmlwhite,
-							$filter.Enabled,$htmlwhite,
+							$filter.Enabled.ToString(),$htmlwhite,
 							$filter.Mode,$htmlwhite,
 							$filter.FilterValue,$htmlwhite))
 						}
@@ -33812,7 +33813,7 @@ Function OutputLicensingOverview
 		$rowdata += @(,('Edition',($global:htmlsb),$LicenseEditionType,$htmlwhite))
 		$rowdata += @(,('License model',($global:htmlsb),$LicenseModelType,$htmlwhite))
 		$rowdata += @(,('Required SA date',($global:htmlsb),$tmpdate,$htmlwhite))
-		$rowdata += @(,('XenDesktop license use',($global:htmlsb),$Script:XDSite1.LicensedSessionsActive,$htmlwhite))
+		$rowdata += @(,('XenDesktop license use',($global:htmlsb),$Script:XDSite1.LicensedSessionsActive.ToString(),$htmlwhite))
 		$rowdata += @(,('Version',($global:htmlsb),$LicenseServerVersion,$htmlwhite))
 
 		$msg = ""
@@ -35990,7 +35991,7 @@ Function OutputAppendixB
 			}
 			$columnHeaders = @(
 			'Registry Key',($global:htmlsb),
-			'Registry Key',($global:htmlsb),
+			'Registry Value',($global:htmlsb),
 			'Data',($global:htmlsb),
 			'DDC Name',($global:htmlsb))
 
