@@ -3,6 +3,9 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.27 4-Sep-2019
+#	Add a NoSessions parameter to exclude Machine Catalog, Application and Hosting session data from the report
+
 #Version 2.26 27-Jun-2019
 #	Added to Session details for Applications and Hosting, session Recording Status
 #	Fixed incorrect variable names in Function OutputMachineDetails

@@ -350,6 +350,7 @@
 		VDARegistryKeys
 
 	Does not change the value of NoADPolicies.
+	Does not change the value of NoSessions.
 	
 	WARNING: Using this parameter can create an extremely large report and 
 	can take a very long time to run.
@@ -371,6 +372,13 @@
 	
 	This parameter is disabled by default.
 	This parameter has an alias of NP.
+.PARAMETER NoSessions
+	Excludes Machine Catalog, Application and Hosting session data from the report.
+	
+	Using the MaxDetails parameter does not change this setting.
+	
+	This parameter is disabled by default.
+	This parameter has an alias of NS.
 .PARAMETER Policies
 	Give detailed information for both Site and Citrix AD based Policies.
 	
@@ -1030,9 +1038,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.26
+	VERSION: 2.27
 	AUTHOR: Carl Webster
-	LASTEDIT: June 25, 2019
+	LASTEDIT: September 4, 2019
 #>
 
 #endregion
@@ -1181,6 +1189,10 @@ Param(
 	[Switch]$NoPolicies=$False,	
 	
 	[parameter(Mandatory=$False)] 
+	[Alias("NS")]
+	[Switch]$NoSessions=$False,	
+	
+	[parameter(Mandatory=$False)] 
 	[Alias("Pol")]
 	[Switch]$Policies=$False,	
 	
@@ -1236,6 +1248,9 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.27 4-Sep-2019
+#	Add a NoSessions parameter to exclude Machine Catalog, Application and Hosting session data from the report
 
 #Version 2.26 27-Jun-2019
 #	Added to Session details for Applications and Hosting, session Recording Status
@@ -7259,7 +7274,7 @@ Function OutputMachines
 			}
 			
 			#added in V2.20
-			If($SessionSUpport -eq "MultiSession")
+			If($SessionSupport -eq "MultiSession")
 			{
 				$itemKeys = $Catalog.MetadataMap.Keys
 
@@ -7479,7 +7494,7 @@ Function OutputMachines
 			}
 			
 			#added in V2.20
-			If($SessionSUpport -eq "MultiSession")
+			If($SessionSupport -eq "MultiSession")
 			{
 				$itemKeys = $Catalog.MetadataMap.Keys
 
@@ -9029,34 +9044,37 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Name"; Value = $Machine.DNSName; }
 			$ScriptInformation += @{Data = "Machine Catalog"; Value = $Machine.CatalogName; }
 			$ScriptInformation += @{Data = "Delivery Group"; Value = $Machine.DesktopGroupName; }
-			$ScriptInformation += @{Data = "User Display Name"; Value = $xAssociatedUserFullNames[0]; }
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserFullNames)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				$ScriptInformation += @{Data = "User Display Name"; Value = $xAssociatedUserFullNames[0]; }
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserFullNames)
 				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$ScriptInformation += @{Data = ""; Value = $tmp; }
+					}
 				}
-			}
-			$ScriptInformation += @{Data = "User"; Value = $xAssociatedUserNames[0]; }
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserNames)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				$ScriptInformation += @{Data = "User"; Value = $xAssociatedUserNames[0]; }
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserNames)
 				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$ScriptInformation += @{Data = ""; Value = $tmp; }
+					}
 				}
-			}
-			$ScriptInformation += @{Data = "UPN"; Value = $xAssociatedUserUPNs[0]; }
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserUPNs)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				$ScriptInformation += @{Data = "UPN"; Value = $xAssociatedUserUPNs[0]; }
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserUPNs)
 				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$ScriptInformation += @{Data = ""; Value = $tmp; }
+					}
 				}
 			}
 			$ScriptInformation += @{Data = "Desktop Conditions"; Value = $xDesktopConditions[0]; }
@@ -9241,80 +9259,83 @@ Function OutputMachineDetails
 			$Table = $Null
 			WriteWordLine 0 0 ""
 
-			WriteWordLine 4 0 "Connection"
-			[System.Collections.Hashtable[]] $ScriptInformation = @()
-			$ScriptInformation += @{Data = "Last Connection Time"; Value = $xLastConnectionTime ; }
-			$ScriptInformation += @{Data = "Last Connection User"; Value = $Machine.LastConnectionUser; }
-			$ScriptInformation += @{Data = "Secure ICA Active"; Value = $xSessionSecureIcaActive ; }
-
-			$Table = AddWordTable -Hashtable $ScriptInformation `
-			-Columns Data,Value `
-			-List `
-			-Format $wdTableGrid `
-			-AutoFit $wdAutoFitFixed;
-
-			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-			$Table.Columns.Item(1).Width = 200;
-			$Table.Columns.Item(2).Width = 250;
-
-			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-			FindWordDocumentEnd
-			$Table = $Null
-			WriteWordLine 0 0 ""
-
-			WriteWordLine 4 0 "Session Details"
-			[System.Collections.Hashtable[]] $ScriptInformation = @()
-			$ScriptInformation += @{Data = "Launched Via"; Value = $xSessionLaunchedViaHostName; }
-			$ScriptInformation += @{Data = "Launched Via (IP)"; Value = $xSessionLaunchedViaIP; }
-			$ScriptInformation += @{Data = "SmartAccess Filters"; Value = $xSessionSmartAccessTags[0]; }
-			$cnt = -1
-			ForEach($tmp in $xSessionSmartAccessTags)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				WriteWordLine 4 0 "Connection"
+				[System.Collections.Hashtable[]] $ScriptInformation = @()
+				$ScriptInformation += @{Data = "Last Connection Time"; Value = $xLastConnectionTime ; }
+				$ScriptInformation += @{Data = "Last Connection User"; Value = $Machine.LastConnectionUser; }
+				$ScriptInformation += @{Data = "Secure ICA Active"; Value = $xSessionSecureIcaActive ; }
+
+				$Table = AddWordTable -Hashtable $ScriptInformation `
+				-Columns Data,Value `
+				-List `
+				-Format $wdTableGrid `
+				-AutoFit $wdAutoFitFixed;
+
+				SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+				$Table.Columns.Item(1).Width = 200;
+				$Table.Columns.Item(2).Width = 250;
+
+				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+				FindWordDocumentEnd
+				$Table = $Null
+				WriteWordLine 0 0 ""
+
+				WriteWordLine 4 0 "Session Details"
+				[System.Collections.Hashtable[]] $ScriptInformation = @()
+				$ScriptInformation += @{Data = "Launched Via"; Value = $xSessionLaunchedViaHostName; }
+				$ScriptInformation += @{Data = "Launched Via (IP)"; Value = $xSessionLaunchedViaIP; }
+				$ScriptInformation += @{Data = "SmartAccess Filters"; Value = $xSessionSmartAccessTags[0]; }
+				$cnt = -1
+				ForEach($tmp in $xSessionSmartAccessTags)
 				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$ScriptInformation += @{Data = ""; Value = $tmp; }
+					}
 				}
+
+				$Table = AddWordTable -Hashtable $ScriptInformation `
+				-Columns Data,Value `
+				-List `
+				-Format $wdTableGrid `
+				-AutoFit $wdAutoFitFixed;
+
+				SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+				$Table.Columns.Item(1).Width = 200;
+				$Table.Columns.Item(2).Width = 250;
+
+				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+				FindWordDocumentEnd
+				$Table = $Null
+				WriteWordLine 0 0 ""
+
+				WriteWordLine 4 0 "Session"
+				[System.Collections.Hashtable[]] $ScriptInformation = @()
+				$ScriptInformation += @{Data = "Session Count"; Value = $Machine.SessionCount.ToString(); }
+
+				$Table = AddWordTable -Hashtable $ScriptInformation `
+				-Columns Data,Value `
+				-List `
+				-Format $wdTableGrid `
+				-AutoFit $wdAutoFitFixed;
+
+				SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+				$Table.Columns.Item(1).Width = 200;
+				$Table.Columns.Item(2).Width = 250;
+
+				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+				FindWordDocumentEnd
+				$Table = $Null
 			}
-
-			$Table = AddWordTable -Hashtable $ScriptInformation `
-			-Columns Data,Value `
-			-List `
-			-Format $wdTableGrid `
-			-AutoFit $wdAutoFitFixed;
-
-			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-			$Table.Columns.Item(1).Width = 200;
-			$Table.Columns.Item(2).Width = 250;
-
-			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-			FindWordDocumentEnd
-			$Table = $Null
-			WriteWordLine 0 0 ""
-
-			WriteWordLine 4 0 "Session"
-			[System.Collections.Hashtable[]] $ScriptInformation = @()
-			$ScriptInformation += @{Data = "Session Count"; Value = $Machine.SessionCount.ToString(); }
-
-			$Table = AddWordTable -Hashtable $ScriptInformation `
-			-Columns Data,Value `
-			-List `
-			-Format $wdTableGrid `
-			-AutoFit $wdAutoFitFixed;
-
-			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-			$Table.Columns.Item(1).Width = 200;
-			$Table.Columns.Item(2).Width = 250;
-
-			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-			FindWordDocumentEnd
-			$Table = $Null
 		}
 		ElseIf($Machine.SessionSupport -eq "SingleSession")
 		{
@@ -9323,34 +9344,37 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Name"; Value = $Machine.DNSName; }
 			$ScriptInformation += @{Data = "Machine Catalog"; Value = $Machine.CatalogName; }
 			$ScriptInformation += @{Data = "Delivery Group"; Value = $Machine.DesktopGroupName; }
-			$ScriptInformation += @{Data = "User Display Name"; Value = $xAssociatedUserFullNames[0]; }
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserFullNames)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				$ScriptInformation += @{Data = "User Display Name"; Value = $xAssociatedUserFullNames[0]; }
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserFullNames)
 				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$ScriptInformation += @{Data = ""; Value = $tmp; }
+					}
 				}
-			}
-			$ScriptInformation += @{Data = "User"; Value = $xAssociatedUserNames[0]; }
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserNames)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				$ScriptInformation += @{Data = "User"; Value = $xAssociatedUserNames[0]; }
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserNames)
 				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$ScriptInformation += @{Data = ""; Value = $tmp; }
+					}
 				}
-			}
-			$ScriptInformation += @{Data = "UPN"; Value = $xAssociatedUserUPNs[0]; }
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserUPNs)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				$ScriptInformation += @{Data = "UPN"; Value = $xAssociatedUserUPNs[0]; }
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserUPNs)
 				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$ScriptInformation += @{Data = ""; Value = $tmp; }
+					}
 				}
 			}
 			$ScriptInformation += @{Data = "Desktop Conditions"; Value = $xDesktopConditions[0]; }
@@ -9482,35 +9506,38 @@ Function OutputMachineDetails
 			$Table = $Null
 			WriteWordLine 0 0 ""
 
-			WriteWordLine 4 0 "Connection"
-			[System.Collections.Hashtable[]] $ScriptInformation = @()
-			$ScriptInformation += @{Data = "Client (IP)"; Value = $xSessionClientAddress; }
-			$ScriptInformation += @{Data = "Client"; Value = $xSessionClientName; }
-			$ScriptInformation += @{Data = "Plug-in Version"; Value = $xSessionClientVersion; }
-			$ScriptInformation += @{Data = "Connected Via"; Value = $xSessionConnectedViaHostName; }
-			$ScriptInformation += @{Data = "Connected Via (IP)"; Value = $xSessionConnectedViaIP; }
-			$ScriptInformation += @{Data = "Last Connection Time"; Value = $xLastConnectionTime ; }
-			$ScriptInformation += @{Data = "Last Connection User"; Value = $Machine.LastConnectionUser; }
-			$ScriptInformation += @{Data = "Connection Type"; Value = $xSessionProtocol; }
-			$ScriptInformation += @{Data = "Secure ICA Active"; Value = $xSessionSecureIcaActive ; }
+			If($NoSessions -eq $False) #V2.27
+			{
+				WriteWordLine 4 0 "Connection"
+				[System.Collections.Hashtable[]] $ScriptInformation = @()
+				$ScriptInformation += @{Data = "Client (IP)"; Value = $xSessionClientAddress; }
+				$ScriptInformation += @{Data = "Client"; Value = $xSessionClientName; }
+				$ScriptInformation += @{Data = "Plug-in Version"; Value = $xSessionClientVersion; }
+				$ScriptInformation += @{Data = "Connected Via"; Value = $xSessionConnectedViaHostName; }
+				$ScriptInformation += @{Data = "Connected Via (IP)"; Value = $xSessionConnectedViaIP; }
+				$ScriptInformation += @{Data = "Last Connection Time"; Value = $xLastConnectionTime ; }
+				$ScriptInformation += @{Data = "Last Connection User"; Value = $Machine.LastConnectionUser; }
+				$ScriptInformation += @{Data = "Connection Type"; Value = $xSessionProtocol; }
+				$ScriptInformation += @{Data = "Secure ICA Active"; Value = $xSessionSecureIcaActive ; }
 
-			$Table = AddWordTable -Hashtable $ScriptInformation `
-			-Columns Data,Value `
-			-List `
-			-Format $wdTableGrid `
-			-AutoFit $wdAutoFitFixed;
+				$Table = AddWordTable -Hashtable $ScriptInformation `
+				-Columns Data,Value `
+				-List `
+				-Format $wdTableGrid `
+				-AutoFit $wdAutoFitFixed;
 
-			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+				SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
-			$Table.Columns.Item(1).Width = 200;
-			$Table.Columns.Item(2).Width = 250;
+				$Table.Columns.Item(1).Width = 200;
+				$Table.Columns.Item(2).Width = 250;
 
-			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
-			FindWordDocumentEnd
-			$Table = $Null
-			WriteWordLine 0 0 ""
-
+				FindWordDocumentEnd
+				$Table = $Null
+				WriteWordLine 0 0 ""
+			}
+			
 			WriteWordLine 4 0 "Registration"
 			[System.Collections.Hashtable[]] $ScriptInformation = @()
 			$ScriptInformation += @{Data = "Broker"; Value = $Machine.ControllerDNSName; }
@@ -9564,60 +9591,63 @@ Function OutputMachineDetails
 			$Table = $Null
 			WriteWordLine 0 0 ""
 
-			WriteWordLine 4 0 "Session Details"
-			[System.Collections.Hashtable[]] $ScriptInformation = @()
-			$ScriptInformation += @{Data = "Launched Via"; Value = $xSessionLaunchedViaHostName; }
-			$ScriptInformation += @{Data = "Launched Via (IP)"; Value = $xSessionLaunchedViaIP; }
-			$ScriptInformation += @{Data = "Session Change Time"; Value = $xSessionStateChangeTime; }
-			$ScriptInformation += @{Data = "SmartAccess Filters"; Value = $xSessionSmartAccessTags[0]; }
-			$cnt = -1
-			ForEach($tmp in $xSessionSmartAccessTags)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				WriteWordLine 4 0 "Session Details"
+				[System.Collections.Hashtable[]] $ScriptInformation = @()
+				$ScriptInformation += @{Data = "Launched Via"; Value = $xSessionLaunchedViaHostName; }
+				$ScriptInformation += @{Data = "Launched Via (IP)"; Value = $xSessionLaunchedViaIP; }
+				$ScriptInformation += @{Data = "Session Change Time"; Value = $xSessionStateChangeTime; }
+				$ScriptInformation += @{Data = "SmartAccess Filters"; Value = $xSessionSmartAccessTags[0]; }
+				$cnt = -1
+				ForEach($tmp in $xSessionSmartAccessTags)
 				{
-					$ScriptInformation += @{Data = ""; Value = $tmp; }
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$ScriptInformation += @{Data = ""; Value = $tmp; }
+					}
 				}
+
+				$Table = AddWordTable -Hashtable $ScriptInformation `
+				-Columns Data,Value `
+				-List `
+				-Format $wdTableGrid `
+				-AutoFit $wdAutoFitFixed;
+
+				SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+				$Table.Columns.Item(1).Width = 200;
+				$Table.Columns.Item(2).Width = 250;
+
+				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+				FindWordDocumentEnd
+				$Table = $Null
+				WriteWordLine 0 0 ""
+
+				WriteWordLine 4 0 "Session"
+				[System.Collections.Hashtable[]] $ScriptInformation = @()
+				$ScriptInformation += @{Data = "Session State"; Value = $xSessionState; }
+				$ScriptInformation += @{Data = "Current User"; Value = $xSessionUserName; }
+				$ScriptInformation += @{Data = "Start Time"; Value = $xSessionStateChangeTime; }
+
+				$Table = AddWordTable -Hashtable $ScriptInformation `
+				-Columns Data,Value `
+				-List `
+				-Format $wdTableGrid `
+				-AutoFit $wdAutoFitFixed;
+
+				SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
+
+				$Table.Columns.Item(1).Width = 200;
+				$Table.Columns.Item(2).Width = 250;
+
+				$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
+
+				FindWordDocumentEnd
+				$Table = $Null
 			}
-
-			$Table = AddWordTable -Hashtable $ScriptInformation `
-			-Columns Data,Value `
-			-List `
-			-Format $wdTableGrid `
-			-AutoFit $wdAutoFitFixed;
-
-			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-			$Table.Columns.Item(1).Width = 200;
-			$Table.Columns.Item(2).Width = 250;
-
-			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-			FindWordDocumentEnd
-			$Table = $Null
-			WriteWordLine 0 0 ""
-
-			WriteWordLine 4 0 "Session"
-			[System.Collections.Hashtable[]] $ScriptInformation = @()
-			$ScriptInformation += @{Data = "Session State"; Value = $xSessionState; }
-			$ScriptInformation += @{Data = "Current User"; Value = $xSessionUserName; }
-			$ScriptInformation += @{Data = "Start Time"; Value = $xSessionStateChangeTime; }
-
-			$Table = AddWordTable -Hashtable $ScriptInformation `
-			-Columns Data,Value `
-			-List `
-			-Format $wdTableGrid `
-			-AutoFit $wdAutoFitFixed;
-
-			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-
-			$Table.Columns.Item(1).Width = 200;
-			$Table.Columns.Item(2).Width = 250;
-
-			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
-
-			FindWordDocumentEnd
-			$Table = $Null
 		}
 		
 		WriteWordLine 0 0 ""
@@ -9630,34 +9660,37 @@ Function OutputMachineDetails
 			Line 2 "Name`t`t`t`t: " $Machine.DNSName
 			Line 2 "Machine Catalog`t`t`t: " $Machine.CatalogName
 			Line 2 "Delivery Group`t`t`t: " $Machine.DesktopGroupName
-			Line 2 "User Display Name`t`t: " $xAssociatedUserFullNames[0]
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserFullNames)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				Line 2 "User Display Name`t`t: " $xAssociatedUserFullNames[0]
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserFullNames)
 				{
-					Line 6 "  " $tmp
+					$cnt++
+					If($cnt -gt 0)
+					{
+						Line 6 "  " $tmp
+					}
 				}
-			}
-			Line 2 "User`t`t`t`t: " $xAssociatedUserNames[0]
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserNames)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				Line 2 "User`t`t`t`t: " $xAssociatedUserNames[0]
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserNames)
 				{
-					Line 6 "  " $tmp
+					$cnt++
+					If($cnt -gt 0)
+					{
+						Line 6 "  " $tmp
+					}
 				}
-			}
-			Line 2 "UPN`t`t`t`t: " $xAssociatedUserUPNs[0]
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserUPNs)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				Line 2 "UPN`t`t`t`t: " $xAssociatedUserUPNs[0]
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserUPNs)
 				{
-					Line 6 "  " $tmp
+					$cnt++
+					If($cnt -gt 0)
+					{
+						Line 6 "  " $tmp
+					}
 				}
 			}
 			Line 2 "Desktop Conditions`t`t: " $xDesktopConditions[0]
@@ -9757,30 +9790,33 @@ Function OutputMachineDetails
 			Line 2 "Power State`t`t`t: " $Machine.PowerState
 			Line 0 ""
 			
-			Line 1 "Connection"
-			Line 2 "Last Connection Time`t`t: " $xLastConnectionTime 
-			Line 2 "Last Connection User`t`t: " $Machine.LastConnectionUser
-			Line 2 "Secure ICA Active`t`t: " $xSessionSecureIcaActive 
-			Line 0 ""
-			
-			Line 1 "Session Details"
-			Line 2 "Launched Via`t`t`t: " $xSessionLaunchedViaHostName
-			Line 2 "Launched Via (IP)`t`t: " $xSessionLaunchedViaIP
-			Line 2 "SmartAccess Filters`t`t: " $xSessionSmartAccessTags[0]
-			$cnt = -1
-			ForEach($tmp in $xSessionSmartAccessTags)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				Line 1 "Connection"
+				Line 2 "Last Connection Time`t`t: " $xLastConnectionTime 
+				Line 2 "Last Connection User`t`t: " $Machine.LastConnectionUser
+				Line 2 "Secure ICA Active`t`t: " $xSessionSecureIcaActive 
+				Line 0 ""
+				
+				Line 1 "Session Details"
+				Line 2 "Launched Via`t`t`t: " $xSessionLaunchedViaHostName
+				Line 2 "Launched Via (IP)`t`t: " $xSessionLaunchedViaIP
+				Line 2 "SmartAccess Filters`t`t: " $xSessionSmartAccessTags[0]
+				$cnt = -1
+				ForEach($tmp in $xSessionSmartAccessTags)
 				{
-					Line 5 "  " $tmp
+					$cnt++
+					If($cnt -gt 0)
+					{
+						Line 5 "  " $tmp
+					}
 				}
+				Line 0 ""
+				
+				Line 1 "Session"
+				Line 2 "Session Count`t`t`t: " $Machine.SessionCount.ToString()
+				Line 0 ""
 			}
-			Line 0 ""
-			
-			Line 1 "Session"
-			Line 2 "Session Count`t`t`t: " $Machine.SessionCount.ToString()
-			Line 0 ""
 		}
 		ElseIf($Machine.SessionSupport -eq "SingleSession")
 		{
@@ -9788,34 +9824,37 @@ Function OutputMachineDetails
 			Line 2 "Name`t`t`t`t: " $Machine.DNSName
 			Line 2 "Machine Catalog`t`t`t: " $Machine.CatalogName
 			Line 2 "Delivery Group`t`t`t: " $Machine.DesktopGroupName
-			Line 2 "User Display Name`t`t: " $xAssociatedUserFullNames[0]
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserFullNames)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				Line 2 "User Display Name`t`t: " $xAssociatedUserFullNames[0]
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserFullNames)
 				{
-					Line 6 "  " $tmp
+					$cnt++
+					If($cnt -gt 0)
+					{
+						Line 6 "  " $tmp
+					}
 				}
-			}
-			Line 2 "User`t`t`t`t: " $xAssociatedUserNames[0]
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserNames)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				Line 2 "User`t`t`t`t: " $xAssociatedUserNames[0]
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserNames)
 				{
-					Line 6 "  " $tmp
+					$cnt++
+					If($cnt -gt 0)
+					{
+						Line 6 "  " $tmp
+					}
 				}
-			}
-			Line 2 "UPN`t`t`t`t: " $xAssociatedUserUPNs[0]
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserUPNs)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				Line 2 "UPN`t`t`t`t: " $xAssociatedUserUPNs[0]
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserUPNs)
 				{
-					Line 6 "  " $tmp
+					$cnt++
+					If($cnt -gt 0)
+					{
+						Line 6 "  " $tmp
+					}
 				}
 			}
 			Line 2 "Desktop Conditions`t`t: " $xDesktopConditions[0]
@@ -9896,17 +9935,20 @@ Function OutputMachineDetails
 			}
 			Line 0 ""
 			
-			Line 1 "Connection"
-			Line 2 "Client (IP)`t`t`t: " $xSessionClientAddress
-			Line 2 "Client`t`t`t`t: " $xSessionClientName
-			Line 2 "Plug-in Version`t`t`t: " $xSessionClientVersion
-			Line 2 "Connected Via`t`t`t: " $xSessionConnectedViaHostName
-			Line 2 "Connect Via (IP)`t`t: " $xSessionConnectedViaIP
-			Line 2 "Last Connection Time`t`t: " $xLastConnectionTime 
-			Line 2 "Last Connection User`t`t: " $Machine.LastConnectionUser
-			Line 2 "Connection Type`t`t`t: " $xSessionProtocol
-			Line 2 "Secure ICA Active`t`t: " $xSessionSecureIcaActive 
-			Line 0 ""
+			If($NoSessions -eq $False) #V2.27
+			{
+				Line 1 "Connection"
+				Line 2 "Client (IP)`t`t`t: " $xSessionClientAddress
+				Line 2 "Client`t`t`t`t: " $xSessionClientName
+				Line 2 "Plug-in Version`t`t`t: " $xSessionClientVersion
+				Line 2 "Connected Via`t`t`t: " $xSessionConnectedViaHostName
+				Line 2 "Connect Via (IP)`t`t: " $xSessionConnectedViaIP
+				Line 2 "Last Connection Time`t`t: " $xLastConnectionTime 
+				Line 2 "Last Connection User`t`t: " $Machine.LastConnectionUser
+				Line 2 "Connection Type`t`t`t: " $xSessionProtocol
+				Line 2 "Secure ICA Active`t`t: " $xSessionSecureIcaActive 
+				Line 0 ""
+			}
 			
 			Line 1 "Registration"
 			Line 2 "Broker`t`t`t`t: " $Machine.ControllerDNSName
@@ -9927,27 +9969,30 @@ Function OutputMachineDetails
 			Line 2 "Will Shutdown After Use`t`t: " $xWillShutdownAfterUse
 			Line 0 ""
 			
-			Line 1 "Session Details"
-			Line 2 "Launched Via`t`t`t: " $xSessionLaunchedViaHostName
-			Line 2 "Launched Via (IP)`t`t: " $xSessionLaunchedViaIP
-			Line 2 "Session Change Time`t`t: " $xSessionStateChangeTime
-			Line 2 "SmartAccess Filters`t`t: " $xSessionSmartAccessTags[0]
-			$cnt = -1
-			ForEach($tmp in $xSessionSmartAccessTags)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				Line 1 "Session Details"
+				Line 2 "Launched Via`t`t`t: " $xSessionLaunchedViaHostName
+				Line 2 "Launched Via (IP)`t`t: " $xSessionLaunchedViaIP
+				Line 2 "Session Change Time`t`t: " $xSessionStateChangeTime
+				Line 2 "SmartAccess Filters`t`t: " $xSessionSmartAccessTags[0]
+				$cnt = -1
+				ForEach($tmp in $xSessionSmartAccessTags)
 				{
-					Line 5 "  " $tmp
+					$cnt++
+					If($cnt -gt 0)
+					{
+						Line 5 "  " $tmp
+					}
 				}
+				Line 0 ""
+				
+				Line 1 "Session"
+				Line 2 "Session State`t`t`t: " $xSessionState
+				Line 2 "Current User`t`t`t: " $xSessionUserName
+				Line 2 "Start Time`t`t`t: " $xSessionStateChangeTime
+				Line 0 ""
 			}
-			Line 0 ""
-			
-			Line 1 "Session"
-			Line 2 "Session State`t`t`t: " $xSessionState
-			Line 2 "Current User`t`t`t: " $xSessionUserName
-			Line 2 "Start Time`t`t`t: " $xSessionStateChangeTime
-			Line 0 ""
 		}
 	}
 	ElseIf($HTML)
@@ -9960,34 +10005,37 @@ Function OutputMachineDetails
 			$columnHeaders = @("Name",($global:htmlsb),$Machine.DNSName,$htmlwhite)
 			$rowdata += @(,('Machine Catalog',($global:htmlsb),$Machine.CatalogName,$htmlwhite))
 			$rowdata += @(,('Delivery Group',($global:htmlsb),$Machine.DesktopGroupName,$htmlwhite))
-			$rowdata += @(,('User Display Name',($global:htmlsb),$xAssociatedUserFullNames[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserFullNames)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				$rowdata += @(,('User Display Name',($global:htmlsb),$xAssociatedUserFullNames[0],$htmlwhite))
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserFullNames)
 				{
-					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					}
 				}
-			}
-			$rowdata += @(,('User',($global:htmlsb),$xAssociatedUserNames[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserNames)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				$rowdata += @(,('User',($global:htmlsb),$xAssociatedUserNames[0],$htmlwhite))
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserNames)
 				{
-					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					}
 				}
-			}
-			$rowdata += @(,('UPN',($global:htmlsb),$xAssociatedUserUPNs[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserUPNs)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				$rowdata += @(,('UPN',($global:htmlsb),$xAssociatedUserUPNs[0],$htmlwhite))
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserUPNs)
 				{
-					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					}
 				}
 			}
 			$rowdata += @(,('Desktop Conditions',($global:htmlsb),$xDesktopConditions[0],$htmlwhite))
@@ -10111,45 +10159,48 @@ Function OutputMachineDetails
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 			WriteHTMLLine 0 0 " "
 
-			WriteHTMLLine 4 0 "Connection"
-			$rowdata = @()
-			$columnHeaders = @("Last Connection Time",($global:htmlsb),$xLastConnectionTime,$htmlwhite)
-			$rowdata += @(,('Last Connection User',($global:htmlsb),$Machine.LastConnectionUser,$htmlwhite))
-			$rowdata += @(,('Secure ICA Active',($global:htmlsb),$xSessionSecureIcaActive,$htmlwhite))
-
-			$msg = ""
-			$columnWidths = @("200px","250px")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
-
-			WriteHTMLLine 4 0 "Session Details"
-			$rowdata = @()
-			$columnHeaders = @("Launched Via",($global:htmlsb),$xSessionLaunchedViaHostName,$htmlwhite)
-			$rowdata += @(,('Launched Via (IP)',($global:htmlsb),$xSessionLaunchedViaIP,$htmlwhite))
-			$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$xSessionSmartAccessTags[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $xSessionSmartAccessTags)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				WriteHTMLLine 4 0 "Connection"
+				$rowdata = @()
+				$columnHeaders = @("Last Connection Time",($global:htmlsb),$xLastConnectionTime,$htmlwhite)
+				$rowdata += @(,('Last Connection User',($global:htmlsb),$Machine.LastConnectionUser,$htmlwhite))
+				$rowdata += @(,('Secure ICA Active',($global:htmlsb),$xSessionSecureIcaActive,$htmlwhite))
+
+				$msg = ""
+				$columnWidths = @("200px","250px")
+				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+				WriteHTMLLine 0 0 " "
+
+				WriteHTMLLine 4 0 "Session Details"
+				$rowdata = @()
+				$columnHeaders = @("Launched Via",($global:htmlsb),$xSessionLaunchedViaHostName,$htmlwhite)
+				$rowdata += @(,('Launched Via (IP)',($global:htmlsb),$xSessionLaunchedViaIP,$htmlwhite))
+				$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$xSessionSmartAccessTags[0],$htmlwhite))
+				$cnt = -1
+				ForEach($tmp in $xSessionSmartAccessTags)
 				{
-					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					}
 				}
+
+				$msg = ""
+				$columnWidths = @("200px","250px")
+				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+				WriteHTMLLine 0 0 " "
+
+				WriteHTMLLine 4 0 "Session"
+				$rowdata = @()
+				$columnHeaders = @("Session Count",($global:htmlsb),$Machine.SessionCount.ToString(),$htmlwhite)
+
+				$msg = ""
+				$columnWidths = @("200px","250px")
+				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+				WriteHTMLLine 0 0 " "
 			}
-
-			$msg = ""
-			$columnWidths = @("200px","250px")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
-
-			WriteHTMLLine 4 0 "Session"
-			$rowdata = @()
-			$columnHeaders = @("Session Count",($global:htmlsb),$Machine.SessionCount.ToString(),$htmlwhite)
-
-			$msg = ""
-			$columnWidths = @("200px","250px")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 		}
 		ElseIf($Machine.SessionSupport -eq "SingleSession")
 		{
@@ -10159,34 +10210,37 @@ Function OutputMachineDetails
 			$columnHeaders = @("Name",($global:htmlsb),$Machine.DNSName,$htmlwhite)
 			$rowdata += @(,('Machine Catalog',($global:htmlsb),$Machine.CatalogName,$htmlwhite))
 			$rowdata += @(,('Delivery Group',($global:htmlsb),$Machine.DesktopGroupName,$htmlwhite))
-			$rowdata += @(,('User Display Name',($global:htmlsb),$xAssociatedUserFullNames[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserFullNames)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				$rowdata += @(,('User Display Name',($global:htmlsb),$xAssociatedUserFullNames[0],$htmlwhite))
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserFullNames)
 				{
-					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					}
 				}
-			}
-			$rowdata += @(,('User',($global:htmlsb),$xAssociatedUserNames[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserNames)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				$rowdata += @(,('User',($global:htmlsb),$xAssociatedUserNames[0],$htmlwhite))
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserNames)
 				{
-					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					}
 				}
-			}
-			$rowdata += @(,('UPN',($global:htmlsb),$xAssociatedUserUPNs[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $xAssociatedUserUPNs)
-			{
-				$cnt++
-				If($cnt -gt 0)
+				$rowdata += @(,('UPN',($global:htmlsb),$xAssociatedUserUPNs[0],$htmlwhite))
+				$cnt = -1
+				ForEach($tmp in $xAssociatedUserUPNs)
 				{
-					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					}
 				}
 			}
 			$rowdata += @(,('Desktop Conditions',($global:htmlsb),$xDesktopConditions[0],$htmlwhite))
@@ -10281,22 +10335,25 @@ Function OutputMachineDetails
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 			WriteHTMLLine 0 0 " "
 
-			WriteHTMLLine 4 0 "Connection"
-			$rowdata = @()
-			$columnHeaders = @("Client (IP)",($global:htmlsb),$xSessionClientAddress,$htmlwhite)
-			$rowdata += @(,('Client',($global:htmlsb),$xSessionClientName,$htmlwhite))
-			$rowdata += @(,('Plug-in Version',($global:htmlsb),$xSessionClientVersion,$htmlwhite))
-			$rowdata += @(,('Connected Via',($global:htmlsb),$xSessionConnectedViaHostName,$htmlwhite))
-			$rowdata += @(,('Connect Via (IP)',($global:htmlsb),$xSessionConnectedViaIP,$htmlwhite))
-			$rowdata += @(,('Last Connection Time',($global:htmlsb),$xLastConnectionTime,$htmlwhite))
-			$rowdata += @(,('Last Connection User',($global:htmlsb),$Machine.LastConnectionUser,$htmlwhite))
-			$rowdata += @(,('Connection Type',($global:htmlsb),$xSessionProtocol,$htmlwhite))
-			$rowdata += @(,('Secure ICA Active',($global:htmlsb),$xSessionSecureIcaActive,$htmlwhite))
+			If($NoSessions -eq $False) #V2.27
+			{
+				WriteHTMLLine 4 0 "Connection"
+				$rowdata = @()
+				$columnHeaders = @("Client (IP)",($global:htmlsb),$xSessionClientAddress,$htmlwhite)
+				$rowdata += @(,('Client',($global:htmlsb),$xSessionClientName,$htmlwhite))
+				$rowdata += @(,('Plug-in Version',($global:htmlsb),$xSessionClientVersion,$htmlwhite))
+				$rowdata += @(,('Connected Via',($global:htmlsb),$xSessionConnectedViaHostName,$htmlwhite))
+				$rowdata += @(,('Connect Via (IP)',($global:htmlsb),$xSessionConnectedViaIP,$htmlwhite))
+				$rowdata += @(,('Last Connection Time',($global:htmlsb),$xLastConnectionTime,$htmlwhite))
+				$rowdata += @(,('Last Connection User',($global:htmlsb),$Machine.LastConnectionUser,$htmlwhite))
+				$rowdata += @(,('Connection Type',($global:htmlsb),$xSessionProtocol,$htmlwhite))
+				$rowdata += @(,('Secure ICA Active',($global:htmlsb),$xSessionSecureIcaActive,$htmlwhite))
 
-			$msg = ""
-			$columnWidths = @("200px","250px")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
+				$msg = ""
+				$columnWidths = @("200px","250px")
+				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+				WriteHTMLLine 0 0 " "
+			}
 
 			WriteHTMLLine 4 0 "Registration"
 			$rowdata = @()
@@ -10327,37 +10384,40 @@ Function OutputMachineDetails
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
 			WriteHTMLLine 0 0 " "
 
-			WriteHTMLLine 4 0 "Session Details"
-			$rowdata = @()
-			$columnHeaders = @("Launched Via",($global:htmlsb),$xSessionLaunchedViaHostName,$htmlwhite)
-			$rowdata += @(,('Launched Via (IP)',($global:htmlsb),$xSessionLaunchedViaIP,$htmlwhite))
-			$rowdata += @(,('Session Change Time',($global:htmlsb),$xSessionStateChangeTime,$htmlwhite))
-			$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$xSessionSmartAccessTags[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $xSessionSmartAccessTags)
+			If($NoSessions -eq $False) #V2.27
 			{
-				$cnt++
-				If($cnt -gt 0)
+				WriteHTMLLine 4 0 "Session Details"
+				$rowdata = @()
+				$columnHeaders = @("Launched Via",($global:htmlsb),$xSessionLaunchedViaHostName,$htmlwhite)
+				$rowdata += @(,('Launched Via (IP)',($global:htmlsb),$xSessionLaunchedViaIP,$htmlwhite))
+				$rowdata += @(,('Session Change Time',($global:htmlsb),$xSessionStateChangeTime,$htmlwhite))
+				$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$xSessionSmartAccessTags[0],$htmlwhite))
+				$cnt = -1
+				ForEach($tmp in $xSessionSmartAccessTags)
 				{
-					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					}
 				}
+
+				$msg = ""
+				$columnWidths = @("200px","250px")
+				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+				WriteHTMLLine 0 0 " "
+
+				WriteHTMLLine 4 0 "Session"
+				$rowdata = @()
+				$columnHeaders = @("Session State",($global:htmlsb),$xSessionState,$htmlwhite)
+				$rowdata += @(,('Current User',($global:htmlsb),$xSessionUserName,$htmlwhite))
+				$rowdata += @(,('Start Time',($global:htmlsb),$xSessionStateChangeTime,$htmlwhite))
+
+				$msg = ""
+				$columnWidths = @("200px","250px")
+				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+				WriteHTMLLine 0 0 " "
 			}
-
-			$msg = ""
-			$columnWidths = @("200px","250px")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
-
-			WriteHTMLLine 4 0 "Session"
-			$rowdata = @()
-			$columnHeaders = @("Session State",($global:htmlsb),$xSessionState,$htmlwhite)
-			$rowdata += @(,('Current User',($global:htmlsb),$xSessionUserName,$htmlwhite))
-			$rowdata += @(,('Start Time',($global:htmlsb),$xSessionStateChangeTime,$htmlwhite))
-
-			$msg = ""
-			$columnWidths = @("200px","250px")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 }
@@ -13708,7 +13768,11 @@ Function OutputApplications
 			}
 			
 			OutputApplicationDetails $Application
-			OutputApplicationSessions $Application
+			
+			If($NoSessions -eq $False) #V2.27
+			{
+				OutputApplicationSessions $Application
+			}
 			OutputApplicationAdministrators $Application
 		}
 	}
@@ -33166,40 +33230,43 @@ Function OutputHosting
 			OutputWarning $txt
 		}
 
-		Write-Verbose "$(Get-Date): `tProcessing Sessions Data"
-		#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
-		$Sessions = @(Get-BrokerSession @XDParams2 -hypervisorconnectionname $Hypervisor.Name -SortBy UserName)
-		If($? -and ($Null -ne $Sessions))
+		If($NoSessions -eq $False) #V2.27
 		{
-			[int]$cnt = $Sessions.Count
+			Write-Verbose "$(Get-Date): `tProcessing Sessions Data"
+			#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
+			$Sessions = @(Get-BrokerSession @XDParams2 -hypervisorconnectionname $Hypervisor.Name -SortBy UserName)
+			If($? -and ($Null -ne $Sessions))
+			{
+				[int]$cnt = $Sessions.Count
 
-			If($MSWord -or $PDF)
-			{
-				$Selection.InsertNewPage()
-				WriteWordLine 4 0 "Sessions ($($cnt))"
+				If($MSWord -or $PDF)
+				{
+					$Selection.InsertNewPage()
+					WriteWordLine 4 0 "Sessions ($($cnt))"
+				}
+				ElseIf($Text)
+				{
+					Line 0 ""
+					Line 0 "Sessions ($($cnt))"
+					Line 0 ""
+				}
+				ElseIf($HTML)
+				{
+					WriteHTMLLine 4 0 "Sessions ($($cnt))"
+				}
+				
+				OutputHostingSessions $Sessions
 			}
-			ElseIf($Text)
+			ElseIf($? -and ($Null -eq $Sessions))
 			{
-				Line 0 ""
-				Line 0 "Sessions ($($cnt))"
-				Line 0 ""
+				$txt = "There are no Sessions"
+				OutputWarning $txt
 			}
-			ElseIf($HTML)
+			Else
 			{
-				WriteHTMLLine 4 0 "Sessions ($($cnt))"
+				$txt = "Unable to retrieve Sessions"
+				OutputWarning $txt
 			}
-			
-			OutputHostingSessions $Sessions
-		}
-		ElseIf($? -and ($Null -eq $Sessions))
-		{
-			$txt = "There are no Sessions"
-			OutputWarning $txt
-		}
-		Else
-		{
-			$txt = "Unable to retrieve Sessions"
-			OutputWarning $txt
 		}
 	}
 }
