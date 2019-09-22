@@ -1250,14 +1250,18 @@ Param(
 # This script is based on the 1.20 script
 
 #Version 2.28
-#	Add "Multi-session OS" and "Single-session OS" where appropriate for CVAD versions greater than or equal to 1909
+#	Added "Multi-session OS" and "Single-session OS" where appropriate for CVAD versions greater than or equal to 1909
 #		Unlike Citrix, I use the correct form of "Single-session OS" and not "Single session OS". Thanks to Melissa Case
+#	Added new Computer policy settings for CVAD 1909
+#		Profile Management\Advanced settings\Outlook search index database - backup and restore
+#		Profile Management\Basic settings\Migrate user store
+#		Profile Management\Profile handling\Automatic migration of existing application profiles
 #	Rework how to get the Site's version information to remove remote registry access
+#	Rework text output to allow for the longer Machine Catalog and Delivery Group type names
 #	
-
 #Version 2.27 4-Sep-2019
 #	Add a NoSessions parameter to exclude Machine Catalog, Application and Hosting session data from the report
-
+#
 #Version 2.26 27-Jun-2019
 #	Added to Session details for Applications and Hosting, session Recording Status
 #	Fixed incorrect variable names in Function OutputMachineDetails
@@ -6764,11 +6768,11 @@ Function OutputMachines
 	}
 	ElseIf($Text)
 	{
-		Line 0 "                                                                   No. of   Allocated Allocation                                            "
-		Line 0 "Machine Catalog                           Machine Type             Machines Machines  Type       User Data         Provisioning Method      "
-		Line 0 "============================================================================================================================================"
-		#       1234567890123456789012345678901234567890S1234567890123456789012345S12345678S12345678SS1234567890S12345678901234567S1234567890123456789012345
-		#                                                                                                        On personal vDisk Machine creation services
+		Line 0 "                                                                              No. of   Allocated Allocation                                            "
+		Line 0 "Machine Catalog                           Machine Type                        Machines Machines  Type       User Data         Provisioning Method      "
+		Line 0 "======================================================================================================================================================="
+		#       1234567890123456789012345678901234567890S123456789012345678901234567890123456S12345678S12345678SS1234567890S12345678901234567S1234567890123456789012345
+		#                                                Single-session OS (Remote PC Access)                               On personal vDisk Machine creation services
 	}
 	ElseIf($HTML)
 	{
@@ -6886,7 +6890,7 @@ Function OutputMachines
 		}
 		ElseIf($Text)
 		{
-			Line 0 ( "{0,-40} {1,-25} {2,8} {3,8}  {4,-10} {5,-17} {6,-25}" -f `
+			Line 0 ( "{0,-40} {1,-36} {2,8} {3,8}  {4,-10} {5,-17} {6,-25}" -f `
 			$Catalog.Name, $xCatalogType, $NumberOfMachines.ToString(), $Catalog.UsedCount.ToString(), $xAllocationType, $xPersistType, $xProvisioningType)
 		}
 		ElseIf($HTML)
@@ -10563,19 +10567,11 @@ Function OutputDeliveryGroupTable
 	}
 	ElseIf($Text)
 	{
-		Line 1 "                                                                                                           No. of   Sessions          Machine                             "
-		Line 1 "Delivery Group                                                                   Delivering                Machines in use   AppDisks type       Unregistered Disconnected"
-		Line 1 "=========================================================================================================================================================================="
-		#       12345678901234567890123456789012345678901234567890123456789012345678901234567890S1234567890123456789012345S12345678S12345678S12345678S1234567890S123456789012S123456789012
-		#                                                                                        Applications and Desktops 99999999 99999999 99999999 Desktop OS 999999999999 999999999999
-		#$Table.Columns.Item(1).Width = 80;
-		#$Table.Columns.Item(2).Width = 25;
-		#$Table.Columns.Item(3).Width = 8;
-		#$Table.Columns.Item(4).Width = 8;
-		#$Table.Columns.Item(5).Width = 8;
-		#$Table.Columns.Item(6).Width = 10;
-		#$Table.Columns.Item(7).Width = 12;
-		#$Table.Columns.Item(8).Width = 12;
+		Line 1 "                                                                                                           No. of   Sessions          Machine                                                                "
+		Line 1 "Delivery Group                                                                   Delivering                Machines in use   AppDisks type                                          Unregistered Disconnected"
+		Line 1 "============================================================================================================================================================================================================="
+		#       12345678901234567890123456789012345678901234567890123456789012345678901234567890S1234567890123456789012345S12345678S12345678S12345678S123456789012345678901234567890123456789012345S123456789012S123456789012
+		#                                                                                        Applications and Desktops 99999999 99999999 99999999 Single-session OS (Static machine assignment) 999999999999 999999999999
 	}
 	ElseIf($HTML)
 	{
@@ -10674,7 +10670,7 @@ Function OutputDeliveryGroupTable
 		}
 		ElseIf($Text)
 		{
-			Line 1 ( "{0,-80} {1,-25} {2,8} {3,8} {4,8} {5,-10} {6,12} {7,12}" -f `
+			Line 1 ( "{0,-80} {1,-25} {2,8} {3,8} {4,8} {5,-45} {6,12} {7,12}" -f `
 			$xGroupName, $xDeliveryType, $Group.TotalDesktops, $Group.Sessions, `
 			$xAppDisks, $xSingleSession, $Group.DesktopsUnregistered, $Group.DesktopsDisconnected)
 		}
@@ -12116,7 +12112,7 @@ Function OutputDeliveryGroupDetails
 							}
 						}
 					}
-					Line 2 "Enable desktop`t`t`t:`t " $DesktopSetting.Enabled
+					Line 2 "Enable desktop`t`t`t`t: " $DesktopSetting.Enabled
 					#New in V2.19
 					Line 2 "Leasing behavior`t`t`t: " $DesktopSetting.LeasingBehavior
 					Line 2 "Maximum concurrent instances`t`t: " $DesktopSetting.MaxPerEntitlementInstances
@@ -23028,6 +23024,28 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.LoadRetries_Part.Value 
 						}
 					}
+					If((validStateProp $Setting OutlookEdbBackupEnabled State ) -and ($Setting.OutlookEdbBackupEnabled.State -ne "NotConfigured"))
+					{
+						#V2.28 new in CVAD 1909
+						$txt = "Profile Management\Advanced settings\Outlook search index database - backup and restore"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.OutlookEdbBackupEnabled.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.OutlookEdbBackupEnabled.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.OutlookEdbBackupEnabled.State
+						}
+					}
 					If((validStateProp $Setting ProcessCookieFiles State ) -and ($Setting.ProcessCookieFiles.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Advanced settings\Process Internet cookie files on logoff"
@@ -23212,6 +23230,51 @@ Function ProcessCitrixPolicies
 							ElseIf($Text)
 							{
 								OutputPolicySetting $txt $Setting.ExcludedGroups_Part.State
+							}
+						}
+					}
+					If((validStateProp $Setting MigrateUserStore_Part State ) -and ($Setting.MigrateUserStore_Part.State -ne "NotConfigured"))
+					{
+						#V2.28 new in CVAD 1909
+						$txt = "Profile Management\Basic settings\Migrate user store"
+						If($Setting.MigrateUserStore_Part.State -eq "Enabled")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = $Setting.MigrateUserStore_Part.Value;
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.MigrateUserStore_Part.Value,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $Setting.MigrateUserStore_Part.Value 
+							}
+						}
+						Else
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = $Setting.MigrateUserStore_Part.State;
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.MigrateUserStore_Part.State,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt $Setting.MigrateUserStore_Part.State
 							}
 						}
 					}
@@ -26251,6 +26314,28 @@ Function ProcessCitrixPolicies
 					}
 
 					Write-Verbose "$(Get-Date): `t`t`tProfile Management\Profile handling"
+					If((validStateProp $Setting ApplicationProfilesAutoMigration State ) -and ($Setting.ApplicationProfilesAutoMigration.State -ne "NotConfigured"))
+					{
+						#V2.28 new in CVAD 1909
+						$txt = "Profile Management\Profile handling\Automatic migration of existing application profiles"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.ApplicationProfilesAutoMigration.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.ApplicationProfilesAutoMigration.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.ApplicationProfilesAutoMigration.State
+						}
+					}
 					If((validStateProp $Setting ProfileDeleteDelay_Part State ) -and ($Setting.ProfileDeleteDelay_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Profile handling\Delay before deleting cached profiles"
@@ -35369,7 +35454,7 @@ Function ProcessSummaryPage
 		If($Script:XDSiteVersion -ge "1909")
 		{
 			Line 1 "Total Multi-session OS Catalogs`t: " $Script:TotalServerOSCatalogs
-			Line 1 "Total Single-session OS Catalogs`t: " $Script:TotalDesktopOSCatalogs
+			Line 1 "Total Single-session OS Catalogs: " $Script:TotalDesktopOSCatalogs
 		}
 		Else
 		{
