@@ -1040,7 +1040,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.28
 	AUTHOR: Carl Webster
-	LASTEDIT: September 22, 2019
+	LASTEDIT: September 23, 2019
 #>
 
 #endregion
@@ -1252,6 +1252,8 @@ Param(
 #Version 2.28
 #	Added "Multi-session OS" and "Single-session OS" where appropriate for CVAD versions greater than or equal to 1909
 #		Unlike Citrix, I use the correct form of "Single-session OS" and not "Single session OS". Thanks to Melissa Case
+#	Added new VDA registry key for 1909
+#		HKLM:\SOFTWARE\Citrix\AppV\Features
 #	Added new Computer policy settings for CVAD 1909
 #		Profile Management\Advanced settings\Outlook search index database - backup and restore
 #		Profile Management\Basic settings\Migrate user store
@@ -8615,6 +8617,10 @@ Function GetVDARegistryKeys
 
 	If($xType -eq "Server")
 	{
+		#AppV added in 1909
+		#https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/whats-new.html
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\AppV" "Features" $ComputerName $xType
+
 		#added in V2.23 for 1903
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnablePostscriptSimulation" $ComputerName $xType
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnableFullFontEmbedding" $ComputerName $xType
@@ -8681,6 +8687,10 @@ Function GetVDARegistryKeys
 	}
 	ElseIf($xType -eq "Desktop")
 	{
+		#AppV added in 1909
+		#https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/whats-new.html
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\AppV" "Features" $ComputerName $xType
+
 		#added in V2.23 for 1903
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnablePostscriptSimulation" $ComputerName $xType
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnableFullFontEmbedding" $ComputerName $xType
@@ -32236,7 +32246,7 @@ Function GetControllerRegistryKeys
 	
 	Write-Verbose "$(Get-Date): `t`t`tGather Registry Key data"
 	#Get-RegKeyToObject "HKLM:\Software\Policies\" "" $ComputerName
-
+	
 	#ControllerSettings
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ControllerStartupRetryPeriodLimitMs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "ControllerStartupRetryPeriodStartMaxMs" $ComputerName

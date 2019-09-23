@@ -6,6 +6,8 @@
 #Version 2.28
 #	Added "Multi-session OS" and "Single-session OS" where appropriate for CVAD versions greater than or equal to 1909
 #		Unlike Citrix, I use the correct form of "Single-session OS" and not "Single session OS". Thanks to Melissa Case
+#	Added new VDA registry key for 1909
+#		HKLM:\SOFTWARE\Citrix\AppV\Features
 #	Added new Computer policy settings for CVAD 1909
 #		Profile Management\Advanced settings\Outlook search index database - backup and restore
 #		Profile Management\Basic settings\Migrate user store
