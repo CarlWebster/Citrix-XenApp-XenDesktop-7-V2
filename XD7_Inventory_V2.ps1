@@ -1254,6 +1254,10 @@ Param(
 #		Unlike Citrix, I use the correct form of "Single-session OS" and not "Single session OS". Thanks to Melissa Case
 #	Added new VDA registry key for 1909
 #		HKLM:\SOFTWARE\Citrix\AppV\Features
+#	Added new VDA registry key https://support.citrix.com/article/CTX212610
+#		HKLM:\Software\Citrix\Reconnect\DisableGPCalculation
+#	Added new VDA registry key https://support.citrix.com/article/CTX256900
+#		HKLM:\Software\Citrix\Reconnect\FastReconnect
 #	Added new Computer policy settings for CVAD 1909
 #		Profile Management\Advanced settings\Outlook search index database - backup and restore
 #		Profile Management\Basic settings\Migrate user store
@@ -8617,9 +8621,15 @@ Function GetVDARegistryKeys
 
 	If($xType -eq "Server")
 	{
-		#AppV added in 1909
+		#V2.28 AppV added in 1909
 		#https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/whats-new.html
 		Get-VDARegKeyToObject "HKLM:\Software\Citrix\AppV" "Features" $ComputerName $xType
+		
+		#V2.28 https://support.citrix.com/article/CTX212610
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Reconnect" "DisableGPCalculation" $ComputerName $xType
+		
+		#V2.28 https://support.citrix.com/article/CTX256900
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Reconnect" "FastReconnect" $ComputerName $xType
 
 		#added in V2.23 for 1903
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnablePostscriptSimulation" $ComputerName $xType
@@ -8690,6 +8700,12 @@ Function GetVDARegistryKeys
 		#AppV added in 1909
 		#https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/whats-new.html
 		Get-VDARegKeyToObject "HKLM:\Software\Citrix\AppV" "Features" $ComputerName $xType
+		
+		#V2.28 https://support.citrix.com/article/CTX212610
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Reconnect" "DisableGPCalculation" $ComputerName $xType
+		
+		#V2.28 https://support.citrix.com/article/CTX256900
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Reconnect" "FastReconnect" $ComputerName $xType
 
 		#added in V2.23 for 1903
 		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\UniversalPrintDrivers\PDF" "EnablePostscriptSimulation" $ComputerName $xType
