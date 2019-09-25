@@ -1040,7 +1040,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.28
 	AUTHOR: Carl Webster
-	LASTEDIT: September 23, 2019
+	LASTEDIT: September 25, 2019
 #>
 
 #endregion
@@ -1249,9 +1249,12 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.28
+#Version 2.28 25-Sep-2019
 #	Added "Multi-session OS" and "Single-session OS" where appropriate for CVAD versions greater than or equal to 1909
 #		Unlike Citrix, I use the correct form of "Single-session OS" and not "Single session OS". Thanks to Melissa Case
+#	Added new Broker registry keys for 1909
+#		HKLM:\Software\Policies\Citrix\DesktopServer\LegacyPeakTransitionDisconnectedBehaviour
+#		HKLM:\Software\Citrix\DesktopServer\LegacyPeakTransitionDisconnectedBehaviour
 #	Added new VDA registry key for 1909
 #		HKLM:\SOFTWARE\Citrix\AppV\Features
 #	Added new VDA registry key https://support.citrix.com/article/CTX212610
@@ -1264,6 +1267,7 @@ Param(
 #		Profile Management\Profile handling\Automatic migration of existing application profiles
 #	Rework how to get the Site's version information to remove remote registry access
 #	Rework text output to allow for the longer Machine Catalog and Delivery Group type names
+#	Updated for CVAD 1909
 #	
 #Version 2.27 4-Sep-2019
 #	Add a NoSessions parameter to exclude Machine Catalog, Application and Hosting session data from the report
@@ -32366,6 +32370,9 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "WorkerSettingsAssessmentMinutes" $ComputerName
 
 	#HostingManagementSettings
+	#new in 1909
+	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "LegacyPeakTransitionDisconnectedBehaviour" $ComputerName
+	
 	#new in V1808/7.19
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "BulkPowerCheckingCoolOffActivePowerActionsSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "BulkPowerCheckingCoolOffSecs" $ComputerName
@@ -32385,6 +32392,9 @@ Function GetControllerRegistryKeys
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "PvdImageUpdateTimeoutMins" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "SimplePowerActionTimeoutSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Policies\Citrix\DesktopServer" "StarvationBoostPeriodSec" $ComputerName
+
+	#new in 1909
+	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "LegacyPeakTransitionDisconnectedBehaviour" $ComputerName
 	#new in V1808/7.19
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "BulkPowerCheckingCoolOffActivePowerActionsSecs" $ComputerName
 	Get-RegKeyToObject "HKLM:\Software\Citrix\DesktopServer" "BulkPowerCheckingCoolOffSecs" $ComputerName
