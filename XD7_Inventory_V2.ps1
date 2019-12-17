@@ -96,8 +96,8 @@
 .PARAMETER AddDateTime
 	Adds a date timestamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2019 at 6PM is 2019-06-01_1800.
-	Output filename will be ReportName_2019-06-01_1800.docx (or .pdf).
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be ReportName_2020-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 	This parameter has an alias of ADT.
 .PARAMETER AdminAddress
@@ -666,11 +666,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2019
-	-EndDate 01/31/2019	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2020
+	-EndDate 01/31/2020	
 	
-	Creates a report with Configuration Logging details for the dates 01/01/2019 through 
-	01/31/2019.
+	Creates a report with Configuration Logging details for the dates 01/01/2020 through 
+	01/31/2020.
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
@@ -682,11 +682,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2019 10:00:00"
-	-EndDate "06/01/2019 14:00:00"	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2020 10:00:00"
+	-EndDate "06/01/2020 14:00:00"	
 	
 	Creates a report with Configuration Logging details for the time range 
-	06/01/2019 10:00:00AM through 06/01/2019 02:00:00PM.
+	06/01/2020 10:00:00AM through 06/01/2020 02:00:00PM.
 	
 	Narrowing the report down to seconds does not work. Seconds must be either 00 or 59.
 	
@@ -822,8 +822,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2019 at 6PM is 2019-06-01_1800.
-	Output filename will be XD7SiteName_2019-06-01_1800.docx
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be XD7SiteName_2020-06-01_1800.docx
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF -AddDateTime
 	
@@ -839,8 +839,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2019 at 6PM is 2019-06-01_1800.
-	Output filename will be XD7SiteName_2019-06-01_1800.pdf
+	June 1, 2020 at 6PM is 2020-06-01_1800.
+	Output filename will be XD7SiteName_2020-06-01_1800.pdf
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hardware
 	
@@ -1038,9 +1038,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.28
+	VERSION: 2.29
 	AUTHOR: Carl Webster
-	LASTEDIT: September 25, 2019
+	LASTEDIT: December 17, 2019
 #>
 
 #endregion
@@ -1249,6 +1249,14 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.29 17-Dec-2019
+#	Fix Swedish Table of Contents (Thanks to Johan Kallio)
+#		From 
+#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+#		To
+#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+#	Updated help text
+#
 #Version 2.28 25-Sep-2019
 #	Added "Multi-session OS" and "Single-session OS" where appropriate for CVAD versions greater than or equal to 1909
 #		Unlike Citrix, I use the correct form of "Single-session OS" and not "Single session OS". Thanks to Melissa Case
@@ -3531,7 +3539,8 @@ Function SetWordHashTable
 			'nb-'	{ 'Automatisk tabell 2'; Break }
 			'nl-'	{ 'Automatische inhoudsopgave 2'; Break }
 			'pt-'	{ 'Sumário Automático 2'; Break }
-			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+			# fix in 2.29 thanks to Johan Kallio 'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
 			'zh-'	{ '自动目录 2'; Break }
 		}
 	)
@@ -36158,6 +36167,12 @@ Function ProcessScriptEnd
 		}
 	}
 	$ErrorActionPreference = $SaveEAPreference
+
+	Write-Host "                                                                                    " -BackgroundColor Black -ForegroundColor White
+	Write-Host "               This FREE script was brought to you by Conversant Group              " -BackgroundColor Black -ForegroundColor White
+	Write-Host "We design, build, and manage infrastructure for a secure, dependable user experience" -BackgroundColor Black -ForegroundColor White
+	Write-Host "                       Visit our website conversantgroup.com                        " -BackgroundColor Black -ForegroundColor White
+	Write-Host "                                                                                    " -BackgroundColor Black -ForegroundColor White
 }
 #endregion
 
