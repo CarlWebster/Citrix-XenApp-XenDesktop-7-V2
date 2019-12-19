@@ -3,6 +3,14 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.30 19-Dec-2019
+#	Added additional VDA registry key data to Machine details for VDA 1912 (Known Issues for ADM hardware encoding)
+#		HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender\MaxNumRefFrames
+#	Fixed - FINALLY - the issue of detecting the Site Version for comparison.
+#		CVAD 1909 and above show Multi-session OS and Single-session OS
+#		CVAD 1906 and below show Server OS and Desktop OS
+#	Tested with CVAD 1912
+
 #Version 2.29 17-Dec-2019
 #	Fix Swedish Table of Contents (Thanks to Johan Kallio)
 #		From 
