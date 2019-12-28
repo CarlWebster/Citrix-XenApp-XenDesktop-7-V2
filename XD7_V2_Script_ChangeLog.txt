@@ -3,6 +3,11 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.31 28-Dec-2019
+#	Added new Computer policy settings for CVAD 1912 (also applies to 1906 and 1909)
+#		User Personalization Layer\User Layer Repository Path
+#		User Personalization Layer\User Layer Size in GB
+
 #Version 2.30 19-Dec-2019
 #	Added additional VDA registry key data to Machine details for VDA 1912 (Known Issues for ADM hardware encoding)
 #		HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender\MaxNumRefFrames
