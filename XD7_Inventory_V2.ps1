@@ -1038,9 +1038,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.30
+	VERSION: 2.31
 	AUTHOR: Carl Webster
-	LASTEDIT: December 19, 2019
+	LASTEDIT: December 28, 2019
 #>
 
 #endregion
@@ -1249,6 +1249,11 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.31 28-Dec-2019
+#	Added new Computer policy settings for CVAD 1912 (also applies to 1906 and 1909)
+#		User Personalization Layer\User Layer Repository Path
+#		User Personalization Layer\User Layer Size in GB
+#
 #Version 2.30 19-Dec-2019
 #	Added additional VDA registry key data to Machine details for VDA 1912 (Known Issues for ADM hardware encoding)
 #		HKLM:\SOFTWARE\Wow6432Node\Citrix\ICAClient\Engine\Configuration\Advanced\Modules\GfxRender\MaxNumRefFrames
@@ -27457,6 +27462,62 @@ Function ProcessCitrixPolicies
 							{
 								OutputPolicySetting "" $tmp
 							}
+						}
+					}
+
+					#UPL added in 2.31
+					Write-Verbose "$(Get-Date): `t`t`tUser Personalization Layer"
+					If((validStateProp $Setting UplRepositoryPath State ) -and ($Setting.UplRepositoryPath.State -ne "NotConfigured"))
+					{
+						$txt = "User Personalization Layer\User Layer Repository Path"
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.UplRepositoryPath.Value;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.UplRepositoryPath.Value,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.UplRepositoryPath.Value 
+						}
+					}
+					If((validStateProp $Setting UplUserLayerSizeInGb State ) -and ($Setting.UplUserLayerSizeInGb.State -ne "NotConfigured"))
+					{
+						$txt = "User Personalization Layer\User Layer Size in GB"
+						$UPLSize = 0
+						If($Setting.UplUserLayerSizeInGb.Value -eq 0)
+						{
+							$UPLSize = 10
+						}
+						Else
+						{
+							$UPLSize = $Setting.UplUserLayerSizeInGb.Value
+						}
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $UPLSize;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$UPLSize,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $UPLSize 
 						}
 					}
 
