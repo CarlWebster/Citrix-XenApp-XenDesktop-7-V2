@@ -3,6 +3,9 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.32
+#	Added to Delivery Group details, App Protection keyboard and screen capture settings
+
 #Version 2.31 28-Dec-2019
 #	Added new Computer policy settings for CVAD 1912 (also applies to 1906 and 1909)
 #		User Personalization Layer\User Layer Repository Path

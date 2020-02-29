@@ -1038,9 +1038,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.31
+	VERSION: 2.32
 	AUTHOR: Carl Webster
-	LASTEDIT: December 28, 2019
+	LASTEDIT: February 29. 2020
 #>
 
 #endregion
@@ -1249,6 +1249,9 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.32
+#	Added to Delivery Group details, App Protection keyboard and screen capture settings
+#
 #Version 2.31 28-Dec-2019
 #	Added new Computer policy settings for CVAD 1912 (also applies to 1906 and 1909)
 #		User Personalization Layer\User Layer Repository Path
@@ -11812,6 +11815,13 @@ Function OutputDeliveryGroupDetails
 			$ScriptInformation += @{Data = "Product code"; Value = $ProductCode; }
 		}
 
+		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "AppProtection" -and $Group.SessionSupport -eq "SingleSession")
+		{
+			#Added in V2.32
+			$ScriptInformation += @{Data = "App Protection Key Logging Required"; Value = $Group.AppProtectionKeyLoggingRequired; }
+			$ScriptInformation += @{Data = "App Protection Screen Capture Required"; Value = $Group.AppProtectionScreenCaptureRequired; }
+		}
+
 		#added in V2.13
 		#this data has been collected for a long time, I simple forgot to add it to the output
 		$ScriptInformation += @{ Data = "Off Peak Buffer Size Percent"; Value = $xOffPeakBufferSizePercent; }
@@ -12327,6 +12337,13 @@ Function OutputDeliveryGroupDetails
 			Line 1 "Product code`t`t`t`t`t: " $ProductCode
 		}
 
+		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "AppProtection" -and $Group.SessionSupport -eq "SingleSession")
+		{
+			#Added in V2.32
+			Line 1 "App Protection Key Logging Required: " $Group.AppProtectionKeyLoggingRequired
+			Line 1 "App Protection Screen Capture Required" $Group.AppProtectionScreenCaptureRequired
+		}
+
 		#added in V2.13
 		#this data has been collected for a long time, I simple forgot to add it to the output
 		Line 1 "Off Peak Buffer Size Percent`t`t`t: " $xOffPeakBufferSizePercent
@@ -12825,6 +12842,13 @@ Function OutputDeliveryGroupDetails
 			$rowdata += @(,('Product code',($global:htmlsb),$ProductCode,$htmlwhite))
 		}
 		
+		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "AppProtection" -and $Group.SessionSupport -eq "SingleSession")
+		{
+			#Added in V2.32
+			$rowdata += @(,("App Protection Key Logging Required",($global:htmlsb),$Group.AppProtectionKeyLoggingRequired.ToString(),$htmlwhite))
+			$rowdata += @(,("App Protection Screen Capture Required",($global:htmlsb),$Group.AppProtectionScreenCaptureRequired.ToString(),$htmlwhite))
+		}
+
 		#added in V2.13
 		#this data has been collected for a long time, I simple forgot to add it to the output
 		$rowdata += @(,( "Off Peak Buffer Size Percent",($global:htmlsb),$xOffPeakBufferSizePercent.ToString(),$htmlwhite))
