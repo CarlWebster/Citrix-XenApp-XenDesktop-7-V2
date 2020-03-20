@@ -3,8 +3,17 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
-#Version 2.32
+#Version 2.32 20-Mar-2020
 #	Added to Delivery Group details, App Protection keyboard and screen capture settings
+#		App protection is an add-on feature that provides enhanced security when using 
+#		Citrix Workspace app. Two policies provide anti-keylogging and anti-screen-capturing 
+#		capabilities in a session. The policies along with Citrix Workspace app 2001 or later 
+#		for Mac can help protect data from keyloggers and screen scrapers.
+#	Note:
+#		If you connect from an older version of Citrix Workspace app, or from Citrix Receiver, 
+#			these policies are not enabled.
+#		Only workstation operating systems support app protection.
+#	Thanks to fellow CTP Ryan Revord for testing this update
 
 #Version 2.31 28-Dec-2019
 #	Added new Computer policy settings for CVAD 1912 (also applies to 1906 and 1909)

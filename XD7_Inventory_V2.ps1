@@ -1040,7 +1040,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.32
 	AUTHOR: Carl Webster
-	LASTEDIT: February 29. 2020
+	LASTEDIT: March 20, 2020
 #>
 
 #endregion
@@ -1249,8 +1249,17 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.32
+#Version 2.32 20-Mar-2020
 #	Added to Delivery Group details, App Protection keyboard and screen capture settings
+#		App protection is an add-on feature that provides enhanced security when using 
+#		Citrix Workspace app. Two policies provide anti-keylogging and anti-screen-capturing 
+#		capabilities in a session. The policies along with Citrix Workspace app 2001 or later 
+#		for Mac can help protect data from keyloggers and screen scrapers.
+#	Note:
+#		If you connect from an older version of Citrix Workspace app, or from Citrix Receiver, 
+#			these policies are not enabled.
+#		Only workstation operating systems support app protection.
+#	Thanks to fellow CTP Ryan Revord for testing this update
 #
 #Version 2.31 28-Dec-2019
 #	Added new Computer policy settings for CVAD 1912 (also applies to 1906 and 1909)
@@ -12340,8 +12349,8 @@ Function OutputDeliveryGroupDetails
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "AppProtection" -and $Group.SessionSupport -eq "SingleSession")
 		{
 			#Added in V2.32
-			Line 1 "App Protection Key Logging Required: " $Group.AppProtectionKeyLoggingRequired
-			Line 1 "App Protection Screen Capture Required" $Group.AppProtectionScreenCaptureRequired
+			Line 1 "App Protection Key Logging Required`t`t: " $Group.AppProtectionKeyLoggingRequired
+			Line 1 "App Protection Screen Capture Required`t`t: " $Group.AppProtectionScreenCaptureRequired
 		}
 
 		#added in V2.13
