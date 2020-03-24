@@ -3,6 +3,16 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.33
+#	Added new Computer policy settings for CVAD 2003
+#		ICA\Multi-Stream Connections\Multi-Stream virtual channel assignment
+#	Added new User policy settings for CVAD 2003
+#		ICA\Loss Tolerant Mode
+#		ICA\Session Interactivity\Loss Tolerant Mode Thresholds
+#	Added new VDA registry key for 2003 VDAs
+#		HKLM:\Software\Citrix\Graphics\BTLLossyThreshold
+#	Added version 7.25 equals 2003
+
 #Version 2.32 20-Mar-2020
 #	Added to Delivery Group details, App Protection keyboard and screen capture settings
 #		App protection is an add-on feature that provides enhanced security when using 
