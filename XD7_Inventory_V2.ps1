@@ -1040,7 +1040,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.33
 	AUTHOR: Carl Webster
-	LASTEDIT: March 24, 2020
+	LASTEDIT: March 28, 2020
 #>
 
 #endregion
@@ -1252,12 +1252,15 @@ Param(
 #Version 2.33
 #	Added new Computer policy settings for CVAD 2003
 #		ICA\Multi-Stream Connections\Multi-Stream virtual channel assignment
+#		Profile Management\Advanced settings\Enable multi-session write-back for FSLogix Profile Container
 #	Added new User policy settings for CVAD 2003
 #		ICA\Loss Tolerant Mode
 #		ICA\Session Interactivity\Loss Tolerant Mode Thresholds
 #	Added new VDA registry key for 2003 VDAs
 #		HKLM:\Software\Citrix\Graphics\BTLLossyThreshold
 #	Added version 7.25 equals 2003
+#	In the Policies section, for AD policies, add the AD GPO name to the section title line
+#	In the Policies section removed a superfluous line for "Site Policies" and "Active Directory Policies"
 
 #Version 2.32 20-Mar-2020
 #	Added to Delivery Group details, App Protection keyboard and screen capture settings
@@ -15073,7 +15076,7 @@ Function ProcessPolicies
 		TranscriptLogging
 		If(Get-PSDrive localfarmgpo -EA 0)
 		{
-			ProcessCitrixPolicies "localfarmgpo" "Computer"
+			ProcessCitrixPolicies "localfarmgpo" "Computer" ""
 			Write-Verbose "$(Get-Date): Finished Processing Citrix Site Computer Policies"
 			Write-Verbose "$(Get-Date): "
 		}
@@ -15089,7 +15092,7 @@ Function ProcessPolicies
 		TranscriptLogging
 		If(Get-PSDrive localfarmgpo -EA 0)
 		{
-			ProcessCitrixPolicies "localfarmgpo" "User"
+			ProcessCitrixPolicies "localfarmgpo" "User" ""
 			Write-Verbose "$(Get-Date): Finished Processing Citrix Site User Policies"
 			Write-Verbose "$(Get-Date): "
 		}
@@ -15129,7 +15132,7 @@ Function ProcessPolicies
 						Write-Verbose "$(Get-Date): `tProcessing Citrix AD Policy $($CtxGPO)"
 					
 						Write-Verbose "$(Get-Date): `tRetrieving AD Policy $($CtxGPO)"
-						ProcessCitrixPolicies "ADGpoDrv" "Computer"
+						ProcessCitrixPolicies "ADGpoDrv" "Computer" $CtxGPO
 						Write-Verbose "$(Get-Date): Finished Processing Citrix AD Computer Policy $($CtxGPO)"
 						Write-Verbose "$(Get-Date): "
 					}
@@ -15149,7 +15152,7 @@ Function ProcessPolicies
 						Write-Verbose "$(Get-Date): `tProcessing Citrix AD Policy $($CtxGPO)"
 					
 						Write-Verbose "$(Get-Date): `tRetrieving AD Policy $($CtxGPO)"
-						ProcessCitrixPolicies "ADGpoDrv" "User"
+						ProcessCitrixPolicies "ADGpoDrv" "User" $CtxGPO
 						Write-Verbose "$(Get-Date): Finished Processing Citrix AD User Policy $($CtxGPO)"
 						Write-Verbose "$(Get-Date): "
 					}
@@ -15417,7 +15420,7 @@ Function validObject( [object] $object, [string] $topLevel )
 
 Function ProcessCitrixPolicies
 {
-	Param([string]$xDriveName, [string]$xPolicyType)
+	Param([string]$xDriveName, [string]$xPolicyType, [string] $ADGpoName = "")
 
 	Write-Verbose "$(Get-Date): `tRetrieving all $($xPolicyType) policy names"
 
@@ -15428,7 +15431,7 @@ Function ProcessCitrixPolicies
 	$Script:TotalADPoliciesNotProcessed = 0
 	$Script:TotalPolicies = 0
 	
-	If($xDriveName -eq "localfarmgpo")
+	<#If($xDriveName -eq "localfarmgpo")
 	{
 		If($MSWord -or $PDF)
 		{
@@ -15463,7 +15466,7 @@ Function ProcessCitrixPolicies
 			WriteHTMLLine 0 0 ""
 			WriteHTMLLine 0 0 "Active Directory Policies"
 		}
-	}
+	}#>
 	
 	$Policies = Get-CtxGroupPolicy -Type $xPolicyType `
 	-DriveName $xDriveName -EA 0 `
@@ -15503,7 +15506,7 @@ Function ProcessCitrixPolicies
 				}
 				Else
 				{
-					WriteWordLine 2 0 "$($Policy.PolicyName) (AD, $($xPolicyType))"
+					WriteWordLine 2 0 "$($Policy.PolicyName) (AD, $($xPolicyType), GPO: $($ADGpoName))"
 				}
 				[System.Collections.Hashtable[]] $ScriptInformation = @()
 			
@@ -15536,7 +15539,7 @@ Function ProcessCitrixPolicies
 				}
 				Else
 				{
-					Line 0 "$($Policy.PolicyName) (AD, $($xPolicyType))"
+					Line 0 "$($Policy.PolicyName) (AD, $($xPolicyType), GPO: $($ADGpoName))"
 				}
 				If(![String]::IsNullOrEmpty($Policy.Description))
 				{
@@ -15554,7 +15557,7 @@ Function ProcessCitrixPolicies
 				}
 				Else
 				{
-					WriteHTMLLine 2 0 "$($Policy.PolicyName) (AD, $($xPolicyType))"
+					WriteHTMLLine 2 0 "$($Policy.PolicyName) (AD, $($xPolicyType), GPO: $($ADGpoName))"
 				}
 				$rowdata = @()
 				$columnHeaders = @("Description",($global:htmlsb),$Policy.Description,$htmlwhite)
@@ -19924,137 +19927,136 @@ Function ProcessCitrixPolicies
 							{
 								"CTXCAM"	
 									{
-										$tmp = "Virtual Channel: Audio                                       - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Audio - Stream Number: $StreamNumber"; Break
 									}
 								"CTXEUEM"	
 									{
-										$tmp = "Virtual Channel: End User Experience Monitoring              - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: End User Experience Monitoring - Stream Number: $StreamNumber"; Break
 									}
 								"CTXCTL"	
 									{
-										$tmp = "Virtual Channel: ICA Control                                 - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: ICA Control - Stream Number: $StreamNumber"; Break
 									}
 								"CTXIME"	
 									{
-										$tmp = "Virtual Channel: Input Method Editor                         - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Input Method Editor - Stream Number: $StreamNumber"; Break
 									}
 								"CTXLIC"	
 									{
-										$tmp = "Virtual Channel: License Management                          - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: License Management - Stream Number: $StreamNumber"; Break
 									}
 								"CTXMTOP"	
 									{
-										$tmp = "Virtual Channel: Microsoft Teams/WebRTC Redirection          - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Microsoft Teams/WebRTC Redirection - Stream Number: $StreamNumber"; Break
 									}
 								"CTXMOB"	
 									{
-										$tmp = "Virtual Channel: Mobile Receiver                             - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Mobile Receiver - Stream Number: $StreamNumber"; Break
 									}
 								"CTXMTCH"	
 									{
-										$tmp = "Virtual Channel: MultiTouch                                  - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: MultiTouch - Stream Number: $StreamNumber"; Break
 									}
 								"CTXTWI"	
 									{
-										$tmp = "Virtual Channel: Seamless (Tranparent Window Integration)    - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Seamless (Tranparent Window Integration) - Stream Number: $StreamNumber"; Break
 									}
 								"CTXSENS"	
 									{
-										$tmp = "Virtual Channel: Sensor and Location                         - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Sensor and Location - Stream Number: $StreamNumber"; Break
 									}
 								"CTXSCRD"	
 									{
-										$tmp = "Virtual Channel: Smart Card                                  - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Smart Card - Stream Number: $StreamNumber"; Break
 									}
 								"CTXTW"		
 									{
-										$tmp = "Virtual Channel: Thinwire Graphics                           - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Thinwire Graphics - Stream Number: $StreamNumber"; Break
 									}
 								"CTXDND"	
 									{
-										$tmp = "Virtual Channel: CTXDND                                      - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: CTXDND - Stream Number: $StreamNumber"; Break
 									}
 								"CTXNSAP"	
 									{
-										$tmp = "Virtual Channel: App Flow                                    - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: App Flow - Stream Number: $StreamNumber"; Break
 									}
 								"CTXCSB"	
 									{
-										$tmp = "Virtual Channel: Browser Content Redirection                 - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Browser Content Redirection - Stream Number: $StreamNumber"; Break
 									}
 								"CTXCDM"	
 									{
-										$tmp = "Virtual Channel: Client Drive Mapping                        - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Client Drive Mapping - Stream Number: $StreamNumber"; Break
 									}
 								"CTXCLIP"	
 									{
-										$tmp = "Virtual Channel: Clipboard                                   - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Clipboard - Stream Number: $StreamNumber"; Break
 									}
 								"CTXFILE"	
 									{
-										$tmp = "Virtual Channel: File Transfer (HTML5 Receiver)              - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: File Transfer (HTML5 Receiver) - Stream Number: $StreamNumber"; Break
 									}
 								"CTXGDT"	
 									{
-										$tmp = "Virtual Channel: Generic Data Transfer                       - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Generic Data Transfer - Stream Number: $StreamNumber"; Break
 									}
 								"CTXPFWD"	
 									{
-										$tmp = "Virtual Channel: Port Forwarding                             - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Port Forwarding - Stream Number: $StreamNumber"; Break
 									}
 								"CTXMM"		
 									{
-										$tmp = "Virtual Channel: Remote Audio and Video Extensions (RAVE)    - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Remote Audio and Video Extensions (RAVE) - Stream Number: $StreamNumber"; Break
 									}
 								"CTXTUI"	
 									{
-										$tmp = "Virtual Channel: Transparent UI Integration/Logon Status     - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Transparent UI Integration/Logon Status - Stream Number: $StreamNumber"; Break
 									}
 								"CTXTWN"	
 									{
-										$tmp = "Virtual Channel: TWAIN Redirection                           - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: TWAIN Redirection - Stream Number: $StreamNumber"; Break
 									}
 								"CTXGUSB"	
 									{
-										$tmp = "Virtual Channel: USB                                         - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: USB - Stream Number: $StreamNumber"; Break
 									}
 								"CTXZLFK"	
 									{
-										$tmp = "Virtual Channel: Zero Latency Font and Keyboard              - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Zero Latency Font and Keyboard - Stream Number: $StreamNumber"; Break
 									}
 								"CTXZLC"	
 									{
-										$tmp = "Virtual Channel: Zero Latency Data Channel                   - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Zero Latency Data Channel - Stream Number: $StreamNumber"; Break
 									}
 								"CTXCCM"	
 									{
-										$tmp = "Virtual Channel: Client COM Port Mapping                     - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Client COM Port Mapping - Stream Number: $StreamNumber"; Break
 									}
 								"CTXCPM"	
 									{
-										$tmp = "Virtual Channel: Client Printer Mapping                      - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Client Printer Mapping - Stream Number: $StreamNumber"; Break
 									}
 								"CTXCOM1"	
 									{
-										$tmp = "Virtual Channel: Legacy Client Printer Mapping (COM1)        - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Legacy Client Printer Mapping (COM1) - Stream Number: $StreamNumber"; Break
 									}
 								"CTXCOM2"	
 									{
-										$tmp = "Virtual Channel: Legacy Client Printer Mapping (COM2)        - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Legacy Client Printer Mapping (COM2) - Stream Number: $StreamNumber"; Break
 									}
 								"CTXLPT1"	
 									{
-										$tmp = "Virtual Channel: Legacy Client Printer Mapping (LPT1)        - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Legacy Client Printer Mapping (LPT1) - Stream Number: $StreamNumber"; Break
 									}
 								"CTXLPT2"	
 									{
-										$tmp = "Virtual Channel: Legacy Client Printer Mapping (LPT2)        - Stream Number: $StreamNumber"; Break
+										$tmp = "Virtual Channel: Legacy Client Printer Mapping (LPT2) - Stream Number: $StreamNumber"; Break
 									}
 								Default		
 									{
-										#custom virtual channel
-										#43 is length of "Legacy Client Printer Mapping (LPT2)        " minus 1
-										$tmp = "Virtual Channel: $($ChannelName.PadRight(43)) - Stream Number: $StreamNumber"; Break
+										#assume a custom virtual channel
+										$tmp = "Virtual Channel: $($ChannelName) - Stream Number: $StreamNumber"; Break
 									}
 							}
 							If($MSWord -or $PDF)
@@ -23389,6 +23391,29 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.DisableDynamicConfig.State
+						}
+					}
+					If((validStateProp $Setting FSLogixProfileContainerSupport State ) -and ($Setting.FSLogixProfileContainerSupport.State -ne "NotConfigured"))
+					{
+						#new in CVAD 2003
+						#added in V2.33
+						$txt = "Profile Management\Advanced settings\Enable multi-session write-back for FSLogix Profile Container"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.FSLogixProfileContainerSupport.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.FSLogixProfileContainerSupport.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.FSLogixProfileContainerSupport.State
 						}
 					}
 					If((validStateProp $Setting OutlookSearchRoamingEnabled State ) -and ($Setting.OutlookSearchRoamingEnabled.State -ne "NotConfigured"))
