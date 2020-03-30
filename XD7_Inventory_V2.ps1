@@ -1038,9 +1038,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.32
+	VERSION: 2.33
 	AUTHOR: Carl Webster
-	LASTEDIT: March 20, 2020
+	LASTEDIT: March 30, 2020
 #>
 
 #endregion
@@ -1248,6 +1248,20 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.33 30-Mar-2020
+#	Added new Computer policy settings for CVAD 2003
+#		ICA\Multi-Stream Connections\Multi-Stream virtual channel assignment
+#		Profile Management\Advanced settings\Enable multi-session write-back for FSLogix Profile Container
+#	Added new User policy settings for CVAD 2003
+#		ICA\Loss Tolerant Mode
+#		ICA\Session Interactivity\Loss Tolerant Mode Thresholds
+#	Added new VDA registry key for 2003 VDAs
+#		HKLM:\Software\Citrix\Graphics\BTLLossyThreshold
+#		HKLM:\SYSTEM\CurrentControlSet\Services\CtxDNDSvc\Enabled
+#	Added version 7.25 equals 2003
+#	In the Policies section, for AD policies, add the AD GPO name to the section title line
+#	In the Policies section removed a superfluous line for "Site Policies" and "Active Directory Policies"
 
 #Version 2.32 20-Mar-2020
 #	Added to Delivery Group details, App Protection keyboard and screen capture settings
@@ -8659,6 +8673,10 @@ Function GetVDARegistryKeys
 
 	If($xType -eq "Server")
 	{
+		#V2.33 added for VDA 2003
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Graphics" "BTLLossyThreshold" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxDNDSvc" "Enabled" $ComputerName $xType
+		
 		#V2.28 AppV added in 1909
 		#https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/whats-new.html
 		Get-VDARegKeyToObject "HKLM:\Software\Citrix\AppV" "Features" $ComputerName $xType
@@ -8737,6 +8755,10 @@ Function GetVDARegistryKeys
 	}
 	ElseIf($xType -eq "Desktop")
 	{
+		#V2.33 added for VDA 2003
+		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Graphics" "BTLLossyThreshold" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxDNDSvc" "Enabled" $ComputerName $xType
+
 		#AppV added in 1909
 		#https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/whats-new.html
 		Get-VDARegKeyToObject "HKLM:\Software\Citrix\AppV" "Features" $ComputerName $xType
@@ -15057,7 +15079,7 @@ Function ProcessPolicies
 		TranscriptLogging
 		If(Get-PSDrive localfarmgpo -EA 0)
 		{
-			ProcessCitrixPolicies "localfarmgpo" "Computer"
+			ProcessCitrixPolicies "localfarmgpo" "Computer" ""
 			Write-Verbose "$(Get-Date): Finished Processing Citrix Site Computer Policies"
 			Write-Verbose "$(Get-Date): "
 		}
@@ -15073,7 +15095,7 @@ Function ProcessPolicies
 		TranscriptLogging
 		If(Get-PSDrive localfarmgpo -EA 0)
 		{
-			ProcessCitrixPolicies "localfarmgpo" "User"
+			ProcessCitrixPolicies "localfarmgpo" "User" ""
 			Write-Verbose "$(Get-Date): Finished Processing Citrix Site User Policies"
 			Write-Verbose "$(Get-Date): "
 		}
@@ -15113,7 +15135,7 @@ Function ProcessPolicies
 						Write-Verbose "$(Get-Date): `tProcessing Citrix AD Policy $($CtxGPO)"
 					
 						Write-Verbose "$(Get-Date): `tRetrieving AD Policy $($CtxGPO)"
-						ProcessCitrixPolicies "ADGpoDrv" "Computer"
+						ProcessCitrixPolicies "ADGpoDrv" "Computer" $CtxGPO
 						Write-Verbose "$(Get-Date): Finished Processing Citrix AD Computer Policy $($CtxGPO)"
 						Write-Verbose "$(Get-Date): "
 					}
@@ -15133,7 +15155,7 @@ Function ProcessPolicies
 						Write-Verbose "$(Get-Date): `tProcessing Citrix AD Policy $($CtxGPO)"
 					
 						Write-Verbose "$(Get-Date): `tRetrieving AD Policy $($CtxGPO)"
-						ProcessCitrixPolicies "ADGpoDrv" "User"
+						ProcessCitrixPolicies "ADGpoDrv" "User" $CtxGPO
 						Write-Verbose "$(Get-Date): Finished Processing Citrix AD User Policy $($CtxGPO)"
 						Write-Verbose "$(Get-Date): "
 					}
@@ -15401,7 +15423,7 @@ Function validObject( [object] $object, [string] $topLevel )
 
 Function ProcessCitrixPolicies
 {
-	Param([string]$xDriveName, [string]$xPolicyType)
+	Param([string]$xDriveName, [string]$xPolicyType, [string] $ADGpoName = "")
 
 	Write-Verbose "$(Get-Date): `tRetrieving all $($xPolicyType) policy names"
 
@@ -15412,7 +15434,7 @@ Function ProcessCitrixPolicies
 	$Script:TotalADPoliciesNotProcessed = 0
 	$Script:TotalPolicies = 0
 	
-	If($xDriveName -eq "localfarmgpo")
+	<#If($xDriveName -eq "localfarmgpo")
 	{
 		If($MSWord -or $PDF)
 		{
@@ -15447,7 +15469,7 @@ Function ProcessCitrixPolicies
 			WriteHTMLLine 0 0 ""
 			WriteHTMLLine 0 0 "Active Directory Policies"
 		}
-	}
+	}#>
 	
 	$Policies = Get-CtxGroupPolicy -Type $xPolicyType `
 	-DriveName $xDriveName -EA 0 `
@@ -15487,7 +15509,7 @@ Function ProcessCitrixPolicies
 				}
 				Else
 				{
-					WriteWordLine 2 0 "$($Policy.PolicyName) (AD, $($xPolicyType))"
+					WriteWordLine 2 0 "$($Policy.PolicyName) (AD, $($xPolicyType), GPO: $($ADGpoName))"
 				}
 				[System.Collections.Hashtable[]] $ScriptInformation = @()
 			
@@ -15520,7 +15542,7 @@ Function ProcessCitrixPolicies
 				}
 				Else
 				{
-					Line 0 "$($Policy.PolicyName) (AD, $($xPolicyType))"
+					Line 0 "$($Policy.PolicyName) (AD, $($xPolicyType), GPO: $($ADGpoName))"
 				}
 				If(![String]::IsNullOrEmpty($Policy.Description))
 				{
@@ -15538,7 +15560,7 @@ Function ProcessCitrixPolicies
 				}
 				Else
 				{
-					WriteHTMLLine 2 0 "$($Policy.PolicyName) (AD, $($xPolicyType))"
+					WriteHTMLLine 2 0 "$($Policy.PolicyName) (AD, $($xPolicyType), GPO: $($ADGpoName))"
 				}
 				$rowdata = @()
 				$columnHeaders = @("Description",($global:htmlsb),$Policy.Description,$htmlwhite)
@@ -16473,6 +16495,28 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.LogoffCheckerStartupDelay.Value 
+						}
+					}
+					If((validStateProp $Setting LossTolerantModeAvailable State ) -and ($Setting.LossTolerantModeAvailable.State -ne "NotConfigured"))
+					{
+						#added in V2.33 for CVAD 2003
+						$txt = "ICA\Loss Tolerant Mode"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.LossTolerantModeAvailable.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.LossTolerantModeAvailable.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.LossTolerantModeAvailable.State
 						}
 					}
 					If((validStateProp $Setting PrimarySelectionUpdateMode State ) -and ($Setting.PrimarySelectionUpdateMode.State -ne "NotConfigured"))
@@ -19571,7 +19615,7 @@ Function ProcessCitrixPolicies
 					Write-Verbose "$(Get-Date): `t`t`tICA\Multi-Stream Connections"
 					If((validStateProp $Setting UDPAudioOnServer State ) -and ($Setting.UDPAudioOnServer.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\MultiStream Connections\Audio over UDP"
+						$txt = "ICA\Multi-Stream Connections\Audio over UDP"
 						If($MSWord -or $PDF)
 						{
 							$SettingsWordTable += @{
@@ -19592,7 +19636,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting RtpAudioPortRange State ) -and ($Setting.RtpAudioPortRange.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\MultiStream Connections\Audio UDP port range"
+						$txt = "ICA\Multi-Stream Connections\Audio UDP port range"
 						If($MSWord -or $PDF)
 						{
 							$SettingsWordTable += @{
@@ -19613,8 +19657,8 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting MultiPortPolicy State ) -and ($Setting.MultiPortPolicy.State -ne "NotConfigured"))
 					{
-						$txt1 = "ICA\MultiStream Connections\Multi-Port Policy\CGP default port"
-						$txt2 = "ICA\MultiStream Connections\Multi-Port Policy\CGP default port priority"
+						$txt1 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP default port"
+						$txt2 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP default port priority"
 						If($MSWord -or $PDF)
 						{
 							$SettingsWordTable += @{
@@ -19680,12 +19724,12 @@ Function ProcessCitrixPolicies
 								"3"	{$Port3Priority = "Low"; Break}
 								Default	{$Port3Priority = "Unknown"; Break}
 							}
-							$txt1 = "ICA\MultiStream Connections\Multi-Port Policy\CGP port1"
-							$txt2 = "ICA\MultiStream Connections\Multi-Port Policy\CGP port1 priority"
-							$txt3 = "ICA\MultiStream Connections\Multi-Port Policy\CGP port2"
-							$txt4 = "ICA\MultiStream Connections\Multi-Port Policy\CGP port2 priority"
-							$txt5 = "ICA\MultiStream Connections\Multi-Port Policy\CGP port3"
-							$txt6 = "ICA\MultiStream Connections\Multi-Port Policy\CGP port3 priority"
+							$txt1 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP port1"
+							$txt2 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP port1 priority"
+							$txt3 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP port2"
+							$txt4 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP port2 priority"
+							$txt5 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP port3"
+							$txt6 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP port3 priority"
 							If($MSWord -or $PDF)
 							{
 								$SettingsWordTable += @{
@@ -19773,7 +19817,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting MultiStreamPolicy State ) -and ($Setting.MultiStreamPolicy.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\MultiStream Connections\Multi-Stream computer setting"
+						$txt = "ICA\Multi-Stream Connections\Multi-Stream computer setting"
 						If($MSWord -or $PDF)
 						{
 							$SettingsWordTable += @{
@@ -19794,7 +19838,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting MultiStream State ) -and ($Setting.MultiStream.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\MultiStream Connections\Multi-Stream user setting"
+						$txt = "ICA\Multi-Stream Connections\Multi-Stream user setting"
 						If($MSWord -or $PDF)
 						{
 							$SettingsWordTable += @{
@@ -19812,6 +19856,232 @@ Function ProcessCitrixPolicies
 						{
 							OutputPolicySetting $txt $Setting.MultiStream.State 
 						}
+					}
+					If((validStateProp $Setting MultiStreamAssignment State ) -and ($Setting.MultiStreamAssignment.State -ne "NotConfigured"))
+					{
+						#added in 2.33 for CVAD 2003
+						<#
+						Value=		Virtual Channels							Stream Number
+						CTXCAM,0; 	Audio                                       0
+						CTXEUEM,1;	End User Experience Monitoring              1
+						CTXCTL,1;	ICA Control                                 1
+						CTXIME,1;	Input Method Editor                         1
+						CTXLIC,1;	License Management                          1
+						CTXMTOP,1;	Microsoft Teams/WebRTC Redirection          1
+						CTXMOB,1;	Mobile Receiver                             1
+						CTXMTCH,1;	MultiTouch                                  1
+						CTXTWI,1;	Seamless (Tranparent Window Integration)    1
+						CTXSENS,1;	Sensor and Location                         1
+						CTXSCRD,1;	Smart Card                                  1
+						CTXTW,1;	Thinwire Graphics                           1
+						CTXDND,1;	CTXDND                                      1
+						CTXNSAP,2;	App Flow                                    2
+						CTXCSB,2;	Browser Content Redirection                 2
+						CTXCDM,2;	Client Drive Mapping                        2
+						CTXCLIP,2;	Clipboard                                   2
+						CTXFILE,2;	File Transfer (HTML5 Receiver)              2
+						CTXGDT,2;	Generic Data Transfer                       2
+						CTXPFWD,2;	Port Forwarding                             2
+						CTXMM,2;	Remote Audio and Video Extensions (RAVE)    2
+						CTXTUI,2;	Transparent UI Integration/Logon Status     2
+						CTXTWN,2;	TWAIN Redirection                           2
+						CTXGUSB,2;	USB                                         2
+						CTXZLFK,2;	Zero Latency Font and Keyboard              2
+						CTXZLC,2;	Zero Latency Data Channel                   2
+						CTXCCM,3;	Client COM Port Mapping                     3
+						CTXCPM,3;	Client Printer Mapping                      3
+						CTXCOM1,3;	Legacy Client Printer Mapping (COM1)        3
+						CTXCOM2,3;	Legacy Client Printer Mapping (COM2)        3
+						CTXLPT1,3;	Legacy Client Printer Mapping (LPT1)        3
+						CTXLPT2,3;	Legacy Client Printer Mapping (LPT2)        3
+						#>
+						$txt = "ICA\Multi-Stream Connections\Multi-Stream virtual channel stream assignment"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = "";
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							"",$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt ""
+						}
+						$Values = $Setting.MultiStreamAssignment.Value.Split(';')
+						$tmp = ""
+						ForEach($Value in $Values)
+						{
+							$tmparray = $Value.Split(",")
+							$ChannelName = $tmparray[0]
+							$StreamNumber = $tmparray[1]
+							
+							If($ChannelName -eq "")
+							{
+								Continue
+							}
+							
+							Switch ($ChannelName)
+							{
+								"CTXCAM"	
+									{
+										$tmp = "Virtual Channel: Audio - Stream Number: $StreamNumber"; Break
+									}
+								"CTXEUEM"	
+									{
+										$tmp = "Virtual Channel: End User Experience Monitoring - Stream Number: $StreamNumber"; Break
+									}
+								"CTXCTL"	
+									{
+										$tmp = "Virtual Channel: ICA Control - Stream Number: $StreamNumber"; Break
+									}
+								"CTXIME"	
+									{
+										$tmp = "Virtual Channel: Input Method Editor - Stream Number: $StreamNumber"; Break
+									}
+								"CTXLIC"	
+									{
+										$tmp = "Virtual Channel: License Management - Stream Number: $StreamNumber"; Break
+									}
+								"CTXMTOP"	
+									{
+										$tmp = "Virtual Channel: Microsoft Teams/WebRTC Redirection - Stream Number: $StreamNumber"; Break
+									}
+								"CTXMOB"	
+									{
+										$tmp = "Virtual Channel: Mobile Receiver - Stream Number: $StreamNumber"; Break
+									}
+								"CTXMTCH"	
+									{
+										$tmp = "Virtual Channel: MultiTouch - Stream Number: $StreamNumber"; Break
+									}
+								"CTXTWI"	
+									{
+										$tmp = "Virtual Channel: Seamless (Tranparent Window Integration) - Stream Number: $StreamNumber"; Break
+									}
+								"CTXSENS"	
+									{
+										$tmp = "Virtual Channel: Sensor and Location - Stream Number: $StreamNumber"; Break
+									}
+								"CTXSCRD"	
+									{
+										$tmp = "Virtual Channel: Smart Card - Stream Number: $StreamNumber"; Break
+									}
+								"CTXTW"		
+									{
+										$tmp = "Virtual Channel: Thinwire Graphics - Stream Number: $StreamNumber"; Break
+									}
+								"CTXDND"	
+									{
+										$tmp = "Virtual Channel: CTXDND - Stream Number: $StreamNumber"; Break
+									}
+								"CTXNSAP"	
+									{
+										$tmp = "Virtual Channel: App Flow - Stream Number: $StreamNumber"; Break
+									}
+								"CTXCSB"	
+									{
+										$tmp = "Virtual Channel: Browser Content Redirection - Stream Number: $StreamNumber"; Break
+									}
+								"CTXCDM"	
+									{
+										$tmp = "Virtual Channel: Client Drive Mapping - Stream Number: $StreamNumber"; Break
+									}
+								"CTXCLIP"	
+									{
+										$tmp = "Virtual Channel: Clipboard - Stream Number: $StreamNumber"; Break
+									}
+								"CTXFILE"	
+									{
+										$tmp = "Virtual Channel: File Transfer (HTML5 Receiver) - Stream Number: $StreamNumber"; Break
+									}
+								"CTXGDT"	
+									{
+										$tmp = "Virtual Channel: Generic Data Transfer - Stream Number: $StreamNumber"; Break
+									}
+								"CTXPFWD"	
+									{
+										$tmp = "Virtual Channel: Port Forwarding - Stream Number: $StreamNumber"; Break
+									}
+								"CTXMM"		
+									{
+										$tmp = "Virtual Channel: Remote Audio and Video Extensions (RAVE) - Stream Number: $StreamNumber"; Break
+									}
+								"CTXTUI"	
+									{
+										$tmp = "Virtual Channel: Transparent UI Integration/Logon Status - Stream Number: $StreamNumber"; Break
+									}
+								"CTXTWN"	
+									{
+										$tmp = "Virtual Channel: TWAIN Redirection - Stream Number: $StreamNumber"; Break
+									}
+								"CTXGUSB"	
+									{
+										$tmp = "Virtual Channel: USB - Stream Number: $StreamNumber"; Break
+									}
+								"CTXZLFK"	
+									{
+										$tmp = "Virtual Channel: Zero Latency Font and Keyboard - Stream Number: $StreamNumber"; Break
+									}
+								"CTXZLC"	
+									{
+										$tmp = "Virtual Channel: Zero Latency Data Channel - Stream Number: $StreamNumber"; Break
+									}
+								"CTXCCM"	
+									{
+										$tmp = "Virtual Channel: Client COM Port Mapping - Stream Number: $StreamNumber"; Break
+									}
+								"CTXCPM"	
+									{
+										$tmp = "Virtual Channel: Client Printer Mapping - Stream Number: $StreamNumber"; Break
+									}
+								"CTXCOM1"	
+									{
+										$tmp = "Virtual Channel: Legacy Client Printer Mapping (COM1) - Stream Number: $StreamNumber"; Break
+									}
+								"CTXCOM2"	
+									{
+										$tmp = "Virtual Channel: Legacy Client Printer Mapping (COM2) - Stream Number: $StreamNumber"; Break
+									}
+								"CTXLPT1"	
+									{
+										$tmp = "Virtual Channel: Legacy Client Printer Mapping (LPT1) - Stream Number: $StreamNumber"; Break
+									}
+								"CTXLPT2"	
+									{
+										$tmp = "Virtual Channel: Legacy Client Printer Mapping (LPT2) - Stream Number: $StreamNumber"; Break
+									}
+								Default		
+									{
+										#assume a custom virtual channel
+										$tmp = "Virtual Channel: $($ChannelName) - Stream Number: $StreamNumber"; Break
+									}
+							}
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = "";
+								Value = $tmp;
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								"",$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting "`t`t`t`t`t`t" $tmp
+							}
+						}
+						$tmp = $Null
+						$Values = $Null
 					}
 
 					Write-Verbose "$(Get-Date): `t`t`tICA\Port Redirection"
@@ -21418,6 +21688,83 @@ Function ProcessCitrixPolicies
 						{
 							OutputPolicySetting $txt $Setting.IdleTimerInterval.Value 
 						}
+					}
+					
+					Write-Verbose "$(Get-Date): `t`t`tICA\Session Interactivity"
+					If((validStateProp $Setting LossTolerantThresholds State ) -and ($Setting.LossTolerantThresholds.State -ne "NotConfigured"))
+					{
+						$txt = "ICA\Session Interactivity\Loss Tolerant Mode Thresholds"
+						#added in 2.33 for CVAD 2003
+						<#
+						Value=		Threshold Type             Threshold Value
+						loss,n; 	Packet Loss Percentage     n
+						latency,n;	Round Trip Latency (ms)    nnn
+						#>
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = "";
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							"",$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt ""
+						}
+						$Values = $Setting.LossTolerantThresholds.Value.Split(';')
+						$tmp = ""
+						ForEach($Value in $Values)
+						{
+							$tmparray = $Value.Split(",")
+							$ThresholdType  = $tmparray[0]
+							$ThresholdValue = $tmparray[1]
+							
+							If($ThresholdType -eq "")
+							{
+								Continue
+							}
+							
+							Switch ($ThresholdType)
+							{
+								"loss"	
+									{
+										$tmp = "Threshold Type: Packet Loss Percentage     - Threshold Value: $ThresholdValue"; Break
+									}
+								"latency"	
+									{
+										$tmp = "Threshold Type: Round Trip Latency (ms)    - Threshold Value: $ThresholdValue"; Break
+									}
+								Default		
+									{
+										$tmp = "Unknown Values: Threshold Type: $ThresholdType - Threshold Value: $ThresholdValue"; Break
+									}
+							}
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = "";
+								Value = $tmp;
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								"",$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting "`t`t`t`t`t`t" $tmp
+							}
+						}
+						$tmp = $Null
+						$Values = $Null
 					}
 					
 					Write-Verbose "$(Get-Date): `t`t`tICA\Session Limits"
@@ -23047,6 +23394,29 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.DisableDynamicConfig.State
+						}
+					}
+					If((validStateProp $Setting FSLogixProfileContainerSupport State ) -and ($Setting.FSLogixProfileContainerSupport.State -ne "NotConfigured"))
+					{
+						#new in CVAD 2003
+						#added in V2.33
+						$txt = "Profile Management\Advanced settings\Enable multi-session write-back for FSLogix Profile Container"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.FSLogixProfileContainerSupport.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.FSLogixProfileContainerSupport.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.FSLogixProfileContainerSupport.State
 						}
 					}
 					If((validStateProp $Setting OutlookSearchRoamingEnabled State ) -and ($Setting.OutlookSearchRoamingEnabled.State -ne "NotConfigured"))
@@ -36093,6 +36463,7 @@ Function ProcessScriptSetup
 	$tmp = $Script:XDSiteVersion
 	Switch ($tmp)
 	{
+		"7.25"	{$Script:XDSiteVersion = "2003"}	#added in 2.33
 		"7.24"	{$Script:XDSiteVersion = "1912"}	#added in 2.30
 		"7.23"	{$Script:XDSiteVersion = "1909"}
 		"7.22"	{$Script:XDSiteVersion = "1906"}
