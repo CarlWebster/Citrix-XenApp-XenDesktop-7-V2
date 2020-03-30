@@ -1040,7 +1040,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.33
 	AUTHOR: Carl Webster
-	LASTEDIT: March 28, 2020
+	LASTEDIT: March 30, 2020
 #>
 
 #endregion
@@ -1249,7 +1249,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.33
+#Version 2.33 30-Mar-2020
 #	Added new Computer policy settings for CVAD 2003
 #		ICA\Multi-Stream Connections\Multi-Stream virtual channel assignment
 #		Profile Management\Advanced settings\Enable multi-session write-back for FSLogix Profile Container
@@ -1258,6 +1258,7 @@ Param(
 #		ICA\Session Interactivity\Loss Tolerant Mode Thresholds
 #	Added new VDA registry key for 2003 VDAs
 #		HKLM:\Software\Citrix\Graphics\BTLLossyThreshold
+#		HKLM:\SYSTEM\CurrentControlSet\Services\CtxDNDSvc\Enabled
 #	Added version 7.25 equals 2003
 #	In the Policies section, for AD policies, add the AD GPO name to the section title line
 #	In the Policies section removed a superfluous line for "Site Policies" and "Active Directory Policies"
@@ -8674,6 +8675,7 @@ Function GetVDARegistryKeys
 	{
 		#V2.33 added for VDA 2003
 		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Graphics" "BTLLossyThreshold" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxDNDSvc" "Enabled" $ComputerName $xType
 		
 		#V2.28 AppV added in 1909
 		#https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/whats-new.html
@@ -8755,6 +8757,7 @@ Function GetVDARegistryKeys
 	{
 		#V2.33 added for VDA 2003
 		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Graphics" "BTLLossyThreshold" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxDNDSvc" "Enabled" $ComputerName $xType
 
 		#AppV added in 1909
 		#https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/whats-new.html
