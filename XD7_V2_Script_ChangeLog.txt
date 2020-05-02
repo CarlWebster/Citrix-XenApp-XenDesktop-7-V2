@@ -3,6 +3,21 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.34
+#	Add checking for a Word version of 0, which indicates the Office installation needs repairing
+#	Add Receive Side Scaling setting to Function OutputNICItem
+#	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
+#	Comment out the code that tests for an elevated PowerShell if the Policies parameter is used.
+#		Citrix engineering is trying to find the Root Cause of this issue.
+#		If you run into the issue of no policy data in the report when the script is run elevated, email me webster@carlwebster.com
+#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
+#	Remove the SMTP parameterset and manually verify the parameters
+#		Remove the code to manually test for conflicting output paramaters
+#	Update Function SendEmail to handle anonymous unauthenticated email
+#	Update FUnction ShowScriptOptions to add the missing Dev parameter
+#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
+#	Update Help Text
+
 #Version 2.33 30-Mar-2020
 #	Added new Computer policy settings for CVAD 2003
 #		ICA\Multi-Stream Connections\Multi-Stream virtual channel assignment
