@@ -1089,7 +1089,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.34
 	AUTHOR: Carl Webster
-	LASTEDIT: May 2, 2020
+	LASTEDIT: May 6, 2020
 #>
 
 #endregion
@@ -1287,18 +1287,15 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.34
+#Version 2.34 6-May-2020
 #	Add checking for a Word version of 0, which indicates the Office installation needs repairing
 #	Add Receive Side Scaling setting to Function OutputNICItem
 #	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
-#	Comment out the code that tests for an elevated PowerShell if the Policies parameter is used.
-#		Citrix engineering is trying to find the Root Cause of this issue.
-#		If you run into the issue of no policy data in the report when the script is run elevated, email me webster@carlwebster.com
 #	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
 #	Remove the SMTP parameterset and manually verify the parameters
 #		Remove the code to manually test for conflicting output parameters
 #	Update Function SendEmail to handle anonymous unauthenticated email
-#	Update FUnction ShowScriptOptions to add the missing Dev parameter
+#	Update Function ShowScriptOptions to add the missing Dev parameter
 #	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
 #	Update Help Text
 
@@ -2331,7 +2328,7 @@ Function ElevatedSession
 	}
 }
 
-<#If($Policies -eq $True)
+If($Policies -eq $True)
 {
 	Write-Verbose "$(Get-Date): Testing for elevated PowerShell session."
 	#see if session is elevated
@@ -2355,7 +2352,7 @@ Function ElevatedSession
 		Write-Verbose "$(Get-Date): "
 		Exit
 	}
-}#>
+}
 #endregion
 
 #region initialize variables for Word, HTML, and text
@@ -15740,14 +15737,14 @@ Function ProcessCitrixPolicies
 		}
 	}#>
 	
-	$Policies = Get-CtxGroupPolicy -Type $xPolicyType `
+	$CtxPolicies = Get-CtxGroupPolicy -Type $xPolicyType `
 	-DriveName $xDriveName -EA 0 `
 	| Select-Object PolicyName, Type, Description, Enabled, Priority `
 	| Sort-Object Priority
 
-	If($? -and $Null -ne $Policies)
+	If($? -and $Null -ne $CtxPolicies)
 	{
-		ForEach($Policy in $Policies)
+		ForEach($Policy in $CtxPolicies)
 		{
 			Write-Verbose "$(Get-Date): `tStarted $($Policy.PolicyName) "
 			
@@ -28981,7 +28978,7 @@ Function ProcessCitrixPolicies
 		Write-Warning "No results Returned for Citrix Policy information"
 	}
 	
-	$Policies = $Null
+	$CtxPolicies = $Null
 	Write-Verbose "$(Get-Date): `tRemoving $($xDriveName) PSDrive"
 	Remove-PSDrive $xDriveName -EA 0 4>$Null
 	Write-Verbose "$(Get-Date): "
@@ -36759,14 +36756,14 @@ Function ProcessScriptSetup
 	$tmp = $Script:XDSiteVersion
 	Switch ($tmp)
 	{
-		"7.25"	{$Script:XDSiteVersion = "2003"}	#added in 2.33
-		"7.24"	{$Script:XDSiteVersion = "1912"}	#added in 2.30
-		"7.23"	{$Script:XDSiteVersion = "1909"}
-		"7.22"	{$Script:XDSiteVersion = "1906"}
-		"7.21"	{$Script:XDSiteVersion = "1903"}
-		"7.20"	{$Script:XDSiteVersion = "1811"}
-		"7.19"	{$Script:XDSiteVersion = "1808"}
-		Default	{$Script:XDSiteVersion = $tmp}
+		"7.25"	{$Script:XDSiteVersion = "2003"; Break}	#added in 2.33
+		"7.24"	{$Script:XDSiteVersion = "1912"; Break}	#added in 2.30
+		"7.23"	{$Script:XDSiteVersion = "1909"; Break}
+		"7.22"	{$Script:XDSiteVersion = "1906"; Break}
+		"7.21"	{$Script:XDSiteVersion = "1903"; Break}
+		"7.20"	{$Script:XDSiteVersion = "1811"; Break}
+		"7.19"	{$Script:XDSiteVersion = "1808"; Break}
+		Default	{$Script:XDSiteVersion = $tmp; Break}
 	}
 	Write-Verbose "$(Get-Date): You are running version $Script:XDSiteVersion"
 	#end of new for 2.28
@@ -36799,6 +36796,7 @@ Function ProcessScriptSetup
 	[bool]$Script:SQLServerLoaded = $False
 	
 	$asm = [reflection.assembly]::loadwithpartialname('microsoft.sqlserver.smo')
+	#$asm = [System.Reflection.Assembly]::LoadFrom("C:\Program Files\Citrix\XenDesktopPoshSdk\Module\Citrix.XenDesktop.Admin.V1\Citrix.XenDesktop.Admin\Microsoft.SqlServer.Smo.dll")
 	If( $null –eq $asm )
 	{
 		Write-Verbose "$(Get-Date): `tSQL Server Assembly could not be loaded"
