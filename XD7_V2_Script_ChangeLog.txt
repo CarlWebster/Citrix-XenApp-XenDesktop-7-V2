@@ -3,6 +3,16 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.35 1-JUL-2020
+#	THIS IS THE FINAL UPDATE FOR THE V2 SCRIPT, except for bug fixes
+#	Added new Computer policy settings for CVAD 2006
+#		ICA\Virtual channel white list
+#	Added new User policy settings for CVAD 2006
+#		ICA\Keyboard and IME\Client keyboard layout synchronization and IME improvement
+#		ICA\Keyboard and IME\Enable Unicode keyboard layout mapping
+#		ICA\Keyboard and IME\Hide keyboard layout switch pop-up message box
+#	Added version 7.26 equals 2006
+
 #Version 2.34 8-May-2020
 #	Add checking for a Word version of 0, which indicates the Office installation needs repairing
 #	Add Receive Side Scaling setting to Function OutputNICItem
