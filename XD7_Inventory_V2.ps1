@@ -1087,9 +1087,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.34
+	VERSION: 2.35
 	AUTHOR: Carl Webster
-	LASTEDIT: May 8, 2020
+	LASTEDIT: July 1, 2020
 #>
 
 #endregion
@@ -1286,6 +1286,16 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.35 1-JUL-2020
+#	THIS IS THE FINAL UPDATE FOR THE V2 SCRIPT, except for bug fixes
+#	Added new Computer policy settings for CVAD 2006
+#		ICA\Virtual channel white list
+#	Added new User policy settings for CVAD 2006
+#		ICA\Keyboard and IME\Client keyboard layout synchronization and IME improvement
+#		ICA\Keyboard and IME\Enable Unicode keyboard layout mapping
+#		ICA\Keyboard and IME\Hide keyboard layout switch pop-up message box
+#	Added version 7.26 equals 2006
 
 #Version 2.34 8-May-2020
 #	Add checking for a Word version of 0, which indicates the Office installation needs repairing
@@ -16987,6 +16997,70 @@ Function ProcessCitrixPolicies
 							}
 						}
 					}
+					If((validStateProp $Setting VirtualChannelWhiteList State ) -and ($Setting.VirtualChannelWhiteList.State -ne "NotConfigured"))
+					{
+						#V2.34
+						#CVAD 2006
+						$txt = "ICA\Virtual channel white list"
+						If(validStateProp $Setting VirtualChannelWhiteList Values )
+						{
+							$tmpArray = $Setting.VirtualChannelWhiteList.Values
+							$tmp = ""
+							$cnt = 0
+							ForEach($Thing in $TmpArray)
+							{
+								If($Null -eq $Thing)
+								{
+									$Thing = ''
+								}
+								$cnt++
+								$tmp = "$($Thing) "
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$SettingsWordTable += @{
+										Text = $txt;
+										Value = $tmp;
+										}
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting $txt $tmp
+									}
+								}
+								Else
+								{
+									If($MSWord -or $PDF)
+									{
+										$SettingsWordTable += @{
+										Text = "";
+										Value = $tmp;
+										}
+									}
+									ElseIf($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									ElseIf($Text)
+									{
+										OutputPolicySetting "" $tmp
+									}
+								}
+								$txt = ""
+							}
+							$TmpArray = $Null
+							$tmp = $Null
+						}
+					}
 					
 					Write-Verbose "$(Get-Date): `t`t`tICA\Adobe Flash Delivery\Flash Redirection"
 					If((validStateProp $Setting FlashAcceleration State ) -and ($Setting.FlashAcceleration.State -ne "NotConfigured"))
@@ -19095,6 +19169,81 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $tmp 
 						}
 						$tmp = $Null
+					}
+
+					#V2.35
+					#CVAD 2006
+					Write-Verbose "$(Get-Date): `t`t`tICA\Keyboard and IME"
+					If((validStateProp $Setting ClientKeyboardLayoutSyncAndIME State ) -and ($Setting.ClientKeyboardLayoutSyncAndIME.State -ne "NotConfigured"))
+					{
+						$txt = "ICA\Keyboard and IME\Client keyboard layout synchronization and IME improvement"
+						$tmp = ""
+						Switch ($Setting.ClientKeyboardLayoutSyncAndIME.Value)
+						{
+							"ClientKeyboardLayoutSync"			{$tmp = "Support dynamic client keyboard layout synchronization"; Break}
+							"ClientKeyboardLayoutSyncAndIME"	{$tmp = "Support dynamic client keyboard layout synchronization and IME improvement"; Break}
+							Default 							{$tmp = "Client keyboard layout synchronization and IME improvement: $($Setting.ClientKeyboardLayoutSyncAndIME.Value)"; Break}
+						}
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $tmp;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$tmp,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $tmp 
+						}
+						$tmp = $Null
+					}
+					If((validStateProp $Setting EnableUnicodeKeyboardLayoutMapping State ) -and ($Setting.EnableUnicodeKeyboardLayoutMapping.State -ne "NotConfigured"))
+					{
+						$txt = "ICA\Keyboard and IME\Enable Unicode keyboard layout mapping"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.EnableUnicodeKeyboardLayoutMapping.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.EnableUnicodeKeyboardLayoutMapping.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.EnableUnicodeKeyboardLayoutMapping.State 
+						}
+					}
+					If((validStateProp $Setting HideKeyboardLayoutSwitchPopupMessageBox State ) -and ($Setting.HideKeyboardLayoutSwitchPopupMessageBox.State -ne "NotConfigured"))
+					{
+						$txt = "ICA\Keyboard and IME\Hide keyboard layout switch pop-up message box"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.HideKeyboardLayoutSwitchPopupMessageBox.State;
+							}
+						}
+						ElseIf($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.HideKeyboardLayoutSwitchPopupMessageBox.State,$htmlwhite))
+						}
+						ElseIf($Text)
+						{
+							OutputPolicySetting $txt $Setting.HideKeyboardLayoutSwitchPopupMessageBox.State
+						}
 					}
 
 					Write-Verbose "$(Get-Date): `t`t`tICA\Local App Access"
@@ -36758,6 +36907,7 @@ Function ProcessScriptSetup
 	$tmp = $Script:XDSiteVersion
 	Switch ($tmp)
 	{
+		"7.26"	{$Script:XDSiteVersion = "2006"; Break}	#added in 2.34
 		"7.25"	{$Script:XDSiteVersion = "2003"; Break}	#added in 2.33
 		"7.24"	{$Script:XDSiteVersion = "1912"; Break}	#added in 2.30
 		"7.23"	{$Script:XDSiteVersion = "1909"; Break}
