@@ -1087,9 +1087,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.35
+	VERSION: 2.36
 	AUTHOR: Carl Webster
-	LASTEDIT: July 1, 2020
+	LASTEDIT: August 15, 2020
 #>
 
 #endregion
@@ -1287,6 +1287,17 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.36 15-Aug-2020
+#	Fix bugs found while working on the V3 script
+#	Fix formatting issues found with Text and HTML code
+#	Fix issue with Word tables with 8 or 9 point font having a black background 
+#		This is an issue with the latest versions of PowerShell 5.1.x
+#	Fix totals for the Summary Page
+#	Fix loading the SQL Server Assembly
+#	Fix missing L_25 VDA Version checking for CVAD 2003
+#	Remove the block on not processing Policies if running from an elevated session.
+#		Citrix and I did a remote session to test this and we can't get it to fail.
+#
 #Version 2.35 1-JUL-2020
 #	THIS IS THE FINAL UPDATE FOR THE V2 SCRIPT, except for bug fixes
 #	Added new Computer policy settings for CVAD 2006
@@ -2321,50 +2332,39 @@ If($VDARegistryKeys)
 	$MachineCatalogs = $True
 }
 
-#V2.24  Add check if $Policies -eq $True, see if PowerShell session is elevated
-#		If session is elevated, abort the script
-Function ElevatedSession
-{
-	#added in V2.24
-	$currentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent() )
+$Script:TotalServerOSCatalogs = 0
+$Script:TotalDesktopOSCatalogs = 0
+$Script:TotalRemotePCCatalogs = 0
+$Script:TotalAppDisks = 0
+$Script:TotalApplicationGroups = 0
+$Script:TotalDesktopGroups = 0
+$Script:TotalAppsAndDesktopGroups = 0
+$Script:TotalPublishedApplications = 0
+$Script:TotalAppvApplications = 0
+$Script:TotalComputerPolicies = 0
+$Script:TotalUserPolicies = 0
+$Script:TotalSitePolicies = 0
+$Script:TotalADPolicies = 0
+$Script:TotalADPoliciesNotProcessed = 0
+$Script:TotalPolicies = 0
+$Script:TotalDeliveryGroupAdmins = 0
+$Script:TotalFullAdmins = 0
+$Script:TotalHelpDeskAdmins = 0
+$Script:TotalHostAdmins = 0
+$Script:TotalMachineCatalogAdmins = 0
+$Script:TotalReadOnlyAdmins = 0
+$Script:TotalCustomAdmins = 0
+$Script:TotalControllers = 0
+$Script:TotalHostingConnections = 0
+$Script:TotalStoreFrontServers = 0
+$Script:TotalZones = 0
+#V2.20
+$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+$Script:ALLVDARegistryItems = New-Object System.Collections.ArrayList
+#Fix V2.20.1
+$Script:ControllerRegistryItems = New-Object System.Collections.ArrayList
+$Script:AllControllerRegistryItems = New-Object System.Collections.ArrayList	
 
-	If($currentPrincipal.IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator ))
-	{
-		Write-Verbose "$(Get-Date): This is an elevated PowerShell session"
-		Return $True
-	}
-	Else
-	{
-		Write-Verbose "$(Get-Date): This is NOT an elevated PowerShell session" -Foreground White
-		Return $False
-	}
-}
-
-If($Policies -eq $True)
-{
-	Write-Verbose "$(Get-Date): Testing for elevated PowerShell session."
-	#see if session is elevated
-	$Elevated = ElevatedSession
-	
-	If($Elevated -eq $True)
-	{
-		#abort script
-		Write-Error "
-		`n`n
-		`t`t
-		The Citrix Group Policy module cannot be loaded or found in an elevated PowerShell session.
-		`n`n
-		`t`t
-		The Policies parameter was used and this is an elevated PowerShell session.
-		`n`n
-		`t`t
-		Rerun the script from a non-elevated PowerShell session. The script will now close.
-		`n`n
-		"
-		Write-Verbose "$(Get-Date): "
-		Exit
-	}
-}
 #endregion
 
 #region initialize variables for Word, HTML, and text
@@ -2380,14 +2380,16 @@ If($MSWord -or $PDF)
 	#http://groovy.codehaus.org/modules/scriptom/1.6.0/scriptom-office-2K3-tlb/apidocs/
 	#http://msdn.microsoft.com/en-us/library/office/aa211923(v=office.11).aspx
 	[int]$wdAlignPageNumberRight = 2
-	[int]$wdColorGray15 = 14277081
-	[int]$wdColorGray05 = 15987699 
 	[int]$wdMove = 0
 	[int]$wdSeekMainDocument = 0
 	[int]$wdSeekPrimaryFooter = 4
 	[int]$wdStory = 6
-	[int]$wdColorRed = 255
 	[int]$wdColorBlack = 0
+	[int]$wdColorGray05 = 15987699 
+	[int]$wdColorGray15 = 14277081
+	[int]$wdColorRed = 255
+	[int]$wdColorWhite = 16777215
+	[int]$wdColorYellow = 65535
 	[int]$wdWord2007 = 12
 	[int]$wdWord2010 = 14
 	[int]$wdWord2013 = 15
@@ -3549,7 +3551,7 @@ Function OutputNicItem
 			Line 2 "DHCP Enabled`t`t: " $nic.dhcpenabled
 			Line 2 "DHCP Lease Obtained`t: " $dhcpleaseobtaineddate
 			Line 2 "DHCP Lease Expires`t: " $dhcpleaseexpiresdate
-			Line 2 "DHCP Server`t`t:" $nic.dhcpserver
+			Line 2 "DHCP Server`t`t: " $nic.dhcpserver
 		}
 		If(![String]::IsNullOrEmpty($nic.dnsdomain))
 		{
@@ -5133,42 +5135,6 @@ Function AddHTMLTable
 	## {
 	##	$global:rowInfo1 = $rowInfo
 	## }
-<#
-	if( $SuperVerbose )
-	{
-		wv "AddHTMLTable: fontName '$fontName', fontsize $fontSize, colCount $colCount, rowCount $rowCount"
-		if( $null -ne $rowInfo -and $rowInfo.Count -gt 0 )
-		{
-			wv "AddHTMLTable: rowInfo has $( $rowInfo.Count ) elements"
-			if( $ExtraSpecialVerbose )
-			{
-				wv "AddHTMLTable: rowInfo length $( $rowInfo.Length )"
-				for( $ii = 0; $ii -lt $rowInfo.Length; $ii++ )
-				{
-					$row = $rowInfo[ $ii ]
-					wv "AddHTMLTable: index $ii, type $( $row.GetType().FullName ), length $( $row.Length )"
-					for( $yyy = 0; $yyy -lt $row.Length; $yyy++ )
-					{
-						wv "AddHTMLTable: index $ii, yyy = $yyy, val = '$( $row[ $yyy ] )'"
-					}
-					wv "AddHTMLTable: done"
-				}
-			}
-		}
-		else
-		{
-			wv "AddHTMLTable: rowInfo is empty"
-		}
-		if( $null -ne $fixedInfo -and $fixedInfo.Count -gt 0 )
-		{
-			wv "AddHTMLTable: fixedInfo has $( $fixedInfo.Count ) elements"
-		}
-		else
-		{
-			wv "AddHTMLTable: fixedInfo is empty"
-		}
-	}
-#>
 
 	##$htmlbody = ''
 	[System.Text.StringBuilder] $sb = New-Object System.Text.StringBuilder( 8192 )
@@ -5191,36 +5157,6 @@ Function AddHTMLTable
 
 		## each row of rowInfo is an array
 		## each row consists of tuples: an item of text followed by an item of formatting data
-<#		
-		$row = $rowInfo[ $rowCountIndex ]
-		if( $ExtraSpecialVerbose )
-		{
-			wv "!!!!! AddHTMLTable: rowCountIndex = $rowCountIndex, row.Length = $( $row.Length ), row gettype = $( $row.GetType().FullName )"
-			wv "!!!!! AddHTMLTable: colCount $colCount"
-			wv "!!!!! AddHTMLTable: row[0].Length $( $row[0].Length )"
-			wv "!!!!! AddHTMLTable: row[0].GetType $( $row[0].GetType().FullName )"
-			$subRow = $row
-			if( $subRow -is [Array] -and $subRow[ 0 ] -is [Array] )
-			{
-				$subRow = $subRow[ 0 ]
-				wv "!!!!! AddHTMLTable: deref subRow.Length $( $subRow.Length ), subRow.GetType $( $subRow.GetType().FullName )"
-			}
-
-			for( $columnIndex = 0; $columnIndex -lt $subRow.Length; $columnIndex += 2 )
-			{
-				$item = $subRow[ $columnIndex ]
-				wv "!!!!! AddHTMLTable: item.GetType $( $item.GetType().FullName )"
-				## if( !( $item -is [String] ) -and $item -is [Array] )
-##				if( $item -is [Array] -and $item[ 0 ] -is [Array] )				
-##				{
-##					$item = $item[ 0 ]
-##					wv "!!!!! AddHTMLTable: dereferenced item.GetType $( $item.GetType().FullName )"
-##				}
-				wv "!!!!! AddHTMLTable: rowCountIndex = $rowCountIndex, columnIndex = $columnIndex, val '$item'"
-			}
-			wv "!!!!! AddHTMLTable: done"
-		}
-#>
 
 		## reset
 		$row = $rowInfo[ $rowCountIndex ]
@@ -5248,14 +5184,6 @@ Function AddHTMLTable
 			$color  = $global:htmlColor[ $format -band 0xffffc ]
 			[Bool] $bold = $format -band $htmlBold
 			[Bool] $ital = $format -band $htmlitalics
-<#			
-			if( $ExtraSpecialVerbose )
-			{
-				wv "***** columnIndex $columnIndex, subRow.Length $( $subRow.Length ), item GetType $( $item.GetType().FullName ), item '$item'"
-				wv "***** format $format, color $color, text '$text'"
-				wv "***** format gettype $( $format.GetType().Fullname ), text gettype $( $text.GetType().Fullname )"
-			}
-#>
 
 			if( $null -eq $fixedInfo -or $fixedInfo.Length -eq 0 )
 			{
@@ -5456,37 +5384,6 @@ Function FormatHTMLTable
 
 	## FIXME - the help text for this function is wacky wrong - MBS
 	## FIXME - Use StringBuilder - MBS - this only builds the table header - benefit relatively small
-<#
-	if( $SuperVerbose )
-	{
-		wv "FormatHTMLTable: fontname '$fontname', size $fontSize, tableheader '$tableheader'"
-		wv "FormatHTMLTable: noborder $noborder, noheadcols $noheadcols"
-		if( $rowarray -and $rowarray.count -gt 0 )
-		{
-			wv "FormatHTMLTable: rowarray has $( $rowarray.count ) elements"
-		}
-		else
-		{
-			wv "FormatHTMLTable: rowarray is empty"
-		}
-		if( $columnarray -and $columnarray.count -gt 0 )
-		{
-			wv "FormatHTMLTable: columnarray has $( $columnarray.count ) elements"
-		}
-		else
-		{
-			wv "FormatHTMLTable: columnarray is empty"
-		}
-		if( $fixedwidth -and $fixedwidth.count -gt 0 )
-		{
-			wv "FormatHTMLTable: fixedwidth has $( $fixedwidth.count ) elements"
-		}
-		else
-		{
-			wv "FormatHTMLTable: fixedwidth is empty"
-		}
-	}
-#>
 
 	$HTMLBody = "<b><font face='" + $fontname + "' size='" + ($fontsize + 1) + "'>" + $tableheader + "</font></b>" + $crlf
 
@@ -5587,23 +5484,6 @@ Function FormatHTMLTable
 	##$rowindex = 2
 	If( $rowArray )
 	{
-<#
-		if( $ExtraSpecialVerbose )
-		{
-			wv "***** FormatHTMLTable: rowarray length $( $rowArray.Length )"
-			for( $ii = 0; $ii -lt $rowArray.Length; $ii++ )
-			{
-				$row = $rowArray[ $ii ]
-				wv "***** FormatHTMLTable: index $ii, type $( $row.GetType().FullName ), length $( $row.Length )"
-				for( $yyy = 0; $yyy -lt $row.Length; $yyy++ )
-				{
-					wv "***** FormatHTMLTable: index $ii, yyy = $yyy, val = '$( $row[ $yyy ] )'"
-				}
-				wv "***** done"
-			}
-			wv "***** FormatHTMLTable: rowCount $NumRows"
-		}
-#>
 
 		AddHTMLTable -fontName $fontName -fontSize $fontSize `
 			-colCount $numCols -rowCount $NumRows `
@@ -5622,87 +5502,6 @@ Function FormatHTMLTable
 #endregion
 
 #region other HTML functions
-<#
-#***********************************************************************************************************
-# CheckHTMLColor - Called from AddHTMLTable WriteHTMLLine and FormatHTMLTable
-#***********************************************************************************************************
-Function CheckHTMLColor
-{
-	Param($hash)
-
-	#V2.23 -- this is really slow. several ways to fixit. so fixit. MBS
-	#V2.23 - obsolete. replaced by using $global:htmlColor lookup table
-	If($hash -band $htmlwhite)
-	{
-		Return $htmlwhitemask
-	}
-	If($hash -band $htmlred)
-	{
-		Return $htmlredmask
-	}
-	If($hash -band $htmlcyan)
-	{
-		Return $htmlcyanmask
-	}
-	If($hash -band $htmlblue)
-	{
-		Return $htmlbluemask
-	}
-	If($hash -band $htmldarkblue)
-	{
-		Return $htmldarkbluemask
-	}
-	If($hash -band $htmllightblue)
-	{
-		Return $htmllightbluemask
-	}
-	If($hash -band $htmlpurple)
-	{
-		Return $htmlpurplemask
-	}
-	If($hash -band $htmlyellow)
-	{
-		Return $htmlyellowmask
-	}
-	If($hash -band $htmllime)
-	{
-		Return $htmllimemask
-	}
-	If($hash -band $htmlmagenta)
-	{
-		Return $htmlmagentamask
-	}
-	If($hash -band $htmlsilver)
-	{
-		Return $htmlsilvermask
-	}
-	If($hash -band $htmlgray)
-	{
-		Return $htmlgraymask
-	}
-	If($hash -band $htmlblack)
-	{
-		Return $htmlblackmask
-	}
-	If($hash -band $htmlorange)
-	{
-		Return $htmlorangemask
-	}
-	If($hash -band $htmlmaroon)
-	{
-		Return $htmlmaroonmask
-	}
-	If($hash -band $htmlgreen)
-	{
-		Return $htmlgreenmask
-	}
-	If($hash -band $htmlolive)
-	{
-		Return $htmlolivemask
-	}
-}
-#>
-
 Function SetupHTML
 {
 	Write-Verbose "$(Get-Date): Setting up HTML"
@@ -7057,13 +6856,6 @@ Function ProcessMachineCatalogs
 		WriteHTMLLine 1 0 $txt
 	}
 
-	$Script:TotalServerOSCatalogs = 0
-	$Script:TotalDesktopOSCatalogs = 0
-	$Script:TotalRemotePCCatalogs = 0
-	#V2.20
-	$Script:VDARegistryItems = New-Object System.Collections.ArrayList
-	$Script:ALLVDARegistryItems = New-Object System.Collections.ArrayList
-
 	$AllMachineCatalogs = Get-BrokerCatalog @XDParams2 -SortBy Name 
 
 	If($? -and $Null -ne $AllMachineCatalogs)
@@ -7226,8 +7018,8 @@ Function OutputMachines
 			$rowdata += @(,(
 			$Catalog.Name,$htmlwhite,
 			$xCatalogType,$htmlwhite,
-			$NumberOfMachines,$htmlwhite,
-			$Catalog.UsedCount,$htmlwhite,
+			$NumberOfMachines.ToString(),$htmlwhite,
+			$Catalog.UsedCount.ToString(),$htmlwhite,
 			$xAllocationType,$htmlwhite,
 			$xPersistType,$htmlwhite,
 			$xProvisioningType,$htmlwhite))
@@ -7242,7 +7034,7 @@ Function OutputMachines
 		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitFixed;
 
-		SetWordCellFormat -Collection $Table -Size 9
+		SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
 		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 		$Table.Columns.Item(1).Width = 105;
@@ -7376,6 +7168,7 @@ Function OutputMachines
 			"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 			"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
 			"L7_20"	{$xVDAVersion = "1811 (or newer)"; Break}
+			"L7_25"	{$xVDAVersion = "2003 (or newer)"; Break}
 			Default {$xVDAVersion = "Unable to determine VDA version: $($Catalog.MinimumFunctionalLevel)"; Break}
 		}
 
@@ -7428,7 +7221,9 @@ Function OutputMachines
 						}
 					}
 					
-					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+					If(($Catalog.MinimumFunctionalLevel -eq "L7_9" -or 
+					    $Catalog.MinimumFunctionalLevel -eq "L7_20" -or 
+						$Catalog.MinimumFunctionalLevel -eq "L7_25") -and 
 					(($xAllocationType -eq "Random") -or 
 					($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 					{
@@ -7436,7 +7231,9 @@ Function OutputMachines
 						$TempMemoryCacheSize = $MachineData.WriteBackCacheMemorySize
 					}
 					
-					If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+					If(($Catalog.MinimumFunctionalLevel -eq "L7_9" -or 
+					    $Catalog.MinimumFunctionalLevel -eq "L7_20" -or 
+						$Catalog.MinimumFunctionalLevel -eq "L7_25") -and 
 					($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
 					((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 					{
@@ -7559,7 +7356,9 @@ Function OutputMachines
 					}
 				}
 			
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				If(($Catalog.MinimumFunctionalLevel -eq "L7_9" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_20" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_25") -and 
 				(($xAllocationType -eq "Random") -or 
 				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
@@ -7567,7 +7366,9 @@ Function OutputMachines
 					$CatalogInformation += @{Data = "Temporary disk cache size"; Value = "$($TempDiskCacheSize) GB"; }
 				}
 
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				If(($Catalog.MinimumFunctionalLevel -eq "L7_9" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_20" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_25") -and 
 				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
 				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
@@ -7779,7 +7580,9 @@ Function OutputMachines
 					}
 				}
 				
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				If(($Catalog.MinimumFunctionalLevel -eq "L7_9" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_20" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_25") -and 
 				(($xAllocationType -eq "Random") -or 
 				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
@@ -7787,7 +7590,9 @@ Function OutputMachines
 					Line 1 "Temporary disk cache size`t: " "$($MachineData.WriteBackCacheDiskSize) GB"
 				}
 
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				If(($Catalog.MinimumFunctionalLevel -eq "L7_9" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_20" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_25") -and 
 				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
 				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
@@ -7940,8 +7745,8 @@ Function OutputMachines
 			{
 				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
 				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
-				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines,$htmlwhite))
-				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount,$htmlwhite))
+				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines.ToString(),$htmlwhite))
+				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount.ToString(),$htmlwhite))
 				$rowdata += @(,('Allocation type',($global:htmlsb),$xAllocationType,$htmlwhite))
 				$rowdata += @(,('User data',($global:htmlsb),$xPersistType,$htmlwhite))
 				$rowdata += @(,('Provisioning method',($global:htmlsb),$xProvisioningType,$htmlwhite))
@@ -7963,7 +7768,7 @@ Function OutputMachines
 				{
 					$rowdata += @(,('Master VM',($global:htmlsb),$MasterVM,$htmlwhite))
 					$rowdata += @(,('Disk Image',($global:htmlsb),$xDiskImage,$htmlwhite))
-					$rowdata += @(,('Virtual CPUs',($global:htmlsb),$MachineData.CpuCount,$htmlwhite))
+					$rowdata += @(,('Virtual CPUs',($global:htmlsb),$MachineData.CpuCount.ToString(),$htmlwhite))
 					$rowdata += @(,('Memory',($global:htmlsb),"$($MachineData.MemoryMB) MB",$htmlwhite))
 					$rowdata += @(,('Hard disk',($global:htmlsb),"$($MachineData.DiskSize) GB",$htmlwhite))
 					If($xAllocationType -eq "Permanent" -and $xPersistType -eq "On personal vDisk" )
@@ -7986,7 +7791,9 @@ Function OutputMachines
 					}
 				}
 				
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				If(($Catalog.MinimumFunctionalLevel -eq "L7_9" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_20" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_25") -and 
 				(($xAllocationType -eq "Random") -or 
 				($xAllocationType -eq "Permanent" -and $xPersistType -eq "Discard" )))
 				{
@@ -7994,7 +7801,9 @@ Function OutputMachines
 					$rowdata += @(,('Temporary disk cache size',($global:htmlsb), "$($TempDiskCacheSize) GB",$htmlwhite))
 				}
 
-				If($Catalog.MinimumFunctionalLevel -eq "L7_9" -or $Catalog.MinimumFunctionalLevel -eq "L7_20" -and 
+				If(($Catalog.MinimumFunctionalLevel -eq "L7_9" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_20" -or 
+					$Catalog.MinimumFunctionalLevel -eq "L7_25") -and 
 				($xAllocationType -eq "Permanent" -and $xPersistType -eq "On local disk" ) -and 
 				((Get-ConfigEnabledFeature @XDParams1) -contains "DedicatedFullDiskClone"))
 				{
@@ -8046,8 +7855,8 @@ Function OutputMachines
 				$rowdata += @(,('Organizational Units',($global:htmlsb),$RemotePCOU,$htmlwhite))
 				$rowdata += @(,('Allow subfolder matches',($global:htmlsb),$RemotePCSubOU,$htmlwhite))
 				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
-				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines,$htmlwhite))
-				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount,$htmlwhite))
+				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines.ToString(),$htmlwhite))
+				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount.ToString(),$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($global:htmlsb),$xVDAVersion,$htmlwhite))
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
@@ -8071,8 +7880,8 @@ Function OutputMachines
 			{
 				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
 				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
-				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines,$htmlwhite))
-				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount,$htmlwhite))
+				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines.ToString(),$htmlwhite))
+				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount.ToString(),$htmlwhite))
 				$rowdata += @(,('Allocation type',($global:htmlsb),$xAllocationType,$htmlwhite))
 				$rowdata += @(,('User data',($global:htmlsb),$xPersistType,$htmlwhite))
 				$rowdata += @(,('Provisioning method',($global:htmlsb),$xProvisioningType,$htmlwhite))
@@ -8390,8 +8199,6 @@ Function ProcessAppDisks
 	{
 		WriteHTMLLine 1 0 $txt
 	}
-
-	$Script:TotalAppDisks = 0
 
 	$AllAppDisks = Get-AppLibAppDisk @XDParams2 -SortBy AppDiskName 
 
@@ -10886,10 +10693,6 @@ Function ProcessDeliveryGroups
 		WriteHTMLLine 1 0 $txt
 	}
 
-	$Script:TotalApplicationGroups = 0
-	$Script:TotalDesktopGroups = 0
-	$Script:TotalAppsAndDesktopGroups = 0
-
 	$AllDeliveryGroups = Get-BrokerDesktopGroup @XDParams2 -SortBy Name 
 
 	If($? -and ($Null -ne $AllDeliveryGroups))
@@ -11056,7 +10859,7 @@ Function OutputDeliveryGroupTable
 		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitFixed;
 
-		SetWordCellFormat -Collection $Table -Size 8
+		SetWordCellFormat -Collection $Table -Size 8 -BackgroundColor $wdColorWhite
 		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 		$Table.Columns.Item(1).Width = 110;
@@ -11448,6 +11251,7 @@ Function OutputDeliveryGroupDetails
 		"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 		"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
 		"L7_20"	{$xVDAVersion = "1811 (or newer)"; Break}
+		"L7_25"	{$xVDAVersion = "2003 (or newer)"; Break}
 		#fixed in V2.14, forgot to set variable
 		Default {$xVDAVersion = "Unable to determine VDA version: $($Group.MinimumFunctionalLevel)"; Break}
 	}
@@ -14115,9 +13919,6 @@ Function ProcessApplications
 		WriteHTMLLine 1 0 $txt
 	}
 
-	$Script:TotalPublishedApplications = 0
-	$Script:TotalAppvApplications = 0
-	
 	$AllApplications = Get-BrokerApplication @XDParams2 -SortBy "AdminFolderName,ApplicationName"
 	If($? -and $Null -ne $AllApplications)
 	{
@@ -14888,7 +14689,7 @@ Function OutputApplicationSessions
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitFixed;
 
-			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
 			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 			$Table.Columns.Item(1).Width = 120;
@@ -15705,50 +15506,6 @@ Function ProcessCitrixPolicies
 
 	Write-Verbose "$(Get-Date): `tRetrieving all $($xPolicyType) policy names"
 
-	$Script:TotalComputerPolicies = 0
-	$Script:TotalUserPolicies = 0
-	$Script:TotalSitePolicies = 0
-	$Script:TotalADPolicies = 0
-	$Script:TotalADPoliciesNotProcessed = 0
-	$Script:TotalPolicies = 0
-	
-	<#If($xDriveName -eq "localfarmgpo")
-	{
-		If($MSWord -or $PDF)
-		{
-			WriteWordLine 0 0 ""
-			WriteWordLine 0 0 "Site Policies"
-		}
-		ElseIf($Text)
-		{
-			Line 0 ""
-			Line 0 "Site Policies"
-		}
-		ElseIf($HTML)
-		{
-			WriteHTMLLine 0 0 ""
-			WriteHTMLLine 0 0 "Site Policies"
-		}
-	}
-	Else
-	{
-		If($MSWord -or $PDF)
-		{
-			WriteWordLine 0 0 ""
-			WriteWordLine 0 0 "Active Directory Policies"
-		}
-		ElseIf($Text)
-		{
-			Line 0 ""
-			Line 0 "Active Directory Policies"
-		}
-		ElseIf($HTML)
-		{
-			WriteHTMLLine 0 0 ""
-			WriteHTMLLine 0 0 "Active Directory Policies"
-		}
-	}#>
-	
 	$CtxPolicies = Get-CtxGroupPolicy -Type $xPolicyType `
 	-DriveName $xDriveName -EA 0 `
 	| Select-Object PolicyName, Type, Description, Enabled, Priority `
@@ -15880,7 +15637,7 @@ Function ProcessCitrixPolicies
 					
 					If($MSWord -or $PDF)
 					{
-						[System.Collections.Hashtable[]] $FiltersWordTable = @();
+						[System.Collections.Hashtable[]] $FiltersWordTable = @()
 					}
 					ElseIf($HTML)
 					{
@@ -22478,7 +22235,7 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.WatermarkStyle.Value)
 						{
-							"StyleMutiple" {$tmp = "Multiple"; Break}
+							"StyleMultiple" {$tmp = "Multiple"; Break}
 							"StyleSingle"   {$tmp = "Single"; Break}
 							Default {$tmp = "Session watermark style could not be determined: $($Setting.WatermarkStyle.Value)"; Break}
 						}
@@ -29062,8 +28819,7 @@ Function ProcessCitrixPolicies
 						-NoInternalGridLines `
 						-AutoFit $wdAutoFitFixed;
 
-						SetWordCellFormat -Collection $Table -Size 9
-						
+						SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
 						SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 						$Table.Columns.Item(1).Width = 300;
@@ -29725,10 +29481,12 @@ Function OutputConfigLog
 	
 	Write-Verbose "$(Get-Date): `t`tOutput Configuration Logging Details"
 	$txt2 = " For date range $($StartDate) through $($EndDate)"
+
 	If($MSword -or $PDF)
 	{
 		$Selection.InsertNewPage()
 		WriteWordLine 0 0 $txt2
+		[System.Collections.Hashtable[]] $ItemsWordTable = @()
 	}
 	ElseIf($Text)
 	{
@@ -29738,14 +29496,6 @@ Function OutputConfigLog
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 0 0 $txt2
-	}
-	
-	If($MSWord -or $PDF)
-	{
-		$ItemsWordTable = @()
-	}
-	ElseIf($HTML)
-	{
 		$rowdata = @()
 	}
 	
@@ -29763,8 +29513,8 @@ Function OutputConfigLog
 		
 		If($MSWord -or $PDF)
 		{
-			$ItemsWordTable += { 
-			Administrator = $Item.User;
+			$ItemsWordTable += @{ 
+			Admin = $Item.User;
 			MainTask = $Item.Text;
 			Start = $Item.StartTime;
 			End = $Item.EndTime;
@@ -29795,13 +29545,12 @@ Function OutputConfigLog
 	If($MSWord -or $PDF)
 	{
 		$Table = AddWordTable -Hashtable $ItemsWordTable `
-		-Columns Administrator, MainTask, Start, End, Status `
+		-Columns Admin,MainTask,Start,End,Status `
 		-Headers  "Administrator", "Main task", "Start", "End", "Status" `
 		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitFixed;
 
-		SetWordCellFormat -Collection $Table -Size 9
-
+		SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
 		SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 		$Table.Columns.Item(1).Width = 120;
@@ -29814,6 +29563,7 @@ Function OutputConfigLog
 
 		FindWordDocumentEnd
 		$Table = $Null
+		WriteWordLine 0 0 " "
 	}
 	ElseIf($HTML)
 	{
@@ -29878,6 +29628,7 @@ Function OutputSiteSettings
 		"L7_8"	{$xVDAVersion = "7.8 (or newer)"; Break}
 		"L7_9"	{$xVDAVersion = "7.9 (or newer)"; Break}
 		"L7_20"	{$xVDAVersion = "1811 (or newer)"; Break}
+		"L7_25"	{$xVDAVersion = "2003 (or newer)"; Break}
 		Default {$xVDAVersion = "Unable to determine VDA version: $($Script:XDSite1.DefaultMinimumFunctionalLevel)"; Break}
 	}
 
@@ -31297,94 +31048,94 @@ Function OutputDatastores
 		{
 			If($ch -eq $False)
 			{
-				$columnHeaders = @('Application Errors',($global:htmlsb),$MonitorConfig.GroomApplicationErrorsRetentionDays,$htmlwhite)
+				$columnHeaders = @('Application Errors',($global:htmlsb),$MonitorConfig.GroomApplicationErrorsRetentionDays.ToString(),$htmlwhite)
 				$ch = $True
 			}
 			Else
 			{
-				$rowdata += @(,('Application Errors',($global:htmlsb),$MonitorConfig.GroomApplicationErrorsRetentionDays,$htmlwhite))
+				$rowdata += @(,('Application Errors',($global:htmlsb),$MonitorConfig.GroomApplicationErrorsRetentionDays.ToString(),$htmlwhite))
 			}
 		}
 		If($MonitorConfig.ContainsKey("GroomApplicationFaultsRetentionDays"))
 		{
 			If($ch -eq $False)
 			{
-				$columnHeaders = @('Application Faults',($global:htmlsb),$MonitorConfig.GroomApplicationFaultsRetentionDays,$htmlwhite)
+				$columnHeaders = @('Application Faults',($global:htmlsb),$MonitorConfig.GroomApplicationFaultsRetentionDays.ToString(),$htmlwhite)
 				$ch = $True
 			}
 			Else
 			{
-				$rowdata += @(,('Application Faults',($global:htmlsb),$MonitorConfig.GroomApplicationFaultsRetentionDays,$htmlwhite))
+				$rowdata += @(,('Application Faults',($global:htmlsb),$MonitorConfig.GroomApplicationFaultsRetentionDays.ToString(),$htmlwhite))
 			}
 		}
 		If($ch -eq $False)
 		{
-			$columnHeaders = @('Application Instance',($global:htmlsb),$MonitorConfig.GroomApplicationInstanceRetentionDays,$htmlwhite)
+			$columnHeaders = @('Application Instance',($global:htmlsb),$MonitorConfig.GroomApplicationInstanceRetentionDays.ToString(),$htmlwhite)
 			$ch = $True
 		}
 		Else
 		{
-			$rowdata += @(,('Application Instance',($global:htmlsb),$MonitorConfig.GroomApplicationInstanceRetentionDays,$htmlwhite))
+			$rowdata += @(,('Application Instance',($global:htmlsb),$MonitorConfig.GroomApplicationInstanceRetentionDays.ToString(),$htmlwhite))
 		}
-		$rowdata += @(,('Deleted',($global:htmlsb),$MonitorConfig.GroomDeletedRetentionDays,$htmlwhite))
-		$rowdata += @(,('Failures',($global:htmlsb),$MonitorConfig.GroomFailuresRetentionDays,$htmlwhite))
+		$rowdata += @(,('Deleted',($global:htmlsb),$MonitorConfig.GroomDeletedRetentionDays.ToString(),$htmlwhite))
+		$rowdata += @(,('Failures',($global:htmlsb),$MonitorConfig.GroomFailuresRetentionDays.ToString(),$htmlwhite))
 		If($MonitorConfig.ContainsKey("GroomHourlyRetentionDays"))
 		{
-			$rowdata += @(,('Hourly Retention',($global:htmlsb),$MonitorConfig.GroomHourlyRetentionDays,$htmlwhite))
+			$rowdata += @(,('Hourly Retention',($global:htmlsb),$MonitorConfig.GroomHourlyRetentionDays.ToString(),$htmlwhite))
 		}
-		$rowdata += @(,('Load Indexes',($global:htmlsb),$MonitorConfig.GroomLoadIndexesRetentionDays,$htmlwhite))
-		$rowdata += @(,('Machine Hotfix Log',($global:htmlsb),$MonitorConfig.GroomMachineHotfixLogRetentionDays,$htmlwhite))
+		$rowdata += @(,('Load Indexes',($global:htmlsb),$MonitorConfig.GroomLoadIndexesRetentionDays.ToString(),$htmlwhite))
+		$rowdata += @(,('Machine Hotfix Log',($global:htmlsb),$MonitorConfig.GroomMachineHotfixLogRetentionDays.ToString(),$htmlwhite))
 		If($MonitorConfig.ContainsKey("GroomMachineMetricDataRetentionDays"))
 		{
-			$rowdata += @(,('Machine Metric Data',($global:htmlsb),$MonitorConfig.GroomMachineMetricDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Machine Metric Data',($global:htmlsb),$MonitorConfig.GroomMachineMetricDataRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomMachineMetricDaySummaryDataRetentionDays"))
 		{
-			$rowdata += @(,('Machine Metric Day Summary',($global:htmlsb),$MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Machine Metric Day Summary',($global:htmlsb),$MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays.ToString(),$htmlwhite))
 		}
-		$rowdata += @(,('Minute',($global:htmlsb),$MonitorConfig.GroomMinuteRetentionDays,$htmlwhite))
+		$rowdata += @(,('Minute',($global:htmlsb),$MonitorConfig.GroomMinuteRetentionDays.ToString(),$htmlwhite))
 		If($MonitorConfig.ContainsKey("GroomNotificationLogRetentionDays"))
 		{
-			$rowdata += @(,('Notification',($global:htmlsb),$MonitorConfig.GroomNotificationLogRetentionDays,$htmlwhite))
+			$rowdata += @(,('Notification',($global:htmlsb),$MonitorConfig.GroomNotificationLogRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomProcessUsageDayDataRetentionDays"))
 		{
-			$rowdata += @(,('Process Usage Day Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageDayDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Process Usage Day Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageDayDataRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomProcessUsageHourDataRetentionDays"))
 		{
-			$rowdata += @(,('Process Usage Hour Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageHourDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Process Usage Hour Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageHourDataRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomProcessUsageMinuteDataRetentionDays"))
 		{
-			$rowdata += @(,('Process Usage Minute Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageMinuteDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Process Usage Minute Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageMinuteDataRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomProcessUsageRawDataRetentionDays"))
 		{
-			$rowdata += @(,('Process Usage Raw Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageRawDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Process Usage Raw Data',($global:htmlsb),$MonitorConfig.GroomProcessUsageRawDataRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomResourceUsageDayDataRetentionDays"))
 		{
-			$rowdata += @(,('Resource Usage Day Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageDayDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Resource Usage Day Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageDayDataRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomResourceUsageHourDataRetentionDays"))
 		{
-			$rowdata += @(,('Resource Usage Hour Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageHourDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Resource Usage Hour Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageHourDataRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomResourceUsageMinuteDataRetentionDays"))
 		{
-			$rowdata += @(,('Resource Usage Minute Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageMinuteDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Resource Usage Minute Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageMinuteDataRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomResourceUsageRawDataRetentionDays"))
 		{
-			$rowdata += @(,('Resource Usage Raw Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageRawDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Resource Usage Raw Data',($global:htmlsb),$MonitorConfig.GroomResourceUsageRawDataRetentionDays.ToString(),$htmlwhite))
 		}
 		If($MonitorConfig.ContainsKey("GroomSessionMetricsDataRetentionDays"))
 		{
-			$rowdata += @(,('Session Metrics',($global:htmlsb),$MonitorConfig.GroomSessionMetricsDataRetentionDays,$htmlwhite))
+			$rowdata += @(,('Session Metrics',($global:htmlsb),$MonitorConfig.GroomSessionMetricsDataRetentionDays.ToString(),$htmlwhite))
 		}
-		$rowdata += @(,('Sessions',($global:htmlsb),$MonitorConfig.GroomSessionsRetentionDays,$htmlwhite))
-		$rowdata += @(,('Summaries',($global:htmlsb),$MonitorConfig.GroomSummariesRetentionDays,$htmlwhite))
+		$rowdata += @(,('Sessions',($global:htmlsb),$MonitorConfig.GroomSessionsRetentionDays.ToString(),$htmlwhite))
+		$rowdata += @(,('Summaries',($global:htmlsb),$MonitorConfig.GroomSummariesRetentionDays.ToString(),$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("200","50")
@@ -31399,14 +31150,6 @@ Function ProcessAdministrators
 {
 	Write-Verbose "$(Get-Date): Processing Administrators"
 	Write-Verbose "$(Get-Date): `tRetrieving Administrator data"
-	
-	$Script:TotalDeliveryGroupAdmins = 0
-	$Script:TotalFullAdmins = 0
-	$Script:TotalHelpDeskAdmins = 0
-	$Script:TotalHostAdmins = 0
-	$Script:TotalMachineCatalogAdmins = 0
-	$Script:TotalReadOnlyAdmins = 0
-	$Script:TotalCustomAdmins = 0
 	
 	$Admins = Get-AdminAdministrator @XDParams2 | Sort-Object Name
 
@@ -32832,11 +32575,6 @@ Function ProcessControllers
 	Write-Verbose "$(Get-Date): Processing Controllers"
 	Write-Verbose "$(Get-Date): `tRetrieving Controller data"
 	
-	$Script:TotalControllers = 0
-	#Fix V2.20.1
-	$Script:ControllerRegistryItems = New-Object System.Collections.ArrayList
-	$Script:AllControllerRegistryItems = New-Object System.Collections.ArrayList	
-	
 	#V2.22 change variable from $Controllers to $DDCs so a new parameter can be added to the script
 	$DDCs = Get-BrokerController @XDParams2 -SortBy DNSName
 
@@ -33564,8 +33302,6 @@ Function ProcessHosting
 	#original work on the Hosting was done by Kenny Baldwin
 	Write-Verbose "$(Get-Date): Processing Hosting"
 	
-	$Script:TotalHostingConnections = 0
-
 	If($MSWord -or $PDF)
 	{
 		$Selection.InsertNewPage()
@@ -35240,7 +34976,7 @@ Function OutputXenDesktopLicenses
 				$tmpdate1,$htmlwhite,
 				$tmpdate2,$htmlwhite,
 				$Product.LocalizedLicenseType,$htmlwhite,
-				$Product.LicensesAvailable,$htmlwhite))
+				$Product.LicensesAvailable.ToString(),$htmlwhite))
 			}
 		}
 		$columnHeaders = @(
@@ -35348,8 +35084,6 @@ Function OutputLicenseAdmins
 Function ProcessStoreFront
 {
 	Write-Verbose "$(Get-Date): Processing StoreFront"
-	
-	$Script:TotalStoreFrontServers = 0
 	
 	If($MSWord -or $PDF)
 	{
@@ -35486,7 +35220,7 @@ Function OutputStoreFront
 		WriteHTMLLine 2 0 "Server: " $SFServer.Name
 		$rowdata = @()
 		$columnHeaders = @("StoreFront Server",($global:htmlsb),$SFServer.Name,$htmlwhite)
-		$rowdata += @(,('Used by # Delivery Groups',($global:htmlsb),$DGCnt,$htmlwhite))
+		$rowdata += @(,('Used by # Delivery Groups',($global:htmlsb),$DGCnt.ToString(),$htmlwhite))
 		$rowdata += @(,('URL',($global:htmlsb),$SFServer.Url,$htmlwhite))
 		$rowdata += @(,('Description',($global:htmlsb),$SFServer.Description,$htmlwhite))
 
@@ -35828,8 +35562,6 @@ Function ProcessZones
 {
 	Write-Verbose "$(Get-Date): Processing Zones"
 	
-	$Script:TotalZones = 0
-
 	If($MSWord -or $PDF)
 	{
 		$Selection.InsertNewPage()
@@ -36051,8 +35783,7 @@ Function OutputPerZoneView
 			$columnHeaders = @(
 			'Name',($global:htmlsb),
 			'Description',($global:htmlsb),
-			'Type',($global:htmlsb),
-			'Zone',($global:htmlsb))
+			'Type',($global:htmlsb))
 
 			$msg = ""
 			$columnWidths = @("150","200","150")
@@ -36779,89 +36510,6 @@ Function ProcessScriptSetup
 		AbortScript
 	}
 
-	<#
-	#V2.28 use only Get-ConfigSite for version info
-	#V2.22 add test for $AdminAddress
-	If($AdminAddress -eq "LocalHost")
-	{
-		#changed 18-dec-2016 to allow 32-bit PoSH to get the data in the 64-bit registry location
-		#initial idea from WC at Citrix and also from http://stackoverflow.com/questions/630382/how-to-access-the-64-bit-registry-from-a-32-bit-powershell-instance reply from SergVro
-		$key = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, [Microsoft.Win32.RegistryView]::Registry64)
-		$subKey =  $key.OpenSubKey("SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Citrix Desktop Delivery Controller")
-	}
-	Else
-	{
-		$subKey = $Null
-	}
-	
-	#new test added 23-Jun-2017
-	#if subkey is Null, then check the -AdminAddress computer for the key
-	If($Null -eq $subkey)
-	{
-		$key = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $AdminAddress)
-		$subKey =  $key.OpenSubKey("SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Citrix Desktop Delivery Controller")
-		
-		If($Null -eq $subkey)
-		{
-			#something is really wrong
-			Write-Verbose "$(Get-Date): Could not find the version information on $($AdminAddress),`n`nScript cannot continue`n "
-			AbortScript
-		}
-	}
-	Else
-	{
-		Write-Verbose "$(Get-Date): Found the version information on $($env:ComputerName)"
-	}
-	
-	$value = $subKey.GetValue("DisplayVersion")
-	#$Script:XDSiteVersion = $value.Substring(0,4) #V2.22
-	$Script:XDSiteVersion = $value #V2.22
-
-	#$tmp = $Script:XDSiteVersion.Split(".")
-	#[int]$MajorVersion = $tmp[0]
-	#[int]$MinorVersion = $tmp[1]
-	#[int]$RevisionVersion = $tmp[2] #added in V2.22
-	#[int]$BuildVersion = $tmp[3] #added in V2.22
-	
-	#Write-Verbose "$(Get-Date): You are running version $value"
-	#Write-Verbose "$(Get-Date): Major version: $MajorVersion"
-	#Write-Verbose "$(Get-Date): Minor version: $MinorVersion"
-	#Write-Verbose "$(Get-Date): Revision     : $RevisionVersion" #V2.22
-	#Write-Verbose "$(Get-Date): Build        : $BuildVersion" #V2.22
-
-	#first check to make sure this is a 7.x Site or 1808+ Site
-	
-	If($MajorVersion -ge 1808)
-	{
-		#version 1808 or later
-	}
-	ElseIf($MajorVersion -eq 7)
-	{
-		#this is a XenDesktop 7.x Site, now test to see if it is less than 7.8
-		If($MinorVersion -lt 8)
-		{
-			Write-Warning "You are running version $($value)"
-			Write-Warning "Are the PowerShell Snapins or Studio installed?"
-			Write-Warning "This script is designed for XenDesktop 7.8 and later and should not be run on 7.7 and earlier.`n`nScript cannot continue`n"
-			AbortScript
-		}
-	}
-	ElseIf($MajorVersion -eq 0 -and $MinorVersion -eq 0)
-	{
-		#something is wrong, we shouldn't be here
-		Write-Verbose "$(Get-Date): Something bad happened. We shouldn't be here. Could not find the version information.`n`nScript cannot continue`n"
-		AbortScript
-	}
-	Else
-	{
-		#this is not a XenDesktop 7.x Site, script cannot proceed
-		Write-Warning "You are running version $($value)"
-		Write-Warning "Are the PowerShell Snapins or Studio installed?"
-		Write-Warning "This script is designed for XenDesktop 7.8 and later and should not be run on other versions of XenDesktop.`n`nScript cannot continue`n"
-		AbortScript
-	}
-	#>
-	
 	#new for 2.28
 	$Script:XDSiteVersion = $Script:XDSite2.ProductVersion #added V2.28
 	$tmp = $Script:XDSiteVersion.Split(".")
@@ -36947,8 +36595,8 @@ Function ProcessScriptSetup
 	Write-Verbose "$(Get-Date): Loading SQL Server Assembly"
 	[bool]$Script:SQLServerLoaded = $False
 	
-	$asm = [reflection.assembly]::loadwithpartialname('microsoft.sqlserver.smo')
-	#$asm = [System.Reflection.Assembly]::LoadFrom("C:\Program Files\Citrix\XenDesktopPoshSdk\Module\Citrix.XenDesktop.Admin.V1\Citrix.XenDesktop.Admin\Microsoft.SqlServer.Smo.dll")
+	#$asm = [reflection.assembly]::loadwithpartialname('microsoft.sqlserver.smo')
+	$asm = [System.Reflection.Assembly]::LoadFrom("C:\Program Files\Citrix\XenDesktopPoshSdk\Module\Citrix.XenDesktop.Admin.V1\Citrix.XenDesktop.Admin\Microsoft.SqlServer.Smo.dll")
 	If( $null –eq $asm )
 	{
 		Write-Verbose "$(Get-Date): `tSQL Server Assembly could not be loaded"
@@ -37161,7 +36809,7 @@ Function OutputAppendixA
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitContent;
 
-			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
 			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
@@ -37324,7 +36972,7 @@ Function OutputAppendixB
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitContent;
 
-			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
 			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
@@ -37484,7 +37132,7 @@ Function OutputAppendixC
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitContent;
 
-			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
 			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
@@ -37639,7 +37287,7 @@ Function OutputAppendixD
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitContent;
 
-			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
 			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
@@ -37792,7 +37440,7 @@ Function OutputAppendixE
 			-Format $wdTableGrid `
 			-AutoFit $wdAutoFitContent;
 
-			SetWordCellFormat -Collection $Table -Size 9
+			SetWordCellFormat -Collection $Table -Size 9 -BackgroundColor $wdColorWhite
 			SetWordCellFormat -Collection $Table.Rows.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
