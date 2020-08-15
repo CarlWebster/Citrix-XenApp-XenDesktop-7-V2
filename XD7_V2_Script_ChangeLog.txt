@@ -3,6 +3,17 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.36 15-Aug-2020
+#	Fix bugs found while working on the V3 script
+#	Fix formatting issues found with Text and HTML code
+#	Fix issue with Word tables with 8 or 9 point font having a black background 
+#		This is an issue with the latest versions of PowerShell 5.1.x
+#	Fix totals for the Summary Page
+#	Fix loading the SQL Server Assembly
+#	Fix missing L_25 VDA Version checking for CVAD 2003
+#	Remove the block on not processing Policies if running from an elevated session.
+#		Citrix and I did a remote session to test this and we can't get it to fail.
+
 #Version 2.35 1-JUL-2020
 #	THIS IS THE FINAL UPDATE FOR THE V2 SCRIPT, except for bug fixes
 #	Added new Computer policy settings for CVAD 2006
