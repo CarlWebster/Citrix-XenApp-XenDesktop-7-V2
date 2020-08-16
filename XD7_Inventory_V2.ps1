@@ -2946,10 +2946,6 @@ Function GetComputerWMIInfo
 	{
 		Line 0 ""
 	}
-	ElseIf($HTML)
-	{
-		WriteHTMLLine 0 0 ""
-	}
 }
 
 Function OutputComputerItem
@@ -3009,7 +3005,6 @@ Function OutputComputerItem
 		$msg = ""
 		$columnWidths = @("150px","200px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -3138,7 +3133,6 @@ Function OutputDriveItem
 		$msg = ""
 		$columnWidths = @("150px","200px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -3262,7 +3256,6 @@ Function OutputProcessorItem
 		$msg = ""
 		$columnWidths = @("150px","200px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -3707,7 +3700,6 @@ Function OutputNicItem
 		$msg = ""
 		$columnWidths = @("150px","200px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 	}
 }
 #endregion
@@ -6458,7 +6450,6 @@ Function OutputWarning
 	ElseIf($HTML)
 	{
 		WriteHTMLLine 0 1 $txt
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -6550,7 +6541,6 @@ Function OutputAdminsForDetails
 		$msg = ""
 		$columnWidths = @("225","200","60")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "485"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -7069,7 +7059,6 @@ Function OutputMachines
 		$columnWidths = @("105","100","75","50","55","50","65")
 		$msg = ""
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-		WriteHTMLLine 0 0 " "
 	}
 	
 	ForEach($Catalog in $Catalogs)
@@ -7950,7 +7939,6 @@ Function OutputMachines
 			$msg = ""
 			$columnWidths = @("225px","200px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "425"
-			WriteHTMLLine 0 0 " "
 		}
 			
 		#scopes
@@ -7999,7 +7987,6 @@ Function OutputMachines
 				$msg = ""
 				$columnWidths = @("225")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "225"
-				WriteHTMLLine 0 0 " "
 			}
 		}
 		ElseIf($? -and ($Null -ne $Scopes))
@@ -8060,25 +8047,12 @@ Function OutputMachines
 				$msg = ""
 				$columnWidths = @("225")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "225"
-				WriteHTMLLine 0 0 " "
 			}
 		}
 		Else
 		{
 			$txt = "Unable to retrieve Scopes for Machine Catalog $($Catalog.Name)"
 			OutputWarning $txt
-			If($MSWord -or $PDF)
-			{
-				WriteWordLine 0 0 ""
-			}
-			ElseIf($Text)
-			{
-				Line 0 ""
-			}
-			ElseIf($HTML)
-			{
-				WriteHTMLLine 0 0 " "
-			}
 		}
 		
 		If($MachineCatalogs)
@@ -8148,7 +8122,6 @@ Function OutputMachines
 					$msg = ""
 					$columnWidths = @("225")
 					FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "225"
-					WriteHTMLLine 0 0 " "
 				}
 				
 				Write-Verbose "$(Get-Date): `t`tProcessing administrators for Machines in $($Catalog.Name)"
@@ -8310,7 +8283,6 @@ Function OutputAppDiskTable
 
 		$msg = ""
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -8568,7 +8540,6 @@ Function OutputApplicationsOnStartMenu
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -8631,7 +8602,6 @@ Function OutputInstalledPackages
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -8702,7 +8672,6 @@ Function OutputAppDiskDeliveryGroups
 
 			$msg = ""
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-			WriteHTMLLine 0 0 " "
 		}
 	}
 	ElseIf($? -and ($Null -eq $DGs))
@@ -10326,7 +10295,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			#V2.20
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
@@ -10350,7 +10318,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			WriteHTMLLine 4 0 "Applications"
 			$rowdata = @()
@@ -10378,7 +10345,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			WriteHTMLLine 4 0 "Registration"
 			$rowdata = @()
@@ -10391,7 +10357,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			WriteHTMLLine 4 0 "Hosting"
 			$rowdata = @()
@@ -10406,7 +10371,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			If($NoSessions -eq $False) #V2.27
 			{
@@ -10419,7 +10383,6 @@ Function OutputMachineDetails
 				$msg = ""
 				$columnWidths = @("200px","250px")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-				WriteHTMLLine 0 0 " "
 
 				WriteHTMLLine 4 0 "Session Details"
 				$rowdata = @()
@@ -10439,7 +10402,6 @@ Function OutputMachineDetails
 				$msg = ""
 				$columnWidths = @("200px","250px")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-				WriteHTMLLine 0 0 " "
 
 				WriteHTMLLine 4 0 "Session"
 				$rowdata = @()
@@ -10448,7 +10410,6 @@ Function OutputMachineDetails
 				$msg = ""
 				$columnWidths = @("200px","250px")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-				WriteHTMLLine 0 0 " "
 			}
 		}
 		ElseIf($Machine.SessionSupport -eq "SingleSession")
@@ -10529,7 +10490,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			#V2.20
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
@@ -10554,7 +10514,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			WriteHTMLLine 4 0 "Applications"
 			$rowdata = @()
@@ -10582,7 +10541,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			If($NoSessions -eq $False) #V2.27
 			{
@@ -10601,7 +10559,6 @@ Function OutputMachineDetails
 				$msg = ""
 				$columnWidths = @("200px","250px")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-				WriteHTMLLine 0 0 " "
 			}
 
 			WriteHTMLLine 4 0 "Registration"
@@ -10615,7 +10572,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			WriteHTMLLine 4 0 "Hosting"
 			$rowdata = @()
@@ -10631,7 +10587,6 @@ Function OutputMachineDetails
 			$msg = ""
 			$columnWidths = @("200px","250px")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 
 			If($NoSessions -eq $False) #V2.27
 			{
@@ -10654,7 +10609,6 @@ Function OutputMachineDetails
 				$msg = ""
 				$columnWidths = @("200px","250px")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-				WriteHTMLLine 0 0 " "
 
 				WriteHTMLLine 4 0 "Session"
 				$rowdata = @()
@@ -10665,7 +10619,6 @@ Function OutputMachineDetails
 				$msg = ""
 				$columnWidths = @("200px","250px")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-				WriteHTMLLine 0 0 " "
 			}
 		}
 	}
@@ -10896,7 +10849,6 @@ Function OutputDeliveryGroupTable
 		$columnWidths = @("135","130","50","45","50","65","60","65")
 		$msg = ""
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "600"
-		WriteHTMLLine 0 0 " "
 	}
 	
 }
@@ -11019,7 +10971,6 @@ Function OutputDeliveryGroup
 		$msg = ""
 		$columnWidths = @("200","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "400"
-		WriteHTMLLine 0 0 " "
 	}
 	
 	If($DeliveryGroups)
@@ -13163,7 +13114,6 @@ Function OutputDeliveryGroupDetails
 		$msg = ""
 		$columnWidths = @("200","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "400"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -13274,7 +13224,6 @@ Function OutputDeliveryGroupApplicationDetails
 			$msg = ""
 			$columnWidths = @("175","170","100","55")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 }
@@ -13390,7 +13339,6 @@ Function OutputDeliveryGroupCatalogs
 			$msg = ""
 			$columnWidths = @("175","150","100","75")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 }
@@ -13496,7 +13444,6 @@ Function OutputDeliveryGroupAppDisks
 			$msg = ""
 			$columnWidths = @("150","150","150")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 	Else
@@ -13788,7 +13735,6 @@ Function OutputDeliveryGroupTags
 			$msg = ""
 			$columnWidths = @("150","150","150")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 	Else
@@ -13882,7 +13828,6 @@ Function OutputDeliveryGroupApplicationGroups
 			$msg = ""
 			$columnWidths = @("150","150","150")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 	ElseIf($? -and $Null -eq $ApplicationGroups)
@@ -14041,7 +13986,6 @@ Function OutputApplications
 		$msg = ""
 		$columnWidths = @("100","145","125","80","50")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-		WriteHTMLLine 0 0 " "
 	}
 
 	If($Applications)
@@ -14565,7 +14509,6 @@ Function OutputApplicationDetails
 		$msg = ""
 		$columnWidths = @("175","325")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -14719,7 +14662,6 @@ Function OutputApplicationSessions
 			$msg = ""
 			$columnWidths = @("135","85","135","50","50","55","55")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "510"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 	ElseIf($? -and $Null -eq $Sessions)
@@ -14852,7 +14794,6 @@ Function OutputApplicationAdministrators
 			$msg = ""
 			$columnWidths = @("225","200","60")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "485"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 	ElseIf($? -and ($Null -eq $Admins))
@@ -15094,8 +15035,6 @@ Function ProcessApplicationGroupDetails
 				$msg = ""
 				$columnWidths = @("225","275")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-				WriteHTMLLine 0 0 " "
-				
 			}
 		}
 	}
@@ -15456,7 +15395,6 @@ Function OutputSummaryPolicyTable
 			$msg = ""
 			$columnWidths = @("155","185","55","60","45")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 	ElseIf($Null -eq $HDXPolicies)
@@ -15606,9 +15544,7 @@ Function ProcessCitrixPolicies
 				$msg = ""
 				$columnWidths = @("90","200")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "290"
-				WriteHTMLLine 0 0 " "
 			}
-				
 
 			Write-Verbose "$(Get-Date): `t`tRetrieving all filters"
 			$filters = Get-CtxGroupPolicyFilter -PolicyName $Policy.PolicyName `
@@ -15726,7 +15662,6 @@ Function ProcessCitrixPolicies
 						$msg = ""
 						$columnWidths = @("115","125","50","40","170")
 						FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-						WriteHTMLLine 0 0 " "
 					}
 				}
 				Else
@@ -28850,7 +28785,6 @@ Function ProcessCitrixPolicies
 						$msg = ""
 						$columnWidths = @("400","300")
 						FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "700"
-						WriteHTMLLine 0 0 " "
 					}
 				}
 			}
@@ -29471,7 +29405,6 @@ Function OutputConfigLogPreferences
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -29577,7 +29510,6 @@ Function OutputConfigLog
 		$msg = ""
 		$columnWidths = @("120","210","60","60","50")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -29746,7 +29678,6 @@ Function OutputSiteSettings
 		
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -29812,7 +29743,6 @@ Function OutputCEIPSetting
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -30945,7 +30875,6 @@ Function OutputDatastores
 		$msg = ""
 		$columnWidths = @("250","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-		WriteHTMLLine 0 0 ""
 
 		$rowdata = @()
 		$columnHeaders = @("Datastore",($global:htmlsb),"Logging",$htmlwhite)
@@ -30977,7 +30906,6 @@ Function OutputDatastores
 		$msg = ""
 		$columnWidths = @("250","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-		WriteHTMLLine 0 0 ""
 
 		$rowdata = @()
 		$columnHeaders = @("Datastore",($global:htmlsb),"Monitoring",$htmlwhite)
@@ -31009,7 +30937,6 @@ Function OutputDatastores
 		$msg = ""
 		$columnWidths = @("250","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-		WriteHTMLLine 0 0 " "
 
 		WriteHTMLLine 3 0 "Monitoring Database Details"
 		$rowdata = @()
@@ -31039,7 +30966,6 @@ Function OutputDatastores
 		$msg = ""
 		$columnWidths = @("200","50")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "250"
-		WriteHTMLLine 0 0 " "
 		
 		WriteHTMLLine 3 0 "Groom Retention Settings in Days"
 		$rowdata = @()
@@ -31140,7 +31066,6 @@ Function OutputDatastores
 		$msg = ""
 		$columnWidths = @("200","50")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "250"
-		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -31399,7 +31324,6 @@ Function OutputAdministrators
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -31486,7 +31410,6 @@ Function OutputScopes
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -31674,7 +31597,6 @@ Function OutputScopeObjects
 				$columnHeaders = @('Name',($global:htmlsb),'Description',($global:htmlsb))
 				$ColumnWidths = @("250","250")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $ColumnWidths -tablewidth "500"
-				WriteHTMLLine 0 0 " "
 			}
 
 			$Results = GetScopeMC $Scope
@@ -31695,7 +31617,6 @@ Function OutputScopeObjects
 				$columnHeaders = @('Name',($global:htmlsb),'Description',($global:htmlsb))
 				$ColumnWidths = @("250","250")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $ColumnWidths -tablewidth "500"
-				WriteHTMLLine 0 0 " "
 			}
 
 			$Results = GetScopeHyp $Scope
@@ -31716,7 +31637,6 @@ Function OutputScopeObjects
 				$columnHeaders = @('Name',($global:htmlsb),'Description',($global:htmlsb))
 				$ColumnWidths = @("250","250")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $ColumnWidths -tablewidth "500"
-				WriteHTMLLine 0 0 " "
 			}
 		}
 	}
@@ -31983,17 +31903,14 @@ Function OutputScopeAdministrators
 				$msg = ""
 				$columnWidths = @("220","225","55")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-				WriteHTMLLine 0 0 " "
 			}
 			ElseIf($? -and $Null -eq $Admins)
 			{
 				WriteHTMLLine 0 0 "No administrators defined"
-				WriteHTMLLine 0 0 " "
 			}
 			Else
 			{
 				WriteHTMLLine 0 0 "Unable to retrieve administrators"
-				WriteHTMLLine 0 0 " "
 			}
 		}
 	}
@@ -32122,7 +32039,6 @@ Function OutputRoles
 		$msg = ""
 		$columnWidths = @("150","300","50")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -32266,7 +32182,6 @@ Function OutputRoleDefinitions
 			$msg = ""
 			$ColumnWidths = @("100","400")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders	-fixedWidth $columnWidths -tablewidth "500"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 }
@@ -32552,17 +32467,14 @@ Function OutputRoleAdministrators
 				$msg = ""
 				$columnWidths = @("220","225","55")
 				FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-				WriteHTMLLine 0 0 " "
 			}
 			ElseIf($? -and $Null -eq $Admins)
 			{
 				WriteHTMLLine 0 0 "No administrators defined"
-				WriteHTMLLine 0 0 " "
 			}
 			Else
 			{
 				WriteHTMLLine 0 0 "Unable to retrieve administrators"
-				WriteHTMLLine 0 0 " "
 			}
 		}
 	}
@@ -33972,7 +33884,6 @@ Function OutputHosting
 		$msg = ""
 		$columnWidths = @("150","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
 		
 		WriteHTMLLine 4 0 "Advanced"
 		$rowdata = @()
@@ -33999,7 +33910,6 @@ Function OutputHosting
 		$msg = ""
 		$columnWidths = @("300","150")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-		WriteHTMLLine 0 0 " "
 	}
 	
 	If($Hosting)
@@ -34123,7 +34033,7 @@ Function OutputHosting
 				#updated for CVAD 1909 in V2.28
 				If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
 				{
-					WriteWordLine 4 0 "Mlti-session OS Machines ($($cnt))"
+					WriteWordLine 4 0 "Multi-session OS Machines ($($cnt))"
 				}
 				Else
 				{
@@ -34393,7 +34303,6 @@ Function OutputDesktopOSMachine
 		$msg = ""
 		$columnWidths = @("150","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -34560,7 +34469,6 @@ Function OutputServerOSMachine
 		$msg = ""
 		$columnWidths = @("150","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -34658,7 +34566,6 @@ Function OutputHostingSessions
 			$msg = ""
 			$columnWidths = @("150","200")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 }
@@ -34845,7 +34752,6 @@ Function OutputLicensingOverview
 		$msg = ""
 		$columnWidths = @("150","125")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "275"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -34990,7 +34896,6 @@ Function OutputXenDesktopLicenses
 		$msg = ""
 		$columnWidths = @("150","125","65","90","80","55")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "565"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -35074,7 +34979,6 @@ Function OutputLicenseAdmins
 		$msg = ""
 		$columnWidths = @("150","125")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "275"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -35227,7 +35131,6 @@ Function OutputStoreFront
 		$msg = ""
 		$columnWidths = @("150","250")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "400"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -35301,7 +35204,6 @@ Function OutputStoreFrontDeliveryGroups
 
 		$msg = ""
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders
-		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -35440,7 +35342,6 @@ Function OutputAppV
 		$msg = ""
 		$columnWidths = @("250","250")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -35552,7 +35453,6 @@ Function OutputAppDNA
 		$msg = ""
 		$columnWidths = @("250","250")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 " "
 	}
 }
 #endregion
@@ -35709,7 +35609,6 @@ Function OutputZoneSiteView
 		$msg = ""
 		$columnWidths = @("150","200","150","150")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "650"
-		WriteHTMLLine 0 0 " "
 	}
 }
 
@@ -35788,7 +35687,6 @@ Function OutputPerZoneView
 			$msg = ""
 			$columnWidths = @("150","200","150")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "500"
-			WriteHTMLLine 0 0 " "
 		}
 	}
 	Write-Verbose "$(Get-Date): "
@@ -36229,7 +36127,6 @@ Function ProcessSummaryPage
 		$msg = "Machine Catalogs"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 		
 		Write-Verbose "$(Get-Date): `tAdd AppDisks summary info"
 		$rowdata = @()
@@ -36238,7 +36135,6 @@ Function ProcessSummaryPage
 		$msg = "AppDisks"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 
 		Write-Verbose "$(Get-Date): `tAdd Delivery Group summary info"
 		$rowdata = @()
@@ -36250,7 +36146,6 @@ Function ProcessSummaryPage
 		$msg = "Delivery Groups"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 
 		Write-Verbose "$(Get-Date): `tAdd Application summary info"
 		$rowdata = @()
@@ -36261,7 +36156,6 @@ Function ProcessSummaryPage
 		$msg = "Applications"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 		
 		If($Policies -eq $True)
 		{
@@ -36284,7 +36178,6 @@ Function ProcessSummaryPage
 			$columnWidths = @("250","50")
 			FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
 			WriteHTMLLine 0 0 '* (AD Policies can contain multiple Citrix policies)' "" "Calibri" 1 $htmlbold
-			WriteHTMLLine 0 0 ""
 		}
 		
 		Write-Verbose "$(Get-Date): `tAdd administrator summary info"
@@ -36301,7 +36194,6 @@ Function ProcessSummaryPage
 		$msg = "Administrators"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 
 		Write-Verbose "$(Get-Date): `tAdd Controller summary info"
 		$rowdata = @()
@@ -36310,7 +36202,6 @@ Function ProcessSummaryPage
 		$msg = "Controllers"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 
 		Write-Verbose "$(Get-Date): `tAdd Hosting Connection summary info"
 		$rowdata = @()
@@ -36319,7 +36210,6 @@ Function ProcessSummaryPage
 		$msg = "Hosting Connections"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 
 		Write-Verbose "$(Get-Date): `tAdd Licensing summary info"
 		$rowdata = @()
@@ -36344,7 +36234,6 @@ Function ProcessSummaryPage
 		$msg = "Licensing"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 
 		Write-Verbose "$(Get-Date): `tAdd StoreFront summary info"
 		$rowdata = @()
@@ -36353,7 +36242,6 @@ Function ProcessSummaryPage
 		$msg = "StoreFront"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 
 		Write-Verbose "$(Get-Date): `tAdd Zone summary info"
 		$rowdata = @()
@@ -36362,7 +36250,6 @@ Function ProcessSummaryPage
 		$msg = "Zones"
 		$columnWidths = @("250","50")
 		FormatHTMLTable $msg "auto" -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths
-		WriteHTMLLine 0 0 ""
 	}
 
 	Write-Verbose "$(Get-Date): Finished Create Summary Page"
@@ -36864,7 +36751,6 @@ Function OutputAppendixA
 		WriteHTMLLine 0 0 "Linux VDAs are excluded"
 		WriteHTMLLine 0 0 "These items may or may not be needed"
 		WriteHTMLLine 0 0 "This Appendix is for VDA comparison only"
-		WriteHTMLLine 0 0 ""
 		
 		$Save = ""
 		$First = $True
@@ -37025,7 +36911,6 @@ Function OutputAppendixB
 		WriteHTMLLine 0 0 "Miscellaneous Registry Items That May or May Not Exist on Controllers"
 		WriteHTMLLine 0 0 "These items may or may not be needed"
 		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
-		WriteHTMLLine 0 0 ""
 		$rowdata = @()
 		
 		$Save = ""
@@ -37183,7 +37068,6 @@ Function OutputAppendixC
 	{
 		WriteHTMLLine 1 0 "Appendix C - Microsoft Hotfixes and Updates"
 		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
-		WriteHTMLLine 0 0 ""
 		$rowdata = @()
 		
 		$Save = ""
@@ -37338,7 +37222,6 @@ Function OutputAppendixD
 	{
 		WriteHTMLLine 1 0 "Appendix D - Citrix Installed Components"
 		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
-		WriteHTMLLine 0 0 ""
 		$rowdata = @()
 		
 		$Save = ""
@@ -37490,7 +37373,6 @@ Function OutputAppendixE
 	{
 		WriteHTMLLine 1 0 "Appendix E - Windows Installed Components"
 		WriteHTMLLine 0 0 "This Appendix is for Controller comparison only"
-		WriteHTMLLine 0 0 ""
 		$rowdata = @()
 		
 		$Save = ""
