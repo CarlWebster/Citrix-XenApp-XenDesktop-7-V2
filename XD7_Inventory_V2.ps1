@@ -511,26 +511,10 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -TEXT
 
 	Will use all default values and save the document as a formatted text file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
-	Webster" or 
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
-
-	Carl Webster for the Company Name.
-	Sideline for the Cover Page format.
-	Administrator for the User Name.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -HTML
 
 	Will use all default values and save the document as an HTML file.
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
-	Webster" or 
-	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
-	$env:username = Administrator
-
-	Carl Webster for the Company Name.
-	Sideline for the Cover Page format.
-	Administrator for the User Name.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs
 	
@@ -9310,7 +9294,7 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Windows Connection Setting"; Value = $xWindowsConnectionSetting; }
 			$ScriptInformation += @{Data = "Is Assigned"; Value = $Machine.IsAssigned; }
 			$ScriptInformation += @{Data = "Is Physical"; Value = $xIsPhysical; }
-			$ScriptInformation += @{Data = "Provisioning Type"; Value = $Machine.ProvisioningType; }
+			$ScriptInformation += @{Data = "Provisioning Type"; Value = $Machine.ProvisioningType.ToString(); }
 			$ScriptInformation += @{Data = "PvD State"; Value = $xPvdStage; }
 			$ScriptInformation += @{Data = "Scheduled Reboot"; Value = $Machine.ScheduledReboot; }
 			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
@@ -9609,7 +9593,7 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Maintenance Mode"; Value = $xInMaintenanceMode; }
 			$ScriptInformation += @{Data = "Is Assigned"; Value = $Machine.IsAssigned; }
 			$ScriptInformation += @{Data = "Is Physical"; Value = $xIsPhysical; }
-			$ScriptInformation += @{Data = "Provisioning Type"; Value = $Machine.ProvisioningType; }
+			$ScriptInformation += @{Data = "Provisioning Type"; Value = $Machine.ProvisioningType.ToString(); }
 			$ScriptInformation += @{Data = "PvD State"; Value = $xPvdStage; }
 			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
@@ -9926,7 +9910,7 @@ Function OutputMachineDetails
 			Line 2 "Windows Connection Setting`t: " $xWindowsConnectionSetting
 			Line 2 "Is Assigned`t`t`t: " $Machine.IsAssigned
 			Line 2 "Is Physical`t`t`t: " $xIsPhysical
-			Line 2 "Provisioning Type`t`t: " $Machine.ProvisioningType
+			Line 2 "Provisioning Type`t`t: " $Machine.ProvisioningType.ToString()
 			Line 2 "PvD State`t`t`t: " $xPvdStage
 			Line 2 "Scheduled Reboot`t`t: " $Machine.ScheduledReboot
 			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
@@ -10089,7 +10073,7 @@ Function OutputMachineDetails
 			Line 2 "Maintenance Mode`t`t: " $xInMaintenanceMode
 			Line 2 "Is Assigned`t`t`t: " $Machine.IsAssigned
 			Line 2 "Is Physical`t`t`t: " $xIsPhysical
-			Line 2 "Provisioning Type`t`t: " $Machine.ProvisioningType
+			Line 2 "Provisioning Type`t`t: " $Machine.ProvisioningType.ToString()
 			Line 2 "PvD State`t`t`t: " $xPvdStage
 			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
@@ -10271,7 +10255,7 @@ Function OutputMachineDetails
 			$rowdata += @(,('Windows Connection Setting',($global:htmlsb),$xWindowsConnectionSetting,$htmlwhite))
 			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned.ToString(),$htmlwhite))
 			$rowdata += @(,('Is Physical',($global:htmlsb),$xIsPhysical,$htmlwhite))
-			$rowdata += @(,('Provisioning Type',($global:htmlsb),$Machine.ProvisioningType,$htmlwhite))
+			$rowdata += @(,('Provisioning Type',($global:htmlsb),$Machine.ProvisioningType.ToString(),$htmlwhite))
 			$rowdata += @(,('PvD State',($global:htmlsb),$xPvdStage,$htmlwhite))
 			$rowdata += @(,('Scheduled Reboot',($global:htmlsb),$Machine.ScheduledReboot.ToString(),$htmlwhite))
 			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
@@ -10467,7 +10451,7 @@ Function OutputMachineDetails
 			$rowdata += @(,('Maintenance Mode',($global:htmlsb),$xInMaintenanceMode,$htmlwhite))
 			$rowdata += @(,('Is Assigned',($global:htmlsb),$Machine.IsAssigned.ToString(),$htmlwhite))
 			$rowdata += @(,('Is Physical',($global:htmlsb),$xIsPhysical,$htmlwhite))
-			$rowdata += @(,('Provisioning Type',($global:htmlsb),$Machine.ProvisioningType,$htmlwhite))
+			$rowdata += @(,('Provisioning Type',($global:htmlsb),$Machine.ProvisioningType.ToString(),$htmlwhite))
 			$rowdata += @(,('PvD State',($global:htmlsb),$xPvdStage,$htmlwhite))
 			#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 			If(validObject $Machine ZoneName)
