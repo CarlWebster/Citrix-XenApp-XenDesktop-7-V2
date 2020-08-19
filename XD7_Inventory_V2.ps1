@@ -1279,6 +1279,11 @@ Param(
 #	Fix totals for the Summary Page
 #	Fix loading the SQL Server Assembly
 #	Fix missing L_25 VDA Version checking for CVAD 2003
+#	Fixed an issue for RemotePC machine catalogs based on OUs. (Thanks to Rene Bigler)
+#		Added all OUs defined
+#		Added Allow SubOUs by each defined OU
+#		Added machines excluded from the catalog
+#		Added machines included in the catalog
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
 #
@@ -4286,9 +4291,16 @@ Function SetupWord
 		
 		If([String]::IsNullOrEmpty($TmpName))
 		{
-			Write-Warning "`n`n`t`tCompany Name is blank so Cover Page will not show a Company Name."
-			Write-Warning "`n`t`tCheck HKCU:\Software\Microsoft\Office\Common\UserInfo for Company or CompanyName value."
-			Write-Warning "`n`t`tYou may want to use the -CompanyName parameter if you need a Company Name on the cover page.`n`n"
+			Write-Warning "
+			`n`n
+			`t`t
+			Company Name is blank so Cover Page will not show a Company Name.
+			`t`t
+			Check HKCU:\Software\Microsoft\Office\Common\UserInfo for Company or CompanyName value.
+			`t`t
+			You may want to use the -CompanyName parameter if you need a Company Name on the cover page.
+			`n`n
+			"
 		}
 		Else
 		{
@@ -7149,20 +7161,21 @@ Function OutputMachines
 		{
 			$Results = Get-BrokerRemotePCAccount @XDParams2 -CatalogUid $Catalog.Uid
 			
-			If($? -and $Null -ne $Results)
-			{
-				$RemotePCOU = $Results.OU
-				$RemotePCSubOU = $Results.AllowSubfolderMatches.ToString()
-			}
-			ElseIf($? -and $Null -eq $Results)
-			{
-				$RemotePCOU = "No RemotePC OU configured"
-				$RemotePCSubOU = ""
-			}
-			Else
+			If(!$?)
 			{
 				$RemotePCOU = "Unable to retrieve"
-				$RemotePCSubOU = ""
+				$RemotePCSubOU = "Unable to retrieve"
+			}
+			ElseIf($? -and $Null -eq $RemotePCAccounts)
+			{
+				$RemotePCOU = "No RemotePC OU configured"
+				$RemotePCSubOU = "N/A"
+			}
+			ElseIf($? -and $Null -ne $RemotePCAccounts)
+			{
+				#$RemotePCOU = $Results.OU
+				#$RemotePCSubOU = $Results.AllowSubfolderMatches.ToString()
+				#Handled later
 			}
 		}
 		
@@ -7388,8 +7401,64 @@ Function OutputMachines
 			ElseIf($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -eq $True)
 			{
 				$CatalogInformation += @{Data = "Description"; Value = $Catalog.Description; }
-				$CatalogInformation += @{Data = "Organizational Units"; Value = $RemotePCOU; }
-				$CatalogInformation += @{Data = "Allow subfolder matches"; Value = $RemotePCSubOU; }
+				
+				If($RemotePCAccounts -is [array])
+				{
+					ForEach($RemotePCAccount in $RemotePCAccounts)
+					{
+						$CatalogInformation += @{Data = "Organizational Units"; Value = $RemotePCAccount.OU; }
+						$CatalogInformation += @{Data = "     Allow subfolder matches"; Value = $RemotePCAccount.AllowSubfolderMatches.ToString(); }
+						If($RemotePCAccount.MachinesExcluded.Count -eq 0)
+						{
+							$CatalogInformation += @{Data = "     Machines excluded"; Value = "None"; }
+						}
+						Else
+						{
+							$cnt = -1
+							ForEach($Item in $RemotePCAccount.MachinesExcluded)
+							{
+								$cnt++
+								
+								If($cnt -eq 0)
+								{
+									$CatalogInformation += @{Data = "     Machines excluded"; Value = $Item; }
+								}
+								Else
+								{
+									$CatalogInformation += @{Data = ""; Value = $Item; }
+								}
+							}
+						}
+
+						If($RemotePCAccount.MachinesIncluded -eq "*")
+						{
+							$CatalogInformation += @{Data = "     Machines Included"; Value = "All"; }
+						}
+						Else
+						{
+							$cnt = -1
+							ForEach($Item in $RemotePCAccount.MachinesIncluded)
+							{
+								$cnt++
+								
+								If($cnt -eq 0)
+								{
+									$CatalogInformation += @{Data = "     Machines Included"; Value = $Item; }
+								}
+								Else
+								{
+									$CatalogInformation += @{Data = ""; Value = $Item; }
+								}
+							}
+						}
+					}
+				}
+				Else
+				{
+					$CatalogInformation += @{Data = "Organizational Units"; Value = $RemotePCOU; }
+					$CatalogInformation += @{Data = "     Allow subfolder matches"; Value = $RemotePCSubOU; }
+				}
+
 				$CatalogInformation += @{Data = "Machine type"; Value = $xCatalogType; }
 				$CatalogInformation += @{Data = "No. of machines"; Value = $NumberOfMachines; }
 				$CatalogInformation += @{Data = "Allocated machines"; Value = $Catalog.UsedCount; }
@@ -7612,8 +7681,64 @@ Function OutputMachines
 			ElseIf($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -eq $True)
 			{
 				Line 1 "Description`t`t`t: " $Catalog.Description
-				Line 1 "Organizational Units`t`t: " $RemotePCOU
-				Line 1 "Allow subfolder matches`t`t: " $RemotePCSubOU
+
+				If($RemotePCAccounts -is [array])
+				{
+					ForEach($RemotePCAccount in $RemotePCAccounts)
+					{
+						Line 1 "Organizational Units`t`t`t: " $RemotePCAccount.OU
+						Line 2 "Allow subfolder matches`t`t: " $RemotePCAccount.AllowSubfolderMatches.ToString()
+						If($RemotePCAccount.MachinesExcluded.Count -eq 0)
+						{
+							Line 2 "Machines excluded`t`t: " "None"
+						}
+						Else
+						{
+							$cnt = -1
+							ForEach($Item in $RemotePCAccount.MachinesExcluded)
+							{
+								$cnt++
+								
+								If($cnt -eq 0)
+								{
+									Line 2 "Machines excluded`t`t: " $Item
+								}
+								Else
+								{
+									Line 6 "  " $Item
+								}
+							}
+						}
+
+						If($RemotePCAccount.MachinesIncluded -eq "*")
+						{
+							Line 2 "Machines Included`t`t: " "All"
+						}
+						Else
+						{
+							$cnt = -1
+							ForEach($Item in $RemotePCAccount.MachinesIncluded)
+							{
+								$cnt++
+								
+								If($cnt -eq 0)
+								{
+									Line 2 "Machines Included`t`t: " $Item
+								}
+								Else
+								{
+									Line 6 "  " $Item
+								}
+							}
+						}
+					}
+				}
+				Else
+				{
+					Line 1 "Organizational Units`t`t`t: " $RemotePCOU
+					Line 2 "Allow subfolder matches`t`t: " $RemotePCSubOU
+				}
+
 				Line 1 "Machine type`t`t`t: " $xCatalogType
 				Line 1 "No. of machines`t`t`t: "$NumberOfMachines
 				Line 1 "Allocated machines`t`t: " $Catalog.UsedCount
@@ -7825,8 +7950,64 @@ Function OutputMachines
 			ElseIf($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -eq $True)
 			{
 				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
-				$rowdata += @(,('Organizational Units',($global:htmlsb),$RemotePCOU,$htmlwhite))
-				$rowdata += @(,('Allow subfolder matches',($global:htmlsb),$RemotePCSubOU,$htmlwhite))
+
+				If($RemotePCAccounts -is [array])
+				{
+					ForEach($RemotePCAccount in $RemotePCAccounts)
+					{
+						$rowdata += @(,("Organizational Units",($global:htmlsb),$RemotePCAccount.OU,$htmlwhite))
+						$rowdata += @(,("     Allow subfolder matches",($global:htmlsb),$RemotePCAccount.AllowSubfolderMatches.ToString(),$htmlwhite))
+						If($RemotePCAccount.MachinesExcluded.Count -eq 0)
+						{
+							$rowdata += @(,("     Machines excluded",($global:htmlsb),"None",$htmlwhite))
+						}
+						Else
+						{
+							$cnt = -1
+							ForEach($Item in $RemotePCAccount.MachinesExcluded)
+							{
+								$cnt++
+								
+								If($cnt -eq 0)
+								{
+									$rowdata += @(,("     Machines excluded",($global:htmlsb),$Item,$htmlwhite))
+								}
+								Else
+								{
+									$rowdata += @(,("",($global:htmlsb),$Item,$htmlwhite))
+								}
+							}
+						}
+
+						If($RemotePCAccount.MachinesIncluded -eq "*")
+						{
+							$rowdata += @(,("     Machines Included",($global:htmlsb),"All",$htmlwhite))
+						}
+						Else
+						{
+							$cnt = -1
+							ForEach($Item in $RemotePCAccount.MachinesIncluded)
+							{
+								$cnt++
+								
+								If($cnt -eq 0)
+								{
+									$rowdata += @(,("     Machines Included",($global:htmlsb),$Item,$htmlwhite))
+								}
+								Else
+								{
+									$rowdata += @(,("",($global:htmlsb),$Item,$htmlwhite))
+								}
+							}
+						}
+					}
+				}
+				Else
+				{
+					$rowdata += @(,("Organizational Units",($global:htmlsb),$RemotePCOU,$htmlwhite))
+					$rowdata += @(,("     Allow subfolder matches",($global:htmlsb),$RemotePCSubOU,$htmlwhite))
+				}
+
 				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
 				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines.ToString(),$htmlwhite))
 				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount.ToString(),$htmlwhite))
@@ -30859,7 +31040,8 @@ Function OutputDatastores
 		$msg = ""
 		$columnWidths = @("250","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
-
+		WriteHTMLLine 0 0 ""
+		
 		$rowdata = @()
 		$columnHeaders = @("Datastore",($global:htmlsb),"Logging",$htmlwhite)
 		$rowdata += @(,("Database Name",($global:htmlsb),$LogDatabaseName,$htmlwhite))
@@ -30890,6 +31072,7 @@ Function OutputDatastores
 		$msg = ""
 		$columnWidths = @("250","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+		WriteHTMLLine 0 0 ""
 
 		$rowdata = @()
 		$columnHeaders = @("Datastore",($global:htmlsb),"Monitoring",$htmlwhite)
