@@ -4,6 +4,95 @@
 # Created on October 20, 2013
 
 #Version 2.36 15-Aug-2020
+#	Added the following missing Administrator Role permissions:
+#		Administrators
+#			Manage Administrator Custom Roles
+#			Manage Administrator Scopes
+#			Manage ServiceSettings
+#		AppDisks
+#			Add AppDisk to Scope
+#			Allow AppDisk to be added to a Delivery Group
+#			Create a new Version of AppDisk
+#			Create AppDisk
+#			Delete AppDisk
+#			Edit AppDisk properties
+#			Install Applications
+#			Prepare AppDisk for use
+#			Remove AppDisk from Scope
+#			View AppDisks
+#		AppDNA
+#			Manage AppDNA connections
+#			View AppDNA connections
+#		Application Groups
+#			Add Application Group to Scope
+#			Add Application to Application Group
+#			Add Delivery Group to Application Group
+#			Change Tags on Application Group
+#			Change users assigned to an application (Application Group)
+#			Create Application (Application Group)
+#			Create Application Folder (Application Group)
+#			Create Application Group
+#			Delete Application (Application Group)
+#			Delete Application Group
+#			Edit Application Folder (Application Group)
+#			Edit Application Group Properties
+#			Edit Application Properties (Application Group)
+#			Edit Application tags (Application Group)
+#			Edit User Assignment on Application Group
+#			Move Application Folder (Application Group)
+#			Remove Application Folder (Application Group)
+#			Remove Application from Application Group
+#			Remove Application Group from Scope
+#			Remove Delivery Group from Application Group
+#			View Application Groups
+#			View Applications (Application Group)
+#		App-V
+#			Add App-V Application Libraries and Packages
+#			Create App-V Isolation Group
+#			Read App-V Application Libraries and Packages
+#			Remove App-V Application Libraries and Packages
+#			Remove App-V Isolation Groups
+#		Controllers
+#			Edit Controller
+#		Delivery Groups
+#			Add Application Group to Delivery Group
+#			Add Webhooks to Delivery Group
+#			Edit Delivery Group machine tags
+#			Edit machine tags
+#			Remove Application Group from Delivery Group
+#		Director
+#			Create\Edit\Delete Alert Policies
+#			Create\Edit\Remove Alert Email Server Configuration
+#			Create\Edit\Remove Cloud Analytics Configurations
+#			Create\Edit\Remove Probe Configurations
+#			Dismiss Alerts
+#			Edit Disk metrics related Broker machine command properties
+#			Edit GPO Data related Broker machine command properties
+#			Edit Gpu metrics related Broker machine command properties
+#			Edit HDX Protocol related Broker machine command properties
+#			Edit Profile Load Data related Broker machine command properties
+#			Edit Startup related Broker machine command properties
+#			View Alert Policies
+#			View Alerts
+#			View Applications page
+#			View Configurations page
+#		Machine Catalogs
+#			Capture AppDNA OS snapshot
+#			Edit Catalog tags
+#			Edit Catalog machine tags
+#		Other Permissions
+#			Create Tags
+#			Delete Tags
+#			Edit Tags
+#			Manage Orchestration Service REST API
+#			Manage Trust Service Keys
+#			Read Tags
+#		Zones
+#			Create Zone
+#			Delete Zone
+#			Edit Zone
+#			Manage Citrix Cloud Connector
+#	Change Policy Filter from Citrix CloudBridge to NetScaler SD-WAN
 #	Fix bugs found while working on the V3 script
 #	Fix formatting issues found with Text and HTML code
 #	Fix issue with Word tables with 8 or 9 point font having a black background 
@@ -16,6 +105,7 @@
 #		Added Allow SubOUs by each defined OU
 #		Added machines excluded from the catalog
 #		Added machines included in the catalog
+#	If PDF is selected for Output and Microsoft Word is not installed, update the error message to state that PDF uses Word's SaveAs PDF function
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
 

@@ -1,5 +1,5 @@
 ﻿#Requires -Version 3.0
-#This File is in Unicode format.  Do not edit in an ASCII editor. Notepad++ UTF-8-BOM
+#This File is in Unicode format. Do not edit in an ASCII editor. Notepad++ UTF-8-BOM
 
 #region help text
 
@@ -144,7 +144,7 @@
 	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CA.
 .PARAMETER CompanyEmail
-	Company Email to use for the Cover Page, if the Cover Page has the Email field.  
+	Company Email to use for the Cover Page, if the Cover Page has the Email field. 
 	
 	The following Cover Pages have an Email field:
 		Facet (Word 2013/2016)
@@ -152,7 +152,7 @@
 	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CE.
 .PARAMETER CompanyFax
-	Company Fax to use for the Cover Page, if the Cover Page has the Fax field.  
+	Company Fax to use for the Cover Page, if the Cover Page has the Fax field. 
 	
 	The following Cover Pages have a Fax field:
 		Contrast (Word 2010)
@@ -161,7 +161,7 @@
 	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CF.
 .PARAMETER CompanyName
-	Company Name to use for the Cover Page.  
+	Company Name to use for the Cover Page. 
 	The default value is contained in 
 	HKCU:\Software\Microsoft\Office\Common\UserInfo\CompanyName or
 	HKCU:\Software\Microsoft\Office\Common\UserInfo\Company, whichever is populated 
@@ -170,7 +170,7 @@
 	This parameter is only valid with the MSWORD and PDF output parameters.
 	This parameter has an alias of CN.
 .PARAMETER CompanyPhone
-	Company Phone to use for the Cover Page if the Cover Page has the Phone field.  
+	Company Phone to use for the Cover Page if the Cover Page has the Phone field. 
 	
 	The following Cover Pages have a Phone field:
 		Contrast (Word 2010)
@@ -1065,9 +1065,9 @@
 	If the current user's credentials are not valid to send email, 
 	the user will be prompted to enter valid credentials.
 .INPUTS
-	None.  You cannot pipe objects to this script.
+	None. You cannot pipe objects to this script.
 .OUTPUTS
-	No objects are output from this script.  
+	No objects are output from this script. 
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
@@ -1272,6 +1272,97 @@ Param(
 # This script is based on the 1.20 script
 
 #Version 2.36 15-Aug-2020
+#	Added the following missing Administrator Role permissions:
+#		Administrators
+#			Manage Administrator Custom Roles
+#			Manage Administrator Scopes
+#			Manage ServiceSettings
+#		AppDisks
+#			Add AppDisk to Scope
+#			Allow AppDisk to be added to a Delivery Group
+#			Create a new Version of AppDisk
+#			Create AppDisk
+#			Delete AppDisk
+#			Edit AppDisk properties
+#			Install Applications
+#			Prepare AppDisk for use
+#			Remove AppDisk from Scope
+#			View AppDisks
+#		AppDNA
+#			Manage AppDNA connections
+#			View AppDNA connections
+#		Application Groups
+#			Add Application Group to Scope
+#			Add Application to Application Group
+#			Add Delivery Group to Application Group
+#			Change Tags on Application Group
+#			Change users assigned to an application (Application Group)
+#			Create Application (Application Group)
+#			Create Application Folder (Application Group)
+#			Create Application Group
+#			Delete Application (Application Group)
+#			Delete Application Group
+#			Edit Application Folder (Application Group)
+#			Edit Application Group Properties
+#			Edit Application Properties (Application Group)
+#			Edit Application tags (Application Group)
+#			Edit User Assignment on Application Group
+#			Move Application Folder (Application Group)
+#			Remove Application Folder (Application Group)
+#			Remove Application from Application Group
+#			Remove Application Group from Scope
+#			Remove Delivery Group from Application Group
+#			View Application Groups
+#			View Applications (Application Group)
+#		App-V
+#			Add App-V Application Libraries and Packages
+#			Create App-V Isolation Group
+#			Read App-V Application Libraries and Packages
+#			Remove App-V Application Libraries and Packages
+#			Remove App-V Isolation Groups
+#		Controllers
+#			Edit Controller
+#		Delivery Groups
+#			Add Application Group to Delivery Group
+#			Add Webhooks to Delivery Group
+#			Edit Delivery Group machine tags
+#			Edit machine tags
+#			Remove Application Group from Delivery Group
+#		Director
+#			Create\Edit\Delete Alert Policies
+#			Create\Edit\Remove Alert Email Server Configuration
+#			Create\Edit\Remove Cloud Analytics Configurations
+#			Create\Edit\Remove Probe Configurations
+#			Dismiss Alerts
+#			Edit Disk metrics related Broker machine command properties
+#			Edit GPO Data related Broker machine command properties
+#			Edit Gpu metrics related Broker machine command properties
+#			Edit HDX Protocol related Broker machine command properties
+#			Edit Profile Load Data related Broker machine command properties
+#			Edit Startup related Broker machine command properties
+#			View Alert Policies
+#			View Alerts
+#			View Applications page
+#			View Configurations page
+#		Machine Catalogs
+#			Capture AppDNA OS snapshot
+#			Edit Catalog tags
+#			Edit Catalog machine tags
+#		Other Permissions
+#			Create Tags
+#			Delete Tags
+#			Edit Tags
+#			Manage Orchestration Service REST API
+#			Manage Trust Service Keys
+#			Read Tags
+#		Zones
+#			Create Zone
+#			Delete Zone
+#			Edit Zone
+#			Manage Citrix Cloud Connector
+#	Change Policy Filter from Citrix CloudBridge to NetScaler SD-WAN
+#	Change some Write-Error to Write-Warning and changed some Write-Warning to Write-Host
+#		Added Function OutputNotice
 #	Fix bugs found while working on the V3 script
 #	Fix formatting issues found with Text and HTML code
 #	Fix issue with Word tables with 8 or 9 point font having a black background 
@@ -1284,6 +1375,7 @@ Param(
 #		Added Allow SubOUs by each defined OU
 #		Added machines excluded from the catalog
 #		Added machines included in the catalog
+#	If PDF is selected for Output and Microsoft Word is not installed, update the error message to state that PDF uses Word's SaveAs PDF function
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
 #
@@ -2164,7 +2256,7 @@ If($NoPolicies -and $Section -eq "Policies")
 	You specified conflicting parameters.
 	`n`n
 	`t`t
-	You specified the $Section section but also selected NoPolicies.
+	You specified the Policies section but also selected NoPolicies.
 	`n`n
 	`t`t
 	Please change one of these options and rerun the script.
@@ -2207,24 +2299,23 @@ If($ValidSection -eq $False)
 	`t`t
 	Valid options are:
 	
-	`t`tAdmins
-	`t`tAppDisks
-	`t`tAppDNA
-	`t`tApps
-	`t`tAppV
-	`t`tCatalogs
-	`t`tConfig
-	`t`tControllers
-	`t`tGroups
-	`t`tHosting
-	`t`tLicensing
-	`t`tLogging
-	`t`tPolicies
-	`t`tStoreFront
-	`t`tZones
-	`t`tAll
+	`tAdmins
+	`tAppDisks
+	`tAppDNA
+	`tApps
+	`tAppV
+	`tCatalogs
+	`tConfig
+	`tControllers
+	`tGroups
+	`tHosting
+	`tLicensing
+	`tLogging
+	`tPolicies
+	`tStoreFront
+	`tZones
+	`tAll
 	
-	`n`n
 	`t`t
 	Script cannot continue.
 	`n`n
@@ -2247,13 +2338,12 @@ If($Folder -ne "")
 		Else
 		{
 			#it exists but it is a file not a folder
+#Do not indent the following write-error lines. Doing so will mess up the console formatting of the error message.
 			Write-Error "
 			`n`n
-			`t`t
-			Folder $Folder is a file, not a folder.
+	Folder $Folder is a file, not a folder.
 			`n`n
-			`t`t
-			Script cannot continue.
+	Script cannot continue.
 			`n`n"
 			Exit
 		}
@@ -2263,11 +2353,9 @@ If($Folder -ne "")
 		#does not exist
 		Write-Error "
 		`n`n
-		`t`t
-		Folder $Folder does not exist.
+	Folder $Folder does not exist.
 		`n`n
-		`t`t
-		Script cannot continue.
+	Script cannot continue.
 		`n`n
 		"
 		Exit
@@ -2353,11 +2441,11 @@ $Script:ALLVDARegistryItems = New-Object System.Collections.ArrayList
 #Fix V2.20.1
 $Script:ControllerRegistryItems = New-Object System.Collections.ArrayList
 $Script:AllControllerRegistryItems = New-Object System.Collections.ArrayList	
+[string]$Script:RunningOS = (Get-WmiObject -class Win32_OperatingSystem -EA 0).Caption
 
 #endregion
 
 #region initialize variables for Word, HTML, and text
-[string]$Script:RunningOS = (Get-WmiObject -class Win32_OperatingSystem -EA 0).Caption
 
 If($MSWord -or $PDF)
 {
@@ -2368,63 +2456,62 @@ If($MSWord -or $PDF)
 	#the following values were attained from 
 	#http://groovy.codehaus.org/modules/scriptom/1.6.0/scriptom-office-2K3-tlb/apidocs/
 	#http://msdn.microsoft.com/en-us/library/office/aa211923(v=office.11).aspx
-	[int]$wdAlignPageNumberRight = 2
-	[int]$wdMove = 0
-	[int]$wdSeekMainDocument = 0
-	[int]$wdSeekPrimaryFooter = 4
-	[int]$wdStory = 6
-	[int]$wdColorBlack = 0
-	[int]$wdColorGray05 = 15987699 
-	[int]$wdColorGray15 = 14277081
-	[int]$wdColorRed = 255
-	[int]$wdColorWhite = 16777215
-	[int]$wdColorYellow = 65535
-	[int]$wdWord2007 = 12
-	[int]$wdWord2010 = 14
-	[int]$wdWord2013 = 15
-	[int]$wdWord2016 = 16
+	[int]$wdAlignPageNumberRight  = 2
+	[int]$wdMove                  = 0
+	[int]$wdSeekMainDocument      = 0
+	[int]$wdSeekPrimaryFooter     = 4
+	[int]$wdStory                 = 6
+	[int]$wdColorBlack            = 0
+	[int]$wdColorGray05           = 15987699 
+	[int]$wdColorGray15           = 14277081
+	[int]$wdColorRed              = 255
+	[int]$wdColorWhite            = 16777215
+	[int]$wdColorYellow           = 65535
+	[int]$wdWord2007              = 12
+	[int]$wdWord2010              = 14
+	[int]$wdWord2013              = 15
+	[int]$wdWord2016              = 16
 	[int]$wdFormatDocumentDefault = 16
-	[int]$wdFormatPDF = 17
+	[int]$wdFormatPDF             = 17
 	#http://blogs.technet.com/b/heyscriptingguy/archive/2006/03/01/how-can-i-right-align-a-single-column-in-a-word-table.aspx
 	#http://msdn.microsoft.com/en-us/library/office/ff835817%28v=office.15%29.aspx
-	#[int]$wdAlignParagraphLeft = 0
+	#[int]$wdAlignParagraphLeft   = 0
 	#[int]$wdAlignParagraphCenter = 1
-	#[int]$wdAlignParagraphRight = 2
+	#[int]$wdAlignParagraphRight  = 2
 	#http://msdn.microsoft.com/en-us/library/office/ff193345%28v=office.15%29.aspx
-	#[int]$wdCellAlignVerticalTop = 0
+	#[int]$wdCellAlignVerticalTop    = 0
 	#[int]$wdCellAlignVerticalCenter = 1
 	#[int]$wdCellAlignVerticalBottom = 2
 	#http://msdn.microsoft.com/en-us/library/office/ff844856%28v=office.15%29.aspx
-	[int]$wdAutoFitFixed = 0
+	[int]$wdAutoFitFixed   = 0
 	[int]$wdAutoFitContent = 1
 	#[int]$wdAutoFitWindow = 2
 	#http://msdn.microsoft.com/en-us/library/office/ff821928%28v=office.15%29.aspx
-	[int]$wdAdjustNone = 0
+	[int]$wdAdjustNone         = 0
 	[int]$wdAdjustProportional = 1
 	#[int]$wdAdjustFirstColumn = 2
-	#[int]$wdAdjustSameWidth = 3
+	#[int]$wdAdjustSameWidth   = 3
 
 	[int]$PointsPerTabStop = 36
-	[int]$Indent0TabStops = 0 * $PointsPerTabStop
+	[int]$Indent0TabStops  = 0 * $PointsPerTabStop
 	#[int]$Indent1TabStops = 1 * $PointsPerTabStop
 	#[int]$Indent2TabStops = 2 * $PointsPerTabStop
 	#[int]$Indent3TabStops = 3 * $PointsPerTabStop
 	#[int]$Indent4TabStops = 4 * $PointsPerTabStop
 
 	# http://www.thedoctools.com/index.php?show=wt_style_names_english_danish_german_french
-	[int]$wdStyleHeading1 = -2
-	[int]$wdStyleHeading2 = -3
-	[int]$wdStyleHeading3 = -4
-	[int]$wdStyleHeading4 = -5
-	[int]$wdStyleNoSpacing = -158
-	[int]$wdTableGrid = -155
+	[int]$wdStyleHeading1         = -2
+	[int]$wdStyleHeading2         = -3
+	[int]$wdStyleHeading3         = -4
+	[int]$wdStyleHeading4         = -5
+	[int]$wdStyleNoSpacing        = -158
+	[int]$wdTableGrid             = -155
 	[int]$wdTableLightListAccent3 = -206
 
 	#http://groovy.codehaus.org/modules/scriptom/1.6.0/scriptom-office-2K3-tlb/apidocs/org/codehaus/groovy/scriptom/tlb/office/word/WdLineStyle.html
-	[int]$wdLineStyleNone = 0
-	[int]$wdLineStyleSingle = 1
-
-	[int]$wdHeadingFormatTrue = -1
+	[int]$wdLineStyleNone       = 0
+	[int]$wdLineStyleSingle     = 1
+	[int]$wdHeadingFormatTrue   = -1
 	#[int]$wdHeadingFormatFalse = 0 
 	
 	[string]$Script:RunningOS = (Get-WmiObject -class Win32_OperatingSystem -EA 0).Caption
@@ -2572,14 +2659,14 @@ Function GetComputerWMIInfo
 		{
 			WriteWordLine 0 2 "Get-WmiObject win32_computersystem failed for $($RemoteComputerName)" "" $Null 0 $False $True
 			WriteWordLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-			WriteWordLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
+			WriteWordLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 0 $False $True
 			WriteWordLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
 		}
 		ElseIf($Text)
 		{
 			Line 2 "Get-WmiObject win32_computersystem failed for $($RemoteComputerName)"
 			Line 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository"
-			Line 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may"
+			Line 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may"
 			Line 2 "need to rerun the script with Domain Admin credentials from the trusted Forest."
 			Line 2 ""
 		}
@@ -2587,7 +2674,7 @@ Function GetComputerWMIInfo
 		{
 			WriteHTMLLine 0 2 "Get-WmiObject win32_computersystem failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
 			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
-			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 2 $htmlbold
 			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 		}
 	}
@@ -2656,21 +2743,21 @@ Function GetComputerWMIInfo
 		{
 			WriteWordLine 0 2 "Get-WmiObject Win32_LogicalDisk failed for $($RemoteComputerName)" "" $Null 0 $False $True
 			WriteWordLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-			WriteWordLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
+			WriteWordLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 0 $False $True
 			WriteWordLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
 		}
 		ElseIf($Text)
 		{
 			Line 2 "Get-WmiObject Win32_LogicalDisk failed for $($RemoteComputerName)"
 			Line 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository"
-			Line 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may"
+			Line 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may"
 			Line 2 "need to rerun the script with Domain Admin credentials from the trusted Forest."
 		}
 		ElseIf($HTML)
 		{
 			WriteHTMLLine 0 2 "Get-WmiObject Win32_LogicalDisk failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
 			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
-			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 2 $htmlbold
 			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 		}
 	}
@@ -2736,21 +2823,21 @@ Function GetComputerWMIInfo
 		{
 			WriteWordLine 0 2 "Get-WmiObject win32_Processor failed for $($RemoteComputerName)" "" $Null 0 $False $True
 			WriteWordLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-			WriteWordLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
+			WriteWordLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 0 $False $True
 			WriteWordLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
 		}
 		ElseIf($Text)
 		{
 			Line 2 "Get-WmiObject win32_Processor failed for $($RemoteComputerName)"
 			Line 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository"
-			Line 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may"
+			Line 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may"
 			Line 2 "need to rerun the script with Domain Admin credentials from the trusted Forest."
 		}
 		ElseIf($HTML)
 		{
 			WriteHTMLLine 0 2 "Get-WmiObject win32_Processor failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
 			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
-			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 2 $htmlbold
 			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 		}
 	}
@@ -2841,7 +2928,7 @@ Function GetComputerWMIInfo
 						WriteWordLine 0 2 "Error retrieving NIC information" "" $Null 0 $False $True
 						WriteWordLine 0 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)" "" $Null 0 $False $True
 						WriteWordLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-						WriteWordLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
+						WriteWordLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 0 $False $True
 						WriteWordLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
 					}
 					ElseIf($Text)
@@ -2849,7 +2936,7 @@ Function GetComputerWMIInfo
 						Line 2 "Error retrieving NIC information"
 						Line 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)"
 						Line 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository"
-						Line 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may"
+						Line 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may"
 						Line 2 "need to rerun the script with Domain Admin credentials from the trusted Forest."
 					}
 					ElseIf($HTML)
@@ -2857,7 +2944,7 @@ Function GetComputerWMIInfo
 						WriteHTMLLine 0 2 "Error retrieving NIC information" "" $Null 0 $False $True
 						WriteHTMLLine 0 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
 						WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
-						WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+						WriteHTMLLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 2 $htmlbold
 						WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 					}
 				}
@@ -2890,7 +2977,7 @@ Function GetComputerWMIInfo
 			WriteWordLine 0 2 "Error retrieving NIC configuration information" "" $Null 0 $False $True
 			WriteWordLine 0 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)" "" $Null 0 $False $True
 			WriteWordLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 0 $False $True
-			WriteWordLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 0 $False $True
+			WriteWordLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 0 $False $True
 			WriteWordLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 0 $False $True
 		}
 		ElseIf($Text)
@@ -2898,7 +2985,7 @@ Function GetComputerWMIInfo
 			Line 2 "Error retrieving NIC configuration information"
 			Line 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)"
 			Line 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository"
-			Line 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may"
+			Line 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may"
 			Line 2 "need to rerun the script with Domain Admin credentials from the trusted Forest."
 		}
 		ElseIf($HTML)
@@ -2906,7 +2993,7 @@ Function GetComputerWMIInfo
 			WriteHTMLLine 0 2 "Error retrieving NIC configuration information" "" $Null 2 $htmlbold
 			WriteHTMLLine 0 2 "Get-WmiObject win32_networkadapterconfiguration failed for $($RemoteComputerName)" "" $Null 2 $htmlbold
 			WriteHTMLLine 0 2 "On $($RemoteComputerName) you may need to run winmgmt /verifyrepository" "" $Null 2 $htmlbold
-			WriteHTMLLine 0 2 "and winmgmt /salvagerepository.  If this is a trusted Forest, you may" "" $Null 2 $htmlbold
+			WriteHTMLLine 0 2 "and winmgmt /salvagerepository. If this is a trusted Forest, you may" "" $Null 2 $htmlbold
 			WriteHTMLLine 0 2 "need to rerun the script with Domain Admin credentials from the trusted Forest." "" $Null 2 $htmlbold
 		}
 	}
@@ -3122,6 +3209,7 @@ Function OutputDriveItem
 		$msg = ""
 		$columnWidths = @("150px","200px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -3245,6 +3333,7 @@ Function OutputProcessorItem
 		$msg = ""
 		$columnWidths = @("150px","200px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -3689,6 +3778,7 @@ Function OutputNicItem
 		$msg = ""
 		$columnWidths = @("150px","200px")
 		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		WriteHTMLLine 0 0 ""
 	}
 }
 #endregion
@@ -4080,16 +4170,23 @@ Function CheckWordPrereq
 	If((Test-Path  REGISTRY::HKEY_CLASSES_ROOT\Word.Application) -eq $False)
 	{
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Host "`n`n`t`tThis script directly outputs to Microsoft Word, please install Microsoft Word`n`n"
-		Exit
+		
+		If(($MSWord -eq $False) -and ($PDF -eq $True))
+		{
+			Write-Host "`n`n`t`tThis script uses Microsoft Word's SaveAs PDF function, please install Microsoft Word`n`n"
+			Exit
+		}
+		Else
+		{
+			Write-Host "`n`n`t`tThis script directly outputs to Microsoft Word, please install Microsoft Word`n`n"
+			Exit
+		}
 	}
 
 	#find out our session (usually "1" except on TS/RDC or Citrix)
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
 	#Find out if winword is running in our session
-	#[bool]$wordrunning = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
-	#fix by MBS in V2.20
 	[bool]$wordrunning = $null –ne ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID})
 	If($wordrunning)
 	{
@@ -4172,26 +4269,38 @@ Function SetupWord
 {
 	Write-Verbose "$(Get-Date): Setting up Word"
     
+	If(!$AddDateTime)
+	{
+		[string]$Script:WordFileName = "$($Script:pwdpath)\$($OutputFileName).docx"
+		If($PDF)
+		{
+			[string]$Script:PDFFileName = "$($Script:pwdpath)\$($OutputFileName).pdf"
+		}
+	}
+	ElseIf($AddDateTime)
+	{
+		[string]$Script:WordFileName = "$($Script:pwdpath)\$($OutputFileName)_$(Get-Date -f yyyy-MM-dd_HHmm).docx"
+		If($PDF)
+		{
+			[string]$Script:PDFFileName = "$($Script:pwdpath)\$($OutputFileName)_$(Get-Date -f yyyy-MM-dd_HHmm).pdf"
+		}
+	}
+
 	# Setup word for output
 	Write-Verbose "$(Get-Date): Create Word comObject."
 	$Script:Word = New-Object -comobject "Word.Application" -EA 0 4>$Null
-	
+
+#Do not indent the following write-error lines. Doing so will mess up the console formatting of the error message.
 	If(!$? -or $Null -eq $Script:Word)
 	{
-		Write-Warning "The Word object could not be created.  You may need to repair your Word installation."
+		Write-Warning "The Word object could not be created. You may need to repair your Word installation."
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Error "
 		`n`n
-		`t`t
-		The Word object could not be created.
+	The Word object could not be created. You may need to repair your Word installation.
 		`n`n
-		`t`t
-		You may need to repair your Word installation.
-		`n`n
-		`t`t
-		Script cannot continue.
-		`n`n
-		"
+	Script cannot Continue.
+		`n`n"
 		Exit
 	}
 
@@ -4210,11 +4319,9 @@ Function SetupWord
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Error "
 		`n`n
-		`t`t
-		Unable to determine the Word language value.
+	Unable to determine the Word language value. You may need to repair your Word installation.
 		`n`n
-		`t`t
-		Script cannot continue.
+	Script cannot Continue.
 		`n`n
 		"
 		AbortScript
@@ -4243,11 +4350,7 @@ Function SetupWord
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Error "
 		`n`n
-		`t`t
-		Microsoft Word 2007 is no longer supported.
-		`n`n
-		`t`t
-		Script will end.
+	Microsoft Word 2007 is no longer supported.`n`n`t`tScript will end.
 		`n`n
 		"
 		AbortScript
@@ -4256,11 +4359,9 @@ Function SetupWord
 	{
 		Write-Error "
 		`n`n
-		`t`t
-		The Word Version is 0. You should run a full online repair of your Office installation.
+	The Word Version is 0. You should run a full online repair of your Office installation.
 		`n`n
-		`t`t
-		Script cannot continue.
+	Script cannot Continue.
 		`n`n
 		"
 		Exit
@@ -4270,43 +4371,40 @@ Function SetupWord
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Error "
 		`n`n
-		`t`t
-		You are running an untested or unsupported version of Microsoft Word.
+	You are running an untested or unsupported version of Microsoft Word.
 		`n`n
-		`t`t
-		Script will end.
+	Script will end.
 		`n`n
-		`t`t
-		Please send info on your version of Word to webster@carlwebster.com
+	Please send info on your version of Word to webster@carlwebster.com
 		`n`n
 		"
 		AbortScript
 	}
 
 	#only validate CompanyName if the field is blank
-	If([String]::IsNullOrEmpty($Script:CoName))
+	If([String]::IsNullOrEmpty($CompanyName))
 	{
-		Write-Verbose "$(Get-Date): Company name is blank.  Retrieve company name from registry."
+		Write-Verbose "$(Get-Date): Company name is blank. Retrieve company name from registry."
 		$TmpName = ValidateCompanyName
 		
 		If([String]::IsNullOrEmpty($TmpName))
 		{
-			Write-Warning "
-			`n`n
-			`t`t
-			Company Name is blank so Cover Page will not show a Company Name.
-			`t`t
-			Check HKCU:\Software\Microsoft\Office\Common\UserInfo for Company or CompanyName value.
-			`t`t
-			You may want to use the -CompanyName parameter if you need a Company Name on the cover page.
-			`n`n
-			"
+			Write-Host "
+		Company Name is blank so Cover Page will not show a Company Name.
+		Check HKCU:\Software\Microsoft\Office\Common\UserInfo for Company or CompanyName value.
+		You may want to use the -CompanyName parameter if you need a Company Name on the cover page.
+			" -Foreground White
+			$Script:CoName = $TmpName
 		}
 		Else
 		{
 			$Script:CoName = $TmpName
 			Write-Verbose "$(Get-Date): Updated company name to $($Script:CoName)"
 		}
+	}
+	Else
+	{
+		$Script:CoName = $CompanyName
 	}
 
 	If($Script:WordCultureCode -ne "en-")
@@ -4430,17 +4528,13 @@ Function SetupWord
 		Write-Verbose "$(Get-Date): Culture code $($Script:WordCultureCode)"
 		Write-Error "
 		`n`n
-		`t`t
-		For $($Script:WordProduct), $($CoverPage) is not a valid Cover Page option.
+	For $($Script:WordProduct), $($CoverPage) is not a valid Cover Page option.
 		`n`n
-		`t`t
-		Script cannot continue.
+	Script cannot Continue.
 		`n`n
 		"
 		AbortScript
 	}
-
-	ShowScriptOptions
 
 	$Script:Word.Visible = $False
 
@@ -4489,8 +4583,8 @@ Function SetupWord
 	If(!$Script:CoverPagesExist)
 	{
 		Write-Verbose "$(Get-Date): Cover Pages are not installed or the Cover Page $($CoverPage) does not exist."
-		Write-Warning "Cover Pages are not installed or the Cover Page $($CoverPage) does not exist."
-		Write-Warning "This report will not have a Cover Page."
+		Write-Host "Cover Pages are not installed or the Cover Page $($CoverPage) does not exist." -Foreground White
+		Write-Host "This report will not have a Cover Page." -Foreground White
 	}
 
 	Write-Verbose "$(Get-Date): Create empty word doc"
@@ -4501,13 +4595,10 @@ Function SetupWord
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Error "
 		`n`n
-		`t`t
-		An empty Word document could not be created.
+	An empty Word document could not be created. You may need to repair your Word installation.
 		`n`n
-		`t`t
-		Script cannot continue.
-		`n`n
-		"
+	Script cannot Continue.
+		`n`n"
 		AbortScript
 	}
 
@@ -4518,18 +4609,15 @@ Function SetupWord
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Error "
 		`n`n
-		`t`t
-		An unknown error happened selecting the entire Word document for default formatting options.
+	An unknown error happened selecting the entire Word document for default formatting options.
 		`n`n
-		`t`t
-		Script cannot continue.
-		`n`n
-		"
+	Script cannot Continue.
+		`n`n"
 		AbortScript
 	}
 
 	#set Default tab stops to 1/2 inch (this line is not from Jeff Hicks)
-	#36 = .50"
+	#36 =.50"
 	$Script:Word.ActiveDocument.DefaultTabStop = 36
 
 	#Disable Spell and Grammar Check to resolve issue and improve performance (from Pat Coughlin)
@@ -4554,8 +4642,8 @@ Function SetupWord
 		If($Null -eq $toc)
 		{
 			Write-Verbose "$(Get-Date): "
-			Write-Verbose "$(Get-Date): Table of Content - $($Script:MyHash.Word_TableOfContents) could not be retrieved."
-			Write-Warning "This report will not have a Table of Contents."
+			Write-Host "Table of Content - $($Script:MyHash.Word_TableOfContents) could not be retrieved." -Foreground White
+			Write-Host "This report will not have a Table of Contents." -Foreground White
 		}
 		Else
 		{
@@ -4564,8 +4652,8 @@ Function SetupWord
 	}
 	Else
 	{
-		Write-Verbose "$(Get-Date): Table of Contents are not installed."
-		Write-Warning "Table of Contents are not installed so this report will not have a Table of Contents."
+		Write-Host "Table of Contents are not installed." -Foreground White
+		Write-Host "Table of Contents are not installed so this report will not have a Table of Contents." -Foreground White
 	}
 
 	#set the footer
@@ -4595,7 +4683,6 @@ Function SetupWord
 	$Script:Selection.HeaderFooter.PageNumbers.Add($wdAlignPageNumberRight) | Out-Null
 
 	FindWordDocumentEnd
-	Write-Verbose "$(Get-Date):"
 	#end of Jeff Hicks 
 }
 
@@ -4716,9 +4803,17 @@ Function Get-RegistryValue2
 		#path needed here is different for remote registry access
 		$path = $path.SubString(6)
 		$path2 = $path.Replace('\','\\')
-		$Reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $ComputerName)
-		$RegKey = $Reg.OpenSubKey($path2)
-		If ($RegKey)
+        Try
+        {
+            ## GRL throws an error if can't open
+		    $Reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine', $ComputerName)
+        }
+        Catch
+        {
+            Write-Debug -Message "Failed to open HKLM on $ComputerName"
+            $Reg = $null
+        }
+        if( $Reg -and ($RegKey = $Reg.OpenSubKey($path2) ) )
 		{
 			$Results = $RegKey.GetValue($name)
 
@@ -4929,7 +5024,7 @@ Function WriteWordLine
 
 .NOTES
 
-	Font Size - Unlike word, there is a limited set of font sizes that can be used in HTML.  They are:
+	Font Size - Unlike word, there is a limited set of font sizes that can be used in HTML. They are:
 		0 - default which actually gives it a 2 or 10 point.
 		1 - 7.5 point font size
 		2 - 10 point
@@ -4941,7 +5036,7 @@ Function WriteWordLine
 	Any number larger than 7 defaults to 7
 
 	Style - Refers to the headers that are used with output and resemble the headers in word, 
-	HTML supports headers h1-h6 and h1-h4 are more commonly used.  Unlike word, H1 will not 
+	HTML supports headers h1-h6 and h1-h4 are more commonly used. Unlike word, H1 will not 
 	give you a blue colored font, you will have to set that yourself.
 
 	Colors and Bold/Italics Flags are:
@@ -5279,11 +5374,11 @@ Function AddHTMLTable
 .EXAMPLE
 	FormatHTMLTable "Table Heading" "auto" "Calibri" 3
 
-	This example formats a table and writes it out into an html file.  All of the parameters are optional
+	This example formats a table and writes it out into an html file. All of the parameters are optional
 	defaults are used if not supplied.
 
-	for <Table format>, the default is auto which will autofit the text into the columns and adjust to the longest text in that column.  You can also use percentage i.e. 25%
-	which will take only 25% of the line and will auto word wrap the text to the next line in the column.  Also, instead of using a percentage, you can use pixels i.e. 400px.
+	for <Table format>, the default is auto which will autofit the text into the columns and adjust to the longest text in that column. You can also use percentage i.e. 25%
+	which will take only 25% of the line and will auto word wrap the text to the next line in the column. Also, instead of using a percentage, you can use pixels i.e. 400px.
 
 	FormatHTMLTable "Table Heading" "auto" -rowArray $rowData -columnArray $columnData
 
@@ -5298,21 +5393,21 @@ Function AddHTMLTable
 	This example creates an HTML table with a heading of 'Table Heading, no header, row data from $rowData, and fixed columns defined by $fixedColumns
 
 .NOTES
-	In order to use the formatted table it first has to be loaded with data.  Examples below will show how to load the table:
+	In order to use the formatted table it first has to be loaded with data. Examples below will show how to load the table:
 
 	First, initialize the table array
 
 	$rowdata = @()
 
-	Then Load the array.  If you are using column headers then load those into the column headers array, otherwise the first line of the table goes into the column headers array
+	Then Load the array. If you are using column headers then load those into the column headers array, otherwise the first line of the table goes into the column headers array
 	and the second and subsequent lines go into the $rowdata table as shown below:
 
 	$columnHeaders = @('Display Name',$htmlsb,'Status',$htmlsb,'Startup Type',$htmlsb)
 
-	The first column is the actual name to display, the second are the attributes of the column i.e. color anded with bold or italics.  For the anding, parens are required or it will
+	The first column is the actual name to display, the second are the attributes of the column i.e. color anded with bold or italics. For the anding, parens are required or it will
 	not format correctly.
 
-	This is following by adding rowdata as shown below.  As more columns are added the columns will auto adjust to fit the size of the page.
+	This is following by adding rowdata as shown below. As more columns are added the columns will auto adjust to fit the size of the page.
 
 	$rowdata = @()
 	$columnHeaders = @("User Name",$htmlsb,$UserName,$htmlwhite)
@@ -6449,6 +6544,26 @@ Function OutputWarning
 	}
 }
 
+Function OutputNotice
+{
+	Param([string] $txt)
+	Write-Host $txt -Foreground White
+	If($MSWord -or $PDF)
+	{
+		WriteWordLine 0 0 $txt
+		WriteWordLIne 0 0 ""
+	}
+	If($Text)
+	{
+		Line 0 $txt
+		Line 0 ""
+	}
+	If($HTML)
+	{
+		WriteHTMLLine 0 0 $txt
+	}
+}
+
 Function OutputAdminsForDetails
 {
 	Param([object] $Admins)
@@ -6851,7 +6966,7 @@ Function ProcessMachineCatalogs
 	ElseIf($? -and ($Null -eq $AllMachineCatalogs))
 	{
 		$txt = "There are no Machine Catalogs"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -6987,8 +7102,8 @@ Function OutputMachines
 			$WordTable += @{
 			MachineCatalogName = $Catalog.Name; 
 			MachineType = $xCatalogType; 
-			NoOfMachines = $NumberOfMachines;
-			AllocatedMachines = $Catalog.UsedCount; 
+			NoOfMachines       = $NumberOfMachines.ToString();
+			AllocatedMachines  = $Catalog.UsedCount.ToString(); 
 			AllocationType = $xAllocationType;
 			UserData = $xPersistType;
 			ProvisioningMethod = $xProvisioningType;
@@ -6997,7 +7112,13 @@ Function OutputMachines
 		ElseIf($Text)
 		{
 			Line 0 ( "{0,-40} {1,-36} {2,8} {3,8}  {4,-10} {5,-17} {6,-25}" -f `
-			$Catalog.Name, $xCatalogType, $NumberOfMachines.ToString(), $Catalog.UsedCount.ToString(), $xAllocationType, $xPersistType, $xProvisioningType)
+			$Catalog.Name, 
+			$xCatalogType, 
+			$NumberOfMachines.ToString(), 
+			$Catalog.UsedCount.ToString(), 
+			$xAllocationType, 
+			$xPersistType, 
+			$xProvisioningType)
 		}
 		ElseIf($HTML)
 		{
@@ -7252,7 +7373,7 @@ Function OutputMachines
 		}
 		Else
 		{
-			Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
+			Write-Host "Unable to retrieve details for Machine Catalog $($Catalog.Name)" -Foreground White
 		}
 		
 		#V2.17 add getting the Account Identity Pool data
@@ -7296,8 +7417,8 @@ Function OutputMachines
 			{
 				$CatalogInformation += @{Data = "Description"; Value = $Catalog.Description; }
 				$CatalogInformation += @{Data = "Machine type"; Value = $xCatalogType; }
-				$CatalogInformation += @{Data = "No. of machines"; Value = $NumberOfMachines; }
-				$CatalogInformation += @{Data = "Allocated machines"; Value = $Catalog.UsedCount; }
+				$CatalogInformation += @{Data = "No. of machines"; Value = $NumberOfMachines.ToString(); }
+				$CatalogInformation += @{Data = "Allocated machines"; Value = $Catalog.UsedCount.ToString(); }
 				$CatalogInformation += @{Data = "Allocation type"; Value = $xAllocationType; }
 				$CatalogInformation += @{Data = "User data"; Value = $xPersistType; }
 				$CatalogInformation += @{Data = "Provisioning method"; Value = $xProvisioningType; }
@@ -7308,7 +7429,11 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "AD Location"; Value = $IdentityOU; }
 				#end of identity pool data
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
-				$CatalogInformation += @{Data = "Resources"; Value = $MachineData.HostingUnitName; }
+                If( $MachineData.PSObject.Properties[ 'HostingUnitName' ] )
+                {
+                    ## GRL - The property 'HostingUnitName' cannot be found on this object. Verify that the property exists
+					$CatalogInformation += @{Data = "Resources"; Value = $MachineData.HostingUnitName; }
+				}
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
@@ -7363,8 +7488,16 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					$CatalogInformation += @{Data = "Installed VDA version"; Value = $Machines[0].AgentVersion; }
-					$CatalogInformation += @{Data = "Operating System"; Value = $Machines[0].OSType; }
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						$CatalogInformation += @{Data = "Installed VDA version"; Value = $Machines[0].AgentVersion; }
+						$CatalogInformation += @{Data = "Operating System"; Value = $Machines[0].OSType; }
+					}
+					Else
+					{
+						$CatalogInformation += @{Data = "Installed VDA version"; Value = "Unable to retrieve details"; }
+						$CatalogInformation += @{Data = "Operating System"; Value = "Unable to retrieve details"; }
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
@@ -7380,7 +7513,11 @@ Function OutputMachines
 				$CatalogInformation += @{Data = "PVS address"; Value = $Catalog.PvsAddress; }
 				$CatalogInformation += @{Data = "Allocation type"; Value = $xAllocationType; }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
-				$CatalogInformation += @{Data = "Resources"; Value = $MachineData.HostingUnitName; }
+                If( $MachineData.PSObject.Properties[ 'HostingUnitName' ] )
+                {
+                    ## GRL - The property 'HostingUnitName' cannot be found on this object. Verify that the property exists
+					$CatalogInformation += @{Data = "Resources"; Value = $MachineData.HostingUnitName; }
+				}
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
@@ -7389,8 +7526,16 @@ Function OutputMachines
 			
 				If($Null -ne $Machines)
 				{
-					$CatalogInformation += @{Data = "Installed VDA version"; Value = $Machines[0].AgentVersion; }
-					$CatalogInformation += @{Data = "Operating System"; Value = $Machines[0].OSType; }
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						$CatalogInformation += @{Data = "Installed VDA version"; Value = $Machines[0].AgentVersion; }
+						$CatalogInformation += @{Data = "Operating System"; Value = $Machines[0].OSType; }
+					}
+					Else
+					{
+						$CatalogInformation += @{Data = "Installed VDA version"; Value = "Unable to retrieve details"; }
+						$CatalogInformation += @{Data = "Operating System"; Value = "Unable to retrieve details"; }
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
@@ -7460,8 +7605,8 @@ Function OutputMachines
 				}
 
 				$CatalogInformation += @{Data = "Machine type"; Value = $xCatalogType; }
-				$CatalogInformation += @{Data = "No. of machines"; Value = $NumberOfMachines; }
-				$CatalogInformation += @{Data = "Allocated machines"; Value = $Catalog.UsedCount; }
+				$CatalogInformation += @{Data = "No. of machines"; Value = $NumberOfMachines.ToString(); }
+				$CatalogInformation += @{Data = "Allocated machines"; Value = $Catalog.UsedCount.ToString(); }
 				$CatalogInformation += @{Data = "Set to VDA version"; Value = $xVDAVersion; }
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
@@ -7471,8 +7616,11 @@ Function OutputMachines
 
 				If($Null -ne $Machines)
 				{
-					$CatalogInformation += @{Data = "Installed VDA version"; Value = $Machines[0].AgentVersion; }
-					$CatalogInformation += @{Data = "Operating System"; Value = $Machines[0].OSType; }
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						$CatalogInformation += @{Data = "Installed VDA version"; Value = $Machines[0].AgentVersion; }
+						$CatalogInformation += @{Data = "Operating System"; Value = $Machines[0].OSType; }
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
@@ -7485,8 +7633,8 @@ Function OutputMachines
 				#(added 29-feb-2016 thanks to Michael Foster)
 				$CatalogInformation += @{Data = "Description"; Value = $Catalog.Description; }
 				$CatalogInformation += @{Data = "Machine type"; Value = $xCatalogType; }
-				$CatalogInformation += @{Data = "No. of machines"; Value = $NumberOfMachines; }
-				$CatalogInformation += @{Data = "Allocated machines"; Value = $Catalog.UsedCount; }
+				$CatalogInformation += @{Data = "No. of machines"; Value = $NumberOfMachines.ToString(); }
+				$CatalogInformation += @{Data = "Allocated machines"; Value = $Catalog.UsedCount.ToString(); }
 				$CatalogInformation += @{Data = "Allocation type"; Value = $xAllocationType; }
 				$CatalogInformation += @{Data = "User data"; Value = $xPersistType; }
 				$CatalogInformation += @{Data = "Provisioning method"; Value = $xProvisioningType; }
@@ -7499,14 +7647,22 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					$CatalogInformation += @{Data = "Installed VDA version"; Value = $Machines[0].AgentVersion; }
-					$CatalogInformation += @{Data = "Operating System"; Value = $Machines[0].OSType; }
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						$CatalogInformation += @{Data = "Installed VDA version"; Value = $Machines[0].AgentVersion; }
+						$CatalogInformation += @{Data = "Operating System"; Value = $Machines[0].OSType; }
+					}
+					Else
+					{
+						$CatalogInformation += @{Data = "Installed VDA version"; Value = "Unable to retrieve details"; }
+						$CatalogInformation += @{Data = "Operating System"; Value = "Unable to retrieve details"; }
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
 					$CatalogInformation += @{Data = "Installed VDA version"; Value = "Unable to retrieve details"; }
 					$CatalogInformation += @{Data = "Operating System"; Value = "Unable to retrieve details"; }
-					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
+					Write-Host "Unable to retrieve details for Machine Catalog $($Catalog.Name)" -Foreground White
 				}
 			}
 			
@@ -7576,8 +7732,8 @@ Function OutputMachines
 			{
 				Line 1 "Description`t`t`t: " $Catalog.Description
 				Line 1 "Machine type`t`t`t: " $xCatalogType
-				Line 1 "No. of machines`t`t`t: " $NumberOfMachines
-				Line 1 "Allocated machines`t`t: " $Catalog.UsedCount
+				Line 1 "No. of machines`t`t`t: " $NumberOfMachines.ToString()
+				Line 1 "Allocated machines`t`t: " $Catalog.UsedCount.ToString()
 				Line 1 "Allocation type`t`t`t: " $xAllocationType
 				Line 1 "User data`t`t`t: " $xPersistType
 				Line 1 "Provisioning method`t`t: " $xProvisioningType
@@ -7588,7 +7744,11 @@ Function OutputMachines
 				Line 1 "AD Location`t`t`t: " $IdentityOU
 				#end of identity pool data
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
-				Line 1 "Resources`t`t`t: " $MachineData.HostingUnitName
+                If( $MachineData.PSObject.Properties[ 'HostingUnitName' ] )
+                {
+                    ## GRL - The property 'HostingUnitName' cannot be found on this object. Verify that the property exists
+					Line 1 "Resources`t`t`t`t: " $MachineData.HostingUnitName
+				}
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
@@ -7643,8 +7803,16 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					Line 1 "Installed VDA version`t`t: " $Machines[0].AgentVersion
-					Line 1 "Operating System`t`t: " $Machines[0].OSType
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						Line 1 "Installed VDA version`t`t`t: " $Machines[0].AgentVersion
+						Line 1 "Operating System`t`t`t: " $Machines[0].OSType
+					}
+					Else
+					{
+						Line 1 "Installed VDA version`t`t`t: " "Unable to retrieve details"
+						Line 1 "Operating System`t`t`t: " "Unable to retrieve details"
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
@@ -7660,7 +7828,11 @@ Function OutputMachines
 				Line 1 "PVS address`t`t`t: " $Catalog.PvsAddress
 				Line 1 "Allocation type`t`t`t: " $xAllocationType
 				Line 1 "Set to VDA version`t`t: " $xVDAVersion
-				Line 1 "Resources`t`t`t: " $MachineData.HostingUnitName
+                If( $MachineData.PSObject.Properties[ 'HostingUnitName' ] )
+                {
+                    ## GRL - The property 'HostingUnitName' cannot be found on this object. Verify that the property exists
+					Line 1 "Resources`t`t`t`t: " $MachineData.HostingUnitName
+				}
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
@@ -7669,8 +7841,16 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					Line 1 "Installed VDA version`t`t: " $Machines[0].AgentVersion
-					Line 1 "Operating System`t`t: " $Machines[0].OSType
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						Line 1 "Installed VDA version`t`t`t: " $Machines[0].AgentVersion
+						Line 1 "Operating System`t`t`t: " $Machines[0].OSType
+					}
+					Else
+					{
+						Line 1 "Installed VDA version`t`t`t: " "Unable to retrieve details"
+						Line 1 "Operating System`t`t`t: " "Unable to retrieve details"
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
@@ -7751,8 +7931,16 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					Line 1 "Installed VDA version`t`t: " $Machines[0].AgentVersion
-					Line 1 "Operating System`t`t: " $Machines[0].OSType
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						Line 1 "Installed VDA version`t`t`t: " $Machines[0].AgentVersion
+						Line 1 "Operating System`t`t`t: " $Machines[0].OSType
+					}
+					Else
+					{
+						Line 1 "Installed VDA version`t`t`t: " "Unable to retrieve details"
+						Line 1 "Operating System`t`t`t: " "Unable to retrieve details"
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
@@ -7765,8 +7953,8 @@ Function OutputMachines
 				#(added 29-feb-2016 thanks to Michael Foster)
 				Line 1 "Description`t`t`t: " $Catalog.Description
 				Line 1 "Machine type`t`t`t: " $xCatalogType
-				Line 1 "No. of machines`t`t`t: "$NumberOfMachines
-				Line 1 "Allocated machines`t`t: " $Catalog.UsedCount
+				Line 1 "No. of machines`t`t`t: "$NumberOfMachines.ToString()
+				Line 1 "Allocated machines`t`t: " $Catalog.UsedCount.ToString()
 				Line 1 "Allocation type`t`t`t: " $xAllocationType
 				Line 1 "User data`t`t`t: " $xPersistType
 				Line 1 "Provisioning method`t`t: " $xProvisioningType
@@ -7779,14 +7967,22 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					Line 1 "Installed VDA version`t`t: " $Machines[0].AgentVersion
-					Line 1 "Operating System`t`t: " $Machines[0].OSType
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						Line 1 "Installed VDA version`t`t`t: " $Machines[0].AgentVersion
+						Line 1 "Operating System`t`t`t: " $Machines[0].OSType
+					}
+					Else
+					{
+						Line 1 "Installed VDA version`t`t`t: " "Unable to retrieve details"
+						Line 1 "Operating System`t`t`t: " "Unable to retrieve details"
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
 					Line 1 "Installed VDA version`t`t: " "Unable to retrieve details"
 					Line 1 "Operating System`t`t: " "Unable to retrieve details"
-					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
+					Write-Host "Unable to retrieve details for Machine Catalog $($Catalog.Name)" -Foreground White
 				}
 			}
 
@@ -7855,7 +8051,11 @@ Function OutputMachines
 				$rowdata += @(,("AD Location",($global:htmlsb),$IdentityOU,$htmlwhite))
 				#end of identity pool data
 				$rowdata += @(,('Set to VDA version',($global:htmlsb),$xVDAVersion,$htmlwhite))
-				$rowdata += @(,('Resources',($global:htmlsb),$MachineData.HostingUnitName,$htmlwhite))
+                If( $MachineData.PSObject.Properties[ 'HostingUnitName' ] )
+                {
+                    ## GRL - The property 'HostingUnitName' cannot be found on this object. Verify that the property exists
+					$rowdata += @(,('Resources',($global:htmlsb),$MachineData.HostingUnitName,$htmlwhite))
+				}
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
@@ -7910,14 +8110,22 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
-					$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
+						$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
+					}
+					Else
+					{
+						$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+						$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
 					$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
-					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
+					Write-Host "Unable to retrieve details for Machine Catalog $($Catalog.Name)" -Foreground White
 				}
 			}
 			ElseIf($Catalog.ProvisioningType -eq "PVS")
@@ -7928,7 +8136,11 @@ Function OutputMachines
 				$rowdata += @(,('PVS address',($global:htmlsb),$Catalog.PvsAddress,$htmlwhite))
 				$rowdata += @(,('Allocation type',($global:htmlsb),$xAllocationType,$htmlwhite))
 				$rowdata += @(,('Set to VDA version',($global:htmlsb),$xVDAVersion,$htmlwhite))
-				$rowdata += @(,('Resources',($global:htmlsb),$MachineData.HostingUnitName,$htmlwhite))
+                If( $MachineData.PSObject.Properties[ 'HostingUnitName' ] )
+                {
+                    ## GRL - The property 'HostingUnitName' cannot be found on this object. Verify that the property exists
+					$rowdata += @(,('Resources',($global:htmlsb),$MachineData.HostingUnitName,$htmlwhite))
+				}
 				#V2.14, change from Get-ConfigServiceAddedCapability -contains "ZonesSupport" to validObject
 				If(validObject $Catalog ZoneName)
 				{
@@ -7937,14 +8149,22 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
-					$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
+						$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
+					}
+					Else
+					{
+						$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+						$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
 					$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
-					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
+					Write-Host "Unable to retrieve details for Machine Catalog $($Catalog.Name)" -Foreground White
 				}
 			}
 			ElseIf($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -eq $True)
@@ -8020,14 +8240,22 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
-					$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
+						$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
+					}
+					Else
+					{
+						$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+						$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
 					$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
-					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
+					Write-Host "Unable to retrieve details for Machine Catalog $($Catalog.Name)" -Foreground White
 				}
 			}
 			ElseIf($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -ne $True)
@@ -8048,14 +8276,22 @@ Function OutputMachines
 				
 				If($Null -ne $Machines)
 				{
-					$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
-					$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
+					If($Machines -is [array] -and $Machines.Count)
+					{
+						$rowdata += @(,('Installed VDA version',($global:htmlsb),$Machines[0].AgentVersion,$htmlwhite))
+						$rowdata += @(,('Operating System',($global:htmlsb),$Machines[0].OSType,$htmlwhite))
+					}
+					Else
+					{
+						$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+						$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
+					}
 				}
 				ElseIf($Null -eq $Machines)
 				{
 					$rowdata += @(,('Installed VDA version',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
 					$rowdata += @(,('Operating System',($global:htmlsb),"Unable to retrieve details",$htmlwhite))
-					Write-Warning "Unable to retrieve details for Machine Catalog $($Catalog.Name)"
+					Write-Host "Unable to retrieve details for Machine Catalog $($Catalog.Name)" -Foreground White
 				}
 			}
 			
@@ -8299,7 +8535,7 @@ Function OutputMachines
 				ElseIf($? -and ($Null -eq $Admins))
 				{
 					$txt = "There are no administrators for Machines in $($Catalog.Name)"
-					OutputWarning $txt
+					OutputNotice $txt
 				}
 				Else
 				{
@@ -8359,7 +8595,7 @@ Function ProcessAppDisks
 	ElseIf($? -and ($Null -eq $AllAppDisks))
 	{
 		$txt = "There are no AppDisks"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -8504,7 +8740,7 @@ Function OutputAppDiskDetails
 	ElseIf($? -and ($Null -eq $PrepMachine))
 	{
 		$txt = "There is no Preparation machine"
-		OutputWarning $txt
+		OutputNotice $txt
 		$PrepMachineName = "Unknown"
 		$PrepMachinePowerState = "Unknown"
 		$PrepMachineRegistrationState = "Unknown"
@@ -8842,7 +9078,7 @@ Function OutputAppDiskDeliveryGroups
 	ElseIf($? -and ($Null -eq $DGs))
 	{
 		$txt = "There are no Delivery Groups for $($AppDisk.AppDiskName)"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -8865,7 +9101,7 @@ Function OutputAppDiskAdmins
 	ElseIf($? -and ($Null -eq $Admins))
 	{
 		$txt = "There are no administrators for $($AppDisk.AppDiskName)"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -9082,7 +9318,7 @@ Function OutputMachineDetails
 		{
 			Write-Verbose "$(Get-Date): `t`t`tTesting $($xMachineName)"
 			$MachineIsOnline = $False
-			If(Test-Connection -ComputerName $xMachineName -EA 0)
+			If(Test-Connection -ComputerName $xMachineName -Count 2 -Quiet -EA 0)
 			{
 				Write-Verbose "$(Get-Date): `t`t`t`t$($xMachineName) is online"
 				$MachineIsOnline = $True
@@ -9429,7 +9665,9 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Delivery Group"; Value = $Machine.DesktopGroupName; }
 			If($NoSessions -eq $False) #V2.27
 			{
-				$ScriptInformation += @{Data = "User Display Name"; Value = $xAssociatedUserFullNames[0]; }
+                ## GRL $xAssociatedUserFullNames can have a count of zero so $xAssociatedUserFullNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserFullNames -is [array] -and $xAssociatedUserFullNames.Count ) { $xAssociatedUserFullNames[0] } Else { '' } )
+				$ScriptInformation += @{Data = "User Display Name"; Value = $name; }
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserFullNames)
 				{
@@ -9439,7 +9677,9 @@ Function OutputMachineDetails
 						$ScriptInformation += @{Data = ""; Value = $tmp; }
 					}
 				}
-				$ScriptInformation += @{Data = "User"; Value = $xAssociatedUserNames[0]; }
+                ## GRL $xAssociatedUserNames can have a count of zero so $xAssociatedUserNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserNames -is [array] -and $xAssociatedUserNames.Count ) { $xAssociatedUserNames[0] } Else { '' } )
+				$ScriptInformation += @{Data = "User"; Value = $name; }
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserNames)
 				{
@@ -9449,7 +9689,9 @@ Function OutputMachineDetails
 						$ScriptInformation += @{Data = ""; Value = $tmp; }
 					}
 				}
-				$ScriptInformation += @{Data = "UPN"; Value = $xAssociatedUserUPNs[0]; }
+                ## GRL $xAssociatedUserUPNs can have a count of zero so $xAssociatedUserUPNs[0] isn't valid.
+                [string]$upn = $(If( $xAssociatedUserUPNs -is [array] -and $xAssociatedUserUPNs.Count ) { $xAssociatedUserUPNs[0] } Else { '' } )
+				$ScriptInformation += @{Data = "UPN"; Value = $upn; }
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserUPNs)
 				{
@@ -9460,7 +9702,8 @@ Function OutputMachineDetails
 					}
 				}
 			}
-			$ScriptInformation += @{Data = "Desktop Conditions"; Value = $xDesktopConditions[0]; }
+			[string]$cond = $(If( $xDesktopConditions -is [array] -and $xDesktopConditions.Count ) { $xDesktopConditions[0] } Else { '' } )
+			$ScriptInformation += @{Data = "Desktop Conditions"; Value = $cond; }
 			$cnt = -1
 			ForEach($tmp in $xDesktopConditions)
 			{
@@ -9484,7 +9727,8 @@ Function OutputMachineDetails
 				$ScriptInformation += @{Data = "Zone"; Value = $Machine.ZoneName; }
 			}
 			$ScriptInformation += @{Data = "Summary State"; Value = $xSummaryState; }
-			$ScriptInformation += @{Data = "Tags"; Value = $xTags[0]; }
+            [string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+			$ScriptInformation += @{Data = "Tags"; Value = $TagName }
 			$cnt = -1
 			ForEach($tmp in $xTags)
 			{
@@ -9552,7 +9796,8 @@ Function OutputMachineDetails
 			WriteWordLine 4 0 "Applications"
 			[System.Collections.Hashtable[]] $ScriptInformation = @()
 			
-			$ScriptInformation += @{Data = "Applications In Use"; Value = $xApplicationsInUse[0]; }
+			[string]$AppsInUse = $(If( $xApplicationsInUse[0] -is [array] -and $xApplicationsInUse.Count ) { $xApplicationsInUse[0] } Else { '' } )
+			$ScriptInformation += @{Data = "Applications In Use"; Value = $AppsInUse; }
 			$cnt = -1
 			ForEach($tmp in $xApplicationsInUse)
 			{
@@ -9562,7 +9807,8 @@ Function OutputMachineDetails
 					$ScriptInformation += @{Data = ""; Value = $tmp; }
 				}
 			}
-			$ScriptInformation += @{Data = "Published Applications"; Value = $xPublishedApplications[0]; }
+			[string]$PubApps = $(If( $xPublishedApplications[0] -is [array] -and $xPublishedApplications.Count ) { $xPublishedApplications[0] } Else { '' } )
+			$ScriptInformation += @{Data = "Published Applications"; Value = $PubApps; }
 			$cnt = -1
 			ForEach($tmp in $xPublishedApplications)
 			{
@@ -9671,7 +9917,8 @@ Function OutputMachineDetails
 				[System.Collections.Hashtable[]] $ScriptInformation = @()
 				$ScriptInformation += @{Data = "Launched Via"; Value = $xSessionLaunchedViaHostName; }
 				$ScriptInformation += @{Data = "Launched Via (IP)"; Value = $xSessionLaunchedViaIP; }
-				$ScriptInformation += @{Data = "SmartAccess Filters"; Value = $xSessionSmartAccessTags[0]; }
+				[string]$SSAT = $(If( $xSessionSmartAccessTags[0] -is [array] -and $xSessionSmartAccessTags.Count ) { $xSessionSmartAccessTags[0] } Else { '' } )
+				$ScriptInformation += @{Data = "SmartAccess Filters"; Value = $SSAT; }
 				$cnt = -1
 				ForEach($tmp in $xSessionSmartAccessTags)
 				{
@@ -9729,7 +9976,9 @@ Function OutputMachineDetails
 			$ScriptInformation += @{Data = "Delivery Group"; Value = $Machine.DesktopGroupName; }
 			If($NoSessions -eq $False) #V2.27
 			{
-				$ScriptInformation += @{Data = "User Display Name"; Value = $xAssociatedUserFullNames[0]; }
+                ## GRL $xAssociatedUserFullNames can have a count of zero so $xAssociatedUserFullNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserFullNames -is [array] -and $xAssociatedUserFullNames.Count ) { $xAssociatedUserFullNames[0] } Else { '' } )
+				$ScriptInformation += @{Data = "User Display Name"; Value = $name; }
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserFullNames)
 				{
@@ -9739,7 +9988,9 @@ Function OutputMachineDetails
 						$ScriptInformation += @{Data = ""; Value = $tmp; }
 					}
 				}
-				$ScriptInformation += @{Data = "User"; Value = $xAssociatedUserNames[0]; }
+                ## GRL $xAssociatedUserNames can have a count of zero so $xAssociatedUserNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserNames -is [array] -and $xAssociatedUserNames.Count ) { $xAssociatedUserNames[0] } Else { '' } )
+				$ScriptInformation += @{Data = "User"; Value = $name; }
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserNames)
 				{
@@ -9749,7 +10000,9 @@ Function OutputMachineDetails
 						$ScriptInformation += @{Data = ""; Value = $tmp; }
 					}
 				}
-				$ScriptInformation += @{Data = "UPN"; Value = $xAssociatedUserUPNs[0]; }
+                ## GRL $xAssociatedUserUPNs can have a count of zero so $xAssociatedUserUPNs[0] isn't valid.
+                [string]$upn = $(If( $xAssociatedUserUPNs -is [array] -and $xAssociatedUserUPNs.Count ) { $xAssociatedUserUPNs[0] } Else { '' } )
+				$ScriptInformation += @{Data = "UPN"; Value = $upn; }
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserUPNs)
 				{
@@ -9760,7 +10013,8 @@ Function OutputMachineDetails
 					}
 				}
 			}
-			$ScriptInformation += @{Data = "Desktop Conditions"; Value = $xDesktopConditions[0]; }
+			[string]$cond = $(If( $xDesktopConditions -is [array] -and $xDesktopConditions.Count ) { $xDesktopConditions[0] } Else { '' } )
+			$ScriptInformation += @{Data = "Desktop Conditions"; Value = $cond; }
 			$cnt = -1
 			ForEach($tmp in $xDesktopConditions)
 			{
@@ -9783,7 +10037,8 @@ Function OutputMachineDetails
 			}
 			$ScriptInformation += @{Data = "Scheduled Reboot"; Value = $Machine.ScheduledReboot; }
 			$ScriptInformation += @{Data = "Summary State"; Value = $xSummaryState; }
-			$ScriptInformation += @{Data = "Tags"; Value = $xTags[0]; }
+            [string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+			$ScriptInformation += @{Data = "Tags"; Value = $TagName; }
 			$cnt = -1
 			ForEach($tmp in $xTags)
 			{
@@ -9851,7 +10106,8 @@ Function OutputMachineDetails
 			WriteWordLine 4 0 "Applications"
 			[System.Collections.Hashtable[]] $ScriptInformation = @()
 			
-			$ScriptInformation += @{Data = "Applications In Use"; Value = $xApplicationsInUse[0]; }
+			[string]$AppsInUse = $(If( $xApplicationsInUse[0] -is [array] -and $xApplicationsInUse.Count ) { $xApplicationsInUse[0] } Else { '' } )
+			$ScriptInformation += @{Data = "Applications In Use"; Value = $AppsInUse; }
 			$cnt = -1
 			ForEach($tmp in $xApplicationsInUse)
 			{
@@ -9861,7 +10117,8 @@ Function OutputMachineDetails
 					$ScriptInformation += @{Data = ""; Value = $tmp; }
 				}
 			}
-			$ScriptInformation += @{Data = "Published Applications"; Value = $xPublishedApplications[0]; }
+			[string]$PubApps = $(If( $xPublishedApplications[0] -is [array] -and $xPublishedApplications.Count ) { $xPublishedApplications[0] } Else { '' } )
+			$ScriptInformation += @{Data = "Published Applications"; Value = $PubApps; }
 			$cnt = -1
 			ForEach($tmp in $xPublishedApplications)
 			{
@@ -9981,7 +10238,8 @@ Function OutputMachineDetails
 				$ScriptInformation += @{Data = "Launched Via"; Value = $xSessionLaunchedViaHostName; }
 				$ScriptInformation += @{Data = "Launched Via (IP)"; Value = $xSessionLaunchedViaIP; }
 				$ScriptInformation += @{Data = "Session Change Time"; Value = $xSessionStateChangeTime; }
-				$ScriptInformation += @{Data = "SmartAccess Filters"; Value = $xSessionSmartAccessTags[0]; }
+				[string]$SSAT = $(If( $xSessionSmartAccessTags[0] -is [array] -and $xSessionSmartAccessTags.Count ) { $xSessionSmartAccessTags[0] } Else { '' } )
+				$ScriptInformation += @{Data = "SmartAccess Filters"; Value = $SSAT; }
 				$cnt = -1
 				ForEach($tmp in $xSessionSmartAccessTags)
 				{
@@ -10045,7 +10303,9 @@ Function OutputMachineDetails
 			Line 2 "Delivery Group`t`t`t: " $Machine.DesktopGroupName
 			If($NoSessions -eq $False) #V2.27
 			{
-				Line 2 "User Display Name`t`t: " $xAssociatedUserFullNames[0]
+                ## GRL $xAssociatedUserFullNames can have a count of zero so $xAssociatedUserFullNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserFullNames -is [array] -and $xAssociatedUserFullNames.Count ) { $xAssociatedUserFullNames[0] } Else { '' } )
+				Line 2 "User Display Name`t`t: " $name
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserFullNames)
 				{
@@ -10055,7 +10315,9 @@ Function OutputMachineDetails
 						Line 6 "  " $tmp
 					}
 				}
-				Line 2 "User`t`t`t`t: " $xAssociatedUserNames[0]
+				## GRL $xAssociatedUserNames can have a count of zero so $xAssociatedUserNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserNames -is [array] -and $xAssociatedUserNames.Count ) { $xAssociatedUserNames[0] } Else { '' } )
+				Line 2 "User`t`t`t`t: " $name
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserNames)
 				{
@@ -10065,7 +10327,9 @@ Function OutputMachineDetails
 						Line 6 "  " $tmp
 					}
 				}
-				Line 2 "UPN`t`t`t`t: " $xAssociatedUserUPNs[0]
+                ## GRL $xAssociatedUserUPNs can have a count of zero so $xAssociatedUserUPNs[0] isn't valid.
+                [string]$upn = $(If( $xAssociatedUserUPNs -is [array] -and $xAssociatedUserUPNs.Count ) { $xAssociatedUserUPNs[0] } Else { '' } )
+				Line 2 "UPN`t`t`t`t: " $upn
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserUPNs)
 				{
@@ -10076,7 +10340,8 @@ Function OutputMachineDetails
 					}
 				}
 			}
-			Line 2 "Desktop Conditions`t`t: " $xDesktopConditions[0]
+			[string]$cond = $(If( $xDesktopConditions -is [array] -and $xDesktopConditions.Count ) { $xDesktopConditions[0] } Else { '' } )
+			Line 2 "Desktop Conditions`t`t: " $cond
 			$cnt = -1
 			ForEach($tmp in $xDesktopConditions)
 			{
@@ -10100,7 +10365,8 @@ Function OutputMachineDetails
 				Line 2 "Zone`t`t`t`t: " $Machine.ZoneName
 			}
 			Line 2 "Summary State`t`t`t: " $xSummaryState
-			Line 2 "Tags`t`t`t`t: " $xTags[0]
+            [string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+			Line 2 "Tags`t`t`t`t: " $TagName
 			$cnt = -1
 			ForEach($tmp in $xTags)
 			{
@@ -10133,7 +10399,8 @@ Function OutputMachineDetails
 			Line 0 ""
 			
 			Line 1 "Applications"
-			Line 2 "Applications In Use`t`t: " $xApplicationsInUse[0]
+			[string]$AppsInUse = $(If( $xApplicationsInUse[0] -is [array] -and $xApplicationsInUse.Count ) { $xApplicationsInUse[0] } Else { '' } )
+			Line 2 "Applications In Use`t`t: " $AppsInUse
 			$cnt = -1
 			ForEach($tmp in $xApplicationsInUse)
 			{
@@ -10143,7 +10410,8 @@ Function OutputMachineDetails
 					Line 6 "  " $tmp
 				}
 			}
-			Line 2 "Published Applications`t`t: " $xPublishedApplications[0]
+			[string]$PubApps = $(If( $xPublishedApplications[0] -is [array] -and $xPublishedApplications.Count ) { $xPublishedApplications[0] } Else { '' } )
+			Line 2 "Published Applications`t`t: " $PubApps
 			$cnt = -1
 			ForEach($tmp in $xPublishedApplications)
 			{
@@ -10184,7 +10452,8 @@ Function OutputMachineDetails
 				Line 1 "Session Details"
 				Line 2 "Launched Via`t`t`t: " $xSessionLaunchedViaHostName
 				Line 2 "Launched Via (IP)`t`t: " $xSessionLaunchedViaIP
-				Line 2 "SmartAccess Filters`t`t: " $xSessionSmartAccessTags[0]
+				[string]$SSAT = $(If( $xSessionSmartAccessTags[0] -is [array] -and $xSessionSmartAccessTags.Count ) { $xSessionSmartAccessTags[0] } Else { '' } )
+				Line 2 "SmartAccess Filters`t`t: " $SSAT
 				$cnt = -1
 				ForEach($tmp in $xSessionSmartAccessTags)
 				{
@@ -10209,7 +10478,9 @@ Function OutputMachineDetails
 			Line 2 "Delivery Group`t`t`t: " $Machine.DesktopGroupName
 			If($NoSessions -eq $False) #V2.27
 			{
-				Line 2 "User Display Name`t`t: " $xAssociatedUserFullNames[0]
+                ## GRL $xAssociatedUserFullNames can have a count of zero so $xAssociatedUserFullNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserFullNames -is [array] -and $xAssociatedUserFullNames.Count ) { $xAssociatedUserFullNames[0] } Else { '' } )
+				Line 2 "User Display Name`t`t: " $name
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserFullNames)
 				{
@@ -10219,7 +10490,9 @@ Function OutputMachineDetails
 						Line 6 "  " $tmp
 					}
 				}
-				Line 2 "User`t`t`t`t: " $xAssociatedUserNames[0]
+                ## GRL $xAssociatedUserNames can have a count of zero so $xAssociatedUserNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserNames -is [array] -and $xAssociatedUserNames.Count ) { $xAssociatedUserNames[0] } Else { '' } )
+				Line 2 "User`t`t`t`t: " $name
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserNames)
 				{
@@ -10229,7 +10502,9 @@ Function OutputMachineDetails
 						Line 6 "  " $tmp
 					}
 				}
-				Line 2 "UPN`t`t`t`t: " $xAssociatedUserUPNs[0]
+                ## GRL $xAssociatedUserUPNs can have a count of zero so $xAssociatedUserUPNs[0] isn't valid.
+                [string]$upn = $(If( $xAssociatedUserUPNs -is [array] -and $xAssociatedUserUPNs.Count ) { $xAssociatedUserUPNs[0] } Else { '' } )
+				Line 2 "UPN`t`t`t`t: " $upn
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserUPNs)
 				{
@@ -10240,7 +10515,8 @@ Function OutputMachineDetails
 					}
 				}
 			}
-			Line 2 "Desktop Conditions`t`t: " $xDesktopConditions[0]
+			[string]$cond = $(If( $xDesktopConditions -is [array] -and $xDesktopConditions.Count ) { $xDesktopConditions[0] } Else { '' } )
+			Line 2 "Desktop Conditions`t`t: " $cond
 			$cnt = -1
 			ForEach($tmp in $xDesktopConditions)
 			{
@@ -10263,7 +10539,8 @@ Function OutputMachineDetails
 			}
 			Line 2 "Scheduled Reboot`t`t: " $Machine.ScheduledReboot
 			Line 2 "Summary State`t`t`t: " $xSummaryState
-			Line 2 "Tags`t`t`t`t: " $xTags[0]
+            [string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+			Line 2 "Tags`t`t`t`t: " $TagName
 			$cnt = -1
 			ForEach($tmp in $xTags)
 			{
@@ -10296,7 +10573,8 @@ Function OutputMachineDetails
 			Line 0 ""
 			
 			Line 1 "Applications"
-			Line 2 "Applications In Use`t`t: " $xApplicationsInUse[0]
+			[string]$AppsInUse = $(If( $xApplicationsInUse[0] -is [array] -and $xApplicationsInUse.Count ) { $xApplicationsInUse[0] } Else { '' } )
+			Line 2 "Applications In Use`t`t: " $AppsInUse
 			$cnt = -1
 			ForEach($tmp in $xApplicationsInUse)
 			{
@@ -10306,7 +10584,8 @@ Function OutputMachineDetails
 					Line 6 "  " $tmp
 				}
 			}
-			Line 2 "Published Applications`t`t: " $xPublishedApplications[0]
+			[string]$PubApps = $(If( $xPublishedApplications[0] -is [array] -and $xPublishedApplications.Count ) { $xPublishedApplications[0] } Else { '' } )
+			Line 2 "Published Applications`t`t: " $PubApps
 			$cnt = -1
 			ForEach($tmp in $xPublishedApplications)
 			{
@@ -10358,7 +10637,8 @@ Function OutputMachineDetails
 				Line 2 "Launched Via`t`t`t: " $xSessionLaunchedViaHostName
 				Line 2 "Launched Via (IP)`t`t: " $xSessionLaunchedViaIP
 				Line 2 "Session Change Time`t`t: " $xSessionStateChangeTime
-				Line 2 "SmartAccess Filters`t`t: " $xSessionSmartAccessTags[0]
+				[string]$SSAT = $(If( $xSessionSmartAccessTags[0] -is [array] -and $xSessionSmartAccessTags.Count ) { $xSessionSmartAccessTags[0] } Else { '' } )
+				Line 2 "SmartAccess Filters`t`t: " $SSAT
 				$cnt = -1
 				ForEach($tmp in $xSessionSmartAccessTags)
 				{
@@ -10390,7 +10670,9 @@ Function OutputMachineDetails
 			$rowdata += @(,('Delivery Group',($global:htmlsb),$Machine.DesktopGroupName,$htmlwhite))
 			If($NoSessions -eq $False) #V2.27
 			{
-				$rowdata += @(,('User Display Name',($global:htmlsb),$xAssociatedUserFullNames[0],$htmlwhite))
+                ## GRL $xAssociatedUserFullNames can have a count of zero so $xAssociatedUserFullNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserFullNames -is [array] -and $xAssociatedUserFullNames.Count ) { $xAssociatedUserFullNames[0] } Else { '' } )
+				$rowdata += @(,('User Display Name',($global:htmlsb),$name,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserFullNames)
 				{
@@ -10400,7 +10682,9 @@ Function OutputMachineDetails
 						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 					}
 				}
-				$rowdata += @(,('User',($global:htmlsb),$xAssociatedUserNames[0],$htmlwhite))
+                ## GRL $xAssociatedUserNames can have a count of zero so $xAssociatedUserNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserNames -is [array] -and $xAssociatedUserNames.Count ) { $xAssociatedUserNames[0] } Else { '' } )
+				$rowdata += @(,('User',($global:htmlsb),$name,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserNames)
 				{
@@ -10410,7 +10694,9 @@ Function OutputMachineDetails
 						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 					}
 				}
-				$rowdata += @(,('UPN',($global:htmlsb),$xAssociatedUserUPNs[0],$htmlwhite))
+                ## GRL $xAssociatedUserUPNs can have a count of zero so $xAssociatedUserUPNs[0] isn't valid.
+                [string]$upn = $(If( $xAssociatedUserUPNs -is [array] -and $xAssociatedUserUPNs.Count ) { $xAssociatedUserUPNs[0] } Else { '' } )
+				$rowdata += @(,('UPN',($global:htmlsb),$upn,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserUPNs)
 				{
@@ -10421,7 +10707,8 @@ Function OutputMachineDetails
 					}
 				}
 			}
-			$rowdata += @(,('Desktop Conditions',($global:htmlsb),$xDesktopConditions[0],$htmlwhite))
+			[string]$cond = $(If( $xDesktopConditions -is [array] -and $xDesktopConditions.Count ) { $xDesktopConditions[0] } Else { '' } )
+			$rowdata += @(,('Desktop Conditions',($global:htmlsb),$cond,$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xDesktopConditions)
 			{
@@ -10445,7 +10732,8 @@ Function OutputMachineDetails
 				$rowdata += @(,('Zone',($global:htmlsb),$Machine.ZoneName,$htmlwhite))
 			}
 			$rowdata += @(,('Summary State',($global:htmlsb),$xSummaryState,$htmlwhite))
-			$rowdata += @(,('Tags',($global:htmlsb),$xTags[0],$htmlwhite))
+            [string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+			$rowdata += @(,('Tags',($global:htmlsb),$TagName,$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xTags)
 			{
@@ -10486,7 +10774,8 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Applications"
 			$rowdata = @()
-			$columnHeaders = @("Applications In Use",($global:htmlsb),$xApplicationsInUse[0],$htmlwhite)
+			[string]$AppsInUse = $(If( $xApplicationsInUse[0] -is [array] -and $xApplicationsInUse.Count ) { $xApplicationsInUse[0] } Else { '' } )
+			$columnHeaders = @("Applications In Use",($global:htmlsb),$AppsInUse,$htmlwhite)
 			$cnt = -1
 			ForEach($tmp in $xApplicationsInUSe)
 			{
@@ -10496,7 +10785,8 @@ Function OutputMachineDetails
 					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Published Applications',($global:htmlsb),$xPublishedApplications[0],$htmlwhite))
+			[string]$PubApps = $(If( $xPublishedApplications[0] -is [array] -and $xPublishedApplications.Count ) { $xPublishedApplications[0] } Else { '' } )
+			$rowdata += @(,('Published Applications',($global:htmlsb),$PubApps,$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xPublishedApplications)
 			{
@@ -10553,7 +10843,8 @@ Function OutputMachineDetails
 				$rowdata = @()
 				$columnHeaders = @("Launched Via",($global:htmlsb),$xSessionLaunchedViaHostName,$htmlwhite)
 				$rowdata += @(,('Launched Via (IP)',($global:htmlsb),$xSessionLaunchedViaIP,$htmlwhite))
-				$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$xSessionSmartAccessTags[0],$htmlwhite))
+				[string]$SSAT = $(If( $xSessionSmartAccessTags[0] -is [array] -and $xSessionSmartAccessTags.Count ) { $xSessionSmartAccessTags[0] } Else { '' } )
+				$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$SSAT,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xSessionSmartAccessTags)
 				{
@@ -10587,7 +10878,9 @@ Function OutputMachineDetails
 			$rowdata += @(,('Delivery Group',($global:htmlsb),$Machine.DesktopGroupName,$htmlwhite))
 			If($NoSessions -eq $False) #V2.27
 			{
-				$rowdata += @(,('User Display Name',($global:htmlsb),$xAssociatedUserFullNames[0],$htmlwhite))
+                ## GRL $xAssociatedUserFullNames can have a count of zero so $xAssociatedUserFullNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserFullNames -is [array] -and $xAssociatedUserFullNames.Count ) { $xAssociatedUserFullNames[0] } Else { '' } )
+				$rowdata += @(,('User Display Name',($global:htmlsb),$name,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserFullNames)
 				{
@@ -10597,7 +10890,9 @@ Function OutputMachineDetails
 						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 					}
 				}
-				$rowdata += @(,('User',($global:htmlsb),$xAssociatedUserNames[0],$htmlwhite))
+                ## GRL $xAssociatedUserNames can have a count of zero so $xAssociatedUserNames[0] isn't valid.
+                [string]$name = $(If( $xAssociatedUserNames -is [array] -and $xAssociatedUserNames.Count ) { $xAssociatedUserNames[0] } Else { '' } )
+				$rowdata += @(,('User',($global:htmlsb),$name,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserNames)
 				{
@@ -10607,7 +10902,9 @@ Function OutputMachineDetails
 						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 					}
 				}
-				$rowdata += @(,('UPN',($global:htmlsb),$xAssociatedUserUPNs[0],$htmlwhite))
+                ## GRL $xAssociatedUserUPNs can have a count of zero so $xAssociatedUserUPNs[0] isn't valid.
+                [string]$upn = $(If( $xAssociatedUserUPNs -is [array] -and $xAssociatedUserUPNs.Count ) { $xAssociatedUserUPNs[0] } Else { '' } )
+				$rowdata += @(,('UPN',($global:htmlsb),$upn,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xAssociatedUserUPNs)
 				{
@@ -10618,7 +10915,8 @@ Function OutputMachineDetails
 					}
 				}
 			}
-			$rowdata += @(,('Desktop Conditions',($global:htmlsb),$xDesktopConditions[0],$htmlwhite))
+			[string]$cond = $(If( $xDesktopConditions -is [array] -and $xDesktopConditions.Count ) { $xDesktopConditions[0] } Else { '' } )
+			$rowdata += @(,('Desktop Conditions',($global:htmlsb),$cond,$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xDesktopConditions)
 			{
@@ -10641,7 +10939,8 @@ Function OutputMachineDetails
 			}
 			$rowdata += @(,('Scheduled Reboot',($global:htmlsb),$Machine.ScheduledReboot.ToString(),$htmlwhite))
 			$rowdata += @(,('Summary State',($global:htmlsb),$xSummaryState,$htmlwhite))
-			$rowdata += @(,('Tags',($global:htmlsb),$xTags[0],$htmlwhite))
+            [string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+			$rowdata += @(,('Tags',($global:htmlsb),$TagName,$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xTags)
 			{
@@ -10682,7 +10981,8 @@ Function OutputMachineDetails
 
 			WriteHTMLLine 4 0 "Applications"
 			$rowdata = @()
-			$columnHeaders = @("Applications In Use",($global:htmlsb),$xApplicationsInUse[0],$htmlwhite)
+			[string]$AppsInUse = $(If( $xApplicationsInUse[0] -is [array] -and $xApplicationsInUse.Count ) { $xApplicationsInUse[0] } Else { '' } )
+			$columnHeaders = @("Applications In Use",($global:htmlsb),$AppsInUse,$htmlwhite)
 			$cnt = -1
 			ForEach($tmp in $xApplicationsInUSe)
 			{
@@ -10692,7 +10992,8 @@ Function OutputMachineDetails
 					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
 				}
 			}
-			$rowdata += @(,('Published Applications',($global:htmlsb),$xPublishedApplications[0],$htmlwhite))
+			[string]$PubApps = $(If( $xPublishedApplications[0] -is [array] -and $xPublishedApplications.Count ) { $xPublishedApplications[0] } Else { '' } )
+			$rowdata += @(,('Published Applications',($global:htmlsb),$PubApps,$htmlwhite))
 			$cnt = -1
 			ForEach($tmp in $xPublishedApplications)
 			{
@@ -10760,7 +11061,8 @@ Function OutputMachineDetails
 				$columnHeaders = @("Launched Via",($global:htmlsb),$xSessionLaunchedViaHostName,$htmlwhite)
 				$rowdata += @(,('Launched Via (IP)',($global:htmlsb),$xSessionLaunchedViaIP,$htmlwhite))
 				$rowdata += @(,('Session Change Time',($global:htmlsb),$xSessionStateChangeTime,$htmlwhite))
-				$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$xSessionSmartAccessTags[0],$htmlwhite))
+				[string]$SSAT = $(If( $xSessionSmartAccessTags[0] -is [array] -and $xSessionSmartAccessTags.Count ) { $xSessionSmartAccessTags[0] } Else { '' } )
+				$rowdata += @(,('SmartAccess Filters',($global:htmlsb),$SSAT,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xSessionSmartAccessTags)
 				{
@@ -10828,7 +11130,7 @@ Function ProcessDeliveryGroups
 	ElseIf($? -and ($Null -eq $AllDeliveryGroups))
 	{
 		$txt = "There are no Delivery Groups"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -10861,13 +11163,13 @@ Function OutputDeliveryGroupTable
 	
 	ForEach($Group in $AllDeliveryGroups)
 	{
-		$xSingleSession = ""
-		$xState = ""
-		$xDeliveryType = ""
-		$xGroupName = ""
-		[int]$NumApps = 0
-		[int]$NumAppGroups = 0
-		[int]$NumDesktops = 0
+		[string]$SessionSupport    = ""
+		[string]$xState            = ""
+		[string]$xDeliveryType     = ""
+		[string]$xGroupName        = ""
+		[int]$NumApps              = 0
+		[int]$NumAppGroups         = 0
+		[int]$NumDesktops          = 0
 		
 		#updated for CVAD 1909 in V2.28
 		If($Group.SessionSupport -eq "SingleSession")
@@ -11192,13 +11494,12 @@ Function OutputDeliveryGroup
 			ElseIf(-not $DeliveryGroups -and $MachineCatalogs)
 			{
 				#shouldn't be here
+#Do not indent the following write-error lines. Doing so will mess up the console formatting of the error message.
 				Write-Error "
 				`n`n
-				`t`t
-				OOPS!!! An error that should not occur has occured in Function OutputDeliveryGroup.
+	OOPS!!! An error that should not occur has occured in Function OutputDeliveryGroup.
 				`n`n
-				`t`t
-				Please send an email to webster@carlwebster.com
+	Please send an email to webster@carlwebster.com
 				`n`n
 				"
 			}
@@ -11206,7 +11507,7 @@ Function OutputDeliveryGroup
 		ElseIf($? -and $Null -eq $Machines)
 		{
 			$txt = "There are no Machines for Delivery Group $($Group.name)"
-			OutputWarning $txt
+			OutputNotice $txt
 		}
 		Else
 		{
@@ -11242,7 +11543,7 @@ Function OutputDeliveryGroup
 		ElseIf($? -and ($Null -eq $Admins))
 		{
 			$txt = "There are no administrators for $($Group.Name)"
-			OutputWarning $txt
+			OutputNotice $txt
 		}
 		Else
 		{
@@ -11263,30 +11564,30 @@ Function OutputDeliveryGroupDetails
 {
 	Param([object] $Group)
 
-	$xDGType = "Delivery Group Type cannot be determined: $($Group.DeliveryType) $($Group.DesktopKind)"
-	$xSessionReconnection = ""
-	$xSecureIcaRequired = "Use delivery group setting"
-	$xVDAVersion = ""
-	$xDeliveryType = ""
-	$xColorDepth = ""
-	$xShutdownDesktopsAfterUse = "No"
-	$xTurnOnAddedMachine = "No"
-	$DGIncludedUsers = @()
-	$DGExcludedUsers = @()
-	$DGScopes = @()
-	$DGSFServers = @()
-	$xSessionPrelaunch = "Off"
-	[int]$xSessionPrelaunchAvgLoad = 0
-	[int]$xSessionPrelaunchAnyLoad = 0
-	$xSessionLinger = "Off"
-	[int]$xSessionLingerAvgLoad = 0
-	[int]$xSessionLingerAnyLoad = 0
-	$xEndPrelaunchSession = ""
-	$xEndLinger = ""
-	$PwrMgmt1 = $False
-	$PwrMgmt2 = $False
-	$PwrMgmt3 = $False
-	$xUsersHomeZone = "No"
+	[string]$xDGType                   = "Delivery Group Type cannot be determined: $($Group.DeliveryType) $($Group.DesktopKind)"
+	[string]$xSessionReconnection      = ""
+	[string]$xSecureIcaRequired        = "Use delivery group setting"
+	[string]$xVDAVersion               = ""
+	[string]$xDeliveryType             = ""
+	[string]$xColorDepth               = ""
+	[string]$xShutdownDesktopsAfterUse = "No"
+	[string]$xTurnOnAddedMachine       = "No"
+	$DGIncludedUsers                   = @()
+	$DGExcludedUsers                   = @()
+	$DGScopes                          = @()
+	$DGSFServers                       = @()
+	[string]$xSessionPrelaunch         = "Off"
+	[int]$xSessionPrelaunchAvgLoad     = 0
+	[int]$xSessionPrelaunchAnyLoad     = 0
+	[string]$xSessionLinger            = "Off"
+	[int]$xSessionLingerAvgLoad        = 0
+	[int]$xSessionLingerAnyLoad        = 0
+	[string]$xEndPrelaunchSession      = ""
+	[string]$xEndLinger                = ""
+	[bool]$PwrMgmt1                    = $False
+	[bool]$PwrMgmt2                    = $False
+	[bool]$PwrMgmt3                    = $False
+	[string]$xUsersHomeZone            = "No"
 	
 	If($Group.DeliveryType -eq "AppsOnly" -and $Group.DesktopKind -eq "Shared")
 	{
@@ -11404,11 +11705,19 @@ Function OutputDeliveryGroupDetails
 		If($? -and $Null -ne $SFTmp)
 		{
 			$SFByteArray = $SFTmp.Policy
-			$SFServer = Get-SFStoreFrontAddress -ByteArray $SFByteArray 4>$Null
-			If($? -and $Null -ne $SFServer)
-			{
-				$DGSFServers += $SFServer.Url
-			}
+			## GRL add Try/Catch
+            try
+            {
+			    $SFServer = Get-SFStoreFrontAddress -ByteArray $SFByteArray -ErrorAction SilentlyContinue 4>$Null
+			    If($? -and $Null -ne $SFServer)
+			    {
+				    $DGSFServers += $SFServer.Url
+			    }
+            }
+            catch
+            {
+                Write-Warning -Message "Failed call to Get-SFStoreFrontAddress for $server"
+            }
 		}
 	}
 	
@@ -11417,69 +11726,93 @@ Function OutputDeliveryGroupDetails
 		$DGSFServers += "-"
 	}
 	
-	$Results = Get-BrokerSessionPreLaunch -DesktopGroupUid $Group.Uid @XDParams1
-	If($? -and $Null -ne $Results)
+	$test = Get-BrokerSessionPreLaunch @CVADParams1
+	If($? -and $null -ne $test)
 	{
-		If($Results.Enabled -and $Results.AssociatedUserFullNames.Count -eq 0)
+		$SPLUIDs = @()
+		ForEach($SPL in $test)
 		{
-			$xSessionPrelaunch = "Prelaunch for any user"
+			$SPLUIDs += $SPL.DesktopGroupUid
 		}
-		ElseIf($Results.Enabled -and $Results.AssociatedUserFullNames.Count -gt 0)
+		If($SPLUIDs -contains $Group.Uid)
 		{
-			$xSessionPrelaunch = "Prelaunch for specific users"
-		}
-		
-		If($Results.MaxAverageLoadThreshold -gt 0)
-		{
-			$xSessionPrelaunchAvgLoad = ($Results.MaxAverageLoadThreshold/100)
-		}
-		If($Results.MaxLoadPerMachineThreshold -gt 0)
-		{
-			$xSessionPrelaunchAnyLoad = ($Results.MaxLoadPerMachineThreshold/100)
-		}
-		$Mins = $Results.MaxTimeBeforeTerminate.Minutes
-		$Hours = $Results.MaxTimeBeforeTerminate.Hours
-		$Days = $Results.MaxTimeBeforeTerminate.Days
-		If($Mins -gt 0)
-		{
-			$xEndPrelaunchSession = "$($Mins) Minutes"
-		}
-		If($Hours -gt 0)
-		{
-			$xEndPrelaunchSession = "$($Hours) Hours"
-		}
-		ElseIf($Days -gt 0)
-		{
-			$xEndPrelaunchSession = "$($Days) Days"
+			$Results = Get-BrokerSessionPreLaunch -DesktopGroupUid $Group.Uid @CVADParams1
+			If($? -and $Null -ne $Results)
+			{
+				If($Results.Enabled -and $Results.AssociatedUserFullNames.Count -eq 0)
+				{
+					$xSessionPrelaunch = "Prelaunch for any user"
+				}
+				ElseIf($Results.Enabled -and $Results.AssociatedUserFullNames.Count -gt 0)
+				{
+					$xSessionPrelaunch = "Prelaunch for specific users"
+				}
+				
+				If($Results.MaxAverageLoadThreshold -gt 0)
+				{
+					$xSessionPrelaunchAvgLoad = ($Results.MaxAverageLoadThreshold/100)
+				}
+				If($Results.MaxLoadPerMachineThreshold -gt 0)
+				{
+					$xSessionPrelaunchAnyLoad = ($Results.MaxLoadPerMachineThreshold/100)
+				}
+				$Mins = $Results.MaxTimeBeforeTerminate.Minutes
+				$Hours = $Results.MaxTimeBeforeTerminate.Hours
+				$Days = $Results.MaxTimeBeforeTerminate.Days
+				If($Mins -gt 0)
+				{
+					$xEndPrelaunchSession = "$($Mins) Minutes"
+				}
+				If($Hours -gt 0)
+				{
+					$xEndPrelaunchSession = "$($Hours) Hours"
+				}
+				ElseIf($Days -gt 0)
+				{
+					$xEndPrelaunchSession = "$($Days) Days"
+				}
+			}
 		}
 	}
 	
-	$Results = Get-BrokerSessionLinger -DesktopGroupUid $Group.Uid @XDParams1
-	If($? -and $Null -ne $Results)
+	$test = Get-BrokerSessionLinger @CVADParams1
+	If($? -and $null -ne $test)
 	{
-		$xSessionLinger = "Keep session active"
-		If($Results.MaxAverageLoadThreshold -gt 0)
+		$SLUIDs = @()
+		ForEach($SL in $test)
 		{
-			$xSessionLingerAvgLoad = ($Results.MaxAverageLoadThreshold/100)
+			$SLUIDs += $SL.DesktopGroupUid
 		}
-		If($Results.MaxLoadPerMachineThreshold -gt 0)
+		If($SLUIDs -contains $Group.Uid)
 		{
-			$xSessionLingerAnyLoad = ($Results.MaxLoadPerMachineThreshold/100)
-		}
-		$Mins = $Results.MaxTimeBeforeTerminate.Minutes
-		$Hours = $Results.MaxTimeBeforeTerminate.Hours
-		$Days = $Results.MaxTimeBeforeTerminate.Days
-		If($Mins -gt 0)
-		{
-			$xEndLinger = "$($Mins) Minutes"
-		}
-		If($Hours -gt 0)
-		{
-			$xEndLinger = "$($Hours) Hours"
-		}
-		ElseIf($Days -gt 0)
-		{
-			$xEndLinger = "$($Days) Days"
+			$Results = Get-BrokerSessionLinger -DesktopGroupUid $Group.Uid @CVADParams1
+			If($? -and $Null -ne $Results)
+			{
+				$xSessionLinger = "Keep session active"
+				If($Results.MaxAverageLoadThreshold -gt 0)
+				{
+					$xSessionLingerAvgLoad = ($Results.MaxAverageLoadThreshold/100)
+				}
+				If($Results.MaxLoadPerMachineThreshold -gt 0)
+				{
+					$xSessionLingerAnyLoad = ($Results.MaxLoadPerMachineThreshold/100)
+				}
+				$Mins = $Results.MaxTimeBeforeTerminate.Minutes
+				$Hours = $Results.MaxTimeBeforeTerminate.Hours
+				$Days = $Results.MaxTimeBeforeTerminate.Days
+				If($Mins -gt 0)
+				{
+					$xEndLinger = "$($Mins) Minutes"
+				}
+				If($Hours -gt 0)
+				{
+					$xEndLinger = "$($Hours) Hours"
+				}
+				ElseIf($Days -gt 0)
+				{
+					$xEndLinger = "$($Days) Days"
+				}
+			}
 		}
 	}
 
@@ -11528,23 +11861,22 @@ Function OutputDeliveryGroupDetails
 		$PwrMgmts = Get-BrokerPowerTimeScheme @XDParams2 -DesktopGroupUid $Group.Uid 
 	}
 	
-	$xOffPeakBufferSizePercent = $Group.OffPeakBufferSizePercent
-	$xOffPeakDisconnectTimeout = $Group.OffPeakDisconnectTimeout
-	$xOffPeakExtendedDisconnectTimeout = $Group.OffPeakExtendedDisconnectTimeout
-	$xOffPeakLogOffTimeout = $Group.OffPeakLogOffTimeout
-	$xPeakBufferSizePercent = $Group.PeakBufferSizePercent
-	$xPeakDisconnectTimeout = $Group.PeakDisconnectTimeout
-	$xPeakExtendedDisconnectTimeout = $Group.PeakExtendedDisconnectTimeout
-	$xPeakLogOffTimeout = $Group.PeakLogOffTimeout
+	$xOffPeakBufferSizePercent           = $Group.OffPeakBufferSizePercent
+	$xOffPeakDisconnectTimeout           = $Group.OffPeakDisconnectTimeout
+	$xOffPeakExtendedDisconnectTimeout   = $Group.OffPeakExtendedDisconnectTimeout
+	$xOffPeakLogOffTimeout               = $Group.OffPeakLogOffTimeout
+	$xPeakBufferSizePercent              = $Group.PeakBufferSizePercent
+	$xPeakDisconnectTimeout              = $Group.PeakDisconnectTimeout
+	$xPeakExtendedDisconnectTimeout      = $Group.PeakExtendedDisconnectTimeout
+	$xPeakLogOffTimeout                  = $Group.PeakLogOffTimeout
 	$xSettlementPeriodBeforeAutoShutdown = $Group.SettlementPeriodBeforeAutoShutdown
-	$xSettlementPeriodBeforeUse = $Group.SettlementPeriodBeforeUse
-
-	$xOffPeakDisconnectAction = ""
-	$xOffPeakExtendedDisconnectAction = ""
-	$xOffPeakLogOffAction = ""
-	$xPeakDisconnectAction = ""
-	$xPeakExtendedDisconnectAction = ""
-	$xPeakLogOffAction = ""
+	$xSettlementPeriodBeforeUse          = $Group.SettlementPeriodBeforeUse
+	$xOffPeakDisconnectAction            = ""
+	$xOffPeakExtendedDisconnectAction    = ""
+	$xOffPeakLogOffAction                = ""
+	$xPeakDisconnectAction               = ""
+	$xPeakExtendedDisconnectAction       = ""
+	$xPeakLogOffAction                   = ""
 
 	Switch ($Group.OffPeakDisconnectAction)
 	{
@@ -11731,7 +12063,7 @@ Function OutputDeliveryGroupDetails
 			#random desktops are a count of the number of entitlement policy rules
 			$xMaxDesktops = 0
 			#V2.10 10-feb-2018 change from xdparams1 to xdparams2 to add maxrecordcount
-			$MaxDesktops = Get-BrokerEntitlementPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid
+			$MaxDesktops = @(Get-BrokerEntitlementPolicyRule @XDParams2 -DesktopGroupUid $Group.Uid)
 			
 			If($? -and $Null -ne $MaxDesktops)
 			{
@@ -11762,7 +12094,8 @@ Function OutputDeliveryGroupDetails
 		$ScriptInformation += @{Data = "Color Depth"; Value = $xColorDepth; }
 		$ScriptInformation += @{Data = "Shutdown Desktops After Use"; Value = $xShutdownDesktopsAfterUse; }
 		$ScriptInformation += @{Data = "Turn On Added Machine"; Value = $xTurnOnAddedMachine; }
-		$ScriptInformation += @{Data = "Included Users"; Value = $DGIncludedUsers[0]; }
+		[string]$DGIU = $(If( $DGIncludedUsers[0] -is [array] -and $DGIncludedUsers.Count ) { $DGIncludedUsers[0] } Else { '' } )
+		$ScriptInformation += @{Data = "Included Users"; Value = $DGIU; }
 		$cnt = -1
 		ForEach($tmp in $DGIncludedUsers)
 		{
@@ -11860,7 +12193,8 @@ Function OutputDeliveryGroupDetails
 					{
 						$ScriptInformation += @{Data = "     Restrict launches to machines with tag"; Value = $RestrictedToTag; }
 					}
-					$ScriptInformation += @{Data = "     Included Users"; Value = $DesktopSettingIncludedUsers[0]; }
+					[string]$DSIU = $(If( $DesktopSettingIncludedUsers[0] -is [array] -and $DesktopSettingIncludedUsers.Count ) { $DesktopSettingIncludedUsers[0] } Else { '' } )
+					$ScriptInformation += @{Data = "     Included Users"; Value = $DSIU; }
 					$cnt = -1
 					ForEach($tmp in $DesktopSettingIncludedUsers)
 					{
@@ -11895,7 +12229,8 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		$ScriptInformation += @{Data = "Scopes"; Value = $DGScopes[0]; }
+		[string]$DGS = $(If( $DGScopes[0] -is [array] -and $DGScopes.Count ) { $DGScopes[0] } Else { '' } )
+		$ScriptInformation += @{Data = "Scopes"; Value = $DGS; }
 		$cnt = -1
 		ForEach($tmp in $DGScopes)
 		{
@@ -11906,7 +12241,8 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		$ScriptInformation += @{Data = "StoreFronts"; Value = $DGSFServers[0]; }
+		[string]$DGSFS = $(If( $DGSFServers[0] -is [array] -and $DGSFServers.Count ) { $DGSFServers[0] } Else { '' } )
+		$ScriptInformation += @{Data = "StoreFronts"; Value = $DGSFS; }
 		$cnt = -1
 		ForEach($tmp in $DGSFServers)
 		{
@@ -12079,7 +12415,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekdays")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -12101,7 +12437,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekend")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -12132,7 +12468,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekdays")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PoolSize[$i] -gt 0)
 						{
@@ -12154,7 +12490,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekend")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PoolSize[$i] -gt 0)
 						{
@@ -12176,7 +12512,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekdays")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -12198,7 +12534,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekend")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -12238,7 +12574,8 @@ Function OutputDeliveryGroupDetails
 		
 		$ScriptInformation += @{Data = "All connections not through NetScaler Gateway"; Value = $xAllConnections; }
 		$ScriptInformation += @{Data = "Connections through NetScaler Gateway"; Value = $xNSConnection; }
-		$ScriptInformation += @{Data = "Connections meeting any of the following filters"; Value = $xAGFilters[0]; }
+		[string]$AGF = $(If( $xAGFilters[0] -is [array] -and $xAGFilters.Count ) { $xAGFilters[0] } Else { '' } )
+		$ScriptInformation += @{Data = "Connections meeting any of the following filters"; Value = $AGF; }
 		$cnt = -1
 		ForEach($tmp in $xAGFilters)
 		{
@@ -12288,7 +12625,8 @@ Function OutputDeliveryGroupDetails
 		Line 1 "Color Depth`t`t`t`t`t: " $xColorDepth
 		Line 1 "Shutdown Desktops After Use`t`t`t: " $xShutdownDesktopsAfterUse
 		Line 1 "Turn On Added Machine`t`t`t`t: " $xTurnOnAddedMachine
-		Line 1 "Included Users`t`t`t`t`t: " $DGIncludedUsers[0]
+		[string]$DGIU = $(If( $DGIncludedUsers[0] -is [array] -and $DGIncludedUsers.Count ) { $DGIncludedUsers[0] } Else { '' } )
+		Line 1 "Included Users`t`t`t`t`t: " $DGIU
 		$cnt = -1
 		ForEach($tmp in $DGIncludedUsers)
 		{
@@ -12299,16 +12637,19 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		If($DGExcludedUsers.Count -gt 0)
+		If($DGExcludedUsers -is [array])
 		{
-			Line 1 "Excluded Users`t`t`t`t`t: " $DGExcludedUsers[0]
-			$cnt = -1
-			ForEach($tmp in $DGExcludedUsers)
+			If($DGExcludedUsers.Count -gt 0)
 			{
-				$cnt++
-				If($cnt -gt 0)
+				Line 1 "Excluded Users`t`t`t`t`t`t: " $DGExcludedUsers[0]
+				$cnt = -1
+				ForEach($tmp in $DGExcludedUsers)
 				{
-					Line 7 "  " $tmp
+					$cnt++
+					If($cnt -gt 0)
+					{
+						Line 8 "  " $tmp
+					}
 				}
 			}
 		}
@@ -12382,7 +12723,8 @@ Function OutputDeliveryGroupDetails
 					{
 						Line 2 "Restrict launches to machines with tag`t: " $RestrictedToTag
 					}
-					Line 2 "Included Users`t`t`t`t: " $DesktopSettingIncludedUsers[0]
+					[string]$DSIU = $(If( $DesktopSettingIncludedUsers[0] -is [array] -and $DesktopSettingIncludedUsers.Count ) { $DesktopSettingIncludedUsers[0] } Else { '' } )
+					Line 2 "Included Users`t`t`t`t: " $DSIU
 					$cnt = -1
 					ForEach($tmp in $DesktopSettingIncludedUsers)
 					{
@@ -12417,7 +12759,8 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		Line 1 "Scopes`t`t`t`t`t`t: " $DGScopes[0]
+		[string]$DGS = $(If( $DGScopes[0] -is [array] -and $DGScopes.Count ) { $DGScopes[0] } Else { '' } )
+		Line 1 "Scopes`t`t`t`t`t`t: " $DGS
 		$cnt = -1
 		ForEach($tmp in $DGScopes)
 		{
@@ -12428,7 +12771,8 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		Line 1 "StoreFronts`t`t`t`t`t: " $DGSFServers[0]
+		[string]$DGSFS = $(If( $DGSFServers[0] -is [array] -and $DGSFServers.Count ) { $DGSFServers[0] } Else { '' } )
+		Line 1 "StoreFronts`t`t`t`t`t: " $DGSFS
 		$cnt = -1
 		ForEach($tmp in $DGSFServers)
 		{
@@ -12601,7 +12945,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekdays")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -12623,7 +12967,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekend")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -12654,7 +12998,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekdays")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PoolSize[$i] -gt 0)
 						{
@@ -12676,7 +13020,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekend")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PoolSize[$i] -gt 0)
 						{
@@ -12698,7 +13042,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekdays")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -12720,7 +13064,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekend")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -12759,7 +13103,8 @@ Function OutputDeliveryGroupDetails
 		
 		Line 1 "All connections not through NetScaler Gateway`t: " $xAllConnections
 		Line 1 "Connections through NetScaler Gateway`t`t: " $xNSConnection
-		Line 1 "Connections meeting any of the following filters: " $xAGFilters[0]
+		[string]$AGF = $(If( $xAGFilters[0] -is [array] -and $xAGFilters.Count ) { $xAGFilters[0] } Else { '' } )
+		Line 1 "Connections meeting any of the following filters: " $AGF
 		$cnt = -1
 		ForEach($tmp in $xAGFilters)
 		{
@@ -12792,7 +13137,8 @@ Function OutputDeliveryGroupDetails
 		$rowdata += @(,('Color Depth',($global:htmlsb),$xColorDepth,$htmlwhite))
 		$rowdata += @(,("Shutdown Desktops After Use",($global:htmlsb),$xShutdownDesktopsAfterUse,$htmlwhite))
 		$rowdata += @(,("Turn On Added Machine",($global:htmlsb),$xTurnOnAddedMachine,$htmlwhite))
-		$rowdata += @(,('Included Users',($global:htmlsb),$DGIncludedUsers[0],$htmlwhite))
+		[string]$DGIU = $(If( $DGIncludedUsers[0] -is [array] -and $DGIncludedUsers.Count ) { $DGIncludedUsers[0] } Else { '' } )
+		$rowdata += @(,('Included Users',($global:htmlsb),$DGIU,$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $DGIncludedUsers)
 		{
@@ -12803,16 +13149,19 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		If($DGExcludedUsers.Count -gt 0)
+		If($DGExcludedUsers -is [array])
 		{
-			$rowdata += @(,('Excluded Users',($global:htmlsb), $DGExcludedUsers[0],$htmlwhite))
-			$cnt = -1
-			ForEach($tmp in $DGExcludedUsers)
+			If($DGExcludedUsers.Count -gt 0)
 			{
-				$cnt++
-				If($cnt -gt 0)
+				$rowdata += @(,('Excluded Users',($global:htmlsb), $DGExcludedUsers[0],$htmlwhite))
+				$cnt = -1
+				ForEach($tmp in $DGExcludedUsers)
 				{
-					$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					$cnt++
+					If($cnt -gt 0)
+					{
+						$rowdata += @(,('',($global:htmlsb),$tmp,$htmlwhite))
+					}
 				}
 			}
 		}
@@ -12886,7 +13235,7 @@ Function OutputDeliveryGroupDetails
 					{
 						$rowdata += @(,("     Restrict launches to machines with tag",($global:htmlsb),$RestrictedToTag,$htmlwhite))
 					}
-					$rowdata += @(,("     Included Users",($global:htmlsb),$DesktopSettingIncludedUsers[0],$htmlwhite))
+					$rowdata += @(,("     Included Users",($global:htmlsb),$DSIU,$htmlwhite))
 					$cnt = -1
 					ForEach($tmp in $DesktopSettingIncludedUsers)
 					{
@@ -12921,7 +13270,8 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		$rowdata += @(,('Scopes',($global:htmlsb),$DGScopes[0],$htmlwhite))
+		[string]$DGS = $(If( $DGScopes[0] -is [array] -and $DGScopes.Count ) { $DGScopes[0] } Else { '' } )
+		$rowdata += @(,('Scopes',($global:htmlsb),$DGS,$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $DGScopes)
 		{
@@ -12932,7 +13282,8 @@ Function OutputDeliveryGroupDetails
 			}
 		}
 		
-		$rowdata += @(,('StoreFronts',($global:htmlsb),$DGSFServers[0],$htmlwhite))
+		[string]$DGSFS = $(If( $DGSFServers[0] -is [array] -and $DGSFServers.Count ) { $DGSFServers[0] } Else { '' } )
+		$rowdata += @(,('StoreFronts',($global:htmlsb),$DGSFS,$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $DGSFServers)
 		{
@@ -13106,7 +13457,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekdays")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -13128,7 +13479,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekend")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -13160,7 +13511,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekdays")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PoolSize[$i] -gt 0)
 						{
@@ -13182,7 +13533,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekend")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PoolSize[$i] -gt 0)
 						{
@@ -13204,7 +13555,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekdays")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -13226,7 +13577,7 @@ Function OutputDeliveryGroupDetails
 			{
 				If($PwrMgmt.DaysOfWeek -eq "Weekend")
 				{
-					For($i=0;$i -le 24;$i++)
+					For($i=0;$i -le 23;$i++)
 					{
 						If($PwrMgmt.PeakHours[$i])
 						{
@@ -13265,7 +13616,8 @@ Function OutputDeliveryGroupDetails
 
 		$rowdata += @(,('All connections not through NetScaler Gateway',($global:htmlsb),$xAllConnections,$htmlwhite))
 		$rowdata += @(,('Connections through NetScaler Gateway',($global:htmlsb),$xNSConnection,$htmlwhite))
-		$rowdata += @(,('Connections meeting any of the following filters',($global:htmlsb),$xAGFilters[0],$htmlwhite))
+		[string]$AGF = $(If( $xAGFilters[0] -is [array] -and $xAGFilters.Count ) { $xAGFilters[0] } Else { '' } )
+		$rowdata += @(,('Connections meeting any of the following filters',($global:htmlsb),$AGF,$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xAGFilters)
 		{
@@ -13614,7 +13966,7 @@ Function OutputDeliveryGroupAppDisks
 	Else
 	{
 		$txt = "There are no AppDisks for $($Group.Name)"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 }
 	
@@ -13786,7 +14138,7 @@ Function OutputDeliveryGroupUtilization
 		ElseIf($? -and $Null -eq $Results)
 		{
 			$txt = "There is no Utilization data for $($Group.Name)"
-			OutputWarning $txt
+			OutputNotice $txt
 		}
 		Else
 		{
@@ -13905,7 +14257,7 @@ Function OutputDeliveryGroupTags
 	Else
 	{
 		$txt = "There are no Tags for $($Group.Name)"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 }
 	
@@ -13998,7 +14350,7 @@ Function OutputDeliveryGroupApplicationGroups
 	ElseIf($? -and $Null -eq $ApplicationGroups)
 	{
 		$txt = "There are no Application Groups for $($Group.Name)"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -14037,7 +14389,7 @@ Function ProcessApplications
 	ElseIf($? -and ($Null -eq $AllApplications))
 	{
 		$txt = "There are no Applications"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -14329,7 +14681,8 @@ Function OutputApplicationDetails
 			$ScriptInformation += @{Data = "Redirected file types"; Value = $tmp1; }
 			$tmp1 = $Null
 		}
-		$ScriptInformation += @{Data = "Tags"; Value = $xTags[0]; }
+        [string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+		$ScriptInformation += @{Data = "Tags"; Value = $TagName; }
 		$cnt = -1
 		ForEach($tmp in $xTags)
 		{
@@ -14467,7 +14820,8 @@ Function OutputApplicationDetails
 		}
 		Line 1 "Redirected file types`t`t`t: " $tmp1
 		$tmp1 = $Null
-		Line 1 "Tags`t`t`t`t`t: " $xTags[0]
+        [string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+		Line 1 "Tags`t`t`t`t`t: " $TagName
 		$cnt = -1
 		ForEach($tmp in $xTags)
 		{
@@ -14590,7 +14944,8 @@ Function OutputApplicationDetails
 		}
 		$rowdata += @(,('Redirected file types',($global:htmlsb),$tmp1,$htmlwhite))
 		$tmp1 = $Null
-		$rowdata += @(,('Tags',($global:htmlsb),$xTags[0],$htmlwhite))
+        [string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+		$rowdata += @(,('Tags',($global:htmlsb),$TagName,$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xTags)
 		{
@@ -14832,7 +15187,7 @@ Function OutputApplicationSessions
 	ElseIf($? -and $Null -eq $Sessions)
 	{
 		$txt = "There are no Sessions for Application $($Application.ApplicationName)"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -14964,7 +15319,7 @@ Function OutputApplicationAdministrators
 	ElseIf($? -and ($Null -eq $Admins))
 	{
 		$txt = "There are no administrators for $($Group.Name)"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -15073,7 +15428,8 @@ Function ProcessApplicationGroupDetails
 					}
 				}
 				
-				$ScriptInformation.Add(@{Data = "Tags"; Value = $xTags[0]; }) > $Null
+				[string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+				$ScriptInformation.Add(@{Data = "Tags"; Value = $TagName; }) > $Null
 				$cnt = -1
 				ForEach($tmp in $xTags)
 				{
@@ -15137,7 +15493,8 @@ Function ProcessApplicationGroupDetails
 					}
 				}
 				
-				Line 1 "Tags`t`t`t`t`t: " $xTags[0]
+				[string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+				Line 1 "Tags`t`t`t`t`t: " $TagName
 				$cnt = -1
 				ForEach($tmp in $xTags)
 				{
@@ -15186,7 +15543,8 @@ Function ProcessApplicationGroupDetails
 					}
 				}
 				
-				$rowdata += @(,('Tags',($global:htmlsb),$xTags[0],$htmlwhite))
+				[string]$TagName = $(If( $xTags -is [array] -and $xTags.Count ) { $xTags[0] } Else { '' } )
+				$rowdata += @(,('Tags',($global:htmlsb),$TagName,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $xTags)
 				{
@@ -15206,7 +15564,7 @@ Function ProcessApplicationGroupDetails
 	ElseIf($? -and $Null -eq $ApplicationGroups)
 	{
 		$txt = "There were no Application Groups found"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -15565,7 +15923,7 @@ Function OutputSummaryPolicyTable
 	ElseIf($Null -eq $HDXPolicies)
 	{
 		$txt = "There are no Policies"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -15752,7 +16110,7 @@ Function ProcessCitrixPolicies
 						Switch($filter.FilterType)
 						{
 							"AccessControl"  {$tmp = "Access Control"; Break}
-							"BranchRepeater" {$tmp = "Citrix CloudBridge"; Break}
+							"BranchRepeater" {$tmp = "NetScaler SD-WAN"; Break}
 							"ClientIP"       {$tmp = "Client IP Address"; Break}
 							"ClientName"     {$tmp = "Client Name"; Break}
 							"DesktopGroup"   {$tmp = "Delivery Group"; Break}
@@ -19404,7 +19762,7 @@ Function ProcessCitrixPolicies
 					{
 						#new in 7.16
 						$txt = "ICA\Multimedia\Browser Content Redirection ACL Configuration"
-						$array = $Setting.BRUrlWhitelist.Values.Split(';')
+						$array = $Setting.BRUrlWhitelist.Values
 						$tmp = $array[0]
 						If($MSWord -or $PDF)
 						{
@@ -19458,112 +19816,118 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting WebBrowserRedirectionAuthenticationSites State ) -and ($Setting.WebBrowserRedirectionAuthenticationSites.State -ne "NotConfigured"))
 					{
 						#new in 7.18
-						$txt = "ICA\Multimedia\Browser Content Redirection Authentication Sites"
-						$array = $Setting.WebBrowserRedirectionAuthenticationSites.Values.Split(';')
-						$tmp = $array[0]
-						If($MSWord -or $PDF)
+						If( $Setting.WebBrowserRedirectionAuthenticationSites.PSObject.Properties[ 'Values' ] )
 						{
-							$SettingsWordTable += @{
-							Text = $txt;
-							Value = $tmp;
-							}
-						}
-						ElseIf($HTML)
-						{
-							$rowdata += @(,(
-							$txt,$htmlbold,
-							$tmp,$htmlwhite))
-						}
-						ElseIf($Text)
-						{
-							OutputPolicySetting $txt $tmp 
-						}
-
-						$txt = ""
-						$cnt = -1
-						ForEach($element in $array)
-						{
-							$cnt++
-							
-							If($cnt -ne 0)
+							$txt = "ICA\Multimedia\Browser Content Redirection Authentication Sites"
+							$array = $Setting.WebBrowserRedirectionAuthenticationSites.Values
+							$tmp = $array[0]
+							If($MSWord -or $PDF)
 							{
-								$tmp = "$($element) "
-								If($MSWord -or $PDF)
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = $tmp;
+								}
+							}
+							If($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							If($Text)
+							{
+								OutputPolicySetting $txt $tmp 
+							}
+
+							$txt = ""
+							$cnt = -1
+							ForEach($element in $array)
+							{
+								$cnt++
+								
+								If($cnt -ne 0)
 								{
-									$SettingsWordTable += @{
-									Text = "";
-									Value = $tmp;
+									$tmp = "$($element) "
+									If($MSWord -or $PDF)
+									{
+										$SettingsWordTable += @{
+										Text = "";
+										Value = $tmp;
+										}
+									}
+									If($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									If($Text)
+									{
+										OutputPolicySetting "" $tmp
 									}
 								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
 							}
+							$array = $Null
+							$tmp = $Null
 						}
-						$array = $Null
-						$tmp = $Null
 					}
 					If((validStateProp $Setting WebBrowserRedirectionBlacklist State ) -and ($Setting.WebBrowserRedirectionBlacklist.State -ne "NotConfigured"))
 					{
 						#new in 7.17
-						$txt = "ICA\Multimedia\Browser Content Redirection Blacklist Configuration"
-						$array = $Setting.WebBrowserRedirectionBlacklist.Values.Split(';')
-						$tmp = $array[0]
-						If($MSWord -or $PDF)
+						If( $Setting.WebBrowserRedirectionBlacklist.PSObject.Properties[ 'Values' ] )
 						{
-							$SettingsWordTable += @{
-							Text = $txt;
-							Value = $tmp;
-							}
-						}
-						ElseIf($HTML)
-						{
-							$rowdata += @(,(
-							$txt,$htmlbold,
-							$tmp,$htmlwhite))
-						}
-						ElseIf($Text)
-						{
-							OutputPolicySetting $txt $tmp 
-						}
-
-						$txt = ""
-						$cnt = -1
-						ForEach($element in $array)
-						{
-							$cnt++
-							
-							If($cnt -ne 0)
+							$txt = "ICA\Multimedia\Browser Content Redirection Blacklist Configuration"
+							$array = $Setting.WebBrowserRedirectionBlacklist.Values
+							$tmp = $array[0]
+							If($MSWord -or $PDF)
 							{
-								$tmp = "$($element) "
-								If($MSWord -or $PDF)
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = $tmp;
+								}
+							}
+							If($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							If($Text)
+							{
+								OutputPolicySetting $txt $tmp 
+							}
+
+							$txt = ""
+							$cnt = -1
+							ForEach($element in $array)
+							{
+								$cnt++
+								
+								If($cnt -ne 0)
 								{
-									$SettingsWordTable += @{
-									Text = "";
-									Value = $tmp;
+									$tmp = "$($element) "
+									If($MSWord -or $PDF)
+									{
+										$SettingsWordTable += @{
+										Text = "";
+										Value = $tmp;
+										}
+									}
+									If($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									If($Text)
+									{
+										OutputPolicySetting "" $tmp
 									}
 								}
-								ElseIf($HTML)
-								{
-									$rowdata += @(,(
-									"",$htmlbold,
-									$tmp,$htmlwhite))
-								}
-								ElseIf($Text)
-								{
-									OutputPolicySetting "" $tmp
-								}
 							}
+							$array = $Null
+							$tmp = $Null
 						}
-						$array = $Null
-						$tmp = $Null
 					}
 					If((validStateProp $Setting WebBrowserRedirectionProxy State ) -and ($Setting.WebBrowserRedirectionProxy.State -ne "NotConfigured"))
 					{
@@ -20191,15 +20555,21 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						ForEach($Value in $Values)
 						{
+							If($Value -eq "")
+							{
+								Continue
+							}
+							
 							$tmparray = $Value.Split(",")
 							$ChannelName = $tmparray[0]
-							$StreamNumber = $tmparray[1]
 							
 							If($ChannelName -eq "")
 							{
 								Continue
 							}
 							
+							$StreamNumber = $tmparray[1]
+
 							Switch ($ChannelName)
 							{
 								"CTXCAM"	
@@ -21995,6 +22365,11 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						ForEach($Value in $Values)
 						{
+							If($Value -eq "")
+							{
+								Continue
+							}
+							
 							$tmparray = $Value.Split(",")
 							$ThresholdType  = $tmparray[0]
 							$ThresholdValue = $tmparray[1]
@@ -29335,7 +29710,7 @@ Function GetCtxGPOsInAD
 		$sysvolFiles = Get-ChildItem -Recurse ( '\\' + $domain  + '\sysvol\' + $domain + '\Policies' ) -EA 0
 		If($sysvolFiles.Count -eq 0)
 		{
-			Write-Verbose "$(Get-Date): `tSearch timed out.  Retrying.  Searching \\ + $($domain)\sysvol\$($domain)\Policies a second time."
+			Write-Verbose "$(Get-Date): `tSearch timed out. Retrying. Searching \\ + $($domain)\sysvol\$($domain)\Policies a second time."
 			$sysvolFiles = Get-ChildItem -Recurse ( '\\' + $domain  + '\sysvol\' + $domain + '\Policies' ) -EA 0
 		}
 		ForEach( $file in $sysvolFiles )
@@ -29417,7 +29792,7 @@ Function ProcessConfigLogging
 			ElseIf($? -and ($Null -eq $ConfigLogItems))
 			{
 				$txt = "There are no Configuration Logging actions recorded for $($StartDate) through $($EndDate)."
-				OutputWarning $txt
+				OutputNotice $txt
 			}
 			Else
 			{
@@ -29429,7 +29804,7 @@ Function ProcessConfigLogging
 		Else
 		{
 			$txt = "Not licensed for Configuration Logging"
-			OutputWarning $txt
+			OutputNotice $txt
 			Write-Verbose "$(Get-Date): "
 		}
 	}
@@ -29940,9 +30315,10 @@ Function GetSQLVersion
 
 Function GetDBCompatibilityLevel
 {
-	Param([string]$DBCompat)
+	Param([string]$DBCompat, [object]$SQLsrv)
 
-	#Added in version V2.11
+	$Major = $SQLsrv.VersionMajor
+	
 	<#
 		https://www.spiria.com/en/blog/web-applications/understanding-sql-server-compatibility-levels
 		
@@ -29960,22 +30336,22 @@ Function GetDBCompatibilityLevel
 	$tmp = ""
 	Switch($DBCompat)
 	{
-		"150"			{$tmp = "SQL Server 2019"}
-		"140"			{$tmp = "SQL Server 2017"}
-		"130"			{$tmp = "SQL Server 2016"}
-		"120"			{$tmp = "SQL Server 2014"}
-		"110"			{$tmp = "SQL Server 2012"}
-		"100"			{$tmp = "SQL Server 2008"}
-		"90"			{$tmp = "SQL Server 2005"}
-		"80"			{$tmp = "SQL Server 2000"}
-		"Version150"	{$tmp = "SQL Server 2019"}
-		"Version140"	{$tmp = "SQL Server 2017"}
-		"Version130"	{$tmp = "SQL Server 2016"}
-		"Version120"	{$tmp = "SQL Server 2014"}
-		"Version110"	{$tmp = "SQL Server 2012"}
-		"Version100"	{$tmp = "SQL Server 2008"}
-		"Version90"		{$tmp = "SQL Server 2005"}
-		"Version80"		{$tmp = "SQL Server 2000"}
+		"150"			{$tmp = "SQL Server 2019"; Break}
+		"140"			{$tmp = "SQL Server 2017"; Break}
+		"130"			{$tmp = "SQL Server 2016"; Break}
+		"120"			{$tmp = "SQL Server 2014"; Break}
+		"110"			{$tmp = "SQL Server 2012"; Break}
+		"100"			{$tmp = "SQL Server 2008"; Break}
+		"90"			{$tmp = "SQL Server 2005"; Break}
+		"80"			{$tmp = "SQL Server 2000"; Break}
+		"Version150"	{$tmp = "SQL Server 2019"; Break}
+		"Version140"	{$tmp = "SQL Server 2017"; Break}
+		"Version130"	{$tmp = "SQL Server 2016"; Break}
+		"Version120"	{$tmp = "SQL Server 2014"; Break}
+		"Version110"	{$tmp = "SQL Server 2012"; Break}
+		"Version100"	{$tmp = "SQL Server 2008"; Break}
+		"Version90"		{$tmp = "SQL Server 2005"; Break}
+		"Version80"		{$tmp = "SQL Server 2000"; Break}
 		Default			{$tmp = "Unable to determine Database Compatibility Level: $DBCompat"}
 	}
 	
@@ -30082,7 +30458,7 @@ Function OutputDatastores
 			$ConfigDBParent 									= $Configdb.Parent
 			$ConfigDBCollation 									= $Configdb.Collation
 			$ConfigDBSQLVersion 								= GetSQLVersion $SQLsrv
-			$ConfigDBCompatibilityLevel 						= GetDBCompatibilityLevel $Configdb.CompatibilityLevel
+			$ConfigDBCompatibilityLevel 						= GetDBCompatibilityLevel $Configdb.CompatibilityLevel $SQLsrv
 			$ConfigDBCreateDate 								= $Configdb.CreateDate.ToString()
 
 			If($Configdb.IsReadCommittedSnapshotOn)
@@ -30176,14 +30552,15 @@ Function OutputDatastores
 	}
 
 	Write-Verbose "$(Get-Date): `t`tConfiguration Logging database"
-	[string]$LogSQLServerPrincipalName = ""
-	[string]$LogSQLServerMirrorName = "Not Configured"
-	[string]$LogDatabaseName = ""
-	[string]$LogDBSize = "Unable to determine"
-	[string]$LogDBReadCommittedSnapshot = "Unable to determine"
-	[string]$LogDBSQLVersion = "Unable to determine"
+	[string]$LogSQLServerPrincipalName          = ""
+	[string]$LogSQLServerMirrorName             = "Not Configured"
+	[string]$LogDatabaseName                    = ""
+	[string]$LogDBSize                          = "Unable to determine"
+	[string]$LogDBReadCommittedSnapshot         = "Unable to determine"
+	[string]$LogDBSQLVersion                    = "Unable to determine"
 	[string]$LogSQLServerPrincipalNameIPAddress = ""
-	[string]$LogSQLServerMirrorNameIPAddress = ""
+	[string]$LogSQLServerMirrorNameIPAddress    = ""
+
 	$LogDBs = Get-LogDataStore @XDParams1
 
 	If($? -and ($Null -ne $LogDBs))
@@ -30255,11 +30632,11 @@ Function OutputDatastores
 				}
 			}
 
-			$LogDBParent 									= $LogDB.Parent
-			$LogDBCollation 								= $LogDB.Collation
-			$LogDBSQLVersion 								= GetSQLVersion $SQLsrv
-			$LogDBCompatibilityLevel 						= GetDBCompatibilityLevel $LogDB.CompatibilityLevel
-			$LogDBCreateDate 								= $LogDB.CreateDate.ToString()
+			$LogDBParent			 = $LogDB.Parent
+			$LogDBCollation			 = $LogDB.Collation
+			$LogDBSQLVersion		 = GetSQLVersion $SQLsrv
+			$LogDBCompatibilityLevel = GetDBCompatibilityLevel $LogDB.CompatibilityLevel $SQLsrv
+			$LogDBCreateDate		 = $LogDB.CreateDate.ToString()
 
 			If($LogDB.IsReadCommittedSnapshotOn)
 			{
@@ -30351,17 +30728,17 @@ Function OutputDatastores
 	}
 
 	Write-Verbose "$(Get-Date): `t`tMonitoring database"
-	[string]$MonitorSQLServerPrincipalName = ""
-	[string]$MonitorSQLServerMirrorName = "Not Configured"
-	[string]$MonitorDatabaseName = ""
-	[string]$MonitorDBSize = "Unable to determine"
-	[string]$MonitorDBReadCommittedSnapshot = "Unable to determine"
-	[string]$MonitorDBSQLVersion = "Unable to determine"
-	[string]$MonitorCollectHotfix = "Disabled"
-	[string]$MonitorDataCollection = "Disabled"
-	[string]$MonitorDetailedSQL = "Disabled"
+	[string]$MonitorSQLServerPrincipalName          = ""
+	[string]$MonitorSQLServerMirrorName             = "Not Configured"
+	[string]$MonitorDatabaseName                    = ""
+	[string]$MonitorDBSize                          = "Unable to determine"
+	[string]$MonitorDBReadCommittedSnapshot         = "Unable to determine"
+	[string]$MonitorDBSQLVersion                    = "Unable to determine"
+	[string]$MonitorCollectHotfix                   = "Disabled"
+	[string]$MonitorDataCollection                  = "Disabled"
+	[string]$MonitorDetailedSQL                     = "Disabled"
 	[string]$MonitorSQLServerPrincipalNameIPAddress = ""
-	[string]$MonitorSQLServerMirrorNameIPAddress = ""
+	[string]$MonitorSQLServerMirrorNameIPAddress    = ""
 	
 	$MonitorDBs = Get-MonitorDataStore @XDParams1
 
@@ -30437,7 +30814,7 @@ Function OutputDatastores
 			$MonitorDBParent 				= $MonitorDB.Parent
 			$MonitorDBCollation 			= $MonitorDB.Collation
 			$MonitorDBSQLVersion 			= GetSQLVersion $SQLsrv
-			$MonitorDBCompatibilityLevel	= GetDBCompatibilityLevel $MonitorDB.CompatibilityLevel
+			$MonitorDBCompatibilityLevel	= GetDBCompatibilityLevel $MonitorDB.CompatibilityLevel $SQLsrv
 			$MonitorDBCreateDate 			= $MonitorDB.CreateDate.ToString()
 
 			If($MonitorDB.IsReadCommittedSnapshotOn)
@@ -31252,7 +31629,7 @@ Function ProcessAdministrators
 	ElseIf($? -and ($Null -eq $Admins))
 	{
 		$txt = "There are no Administrators"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -31291,6 +31668,9 @@ Function OutputAdministrators
 		ForEach($Admin in $Admins)
 		{
 			$Tmp = $Null
+			$xScopeName = ""
+			$xRoleName = ""
+
 			If($Admin.Enabled)
 			{
 				$Tmp = "Enabled"
@@ -31302,7 +31682,6 @@ Function OutputAdministrators
 
 			If($Admin.Rights.ScopeName -is [array])
             {
-                $xScopeName = ""
                 $cnt = 0
                 ForEach($xScope in $Admin.Rights.ScopeName)
                 {
@@ -31324,7 +31703,6 @@ Function OutputAdministrators
 
             If($Admin.Rights.RoleName -is [array])
             {
-                $xRoleName = ""
                 $cnt = 0
                 ForEach($xRole in $Admin.Rights.RoleName)
                 {
@@ -31511,7 +31889,7 @@ Function ProcessScopes
 	ElseIf($? -and ($Null -eq $Scopes))
 	{
 		$txt = "There are no Administrator Scopes"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -31598,7 +31976,7 @@ Function OutputScopeObjects
 			
 			If($Results.Count -gt 0)
 			{
-				$WordTable = @()
+				[System.Collections.Hashtable[]] $WordTable = @()
 
 				WriteWordLine 4 0 "Delivery Groups"
 				
@@ -31630,7 +32008,7 @@ Function OutputScopeObjects
 
 			If($Results.Count -gt 0)
 			{
-				$WordTable = @()
+				[System.Collections.Hashtable[]] $WordTable = @()
 
 				WriteWordLine 4 0 "Machine Catalogs"
 				ForEach($Result in $Results)
@@ -31661,7 +32039,7 @@ Function OutputScopeObjects
 
 			If($Results.Count -gt 0)
 			{
-				$WordTable = @()
+				[System.Collections.Hashtable[]] $WordTable = @()
 
 				WriteWordLine 4 0 "Hosting"
 				ForEach($Result in $Results)
@@ -31927,7 +32305,7 @@ Function OutputScopeAdministrators
 		
 		ForEach($Scope in $Scopes)
 		{
-			$WordTable = @()
+			[System.Collections.Hashtable[]] $WordTable = @()
 			WriteWordLine 3 0 "Administrators for Scope: $($Scope.Name)"
 			$Admins = Get-AdminAdministrator @XDParams1 | Where-Object {$_.Rights.ScopeName -Contains $Scope.Name}
 			
@@ -32100,7 +32478,7 @@ Function ProcessRoles
 	ElseIf($? -and ($Null -eq $Roles))
 	{
 		$txt = "There are no Administrator Roles"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -32220,7 +32598,7 @@ Function OutputRoleDefinitions
 		
 		ForEach($Role in $Roles)
 		{
-			$WordTable = @()
+			[System.Collections.Hashtable[]] $WordTable = @()
 			WriteWordLine 3 0 "Role definition for $($Role.Name)"
 			WriteWordLine 0 0 "Details - " $Role.Name
 			WriteWordLine 0 0 $Role.Description
@@ -32244,19 +32622,19 @@ Function OutputRoleDefinitions
 				{
 					If($comp -eq $Result.value)
 					{
-						$WordTable.Add(@{ 
+						$WordTable += @{ 
 						FolderName = ""; 
 						Permission = $Result.Name; 
-						}) > $Null
+						}
 					}
 					Else
 					{
 						$comp = $Result.Value
 
-						$WordTable.Add(@{ 
+						$WordTable += { 
 						FolderName = $Result.Value; 
 						Permission = $Result.Name; 
-						}) > $Null
+						}
 					}
 				}
 				$x++
@@ -32365,6 +32743,59 @@ Function GetRolePermissions
 		{
 			"Admin_FullControl"											{$Results.Add("Manage Administrators", "Administrators"); Break}
 			"Admin_Read"												{$Results.Add("View Administrators", "Administrators"); Break}
+			"Admin_RoleControl"											{$Results.Add("Manage Administrator Custom Roles", "Administrators"); Break}
+			"Admin_ScopeControl"										{$Results.Add("Manage Administrator Scopes", "Administrators"); Break}
+			"Manage_ServiceConfigurationData"							{$Results.Add("Manage ServiceSettings", "Administrators"); Break}
+			
+			"AppDisk_AddScope"											{$Results.Add("Add AppDisk to Scope", "AppDisks"); Break}
+			"AppDisk_Clone"												{$Results.Add("Create a new Version of AppDisk", "AppDisks"); Break}
+			"AppDisk_Consume"											{$Results.Add("Allow AppDisk to be added to a Delivery Group", "AppDisks"); Break}
+			"AppDisk_Create"											{$Results.Add("Create AppDisk", "AppDisks"); Break}
+			"AppDisk_Delete"											{$Results.Add("Delete AppDisk", "AppDisks"); Break}
+			"AppDisk_EditProperties"									{$Results.Add("Edit AppDisk properties", "AppDisks"); Break}
+			"AppDisk_Read"												{$Results.Add("View AppDisks", "AppDisks"); Break}
+			"AppDisk_RemoveScope"										{$Results.Add("Remove AppDisk from Scope", "AppDisks"); Break}
+			"AppDisk_Seal"												{$Results.Add("Prepare AppDisk for use", "AppDisks"); Break}
+			"AppDisk_StartAndLaunchSession"								{$Results.Add("Install Applications", "AppDisks"); Break}
+
+			"AppDNA_Read"												{$Results.Add("View AppDNA connections", "AppDNA"); Break}
+			"AppDNA_Write"												{$Results.Add("Manage AppDNA connections", "AppDNA"); Break}
+
+			"AppGroupApplications_ChangeTags"							{$Results.Add("Edit Application tags (Application Group)", "Application Groups"); Break}
+			"AppGroupApplications_ChangeUserAssignment"					{$Results.Add("Change users assigned to an application (Application Group)", "Application Groups"); Break}
+			"AppGroupApplications_Create"								{$Results.Add("Create Application (Application Group)", "Application Groups"); Break}
+			"AppGroupApplications_CreateFolder"							{$Results.Add("Create Application Folder (Application Group)", "Application Groups"); Break}
+			"AppGroupApplications_Delete"								{$Results.Add("Delete Application (Application Group)", "Application Groups"); Break}
+			"AppGroupApplications_EditFolder"							{$Results.Add("Edit Application Folder (Application Group)", "Application Groups"); Break}
+			"AppGroupApplications_EditProperties"						{$Results.Add("Edit Application Properties (Application Group)", "Application Groups"); Break}
+			"AppGroupApplications_MoveFolder"							{$Results.Add("Move Application Folder (Application Group)", "Application Groups"); Break}
+			"AppGroupApplications_Read"									{$Results.Add("View Applications (Application Group)", "Application Groups"); Break}
+			"AppGroupApplications_RemoveFolder"							{$Results.Add("Remove Application Folder (Application Group)", "Application Groups"); Break}
+			"ApplicationGroup_AddApplication"							{$Results.Add("Add Application to Application Group", "Application Groups"); Break}
+			"ApplicationGroup_AddScope"									{$Results.Add("Add Application Group to Scope", "Application Groups"); Break}
+			"ApplicationGroup_AddToDesktopGroup"						{$Results.Add("Add Delivery Group to Application Group", "Application Groups"); Break}
+			"ApplicationGroup_ChangeTags"								{$Results.Add("Change Tags on Application Group", "Application Groups"); Break}
+			"ApplicationGroup_ChangeUserAssignment"						{$Results.Add("Edit User Assignment on Application Group", "Application Groups"); Break}
+			"ApplicationGroup_Create"									{$Results.Add("Create Application Group", "Application Groups"); Break}
+			"ApplicationGroup_Delete"									{$Results.Add("Delete Application Group", "Application Groups"); Break}
+			"ApplicationGroup_EditProperties"							{$Results.Add("Edit Application Group Properties", "Application Groups"); Break}
+			"ApplicationGroup_Read"										{$Results.Add("View Application Groups", "Application Groups"); Break}
+			"ApplicationGroup_RemoveApplication"						{$Results.Add("Remove Application from Application Group", "Application Groups"); Break}
+			"ApplicationGroup_RemoveFromDesktopGroup"					{$Results.Add("Remove Delivery Group from Application Group", "Application Groups"); Break}
+			"ApplicationGroup_RemoveScope"								{$Results.Add("Remove Application Group from Scope", "Application Groups"); Break}
+			
+			"AppLib_AddPackage"											{$Results.Add("Add App-V Application Libraries and Packages", "App-V"); Break}
+			"AppLib_IsolationGroup_Create"								{$Results.Add("Create App-V Isolation Group", "App-V"); Break}
+			"AppLib_IsolationGroup_Remove"								{$Results.Add("Remove App-V Isolation Groups", "App-V"); Break}
+			"AppLib_Read"												{$Results.Add("Read App-V Application Libraries and Packages", "App-V"); Break}
+			"AppLib_RemovePackage"										{$Results.Add("Remove App-V Application Libraries and Packages", "App-V"); Break}
+			"AppV_AddServer"											{$Results.Add("Add App-V publishing server", "App-V"); Break}
+			"AppV_DeleteServer"											{$Results.Add("Delete App-V publishing server", "App-V"); Break}
+			"AppV_Read"													{$Results.Add("Read App-V servers", "App-V"); Break}
+			
+			"Controller_EditProperties"									{$Results.Add("Edit Controller", "Controllers"); Break}
+			"Controllers_Remove"										{$Results.Add("Remove Delivery Controller", "Controllers"); Break}
+
 			"Applications_AttachClientHostedApplicationToDesktopGroup"	{$Results.Add("Attach Local Access Application to Delivery Group", "Delivery Groups"); Break}
 			"Applications_ChangeMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of an Application", "Delivery Groups"); Break}
 			"Applications_ChangeTags"									{$Results.Add("Edit Application tags", "Delivery Groups"); Break}
@@ -32378,33 +32809,11 @@ Function GetRolePermissions
 			"Applications_MoveFolder"									{$Results.Add("Move Application Folder", "Delivery Groups"); Break}
 			"Applications_Read"											{$Results.Add("View Applications", "Delivery Groups"); Break}
 			"Applications_RemoveFolder"									{$Results.Add("Remove Application Folder", "Delivery Groups"); Break}
-			"AppV_AddServer"											{$Results.Add("Add App-V publishing server", "App-V"); Break}
-			"AppV_DeleteServer"											{$Results.Add("Delete App-V publishing server", "App-V"); Break}
-			"AppV_Read"													{$Results.Add("Read App-V servers", "App-V"); Break}
-			"Catalog_AddMachines"										{$Results.Add("Add Machines to Machine Catalog", "Machine Catalogs"); Break}
-			"Catalog_AddScope"											{$Results.Add("Add Machine Catalog to Scope", "Machine Catalogs"); Break}
-			"Catalog_CancelProvTask"									{$Results.Add("Cancel Provisioning Task", "Machine Catalogs"); Break}
-			"Catalog_ChangeMachineMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of a machine via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_ChangeMaintenanceMode"								{$Results.Add("Enable/disable maintenance mode on Desktop via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_ChangeUserAssignment"								{$Results.Add("Change users assigned to a machine", "Machine Catalogs"); Break}
-			"Catalog_ConsumeMachines"									{$Results.Add("Allow machines to be consumed by a Delivery Group", "Machine Catalogs"); Break}
-			"Catalog_Create"											{$Results.Add("Create Machine Catalog", "Machine Catalogs"); Break}
-			"Catalog_Delete"											{$Results.Add("Delete Machine Catalog", "Machine Catalogs"); Break}
-			"Catalog_EditProperties"									{$Results.Add("Edit Machine Catalog Properties", "Machine Catalogs"); Break}
-			"Catalog_ManageAccounts"									{$Results.Add("Manage Active Directory Accounts", "Machine Catalogs"); Break}
-			"Catalog_PowerOperations_RDS"								{$Results.Add("Perform power operations on Windows Server machines via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_PowerOperations_VDI"								{$Results.Add("Perform power operations on Windows Desktop machines via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_Read"												{$Results.Add("View Machine Catalogs", "Machine Catalogs"); Break}
-			"Catalog_RemoveMachine"										{$Results.Add("Remove Machines from Machine Catalog", "Machine Catalogs"); Break}
-			"Catalog_RemoveScope"										{$Results.Add("Remove Machine Catalog from Scope", "Machine Catalogs"); Break}
-			"Catalog_SessionManagement"									{$Results.Add("Perform session management on machines via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_UpdateMasterImage"									{$Results.Add("Perform Machine update", "Machine Catalogs"); Break}
-			"Configuration_Read"										{$Results.Add("Read Site Configuration (Configuration_Read)", "Other permissions"); Break}
-			"Configuration_Write"										{$Results.Add("Update Site Configuration (Configuration_Write)", "Other permissions"); Break}
-			"Controllers_Remove"										{$Results.Add("Remove Delivery Controller", "Controllers"); Break}
 			"DesktopGroup_AddApplication"								{$Results.Add("Add Application to Delivery Group", "Delivery Groups"); Break}
+			"DesktopGroup_AddApplicationGroup"							{$Results.Add("Add Application Group to Delivery Group", "Delivery Groups"); Break}
 			"DesktopGroup_AddMachines"									{$Results.Add("Add Machines to Delivery Group", "Delivery Groups"); Break}
 			"DesktopGroup_AddScope"										{$Results.Add("Add Delivery Group to Scope", "Delivery Groups"); Break}
+			"DesktopGroup_AddWebhook"									{$Results.Add("Add Webhooks to Delivery Group", "Delivery Groups"); Break}
 			"DesktopGroup_ChangeMachineMaintenanceMode"					{$Results.Add("Enable/disable maintenance mode of a machine via Delivery Group membership", "Delivery Groups"); Break}
 			"DesktopGroup_ChangeMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of a Delivery Group", "Delivery Groups"); Break}
 			"DesktopGroup_ChangeTags"									{$Results.Add("Edit Delivery Group tags", "Delivery Groups"); Break}
@@ -32412,18 +32821,34 @@ Function GetRolePermissions
 			"DesktopGroup_Create"										{$Results.Add("Create Delivery Group", "Delivery Groups"); Break}
 			"DesktopGroup_Delete"										{$Results.Add("Delete Delivery Group", "Delivery Groups"); Break}
 			"DesktopGroup_EditProperties"								{$Results.Add("Edit Delivery Group Properties", "Delivery Groups"); Break}
+			"DesktopGroup_Machine_ChangeTags"							{$Results.Add("Edit Delivery Group machine tags", "Delivery Groups"); Break}
 			"DesktopGroup_PowerOperations_RDS"							{$Results.Add("Perform power operations on Windows Server machines via Delivery Group membership", "Delivery Groups"); Break}
 			"DesktopGroup_PowerOperations_VDI"							{$Results.Add("Perform power operations on Windows Desktop machines via Delivery Group membership", "Delivery Groups"); Break}
 			"DesktopGroup_Read"											{$Results.Add("View Delivery Groups", "Delivery Groups"); Break}
 			"DesktopGroup_RemoveApplication"							{$Results.Add("Remove Application from Delivery Group", "Delivery Groups"); Break}
+			"DesktopGroup_RemoveApplicationGroup"						{$Results.Add("Remove Application Group from Delivery Group", "Delivery Groups"); Break}
 			"DesktopGroup_RemoveDesktop"								{$Results.Add("Remove Desktop from Delivery Group", "Delivery Groups"); Break}
 			"DesktopGroup_RemoveScope"									{$Results.Add("Remove Delivery Group from Scope", "Delivery Groups"); Break}
 			"DesktopGroup_SessionManagement"							{$Results.Add("Perform session management on machines via Delivery Group membership", "Delivery Groups"); Break}
+			"Machine_ChangeTagsBase"									{$Results.Add("Edit machine tags", "Delivery Groups"); Break}
+			
+			"Director_AlertPolicy_Edit"									{$Results.Add("Create\Edit\Delete Alert Policies", "Director"); Break}
+			"Director_AlertPolicy_Read"									{$Results.Add("View Alert Policies", "Director"); Break}
+			"Director_Alerts_Read"										{$Results.Add("View Alerts", "Director"); Break}
+			"Director_ApplicationDashboard"								{$Results.Add("View Applications page", "Director"); Break}
 			"Director_ClientDetails_Read"								{$Results.Add("View Client Details page", "Director"); Break}
 			"Director_ClientHelpDesk_Read"								{$Results.Add("View Client Activity Manager page", "Director"); Break}
+			"Director_CloudAnalyticsConfiguration"						{$Results.Add("Create\Edit\Remove Cloud Analytics Configurations", "Director"); Break}
+			"Director_Configuration"									{$Results.Add("View Configurations page", "Director"); Break}
 			"Director_Dashboard_Read"									{$Results.Add("View Dashboard page", "Director"); Break}
 			"Director_DesktopHardwareInformation_Edit"					{$Results.Add("Edit Machine Hardware related Broker machine command properties", "Director"); Break}
+			"Director_DiskMetrics_Edit"									{$Results.Add("Edit Disk metrics related Broker machine command properties", "Director"); Break}
+			"Director_DismissAlerts"									{$Results.Add("Dismiss Alerts", "Director"); Break}
+			"Director_EmailserverConfiguration_Edit"					{$Results.Add("Create\Edit\Remove Alert Email Server Configuration", "Director"); Break}
+			"Director_GPOData_Edit"										{$Results.Add("Edit GPO Data related Broker machine command properties", "Director"); Break}
+			"Director_GpuMetrics_Edit"									{$Results.Add("Edit Gpu metrics related Broker machine command properties", "Director"); Break}
 			"Director_HDXInformation_Edit"								{$Results.Add("Edit HDX related Broker machine command properties", "Director"); Break}
+			"Director_HDXProtocol_Edit"									{$Results.Add("Edit HDX Protocol related Broker machine command properties", "Director"); Break}
 			"Director_HelpDesk_Read"									{$Results.Add("View Activity Manager page", "Director"); Break}
 			"Director_KillApplication"									{$Results.Add("Perform Kill Application running on a machine", "Director"); Break}
 			"Director_KillApplication_Edit"								{$Results.Add("Edit Kill Application related Broker machine command properties", "Director"); Break}
@@ -32434,19 +32859,23 @@ Function GetRolePermissions
 			"Director_MachineMetricValues_Edit"							{$Results.Add("Edit Machine metric related Broker machine command properties", "Director"); Break}
 			"Director_PersonalizationInformation_Edit"					{$Results.Add("Edit Personalization related Broker machine command properties", "Director"); Break}
 			"Director_PoliciesInformation_Edit"							{$Results.Add("Edit Policies related Broker machine command properties", "Director"); Break}
+			"Director_ProbeConfigurationActions"						{$Results.Add("Create\Edit\Remove Probe Configurations", "Director"); Break}
+			"Director_ProfileLoadData_Edit"								{$Results.Add("Edit Profile Load Data related Broker machine command properties", "Director"); Break}
 			"Director_ResetVDisk"										{$Results.Add("Perform Reset VDisk operation", "Director"); Break}
 			"Director_ResetVDisk_Edit"									{$Results.Add("Edit Reset VDisk related Broker machine command properties", "Director"); Break}
 			"Director_RoundTripInformation_Edit"						{$Results.Add("Edit Roundtrip Time related Broker machine command properties", "Director"); Break}
+			"Director_SCOM_Read"										{$Results.Add("View SCOM Notifications", "Director"); Break}
 			"Director_ShadowSession"									{$Results.Add("Perform Remote Assistance on a machine", "Director"); Break}
 			"Director_ShadowSession_Edit"								{$Results.Add("Edit Remote Assistance related Broker machine command properties", "Director"); Break}
 			"Director_SliceAndDice_Read"								{$Results.Add("View Filters page", "Director"); Break}
+			"Director_StartupMetrics_Edit"								{$Results.Add("Edit Startup related Broker machine command properties", "Director"); Break}
 			"Director_TaskManagerInformation_Edit"						{$Results.Add("Edit Task Manager related Broker machine command properties", "Director"); Break}
 			"Director_Trends_Read"										{$Results.Add("View Trends page", "Director"); Break}
 			"Director_UserDetails_Read"									{$Results.Add("View User Details page", "Director"); Break}
 			"Director_WindowsSessionId_Edit"							{$Results.Add("Edit Windows Sessionid related Broker machine command properties", "Director"); Break}
-			"EnvTest"													{$Results.Add("Run environment tests", "Other permissions"); Break}
-			"Global_Read"												{$Results.Add("Read Site Configuration (Global_Read)", "Other permissions"); Break}
-			"Global_Write"												{$Results.Add("Update Site Configuration (Global_Write)", "Other permissions"); Break}
+			"UPM_Reset_Profiles"										{$Results.Add("Reset user profiles", "Director"); Break}
+			"UPM_Reset_Profiles_Edit"									{$Results.Add("Edit Reset User Profiles related Broker machine command properties", "Director"); Break}
+			
 			"Hosts_AddScope"											{$Results.Add("Add Host Connection to Scope", "Hosts"); Break}
 			"Hosts_AddStorage"											{$Results.Add("Add storage to Resources", "Hosts"); Break}
 			"Hosts_ChangeMaintenanceMode"								{$Results.Add("Enable/disable maintenance mode of a Host Connection", "Hosts"); Break}
@@ -32458,21 +32887,64 @@ Function GetRolePermissions
 			"Hosts_EditHostProperties"									{$Results.Add("Edit Resources", "Hosts"); Break}
 			"Hosts_Read"												{$Results.Add("View Host Connections and Resources", "Hosts"); Break}
 			"Hosts_RemoveScope"											{$Results.Add("Remove Host Connection from Scope", "Hosts"); Break}
+
 			"Licensing_ChangeLicenseServer"								{$Results.Add("Change licensing server", "Licensing"); Break}
 			"Licensing_EditLicensingProperties"							{$Results.Add("Edit product edition", "Licensing"); Break}
 			"Licensing_Read"											{$Results.Add("View Licensing", "Licensing"); Break}
+
 			"Logging_Delete"											{$Results.Add("Delete Configuration Logs", "Logging"); Break}
 			"Logging_EditPreferences"									{$Results.Add("Edit Logging Preferences", "Logging"); Break}
 			"Logging_Read"												{$Results.Add("View Configuration Logs", "Logging"); Break}
+
+			"Catalog_AddMachines"										{$Results.Add("Add Machines to Machine Catalog", "Machine Catalogs"); Break}
+			"Catalog_AddScope"											{$Results.Add("Add Machine Catalog to Scope", "Machine Catalogs"); Break}
+			"Catalog_AppDNAAnalyzeMachine"								{$Results.Add("Capture AppDNA OS snapshot", "Machine Catalogs"); Break}
+			"Catalog_CancelProvTask"									{$Results.Add("Cancel Provisioning Task", "Machine Catalogs"); Break}
+			"Catalog_ChangeMachineMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of a machine via Machine Catalog membership", "Machine Catalogs"); Break}
+			"Catalog_ChangeMaintenanceMode"								{$Results.Add("Enable/disable maintenance mode on Desktop via Machine Catalog membership", "Machine Catalogs"); Break}
+			"Catalog_ChangeTags"										{$Results.Add("Edit Catalog tags", "Machine Catalogs"); Break}
+			"Catalog_ChangeUserAssignment"								{$Results.Add("Change users assigned to a machine", "Machine Catalogs"); Break}
+			"Catalog_ConsumeMachines"									{$Results.Add("Allow machines to be consumed by a Delivery Group", "Machine Catalogs"); Break}
+			"Catalog_Create"											{$Results.Add("Create Machine Catalog", "Machine Catalogs"); Break}
+			"Catalog_Delete"											{$Results.Add("Delete Machine Catalog", "Machine Catalogs"); Break}
+			"Catalog_EditProperties"									{$Results.Add("Edit Machine Catalog Properties", "Machine Catalogs"); Break}
+			"Catalog_Manage_ChangeTags"									{$Results.Add("Edit Catalog machine tags", "Machine Catalogs"); Break}
+			"Catalog_ManageAccounts"									{$Results.Add("Manage Active Directory Accounts", "Machine Catalogs"); Break}
+			"Catalog_PowerOperations_RDS"								{$Results.Add("Perform power operations on Windows Server machines via Machine Catalog membership", "Machine Catalogs"); Break}
+			"Catalog_PowerOperations_VDI"								{$Results.Add("Perform power operations on Windows Desktop machines via Machine Catalog membership", "Machine Catalogs"); Break}
+			"Catalog_Read"												{$Results.Add("View Machine Catalogs", "Machine Catalogs"); Break}
+			"Catalog_RemoveMachine"										{$Results.Add("Remove Machines from Machine Catalog", "Machine Catalogs"); Break}
+			"Catalog_RemoveScope"										{$Results.Add("Remove Machine Catalog from Scope", "Machine Catalogs"); Break}
+			"Catalog_SessionManagement"									{$Results.Add("Perform session management on machines via Machine Catalog membership", "Machine Catalogs"); Break}
+			"Catalog_UpdateMasterImage"									{$Results.Add("Perform Machine update", "Machine Catalogs"); Break}
+
+			"Configuration_Read"										{$Results.Add("Read Site Configuration (Configuration_Read)", "Other permissions"); Break}
+			"Configuration_Write"										{$Results.Add("Update Site Configuration (Configuration_Write)", "Other permissions"); Break}
+			"EnvTest"													{$Results.Add("Run environment tests", "Other permissions"); Break}
+			"Global_Read"												{$Results.Add("Read Site Configuration (Global_Read)", "Other permissions"); Break}
+			"Global_Write"												{$Results.Add("Update Site Configuration (Global_Write)", "Other permissions"); Break}
+			"Orchestration_RestApi"										{$Results.Add("Manage Orchestration Service REST API", "Other permissions"); Break}
 			"PerformUpgrade"											{$Results.Add("Perform upgrade", "Other permissions"); Break}
+			"Tag_Create"												{$Results.Add("Create tags", "Other permissions"); Break}
+			"Tag_Delete"												{$Results.Add("Delete tags", "Other permissions"); Break}
+			"Tag_Edit"													{$Results.Add("Edit tags", "Other permissions"); Break}
+			"Tag_Read"													{$Results.Add("Read tags", "Other permissions"); Break}
+			"Trust_ServiceKeys"											{$Results.Add("Manage Trust Service Keys", "Other permissions"); Break}
+
 			"Policies_Manage"											{$Results.Add("Manage Policies", "Policies"); Break}
 			"Policies_Read"												{$Results.Add("View Policies", "Policies"); Break}
+
 			"Storefront_Create"											{$Results.Add("Create a new StoreFront definition", "StoreFronts"); Break}
 			"Storefront_Delete"											{$Results.Add("Delete a StoreFront definition", "StoreFronts"); Break}
 			"Storefront_Read"											{$Results.Add("Read StoreFront definitions", "StoreFronts"); Break}
 			"Storefront_Update"											{$Results.Add("Update a StoreFront definition", "StoreFronts"); Break}
-			"UPM_Reset_Profiles"										{$Results.Add("Reset user profiles", "Director"); Break}
-			"UPM_Reset_Profiles_Edit"									{$Results.Add("Edit Reset User Profiles related Broker machine command properties", "Director"); Break}
+
+			"EdgeServer_Manage"											{$Results.Add("Manage Citrix Cloud Connector", "Zones"); Break}
+			"EdgeServer_Read"											{$Results.Add("View Citrix Cloud Connector", "Zones"); Break}
+			"Zone_Create"												{$Results.Add("Create Zone", "Zones"); Break}
+			"Zone_Delete"												{$Results.Add("Delete Zone", "Zones"); Break}
+			"Zone_EditProperties"										{$Results.Add("Edit Zone", "Zones"); Break}
+			"Zone_Read"													{$Results.Add("View Zones", "Zones"); Break}
 		}
 	}
 
@@ -32491,7 +32963,7 @@ Function OutputRoleAdministrators
 		
 		ForEach($Role in $Roles)
 		{
-			$WordTable = @()
+			[System.Collections.Hashtable[]] $WordTable = @()
 			WriteWordLine 3 0 "Administrators for Role: $($Role.Name)"
 			$Admins = Get-AdminAdministrator @XDParams1 | Where-Object {$_.Rights.RoleName -Contains $Role.Name}
 			
@@ -33439,7 +33911,7 @@ Function ProcessHosting
 	ElseIf($? -and $Null -eq $HostingUnits)
 	{
 		$txt = "No Hosting Units found"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -33563,7 +34035,7 @@ Function ProcessHosting
 			ElseIf($? -and $Null -eq $Connections)
 			{
 				$txt = "No Hosting Connections found"
-				OutputWarning $txt
+				OutputNotice $txt
 			}
 			Else
 			{
@@ -33580,7 +34052,7 @@ Function ProcessHosting
 	ElseIf($? -and $Null -eq $Hypervisors)
 	{
 		$txt = "No Hypervisors found"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -33691,9 +34163,9 @@ Function OutputHosting
 	$xxConnectionType = ""
 	Switch ($xConnectionType)
 	{
-		"XenServer" {$xxConnectionType = "XenServer"; Break}
+		"XenServer" {$xxConnectionType = "Citrix Hypervisor"; Break}
 		"SCVMM"     {$xxConnectionType = "Microsoft System Center Virtual Machine Manager"; Break}
-		"vCenter"   {$xxConnectionType = "VMware virtualization"; Break}
+		"vCenter"   {$xxConnectionType = "VMware vSphere"; Break}
 		"Custom"    {$xxConnectionType = "Custom"; Break}
 		Default     {$xxConnectionType = "Hypervisor Type could not be determined: $($xConnectionType)"; Break}
 	}
@@ -34091,7 +34563,7 @@ Function OutputHosting
 		ElseIf($? -and ($Null -eq $Admins))
 		{
 			$txt = "There are no administrators for Host $($Hypervisor.Name)"
-			OutputWarning $txt
+			OutputNotice $txt
 		}
 		Else
 		{
@@ -34164,7 +34636,7 @@ Function OutputHosting
 			{
 				$txt = "There are no Desktop OS Machines"
 			}
-			OutputWarning $txt
+			OutputNotice $txt
 		}
 		Else
 		{
@@ -34250,7 +34722,7 @@ Function OutputHosting
 			{
 				$txt = "There are no Server OS Machines"
 			}
-			OutputWarning $txt
+			OutputNotice $txt
 		}
 		Else
 		{
@@ -34296,7 +34768,7 @@ Function OutputHosting
 			ElseIf($? -and ($Null -eq $Sessions))
 			{
 				$txt = "There are no Sessions"
-				OutputWarning $txt
+				OutputNotice $txt
 			}
 			Else
 			{
@@ -34337,10 +34809,10 @@ Function OutputDesktopOSMachine
 		$ScriptInformation.Add(@{Data = "Machine Catalog"; Value = $Desktop.CatalogName; }) > $Null
 		$ScriptInformation.Add(@{Data = "Delivery Group"; Value = $Desktop.DesktopGroupName; }) > $Null
 		#fixed in 2.21
-		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
+		If(![String]::IsNullOrEmpty($Desktop.AssociatedUserNames))
 		{
 			$cnt = -1
-			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
+			ForEach($AssociatedUserName in $Desktop.AssociatedUserNames)
 			{
 				If($cnt -eq 0)
 				{
@@ -34382,10 +34854,10 @@ Function OutputDesktopOSMachine
 			Line 1 "Delivery Group`t`t: " $Desktop.DesktopGroupName
 		}
 		#fixed in 2.21
-		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
+		If(![String]::IsNullOrEmpty($Desktop.AssociatedUserNames))
 		{
 			$cnt = -1
-			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
+			ForEach($AssociatedUserName in $Desktop.AssociatedUserNames)
 			{
 				$cnt++
 				If($cnt -eq 0)
@@ -34446,10 +34918,10 @@ Function OutputDesktopOSMachine
 			$rowdata += @(,('Delivery Group',($global:htmlsb),$Desktop.DesktopGroupName,$htmlwhite))
 		}
 		#fixed in 2.21
-		If(![String]::IsNullOrEmpty($Server.AssociatedUserNames))
+		If(![String]::IsNullOrEmpty($Desktop.AssociatedUserNames))
 		{
 			$cnt = -1
-			ForEach($AssociatedUserName in $Server.AssociatedUserNames)
+			ForEach($AssociatedUserName in $Desktop.AssociatedUserNames)
 			{
 				$cnt++
 				If($cnt -eq 0)
@@ -34470,6 +34942,7 @@ Function OutputDesktopOSMachine
 		$msg = ""
 		$columnWidths = @("150","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -34636,6 +35109,7 @@ Function OutputServerOSMachine
 		$msg = ""
 		$columnWidths = @("150","200")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 ""
 	}
 }
 
@@ -34662,15 +35136,15 @@ Function OutputHostingSessions
 		$RecordingStatus = "Not supported"
 		If((Get-BrokerServiceAddedCapability @XDParams1) -contains "SessionRecordingControl")
 		{
-			$result = Get-BrokerSessionRecordingStatus -Session $Session.Uid
+			$result = Get-BrokerSessionRecordingStatus -Session $Session.Uid -EA 0
 			
 			If($?)
 			{
 				Switch ($result)
 				{
-					"SessionBeingRecorded"	{$RecordingStatus = "Session is being recorded"}
-					"SessionNotRecorded"	{$RecordingStatus = "Session is not being recorded"}
-					Default					{$RecordingStatus = "Unable to determine session recording status: $($result)"}
+					"SessionBeingRecorded"	{$RecordingStatus = "Session is being recorded"; Break}
+					"SessionNotRecorded"	{$RecordingStatus = "Session is not being recorded"; Break}
+					Default					{$RecordingStatus = "Unable to determine session recording status: $($result)"; Break}
 				}
 			}
 		}
@@ -34733,6 +35207,7 @@ Function OutputHostingSessions
 			$msg = ""
 			$columnWidths = @("150","200")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "350"
+			WriteHTMLLine 0 0 ""
 		}
 	}
 }
@@ -35181,7 +35656,15 @@ Function ProcessStoreFront
 
 			$SFByteArray = $SFInfo.Policy
 			Write-Verbose "$(Get-Date): `t`tRetrieving StoreFront server information for $($SFInfo.LeafName)"
-			$SFServer = Get-SFStoreFrontAddress -ByteArray $SFByteArray 4>$Null
+			## GRL ad Try/Catch
+            Try
+            {
+			    $SFServer = Get-SFStoreFrontAddress -ByteArray $SFByteArray 4>$Null
+            }
+            Catch
+            {
+                $SFServer = $null
+            }
 			If($? -and ($Null -ne $SFServer))
 			{
 				If($MSWord -or $PDF)
@@ -35210,7 +35693,7 @@ Function ProcessStoreFront
 					ElseIf($? -and ($Null -eq $Admins))
 					{
 						$txt = "There are no administrators for StoreFront server $($SFServer.Name)"
-						OutputWarning $txt
+						OutputNotice $txt
 					}
 					Else
 					{
@@ -35222,7 +35705,7 @@ Function ProcessStoreFront
 			ElseIf($? -and ($Null -eq $SFServer))
 			{
 				$txt = "There was no StoreFront Server found for $($SFInfo.LeafName)"
-				OutputWarning $txt
+				OutputNotice $txt
 			}
 			Else
 			{
@@ -35234,7 +35717,7 @@ Function ProcessStoreFront
 	ElseIf($? -and ($Null -eq $SFInfos))
 	{
 		$txt = "StoreFront is not configured for this Site"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -35257,7 +35740,7 @@ Function OutputStoreFront
 		WriteWordLine 2 0 "Server: " $SFServer.Name
 		$ScriptInformation = New-Object System.Collections.ArrayList
 		$ScriptInformation.Add(@{Data = "StoreFront Server"; Value = $SFServer.Name; }) > $Null
-		$ScriptInformation.Add(@{Data = "Used by # Delivery Groups"; Value = $DGCnt; }) > $Null
+		$ScriptInformation.Add(@{Data = "Used by # Delivery Groups"; Value = $DGCnt.ToString(); }) > $Null
 		$ScriptInformation.Add(@{Data = "URL"; Value = $SFServer.Url; }) > $Null
 		$ScriptInformation.Add(@{Data = "Description"; Value = $SFServer.Description; }) > $Null
 		$Table = AddWordTable -Hashtable $ScriptInformation `
@@ -35281,7 +35764,7 @@ Function OutputStoreFront
 	{
 		Line 0 "Server"
 		Line 0 "StoreFront Server`t`t: " $SFServer.Name
-		Line 0 "Used by # Delivery Groups`t: " $DGCnt
+		Line 0 "Used by # Delivery Groups`t: " $DGCnt.ToString()
 		Line 0 "URL`t`t`t`t: " $SFServer.Url
 		Line 0 "Description`t`t`t: " $SFServer.Description
 		Line 0 ""
@@ -35416,7 +35899,7 @@ Function ProcessAppV
 			ElseIf($? -and ($Null -eq $AppV))
 			{
 				$txt = "There was no App-V server information found for $($AppVConfig.Policy)"
-				OutputWarning $txt
+				OutputNotice $txt
 			}
 			Else
 			{
@@ -35432,7 +35915,7 @@ Function ProcessAppV
 	ElseIf($? -and $Null -eq $AppVConfigs)
 	{
 		$txt = "App-V is not configured for this Site"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -35553,7 +36036,7 @@ Function ProcessAppDNA
 	ElseIf($? -and $Null -eq $AppDNAConfig)
 	{
 		$txt = "AppDNA is not configured for this Site"
-		OutputWarning $txt
+		OutputNotice $txt
 	}
 	Else
 	{
@@ -35861,7 +36344,7 @@ Function OutputPerZoneView
 #endregion
 
 #region summary page
-Function ProcessSummaryPage
+Function OutputSummaryPage
 {
 	#summary page
 	Write-Verbose "$(Get-Date): Create Summary Page"
@@ -35996,7 +36479,7 @@ Function ProcessSummaryPage
 			WriteWordLine 4 0 "Policies"
 			$ScriptInformation.Add(@{Data = "Total Computer Policies"; Value = $Script:TotalComputerPolicies.ToString(); }) > $Null
 			$ScriptInformation.Add(@{Data = 'Total User Policies'; Value = $Script:TotalUserPolicies.ToString(); }) > $Null
-			$ScriptInformation.Add(@{Data = '     Total Policies'; Value = ($Script:TotalComputerPolicies + $Script:TotalUserPolicies).ToString(); }) > $Null
+			$ScriptInformation.Add(@{Data = '     Total Policies'; Value = $Script:TotalPolicies.ToString(); }) > $Null
 			$ScriptInformation.Add(@{Data = ''; Value = ""; }) > $Null
 			$ScriptInformation.Add(@{Data = 'Site Policies'; Value = $Script:TotalSitePolicies.ToString(); }) > $Null
 			If($NoADPolicies -eq $False)
@@ -36222,7 +36705,7 @@ Function ProcessSummaryPage
 			Line 0 "Policies"
 			Line 1 "Total Computer Policies`t`t: " $Script:TotalComputerPolicies
 			Line 1 "Total User Policies`t`t: " $Script:TotalUserPolicies
-			Line 2 "Total Policies`t`t: " ($Script:TotalComputerPolicies + $Script:TotalUserPolicies)
+			Line 2 "Total Policies`t`t: " $Script:TotalPolicies
 			Line 0 ""
 			Line 1 "Site Policies`t`t`t: " $Script:TotalSitePolicies
 			
@@ -36331,7 +36814,7 @@ Function ProcessSummaryPage
 			$rowdata = @()
 			$columnHeaders = @("Total Computer Policies",($global:htmlsb),$Script:TotalComputerPolicies.ToString(),$htmlwhite)
 			$rowdata += @(,('Total User Policies',($global:htmlsb),$Script:TotalUserPolicies.ToString(),$htmlwhite))
-			$rowdata += @(,('     Total Policies',($global:htmlsb),($Script:TotalComputerPolicies + $Script:TotalUserPolicies).ToString(),$htmlwhite))
+			$rowdata += @(,('     Total Policies',($global:htmlsb),$Script:TotalPolicies.ToString(),$htmlwhite))
 			$rowdata += @(,('',($global:htmlsb),"",$htmlwhite))
 			$rowdata += @(,('Site Policies',($global:htmlsb),$Script:TotalSitePolicies.ToString(),$htmlwhite))
 			If($NoADPolicies -eq $False)
@@ -36438,7 +36921,6 @@ Function ProcessScriptSetup
 	"Citrix.Configuration.Admin.V2",
 	"Citrix.ConfigurationLogging.Admin.V1",
 	"Citrix.DelegatedAdmin.Admin.V1",
-	"Citrix.EnvTest.Admin.V1",
 	"Citrix.Host.Admin.V2",
 	"Citrix.Licensing.Admin.V1",
 	"Citrix.MachineCreation.Admin.V2",
@@ -36485,20 +36967,18 @@ Function ProcessScriptSetup
 	}
 	ElseIf(!(Check-LoadedModule "Citrix.GroupPolicy.Commands") -and $Policies -eq $True)
 	{
-		Write-Error "
-		`n`n
-		`t`t
-		The Citrix Group Policy module Citrix.GroupPolicy.Commands.psm1 could not be loaded 
-		`n`n
-		`t`t
-		Please see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb). 
-		`n`n
-		`t`t
-		Because the Policies parameter was used the script will now close.
-		`n`n
-		"
-		Write-Verbose "$(Get-Date): "
-		Exit
+#Do not indent the following write-error lines. Doing so will mess up the console formatting of the error message.
+				Write-Error "
+				`n`n
+	The Citrix Group Policy module Citrix.GroupPolicy.Commands.psm1 could not be loaded 
+				`n`n
+	Please see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb). 
+				`n`n
+	Because the Policies parameter was used the script will now close.
+				`n`n
+				"
+				Write-Verbose "$(Get-Date): "
+				Exit
 	}
 	
 	If($Policies -eq $False -and $NoPolicies -eq $False -and $NoADPolicies -eq $False)
@@ -36539,7 +37019,7 @@ Function ProcessScriptSetup
 	If( !($?) -or $Null -eq $Script:XDSite1)
 	{
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Warning "XenDesktop Site1 information could not be retrieved.  Script cannot continue"
+		Write-Warning "XenDesktop Site1 information could not be retrieved. Script cannot continue"
 		Write-Error "
 		`n`n
 		`t`t
@@ -36554,7 +37034,7 @@ Function ProcessScriptSetup
 	If( !($?) -or $Null -eq $Script:XDSite2)
 	{
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Warning "XenDesktop Site2 information could not be retrieved.  Script cannot continue"
+		Write-Warning "XenDesktop Site2 information could not be retrieved. Script cannot continue"
 		Write-Error "
 		`n`n
 		`t`t
@@ -37682,7 +38162,7 @@ If($Section -eq "All" -or $Section -eq "Zones")
 
 If($Section -eq "All")
 {
-	ProcessSummaryPage
+	OutputSummaryPage
 }
 
 If($VDARegistryKeys)
