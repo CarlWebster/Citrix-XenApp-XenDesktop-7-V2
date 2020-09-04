@@ -93,6 +93,8 @@
 #			Edit Zone
 #			Manage Citrix Cloud Connector
 #	Change Policy Filter from Citrix CloudBridge to NetScaler SD-WAN
+#	Change some Write-Error to Write-Warning and changed some Write-Warning to Write-Host
+#		Added Function OutputNotice
 #	Fix bugs found while working on the V3 script
 #	Fix formatting issues found with Text and HTML code
 #	Fix issue with Word tables with 8 or 9 point font having a black background 
@@ -105,9 +107,18 @@
 #		Added Allow SubOUs by each defined OU
 #		Added machines excluded from the catalog
 #		Added machines included in the catalog
+#	Fixed issue with PowerShell 5.1.x and empty Hashtables for Ian Brighton's Word Table functions
+#		PoSH 3, 4, and 5.0 had no problem with an empty hashtable and would create a blank Word table with only column headings
+#		For many tables, before passing the hashtable to Ian's function, test if the hashtable is empty
+#		If it is, create a dummy row of data for the hashtable
+#		For example, a RemotePC catalog based on OU that contains no machines, or Applications with no administrators. 
+#		Instead of having a missing table, the table will now have a row that says "None found"
+#	Fixed several more array out of bounds issues when accessing element 0 when the array was empty
 #	If PDF is selected for Output and Microsoft Word is not installed, update the error message to state that PDF uses Word's SaveAs PDF function
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
+#	When VDARegistryKeys is used, now test the RemoteRegistry service for its status.
+#		If the service is not running, add that information into the AllVDARegistryItems array
 
 #Version 2.35 1-JUL-2020
 #	THIS IS THE FINAL UPDATE FOR THE V2 SCRIPT, except for bug fixes

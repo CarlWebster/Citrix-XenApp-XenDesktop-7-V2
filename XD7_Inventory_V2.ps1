@@ -1375,9 +1375,18 @@ Param(
 #		Added Allow SubOUs by each defined OU
 #		Added machines excluded from the catalog
 #		Added machines included in the catalog
+#	Fixed issue with PowerShell 5.1.x and empty Hashtables for Ian Brighton's Word Table functions
+#		PoSH 3, 4, and 5.0 had no problem with an empty hashtable and would create a blank Word table with only column headings
+#		For many tables, before passing the hashtable to Ian's function, test if the hashtable is empty
+#		If it is, create a dummy row of data for the hashtable
+#		For example, a RemotePC catalog based on OU that contains no machines, or Applications with no administrators. 
+#		Instead of having a missing table, the table will now have a row that says "None found"
+#	Fixed several more array out of bounds issues when accessing element 0 when the array was empty
 #	If PDF is selected for Output and Microsoft Word is not installed, update the error message to state that PDF uses Word's SaveAs PDF function
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
+#	When VDARegistryKeys is used, now test the RemoteRegistry service for its status.
+#		If the service is not running, add that information into the AllVDARegistryItems array
 #
 #Version 2.35 1-JUL-2020
 #	THIS IS THE FINAL UPDATE FOR THE V2 SCRIPT, except for bug fixes
@@ -6547,7 +6556,7 @@ Function OutputWarning
 Function OutputNotice
 {
 	Param([string] $txt)
-	Write-Host $txt -Foreground White
+	#Write-Host $txt -Foreground White
 	If($MSWord -or $PDF)
 	{
 		WriteWordLine 0 0 $txt
@@ -6624,6 +6633,15 @@ Function OutputAdminsForDetails
 	
 	If($MSWord -or $PDF)
 	{
+		If($AdminsWordTable.Count -eq 0)
+		{
+			$AdminsWordTable += @{ 
+			AdminName = "No admins found";
+			Role = "N/A";
+			Status = "N/A";
+			}
+		}
+
 		$Table = AddWordTable -Hashtable $AdminsWordTable `
 		-Columns AdminName, Role, Status `
 		-Headers "Administrator Name", "Role", "Status" `
@@ -7280,7 +7298,7 @@ Function OutputMachines
 
 		If($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -eq $True)
 		{
-			$Results = Get-BrokerRemotePCAccount @XDParams2 -CatalogUid $Catalog.Uid
+			$RemotePCAccounts = Get-BrokerRemotePCAccount @XDParams2 -CatalogUid $Catalog.Uid
 			
 			If(!$?)
 			{
@@ -7683,7 +7701,7 @@ Function OutputMachines
 			}
 			
 			#added in V2.20
-			If($SessionSupport -eq "MultiSession")
+			If($Catalog.SessionSupport -eq "MultiSession")
 			{
 				$itemKeys = $Catalog.MetadataMap.Keys
 
@@ -8003,7 +8021,7 @@ Function OutputMachines
 			}
 			
 			#added in V2.20
-			If($SessionSupport -eq "MultiSession")
+			If($Catalog.SessionSupport -eq "MultiSession")
 			{
 				$itemKeys = $Catalog.MetadataMap.Keys
 
@@ -8481,7 +8499,9 @@ Function OutputMachines
 				{
 					If($MSWord -or $PDF)
 					{
-						$MachinesWordTable += @{ MachineName = $Machine.MachineName;}
+						$MachinesWordTable += @{
+						MachineName = $Machine.MachineName;
+						}
 					}
 					ElseIf($Text)
 					{
@@ -8495,6 +8515,13 @@ Function OutputMachines
 				
 				If($MSWord -or $PDF)
 				{
+					If($MachinesWordTable.Count -eq 0)
+					{
+						$MachinesWordTable += @{
+						MachineName = "None found";
+						}
+					}
+					
 					$Table = AddWordTable -Hashtable $MachinesWordTable `
 					-Columns MachineName `
 					-Headers "Machine Names" `
@@ -9318,7 +9345,7 @@ Function OutputMachineDetails
 		{
 			Write-Verbose "$(Get-Date): `t`t`tTesting $($xMachineName)"
 			$MachineIsOnline = $False
-			If(Test-Connection -ComputerName $xMachineName -Count 2 -Quiet -EA 0)
+			If(Test-Connection -ComputerName $xMachineName -Count 3 -Quiet -EA 0)
 			{
 				Write-Verbose "$(Get-Date): `t`t`t`t$($xMachineName) is online"
 				$MachineIsOnline = $True
@@ -9631,7 +9658,7 @@ Function OutputMachineDetails
 	}
 	Else
 	{
-		$xSessionState = $Machine.SessionState
+		$xSessionState = $Machine.SessionState.ToString()
 	}
 	
 	If($Null -eq $Machine.SessionUserName)
@@ -9760,10 +9787,26 @@ Function OutputMachineDetails
 			#V2.20
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
-				GetVDARegistryKeys $Machine.DNSName "Server"
-				#V2.23 remove output from here and use only in Appendix
-				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
-				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				#First test if the Remote Registry service is enabled. If not skip the VDA registry keys
+				If((Get-Service -ComputerName $Machine.DNSName -Name "RemoteRegistry" -EA 0).Status -eq "Running")
+				{
+					GetVDARegistryKeys $Machine.DNSName "Server"
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
+				Else
+				{
+					$obj1 = [PSCustomObject] @{
+						RegKey       = "N/A"
+						RegValue     = "N/A"
+						VDAType      = "Server"
+						ComputerName = $Machine.DNSName	
+						Value        = "The Remote Registry service is not running"
+					}
+					$null = $Script:VDARegistryItems.Add($obj1)
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
 			}
 			ElseIf($LinuxVDA -and $VDARegistryKeys)
 			{
@@ -10069,10 +10112,26 @@ Function OutputMachineDetails
 			#V2.20
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
-				GetVDARegistryKeys $Machine.DNSName "Desktop"
-				#V2.23 remove output from here and use only in Appendix
-				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
-				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				#First test if the Remote Registry service is enabled. If not skip the VDA registry keys
+				If((Get-Service -ComputerName $Machine.DNSName -Name "RemoteRegistry" -EA 0).Status -eq "Running")
+				{
+					GetVDARegistryKeys $Machine.DNSName "Desktop"
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
+				Else
+				{
+					$obj1 = [PSCustomObject] @{
+						RegKey       = "N/A"
+						RegValue     = "N/A"
+						VDAType      = "Desktop"
+						ComputerName = $Machine.DNSName	
+						Value        = "The Remote Registry service is not running"
+					}
+					$null = $Script:VDARegistryItems.Add($obj1)
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
 			}
 			ElseIf($LinuxVDA -and $VDARegistryKeys)
 			{
@@ -10382,10 +10441,26 @@ Function OutputMachineDetails
 			#V2.20
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
-				GetVDARegistryKeys $Machine.DNSName "Server"
-				#V2.23 remove output from here and use only in Appendix
-				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
-				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				#First test if the Remote Registry service is enabled. If not skip the VDA registry keys
+				If((Get-Service -ComputerName $Machine.DNSName -Name "RemoteRegistry" -EA 0).Status -eq "Running")
+				{
+					GetVDARegistryKeys $Machine.DNSName "Server"
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
+				Else
+				{
+					$obj1 = [PSCustomObject] @{
+						RegKey       = "N/A"
+						RegValue     = "N/A"
+						VDAType      = "Server"
+						ComputerName = $Machine.DNSName	
+						Value        = "The Remote Registry service is not running"
+					}
+					$null = $Script:VDARegistryItems.Add($obj1)
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
 			}
 			ElseIf($LinuxVDA -and $VDARegistryKeys)
 			{
@@ -10555,10 +10630,26 @@ Function OutputMachineDetails
 			#V2.20
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
-				GetVDARegistryKeys $Machine.DNSName "Desktop"
-				#V2.23 remove output from here and use only in Appendix
-				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
-				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				#First test if the Remote Registry service is enabled. If not skip the VDA registry keys
+				If((Get-Service -ComputerName $Machine.DNSName -Name "RemoteRegistry" -EA 0).Status -eq "Running")
+				{
+					GetVDARegistryKeys $Machine.DNSName "Desktop"
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
+				Else
+				{
+					$obj1 = [PSCustomObject] @{
+						RegKey       = "N/A"
+						RegValue     = "N/A"
+						VDAType      = "Desktop"
+						ComputerName = $Machine.DNSName	
+						Value        = "The Remote Registry service is not running"
+					}
+					$null = $Script:VDARegistryItems.Add($obj1)
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
 			}
 			ElseIf($LinuxVDA -and $VDARegistryKeys)
 			{
@@ -10752,10 +10843,26 @@ Function OutputMachineDetails
 			#V2.20
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
-				GetVDARegistryKeys $Machine.DNSName "Server"
-				#V2.23 remove output from here and use only in Appendix
-				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
-				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				#First test if the Remote Registry service is enabled. If not skip the VDA registry keys
+				If((Get-Service -ComputerName $Machine.DNSName -Name "RemoteRegistry" -EA 0).Status -eq "Running")
+				{
+					GetVDARegistryKeys $Machine.DNSName "Server"
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
+				Else
+				{
+					$obj1 = [PSCustomObject] @{
+						RegKey       = "N/A"
+						RegValue     = "N/A"
+						VDAType      = "Server"
+						ComputerName = $Machine.DNSName	
+						Value        = "The Remote Registry service is not running"
+					}
+					$null = $Script:VDARegistryItems.Add($obj1)
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
 			}
 			ElseIf($LinuxVDA -and $VDARegistryKeys)
 			{
@@ -10958,10 +11065,26 @@ Function OutputMachineDetails
 			#V2.20
 			If((!$LinuxVDA) -and $VDARegistryKeys -and $MachineIsOnline)
 			{
-				GetVDARegistryKeys $Machine.DNSName "Desktop"
-				#V2.23 remove output from here and use only in Appendix
-				$Script:ALLVDARegistryItems += $Script:VDARegistryItems
-				$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				#First test if the Remote Registry service is enabled. If not skip the VDA registry keys
+				If((Get-Service -ComputerName $Machine.DNSName -Name "RemoteRegistry" -EA 0).Status -eq "Running")
+				{
+					GetVDARegistryKeys $Machine.DNSName "Desktop"
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
+				Else
+				{
+					$obj1 = [PSCustomObject] @{
+						RegKey       = "N/A"
+						RegValue     = "N/A"
+						VDAType      = "Desktop"
+						ComputerName = $Machine.DNSName	
+						Value        = "The Remote Registry service is not running"
+					}
+					$null = $Script:VDARegistryItems.Add($obj1)
+					$Script:ALLVDARegistryItems += $Script:VDARegistryItems
+					$Script:VDARegistryItems = New-Object System.Collections.ArrayList
+				}
 			}
 			ElseIf($LinuxVDA -and $VDARegistryKeys)
 			{
@@ -11163,7 +11286,7 @@ Function OutputDeliveryGroupTable
 	
 	ForEach($Group in $AllDeliveryGroups)
 	{
-		[string]$SessionSupport    = ""
+		[string]$xSingleSession    = ""
 		[string]$xState            = ""
 		[string]$xDeliveryType     = ""
 		[string]$xGroupName        = ""
@@ -11482,7 +11605,7 @@ Function OutputDeliveryGroup
 			If($MachineCatalogs -and $DeliveryGroups)
 			{
 				#do not do machine details for delivery groups if both -MachineCatalogs and -DeliveryGroups parameters are used
-				Write-Verbose "Skipping machine details in OutputDeliveryGroup since both -MachineCatalogs and -DeliveryGroups parameters are used"
+				#Write-Verbose "Skipping machine details in OutputDeliveryGroup since both -MachineCatalogs and -DeliveryGroups parameters are used"
 			}
 			ElseIf($DeliveryGroups -and -not $MachineCatalogs)
 			{
@@ -11726,7 +11849,7 @@ Function OutputDeliveryGroupDetails
 		$DGSFServers += "-"
 	}
 	
-	$test = Get-BrokerSessionPreLaunch @CVADParams1
+	$test = Get-BrokerSessionPreLaunch @XDParams1
 	If($? -and $null -ne $test)
 	{
 		$SPLUIDs = @()
@@ -11736,7 +11859,7 @@ Function OutputDeliveryGroupDetails
 		}
 		If($SPLUIDs -contains $Group.Uid)
 		{
-			$Results = Get-BrokerSessionPreLaunch -DesktopGroupUid $Group.Uid @CVADParams1
+			$Results = Get-BrokerSessionPreLaunch -DesktopGroupUid $Group.Uid @XDParams1
 			If($? -and $Null -ne $Results)
 			{
 				If($Results.Enabled -and $Results.AssociatedUserFullNames.Count -eq 0)
@@ -11775,7 +11898,7 @@ Function OutputDeliveryGroupDetails
 		}
 	}
 	
-	$test = Get-BrokerSessionLinger @CVADParams1
+	$test = Get-BrokerSessionLinger @XDParams1
 	If($? -and $null -ne $test)
 	{
 		$SLUIDs = @()
@@ -11785,7 +11908,7 @@ Function OutputDeliveryGroupDetails
 		}
 		If($SLUIDs -contains $Group.Uid)
 		{
-			$Results = Get-BrokerSessionLinger -DesktopGroupUid $Group.Uid @CVADParams1
+			$Results = Get-BrokerSessionLinger -DesktopGroupUid $Group.Uid @XDParams1
 			If($? -and $Null -ne $Results)
 			{
 				$xSessionLinger = "Keep session active"
@@ -12076,7 +12199,6 @@ Function OutputDeliveryGroupDetails
 	{
 		WriteWordLine 4 0 "Details: " $Group.Name
 		[System.Collections.Hashtable[]] $ScriptInformation = @()
-		[System.Collections.Hashtable[]] $HighlightedCells = @();
 		$ScriptInformation += @{Data = "Description"; Value = $Group.Description; }
 		If(![String]::IsNullOrEmpty($Group.PublishedName))
 		{
@@ -12593,8 +12715,6 @@ Function OutputDeliveryGroupDetails
 		-AutoFit $wdAutoFitFixed;
 
 		SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
-		## Set the required highlighted cell
-		SetWordCellFormat -Coordinates $HighlightedCells -Table $Table -Bold -BackgroundColor $wdColorRed -Solid;
 
 		$Table.Columns.Item(1).Width = 200;
 		$Table.Columns.Item(2).Width = 200;
@@ -13235,6 +13355,7 @@ Function OutputDeliveryGroupDetails
 					{
 						$rowdata += @(,("     Restrict launches to machines with tag",($global:htmlsb),$RestrictedToTag,$htmlwhite))
 					}
+					[string]$DSIU = $(If( $DesktopSettingIncludedUsers[0] -is [array] -and $DesktopSettingIncludedUsers.Count ) { $DesktopSettingIncludedUsers[0] } Else { '' } )
 					$rowdata += @(,("     Included Users",($global:htmlsb),$DSIU,$htmlwhite))
 					$cnt = -1
 					ForEach($tmp in $DesktopSettingIncludedUsers)
@@ -13501,7 +13622,6 @@ Function OutputDeliveryGroupDetails
 			$rowdata += @(,("During off-peak hours, when disconnected $($Group.OffPeakDisconnectTimeout) mins",($global:htmlsb),$xOffPeakDisconnectAction,$htmlwhite))
 			$rowdata += @(,("During off-peak extended hours, when disconnected $($Group.OffPeakExtendedDisconnectTimeout) mins",($global:htmlsb),$xOffPeakExtendedDisconnectAction,$htmlwhite))
 			$rowdata += @(,("During off-peak hours, when logged off $($Group.OffPeakLogOffTimeout) mins",($global:htmlsb),$xOffPeakLogOffAction,$htmlwhite))
-			$rowdata += @(,("During off-peak extended hours, when logged off $($Group.OffPeakExtendedLogOffTimeout) mins",($global:htmlsb),$xOffPeakExtendedLogOffAction,$htmlwhite))
 		}
 		If($PwrMgmt3)
 		{
@@ -14639,7 +14759,8 @@ Function OutputApplicationDetails
 		$ScriptInformation += @{Data = "Name (for administrator)"; Value = $Application.Name; }
 		$ScriptInformation += @{Data = "Name (for user)"; Value = $Application.PublishedName; }
 		$ScriptInformation += @{Data = "Description and keywords"; Value = $Application.Description; }
-		$ScriptInformation += @{Data = "Delivery Group"; Value = $DeliveryGroups[0]; }
+		[string]$xDGs = $(If( $DeliveryGroups -is [array] -and $DeliveryGroups.Count ) { $DeliveryGroups[0] } Else { '' } )
+		$ScriptInformation += @{Data = "Delivery Group"; Value = $xDGs; }
 		$cnt = -1
 		ForEach($Group in $DeliveryGroups)
 		{
@@ -14654,7 +14775,8 @@ Function OutputApplicationDetails
 		#This changed in XA/X 7.8 and I never noticed it and no one reported it.
 		#Thanks to lbates for bringing it to my attention.
 		$ScriptInformation += @{Data = "Application category (optional)"; Value = $Application.ClientFolder; }
-		$ScriptInformation += @{Data = "Visibility"; Value = $xVisibility[0]; }
+		[string]$xVis = $(If( $xVisibility -is [array] -and $xVisibility.Count ) { $xVisibility[0] } Else { '' } )
+		$ScriptInformation += @{Data = "Visibility"; Value = $xVis; }
 		$cnt = -1
 		ForEach($tmp in $xVisibility)
 		{
@@ -14785,7 +14907,8 @@ Function OutputApplicationDetails
 		Line 1 "Name (for administrator)`t`t: " $Application.Name
 		Line 1 "Name (for user)`t`t`t`t: " $Application.PublishedName
 		Line 1 "Description and keywords`t`t: " $Application.Description
-		Line 1 "Delivery Group`t`t`t`t: " $DeliveryGroups[0]
+		[string]$xDGs = $(If( $DeliveryGroups -is [array] -and $DeliveryGroups.Count ) { $DeliveryGroups[0] } Else { '' } )
+		Line 1 "Delivery Group`t`t`t`t: " $xDGs
 		$cnt = -1
 		ForEach($Group in $DeliveryGroups)
 		{
@@ -14800,7 +14923,8 @@ Function OutputApplicationDetails
 		#This changed in XA/X 7.8 and I never noticed it and no one reported it.
 		#Thanks to lbates for bringing it to my attention.
 		Line 1 "Application category (optional)`t`t: " $Application.ClientFolder
-		Line 1 "Visibility`t`t`t`t: " $xVisibility[0]
+		[string]$xVis = $(If( $xVisibility -is [array] -and $xVisibility.Count ) { $xVisibility[0] } Else { '' } )
+		Line 1 "Visibility`t`t`t`t: " $xVis
 		$cnt = -1
 		ForEach($tmp in $xVisibility)
 		{
@@ -14909,7 +15033,8 @@ Function OutputApplicationDetails
 		$columnHeaders = @("Name (for administrator)",($global:htmlsb),$Application.Name,$htmlwhite)
 		$rowdata += @(,('Name (for user)',($global:htmlsb),$Application.PublishedName,$htmlwhite))
 		$rowdata += @(,('Description and keywords',($global:htmlsb),$Application.Description,$htmlwhite))
-		$rowdata += @(,('Delivery Group',($global:htmlsb),$DeliveryGroups[0],$htmlwhite))
+		[string]$xDGs = $(If( $DeliveryGroups -is [array] -and $DeliveryGroups.Count ) { $DeliveryGroups[0] } Else { '' } )
+		$rowdata += @(,('Delivery Group',($global:htmlsb),$xDGs,$htmlwhite))
 		$cnt = -1
 		ForEach($Group in $DeliveryGroups)
 		{
@@ -14924,7 +15049,8 @@ Function OutputApplicationDetails
 		#This changed in XA/X 7.8 and I never noticed it and no one reported it.
 		#Thanks to lbates for bringing it to my attention.
 		$rowdata += @(,('Application category (optional)',($global:htmlsb),$Application.ClientFolder,$htmlwhite))
-		$rowdata += @(,('Visibility',($global:htmlsb),$xVisibility[0],$htmlwhite))
+		[string]$xVis = $(If( $xVisibility -is [array] -and $xVisibility.Count ) { $xVisibility[0] } Else { '' } )
+		$rowdata += @(,('Visibility',($global:htmlsb),$xVis,$htmlwhite))
 		$cnt = -1
 		ForEach($tmp in $xVisibility)
 		{
@@ -15287,6 +15413,15 @@ Function OutputApplicationAdministrators
 		
 		If($MSWord -or $PDF)
 		{
+			If($AdminsWordTable.Count -eq 0)
+			{
+				$AdminsWordTable += @{ 
+				AdminName = "No admins found";
+				Role = "N/A";
+				Status = "N/A";
+				}
+			}
+
 			$Table = AddWordTable -Hashtable $AdminsWordTable `
 			-Columns AdminName, Role, Status `
 			-Headers "Administrator Name", "Role", "Status" `
@@ -15358,7 +15493,7 @@ Function ProcessApplicationGroupDetails
 	{
 		ForEach($AppGroup in $ApplicationGroups)
 		{
-			Write-Verbose "$(Get-Date): `t`t`tAdding Application Group $($ApplicationGroup.Name)"
+			Write-Verbose "$(Get-Date): `t`t`tAdding Application Group $($AppGroup.Name)"
 
 			$xEnabled = "No"
 			If($AppGroup.Enabled)
@@ -15417,7 +15552,8 @@ Function ProcessApplicationGroupDetails
 				$ScriptInformation.Add(@{Data = "Single application per session"; Value = $xSingleSession; }) > $Null
 				$ScriptInformation.Add(@{Data = "Restrict launches to machines with tag"; Value = $AppGroup.RestrictToTag; }) > $Null
 
-				$ScriptInformation.Add(@{Data = "Delivery Groups"; Value = $DGs[0]; }) > $Null
+				[string]$xxDGs = $(If( $DGs -is [array] -and $DGs.Count ) { $DGs[0] } Else { '' } )
+				$ScriptInformation.Add(@{Data = "Delivery Groups"; Value = $xxDGs; }) > $Null
 				$cnt = -1
 				ForEach($tmp in $DGs)
 				{
@@ -15482,7 +15618,8 @@ Function ProcessApplicationGroupDetails
 				Line 1 "Single application per session`t`t: " $xSingleSession
 				Line 1 "Restrict launches to machines with tag`t: " $AppGroup.RestrictToTag
 
-				Line 1 "Delivery Groups`t`t`t`t: " $DGs[0]
+				[string]$xxDGs = $(If( $DGs -is [array] -and $DGs.Count ) { $DGs[0] } Else { '' } )
+				Line 1 "Delivery Groups`t`t`t`t: " $xxDGs
 				$cnt = -1
 				ForEach($tmp in $DGs)
 				{
@@ -15532,7 +15669,8 @@ Function ProcessApplicationGroupDetails
 				$rowdata += @(,('Single application per session',($global:htmlsb),$xSingleSession,$htmlwhite))
 				$rowdata += @(,('Restrict launches to machines with tag',($global:htmlsb),$AppGroup.RestrictToTag,$htmlwhite))
 				
-				$rowdata += @(,('Delivery Groups',($global:htmlsb),$DGs[0],$htmlwhite))
+				[string]$xxDGs = $(If( $DGs -is [array] -and $DGs.Count ) { $DGs[0] } Else { '' } )
+				$rowdata += @(,('Delivery Groups',($global:htmlsb),$xxDGs,$htmlwhite))
 				$cnt = -1
 				ForEach($tmp in $DGs)
 				{
@@ -31729,6 +31867,17 @@ Function OutputAdministrators
 			Status = $Tmp;
 			}
 		}
+
+		If($AdminsWordTable.Count -eq 0)
+		{
+			$AdminsWordTable += @{ 
+			Name = "No admins found";
+			Scope = "N/A";
+			Role = "N/A";
+			Status = "N/A";
+			}
+		}
+
 		$Table = AddWordTable -Hashtable $AdminsWordTable `
 		-Columns Name, Scope, Role, Status `
 		-Headers "Name", "Scope", "Role", "Status" `
@@ -32631,7 +32780,7 @@ Function OutputRoleDefinitions
 					{
 						$comp = $Result.Value
 
-						$WordTable += { 
+						$WordTable += @{ 
 						FolderName = $Result.Value; 
 						Permission = $Result.Name; 
 						}
@@ -33930,6 +34079,7 @@ Function ProcessHosting
 			$hyppvdstorage = @()
 			$hypnetwork = @()
 			$hypIntelliCache = @()
+			$hyptmpstorage = @()
 			#V2.21 fixed bug where the comparison for $Hypervisor.Name was done incorrectly
 			ForEach($storage in $vmstorage)
 			{
@@ -35598,6 +35748,14 @@ Function OutputLicenseAdmins
 
 	If($MSWord -or $PDF)
 	{
+		If($AdminsWordTable.Count -eq 0)
+		{
+			$AdminsWordTable += @{ 
+			AdminName = "No admins found";
+			Permissions = "N/A";
+			}
+		}
+
 		$Table = AddWordTable -Hashtable $AdminsWordTable `
 		-Columns  AdminName,Permissions `
 		-Headers  "Name","Permissions" `
