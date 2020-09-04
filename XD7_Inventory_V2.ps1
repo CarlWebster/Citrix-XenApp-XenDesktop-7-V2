@@ -32890,210 +32890,210 @@ Function GetRolePermissions
 	{
 		Switch ($Permission)
 		{
-			"Admin_FullControl"											{$Results.Add("Manage Administrators", "Administrators"); Break}
-			"Admin_Read"												{$Results.Add("View Administrators", "Administrators"); Break}
-			"Admin_RoleControl"											{$Results.Add("Manage Administrator Custom Roles", "Administrators"); Break}
-			"Admin_ScopeControl"										{$Results.Add("Manage Administrator Scopes", "Administrators"); Break}
-			"Manage_ServiceConfigurationData"							{$Results.Add("Manage ServiceSettings", "Administrators"); Break}
+			"Admin_FullControl"											{$Results.Add("Manage Administrators", "Administrators")}
+			"Admin_Read"												{$Results.Add("View Administrators", "Administrators")}
+			"Admin_RoleControl"											{$Results.Add("Manage Administrator Custom Roles", "Administrators")}
+			"Admin_ScopeControl"										{$Results.Add("Manage Administrator Scopes", "Administrators")}
+			"Manage_ServiceConfigurationData"							{$Results.Add("Manage ServiceSettings", "Administrators")}
 			
-			"AppDisk_AddScope"											{$Results.Add("Add AppDisk to Scope", "AppDisks"); Break}
-			"AppDisk_Clone"												{$Results.Add("Create a new Version of AppDisk", "AppDisks"); Break}
-			"AppDisk_Consume"											{$Results.Add("Allow AppDisk to be added to a Delivery Group", "AppDisks"); Break}
-			"AppDisk_Create"											{$Results.Add("Create AppDisk", "AppDisks"); Break}
-			"AppDisk_Delete"											{$Results.Add("Delete AppDisk", "AppDisks"); Break}
-			"AppDisk_EditProperties"									{$Results.Add("Edit AppDisk properties", "AppDisks"); Break}
-			"AppDisk_Read"												{$Results.Add("View AppDisks", "AppDisks"); Break}
-			"AppDisk_RemoveScope"										{$Results.Add("Remove AppDisk from Scope", "AppDisks"); Break}
-			"AppDisk_Seal"												{$Results.Add("Prepare AppDisk for use", "AppDisks"); Break}
-			"AppDisk_StartAndLaunchSession"								{$Results.Add("Install Applications", "AppDisks"); Break}
+			"AppDisk_AddScope"											{$Results.Add("Add AppDisk to Scope", "AppDisks")}
+			"AppDisk_Clone"												{$Results.Add("Create a new Version of AppDisk", "AppDisks")}
+			"AppDisk_Consume"											{$Results.Add("Allow AppDisk to be added to a Delivery Group", "AppDisks")}
+			"AppDisk_Create"											{$Results.Add("Create AppDisk", "AppDisks")}
+			"AppDisk_Delete"											{$Results.Add("Delete AppDisk", "AppDisks")}
+			"AppDisk_EditProperties"									{$Results.Add("Edit AppDisk properties", "AppDisks")}
+			"AppDisk_Read"												{$Results.Add("View AppDisks", "AppDisks")}
+			"AppDisk_RemoveScope"										{$Results.Add("Remove AppDisk from Scope", "AppDisks")}
+			"AppDisk_Seal"												{$Results.Add("Prepare AppDisk for use", "AppDisks")}
+			"AppDisk_StartAndLaunchSession"								{$Results.Add("Install Applications", "AppDisks")}
 
-			"AppDNA_Read"												{$Results.Add("View AppDNA connections", "AppDNA"); Break}
-			"AppDNA_Write"												{$Results.Add("Manage AppDNA connections", "AppDNA"); Break}
+			"AppDNA_Read"												{$Results.Add("View AppDNA connections", "AppDNA")}
+			"AppDNA_Write"												{$Results.Add("Manage AppDNA connections", "AppDNA")}
 
-			"AppGroupApplications_ChangeTags"							{$Results.Add("Edit Application tags (Application Group)", "Application Groups"); Break}
-			"AppGroupApplications_ChangeUserAssignment"					{$Results.Add("Change users assigned to an application (Application Group)", "Application Groups"); Break}
-			"AppGroupApplications_Create"								{$Results.Add("Create Application (Application Group)", "Application Groups"); Break}
-			"AppGroupApplications_CreateFolder"							{$Results.Add("Create Application Folder (Application Group)", "Application Groups"); Break}
-			"AppGroupApplications_Delete"								{$Results.Add("Delete Application (Application Group)", "Application Groups"); Break}
-			"AppGroupApplications_EditFolder"							{$Results.Add("Edit Application Folder (Application Group)", "Application Groups"); Break}
-			"AppGroupApplications_EditProperties"						{$Results.Add("Edit Application Properties (Application Group)", "Application Groups"); Break}
-			"AppGroupApplications_MoveFolder"							{$Results.Add("Move Application Folder (Application Group)", "Application Groups"); Break}
-			"AppGroupApplications_Read"									{$Results.Add("View Applications (Application Group)", "Application Groups"); Break}
-			"AppGroupApplications_RemoveFolder"							{$Results.Add("Remove Application Folder (Application Group)", "Application Groups"); Break}
-			"ApplicationGroup_AddApplication"							{$Results.Add("Add Application to Application Group", "Application Groups"); Break}
-			"ApplicationGroup_AddScope"									{$Results.Add("Add Application Group to Scope", "Application Groups"); Break}
-			"ApplicationGroup_AddToDesktopGroup"						{$Results.Add("Add Delivery Group to Application Group", "Application Groups"); Break}
-			"ApplicationGroup_ChangeTags"								{$Results.Add("Change Tags on Application Group", "Application Groups"); Break}
-			"ApplicationGroup_ChangeUserAssignment"						{$Results.Add("Edit User Assignment on Application Group", "Application Groups"); Break}
-			"ApplicationGroup_Create"									{$Results.Add("Create Application Group", "Application Groups"); Break}
-			"ApplicationGroup_Delete"									{$Results.Add("Delete Application Group", "Application Groups"); Break}
-			"ApplicationGroup_EditProperties"							{$Results.Add("Edit Application Group Properties", "Application Groups"); Break}
-			"ApplicationGroup_Read"										{$Results.Add("View Application Groups", "Application Groups"); Break}
-			"ApplicationGroup_RemoveApplication"						{$Results.Add("Remove Application from Application Group", "Application Groups"); Break}
-			"ApplicationGroup_RemoveFromDesktopGroup"					{$Results.Add("Remove Delivery Group from Application Group", "Application Groups"); Break}
-			"ApplicationGroup_RemoveScope"								{$Results.Add("Remove Application Group from Scope", "Application Groups"); Break}
+			"AppGroupApplications_ChangeTags"							{$Results.Add("Edit Application tags (Application Group)", "Application Groups")}
+			"AppGroupApplications_ChangeUserAssignment"					{$Results.Add("Change users assigned to an application (Application Group)", "Application Groups")}
+			"AppGroupApplications_Create"								{$Results.Add("Create Application (Application Group)", "Application Groups")}
+			"AppGroupApplications_CreateFolder"							{$Results.Add("Create Application Folder (Application Group)", "Application Groups")}
+			"AppGroupApplications_Delete"								{$Results.Add("Delete Application (Application Group)", "Application Groups")}
+			"AppGroupApplications_EditFolder"							{$Results.Add("Edit Application Folder (Application Group)", "Application Groups")}
+			"AppGroupApplications_EditProperties"						{$Results.Add("Edit Application Properties (Application Group)", "Application Groups")}
+			"AppGroupApplications_MoveFolder"							{$Results.Add("Move Application Folder (Application Group)", "Application Groups")}
+			"AppGroupApplications_Read"									{$Results.Add("View Applications (Application Group)", "Application Groups")}
+			"AppGroupApplications_RemoveFolder"							{$Results.Add("Remove Application Folder (Application Group)", "Application Groups")}
+			"ApplicationGroup_AddApplication"							{$Results.Add("Add Application to Application Group", "Application Groups")}
+			"ApplicationGroup_AddScope"									{$Results.Add("Add Application Group to Scope", "Application Groups")}
+			"ApplicationGroup_AddToDesktopGroup"						{$Results.Add("Add Delivery Group to Application Group", "Application Groups")}
+			"ApplicationGroup_ChangeTags"								{$Results.Add("Change Tags on Application Group", "Application Groups")}
+			"ApplicationGroup_ChangeUserAssignment"						{$Results.Add("Edit User Assignment on Application Group", "Application Groups")}
+			"ApplicationGroup_Create"									{$Results.Add("Create Application Group", "Application Groups")}
+			"ApplicationGroup_Delete"									{$Results.Add("Delete Application Group", "Application Groups")}
+			"ApplicationGroup_EditProperties"							{$Results.Add("Edit Application Group Properties", "Application Groups")}
+			"ApplicationGroup_Read"										{$Results.Add("View Application Groups", "Application Groups")}
+			"ApplicationGroup_RemoveApplication"						{$Results.Add("Remove Application from Application Group", "Application Groups")}
+			"ApplicationGroup_RemoveFromDesktopGroup"					{$Results.Add("Remove Delivery Group from Application Group", "Application Groups")}
+			"ApplicationGroup_RemoveScope"								{$Results.Add("Remove Application Group from Scope", "Application Groups")}
 			
-			"AppLib_AddPackage"											{$Results.Add("Add App-V Application Libraries and Packages", "App-V"); Break}
-			"AppLib_IsolationGroup_Create"								{$Results.Add("Create App-V Isolation Group", "App-V"); Break}
-			"AppLib_IsolationGroup_Remove"								{$Results.Add("Remove App-V Isolation Groups", "App-V"); Break}
-			"AppLib_Read"												{$Results.Add("Read App-V Application Libraries and Packages", "App-V"); Break}
-			"AppLib_RemovePackage"										{$Results.Add("Remove App-V Application Libraries and Packages", "App-V"); Break}
-			"AppV_AddServer"											{$Results.Add("Add App-V publishing server", "App-V"); Break}
-			"AppV_DeleteServer"											{$Results.Add("Delete App-V publishing server", "App-V"); Break}
-			"AppV_Read"													{$Results.Add("Read App-V servers", "App-V"); Break}
+			"AppLib_AddPackage"											{$Results.Add("Add App-V Application Libraries and Packages", "App-V")}
+			"AppLib_IsolationGroup_Create"								{$Results.Add("Create App-V Isolation Group", "App-V")}
+			"AppLib_IsolationGroup_Remove"								{$Results.Add("Remove App-V Isolation Groups", "App-V")}
+			"AppLib_Read"												{$Results.Add("Read App-V Application Libraries and Packages", "App-V")}
+			"AppLib_RemovePackage"										{$Results.Add("Remove App-V Application Libraries and Packages", "App-V")}
+			"AppV_AddServer"											{$Results.Add("Add App-V publishing server", "App-V")}
+			"AppV_DeleteServer"											{$Results.Add("Delete App-V publishing server", "App-V")}
+			"AppV_Read"													{$Results.Add("Read App-V servers", "App-V")}
 			
-			"Controller_EditProperties"									{$Results.Add("Edit Controller", "Controllers"); Break}
-			"Controllers_Remove"										{$Results.Add("Remove Delivery Controller", "Controllers"); Break}
+			"Controller_EditProperties"									{$Results.Add("Edit Controller", "Controllers")}
+			"Controllers_Remove"										{$Results.Add("Remove Delivery Controller", "Controllers")}
 
-			"Applications_AttachClientHostedApplicationToDesktopGroup"	{$Results.Add("Attach Local Access Application to Delivery Group", "Delivery Groups"); Break}
-			"Applications_ChangeMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of an Application", "Delivery Groups"); Break}
-			"Applications_ChangeTags"									{$Results.Add("Edit Application tags", "Delivery Groups"); Break}
-			"Applications_ChangeUserAssignment"							{$Results.Add("Change users assigned to an application", "Delivery Groups"); Break}
-			"Applications_Create"										{$Results.Add("Create Application", "Delivery Groups"); Break}
-			"Applications_CreateFolder"									{$Results.Add("Create Application Folder", "Delivery Groups"); Break}
-			"Applications_Delete"										{$Results.Add("Delete Application", "Delivery Groups"); Break}
-			"Applications_DetachClientHostedApplicationToDesktopGroup"	{$Results.Add("Detach Local Access Application from Delivery Group", "Delivery Groups"); Break}
-			"Applications_EditFolder"									{$Results.Add("Edit Application Folder", "Delivery Groups"); Break}
-			"Applications_EditProperties"								{$Results.Add("Edit Application Properties", "Delivery Groups"); Break}
-			"Applications_MoveFolder"									{$Results.Add("Move Application Folder", "Delivery Groups"); Break}
-			"Applications_Read"											{$Results.Add("View Applications", "Delivery Groups"); Break}
-			"Applications_RemoveFolder"									{$Results.Add("Remove Application Folder", "Delivery Groups"); Break}
-			"DesktopGroup_AddApplication"								{$Results.Add("Add Application to Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_AddApplicationGroup"							{$Results.Add("Add Application Group to Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_AddMachines"									{$Results.Add("Add Machines to Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_AddScope"										{$Results.Add("Add Delivery Group to Scope", "Delivery Groups"); Break}
-			"DesktopGroup_AddWebhook"									{$Results.Add("Add Webhooks to Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_ChangeMachineMaintenanceMode"					{$Results.Add("Enable/disable maintenance mode of a machine via Delivery Group membership", "Delivery Groups"); Break}
-			"DesktopGroup_ChangeMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of a Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_ChangeTags"									{$Results.Add("Edit Delivery Group tags", "Delivery Groups"); Break}
-			"DesktopGroup_ChangeUserAssignment"							{$Results.Add("Change users assigned to a desktop", "Delivery Groups"); Break}
-			"DesktopGroup_Create"										{$Results.Add("Create Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_Delete"										{$Results.Add("Delete Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_EditProperties"								{$Results.Add("Edit Delivery Group Properties", "Delivery Groups"); Break}
-			"DesktopGroup_Machine_ChangeTags"							{$Results.Add("Edit Delivery Group machine tags", "Delivery Groups"); Break}
-			"DesktopGroup_PowerOperations_RDS"							{$Results.Add("Perform power operations on Windows Server machines via Delivery Group membership", "Delivery Groups"); Break}
-			"DesktopGroup_PowerOperations_VDI"							{$Results.Add("Perform power operations on Windows Desktop machines via Delivery Group membership", "Delivery Groups"); Break}
-			"DesktopGroup_Read"											{$Results.Add("View Delivery Groups", "Delivery Groups"); Break}
-			"DesktopGroup_RemoveApplication"							{$Results.Add("Remove Application from Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_RemoveApplicationGroup"						{$Results.Add("Remove Application Group from Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_RemoveDesktop"								{$Results.Add("Remove Desktop from Delivery Group", "Delivery Groups"); Break}
-			"DesktopGroup_RemoveScope"									{$Results.Add("Remove Delivery Group from Scope", "Delivery Groups"); Break}
-			"DesktopGroup_SessionManagement"							{$Results.Add("Perform session management on machines via Delivery Group membership", "Delivery Groups"); Break}
-			"Machine_ChangeTagsBase"									{$Results.Add("Edit machine tags", "Delivery Groups"); Break}
+			"Applications_AttachClientHostedApplicationToDesktopGroup"	{$Results.Add("Attach Local Access Application to Delivery Group", "Delivery Groups")}
+			"Applications_ChangeMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of an Application", "Delivery Groups")}
+			"Applications_ChangeTags"									{$Results.Add("Edit Application tags", "Delivery Groups")}
+			"Applications_ChangeUserAssignment"							{$Results.Add("Change users assigned to an application", "Delivery Groups")}
+			"Applications_Create"										{$Results.Add("Create Application", "Delivery Groups")}
+			"Applications_CreateFolder"									{$Results.Add("Create Application Folder", "Delivery Groups")}
+			"Applications_Delete"										{$Results.Add("Delete Application", "Delivery Groups")}
+			"Applications_DetachClientHostedApplicationToDesktopGroup"	{$Results.Add("Detach Local Access Application from Delivery Group", "Delivery Groups")}
+			"Applications_EditFolder"									{$Results.Add("Edit Application Folder", "Delivery Groups")}
+			"Applications_EditProperties"								{$Results.Add("Edit Application Properties", "Delivery Groups")}
+			"Applications_MoveFolder"									{$Results.Add("Move Application Folder", "Delivery Groups")}
+			"Applications_Read"											{$Results.Add("View Applications", "Delivery Groups")}
+			"Applications_RemoveFolder"									{$Results.Add("Remove Application Folder", "Delivery Groups")}
+			"DesktopGroup_AddApplication"								{$Results.Add("Add Application to Delivery Group", "Delivery Groups")}
+			"DesktopGroup_AddApplicationGroup"							{$Results.Add("Add Application Group to Delivery Group", "Delivery Groups")}
+			"DesktopGroup_AddMachines"									{$Results.Add("Add Machines to Delivery Group", "Delivery Groups")}
+			"DesktopGroup_AddScope"										{$Results.Add("Add Delivery Group to Scope", "Delivery Groups")}
+			"DesktopGroup_AddWebhook"									{$Results.Add("Add Webhooks to Delivery Group", "Delivery Groups")}
+			"DesktopGroup_ChangeMachineMaintenanceMode"					{$Results.Add("Enable/disable maintenance mode of a machine via Delivery Group membership", "Delivery Groups")}
+			"DesktopGroup_ChangeMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of a Delivery Group", "Delivery Groups")}
+			"DesktopGroup_ChangeTags"									{$Results.Add("Edit Delivery Group tags", "Delivery Groups")}
+			"DesktopGroup_ChangeUserAssignment"							{$Results.Add("Change users assigned to a desktop", "Delivery Groups")}
+			"DesktopGroup_Create"										{$Results.Add("Create Delivery Group", "Delivery Groups")}
+			"DesktopGroup_Delete"										{$Results.Add("Delete Delivery Group", "Delivery Groups")}
+			"DesktopGroup_EditProperties"								{$Results.Add("Edit Delivery Group Properties", "Delivery Groups")}
+			"DesktopGroup_Machine_ChangeTags"							{$Results.Add("Edit Delivery Group machine tags", "Delivery Groups")}
+			"DesktopGroup_PowerOperations_RDS"							{$Results.Add("Perform power operations on Windows Server machines via Delivery Group membership", "Delivery Groups")}
+			"DesktopGroup_PowerOperations_VDI"							{$Results.Add("Perform power operations on Windows Desktop machines via Delivery Group membership", "Delivery Groups")}
+			"DesktopGroup_Read"											{$Results.Add("View Delivery Groups", "Delivery Groups")}
+			"DesktopGroup_RemoveApplication"							{$Results.Add("Remove Application from Delivery Group", "Delivery Groups")}
+			"DesktopGroup_RemoveApplicationGroup"						{$Results.Add("Remove Application Group from Delivery Group", "Delivery Groups")}
+			"DesktopGroup_RemoveDesktop"								{$Results.Add("Remove Desktop from Delivery Group", "Delivery Groups")}
+			"DesktopGroup_RemoveScope"									{$Results.Add("Remove Delivery Group from Scope", "Delivery Groups")}
+			"DesktopGroup_SessionManagement"							{$Results.Add("Perform session management on machines via Delivery Group membership", "Delivery Groups")}
+			"Machine_ChangeTagsBase"									{$Results.Add("Edit machine tags", "Delivery Groups")}
 			
-			"Director_AlertPolicy_Edit"									{$Results.Add("Create\Edit\Delete Alert Policies", "Director"); Break}
-			"Director_AlertPolicy_Read"									{$Results.Add("View Alert Policies", "Director"); Break}
-			"Director_Alerts_Read"										{$Results.Add("View Alerts", "Director"); Break}
-			"Director_ApplicationDashboard"								{$Results.Add("View Applications page", "Director"); Break}
-			"Director_ClientDetails_Read"								{$Results.Add("View Client Details page", "Director"); Break}
-			"Director_ClientHelpDesk_Read"								{$Results.Add("View Client Activity Manager page", "Director"); Break}
-			"Director_CloudAnalyticsConfiguration"						{$Results.Add("Create\Edit\Remove Cloud Analytics Configurations", "Director"); Break}
-			"Director_Configuration"									{$Results.Add("View Configurations page", "Director"); Break}
-			"Director_Dashboard_Read"									{$Results.Add("View Dashboard page", "Director"); Break}
-			"Director_DesktopHardwareInformation_Edit"					{$Results.Add("Edit Machine Hardware related Broker machine command properties", "Director"); Break}
-			"Director_DiskMetrics_Edit"									{$Results.Add("Edit Disk metrics related Broker machine command properties", "Director"); Break}
-			"Director_DismissAlerts"									{$Results.Add("Dismiss Alerts", "Director"); Break}
-			"Director_EmailserverConfiguration_Edit"					{$Results.Add("Create\Edit\Remove Alert Email Server Configuration", "Director"); Break}
-			"Director_GPOData_Edit"										{$Results.Add("Edit GPO Data related Broker machine command properties", "Director"); Break}
-			"Director_GpuMetrics_Edit"									{$Results.Add("Edit Gpu metrics related Broker machine command properties", "Director"); Break}
-			"Director_HDXInformation_Edit"								{$Results.Add("Edit HDX related Broker machine command properties", "Director"); Break}
-			"Director_HDXProtocol_Edit"									{$Results.Add("Edit HDX Protocol related Broker machine command properties", "Director"); Break}
-			"Director_HelpDesk_Read"									{$Results.Add("View Activity Manager page", "Director"); Break}
-			"Director_KillApplication"									{$Results.Add("Perform Kill Application running on a machine", "Director"); Break}
-			"Director_KillApplication_Edit"								{$Results.Add("Edit Kill Application related Broker machine command properties", "Director"); Break}
-			"Director_KillProcess"										{$Results.Add("Perform Kill Process running on a machine", "Director"); Break}
-			"Director_KillProcess_Edit"									{$Results.Add("Edit Kill Process related Broker machine command properties", "Director"); Break}
-			"Director_LatencyInformation_Edit"							{$Results.Add("Edit Latency related Broker machine command properties", "Director"); Break}
-			"Director_MachineDetails_Read"								{$Results.Add("View Machine Details page", "Director"); Break}
-			"Director_MachineMetricValues_Edit"							{$Results.Add("Edit Machine metric related Broker machine command properties", "Director"); Break}
-			"Director_PersonalizationInformation_Edit"					{$Results.Add("Edit Personalization related Broker machine command properties", "Director"); Break}
-			"Director_PoliciesInformation_Edit"							{$Results.Add("Edit Policies related Broker machine command properties", "Director"); Break}
-			"Director_ProbeConfigurationActions"						{$Results.Add("Create\Edit\Remove Probe Configurations", "Director"); Break}
-			"Director_ProfileLoadData_Edit"								{$Results.Add("Edit Profile Load Data related Broker machine command properties", "Director"); Break}
-			"Director_ResetVDisk"										{$Results.Add("Perform Reset VDisk operation", "Director"); Break}
-			"Director_ResetVDisk_Edit"									{$Results.Add("Edit Reset VDisk related Broker machine command properties", "Director"); Break}
-			"Director_RoundTripInformation_Edit"						{$Results.Add("Edit Roundtrip Time related Broker machine command properties", "Director"); Break}
-			"Director_SCOM_Read"										{$Results.Add("View SCOM Notifications", "Director"); Break}
-			"Director_ShadowSession"									{$Results.Add("Perform Remote Assistance on a machine", "Director"); Break}
-			"Director_ShadowSession_Edit"								{$Results.Add("Edit Remote Assistance related Broker machine command properties", "Director"); Break}
-			"Director_SliceAndDice_Read"								{$Results.Add("View Filters page", "Director"); Break}
-			"Director_StartupMetrics_Edit"								{$Results.Add("Edit Startup related Broker machine command properties", "Director"); Break}
-			"Director_TaskManagerInformation_Edit"						{$Results.Add("Edit Task Manager related Broker machine command properties", "Director"); Break}
-			"Director_Trends_Read"										{$Results.Add("View Trends page", "Director"); Break}
-			"Director_UserDetails_Read"									{$Results.Add("View User Details page", "Director"); Break}
-			"Director_WindowsSessionId_Edit"							{$Results.Add("Edit Windows Sessionid related Broker machine command properties", "Director"); Break}
-			"UPM_Reset_Profiles"										{$Results.Add("Reset user profiles", "Director"); Break}
-			"UPM_Reset_Profiles_Edit"									{$Results.Add("Edit Reset User Profiles related Broker machine command properties", "Director"); Break}
+			"Director_AlertPolicy_Edit"									{$Results.Add("Create\Edit\Delete Alert Policies", "Director")}
+			"Director_AlertPolicy_Read"									{$Results.Add("View Alert Policies", "Director")}
+			"Director_Alerts_Read"										{$Results.Add("View Alerts", "Director")}
+			"Director_ApplicationDashboard"								{$Results.Add("View Applications page", "Director")}
+			"Director_ClientDetails_Read"								{$Results.Add("View Client Details page", "Director")}
+			"Director_ClientHelpDesk_Read"								{$Results.Add("View Client Activity Manager page", "Director")}
+			"Director_CloudAnalyticsConfiguration"						{$Results.Add("Create\Edit\Remove Cloud Analytics Configurations", "Director")}
+			"Director_Configuration"									{$Results.Add("View Configurations page", "Director")}
+			"Director_Dashboard_Read"									{$Results.Add("View Dashboard page", "Director")}
+			"Director_DesktopHardwareInformation_Edit"					{$Results.Add("Edit Machine Hardware related Broker machine command properties", "Director")}
+			"Director_DiskMetrics_Edit"									{$Results.Add("Edit Disk metrics related Broker machine command properties", "Director")}
+			"Director_DismissAlerts"									{$Results.Add("Dismiss Alerts", "Director")}
+			"Director_EmailserverConfiguration_Edit"					{$Results.Add("Create\Edit\Remove Alert Email Server Configuration", "Director")}
+			"Director_GPOData_Edit"										{$Results.Add("Edit GPO Data related Broker machine command properties", "Director")}
+			"Director_GpuMetrics_Edit"									{$Results.Add("Edit Gpu metrics related Broker machine command properties", "Director")}
+			"Director_HDXInformation_Edit"								{$Results.Add("Edit HDX related Broker machine command properties", "Director")}
+			"Director_HDXProtocol_Edit"									{$Results.Add("Edit HDX Protocol related Broker machine command properties", "Director")}
+			"Director_HelpDesk_Read"									{$Results.Add("View Activity Manager page", "Director")}
+			"Director_KillApplication"									{$Results.Add("Perform Kill Application running on a machine", "Director")}
+			"Director_KillApplication_Edit"								{$Results.Add("Edit Kill Application related Broker machine command properties", "Director")}
+			"Director_KillProcess"										{$Results.Add("Perform Kill Process running on a machine", "Director")}
+			"Director_KillProcess_Edit"									{$Results.Add("Edit Kill Process related Broker machine command properties", "Director")}
+			"Director_LatencyInformation_Edit"							{$Results.Add("Edit Latency related Broker machine command properties", "Director")}
+			"Director_MachineDetails_Read"								{$Results.Add("View Machine Details page", "Director")}
+			"Director_MachineMetricValues_Edit"							{$Results.Add("Edit Machine metric related Broker machine command properties", "Director")}
+			"Director_PersonalizationInformation_Edit"					{$Results.Add("Edit Personalization related Broker machine command properties", "Director")}
+			"Director_PoliciesInformation_Edit"							{$Results.Add("Edit Policies related Broker machine command properties", "Director")}
+			"Director_ProbeConfigurationActions"						{$Results.Add("Create\Edit\Remove Probe Configurations", "Director")}
+			"Director_ProfileLoadData_Edit"								{$Results.Add("Edit Profile Load Data related Broker machine command properties", "Director")}
+			"Director_ResetVDisk"										{$Results.Add("Perform Reset VDisk operation", "Director")}
+			"Director_ResetVDisk_Edit"									{$Results.Add("Edit Reset VDisk related Broker machine command properties", "Director")}
+			"Director_RoundTripInformation_Edit"						{$Results.Add("Edit Roundtrip Time related Broker machine command properties", "Director")}
+			"Director_SCOM_Read"										{$Results.Add("View SCOM Notifications", "Director")}
+			"Director_ShadowSession"									{$Results.Add("Perform Remote Assistance on a machine", "Director")}
+			"Director_ShadowSession_Edit"								{$Results.Add("Edit Remote Assistance related Broker machine command properties", "Director")}
+			"Director_SliceAndDice_Read"								{$Results.Add("View Filters page", "Director")}
+			"Director_StartupMetrics_Edit"								{$Results.Add("Edit Startup related Broker machine command properties", "Director")}
+			"Director_TaskManagerInformation_Edit"						{$Results.Add("Edit Task Manager related Broker machine command properties", "Director")}
+			"Director_Trends_Read"										{$Results.Add("View Trends page", "Director")}
+			"Director_UserDetails_Read"									{$Results.Add("View User Details page", "Director")}
+			"Director_WindowsSessionId_Edit"							{$Results.Add("Edit Windows Sessionid related Broker machine command properties", "Director")}
+			"UPM_Reset_Profiles"										{$Results.Add("Reset user profiles", "Director")}
+			"UPM_Reset_Profiles_Edit"									{$Results.Add("Edit Reset User Profiles related Broker machine command properties", "Director")}
 			
-			"Hosts_AddScope"											{$Results.Add("Add Host Connection to Scope", "Hosts"); Break}
-			"Hosts_AddStorage"											{$Results.Add("Add storage to Resources", "Hosts"); Break}
-			"Hosts_ChangeMaintenanceMode"								{$Results.Add("Enable/disable maintenance mode of a Host Connection", "Hosts"); Break}
-			"Hosts_Consume"												{$Results.Add("Use Host Connection or Resources to Create Catalog", "Hosts"); Break}
-			"Hosts_CreateHost"											{$Results.Add("Add Host Connection or Resources", "Hosts"); Break}
-			"Hosts_DeleteConnection"									{$Results.Add("Delete Host Connection", "Hosts"); Break}
-			"Hosts_DeleteHost"											{$Results.Add("Delete Resources", "Hosts"); Break}
-			"Hosts_EditConnectionProperties"							{$Results.Add("Edit Host Connection properties", "Hosts"); Break}
-			"Hosts_EditHostProperties"									{$Results.Add("Edit Resources", "Hosts"); Break}
-			"Hosts_Read"												{$Results.Add("View Host Connections and Resources", "Hosts"); Break}
-			"Hosts_RemoveScope"											{$Results.Add("Remove Host Connection from Scope", "Hosts"); Break}
+			"Hosts_AddScope"											{$Results.Add("Add Host Connection to Scope", "Hosts")}
+			"Hosts_AddStorage"											{$Results.Add("Add storage to Resources", "Hosts")}
+			"Hosts_ChangeMaintenanceMode"								{$Results.Add("Enable/disable maintenance mode of a Host Connection", "Hosts")}
+			"Hosts_Consume"												{$Results.Add("Use Host Connection or Resources to Create Catalog", "Hosts")}
+			"Hosts_CreateHost"											{$Results.Add("Add Host Connection or Resources", "Hosts")}
+			"Hosts_DeleteConnection"									{$Results.Add("Delete Host Connection", "Hosts")}
+			"Hosts_DeleteHost"											{$Results.Add("Delete Resources", "Hosts")}
+			"Hosts_EditConnectionProperties"							{$Results.Add("Edit Host Connection properties", "Hosts")}
+			"Hosts_EditHostProperties"									{$Results.Add("Edit Resources", "Hosts")}
+			"Hosts_Read"												{$Results.Add("View Host Connections and Resources", "Hosts")}
+			"Hosts_RemoveScope"											{$Results.Add("Remove Host Connection from Scope", "Hosts")}
 
-			"Licensing_ChangeLicenseServer"								{$Results.Add("Change licensing server", "Licensing"); Break}
-			"Licensing_EditLicensingProperties"							{$Results.Add("Edit product edition", "Licensing"); Break}
-			"Licensing_Read"											{$Results.Add("View Licensing", "Licensing"); Break}
+			"Licensing_ChangeLicenseServer"								{$Results.Add("Change licensing server", "Licensing")}
+			"Licensing_EditLicensingProperties"							{$Results.Add("Edit product edition", "Licensing")}
+			"Licensing_Read"											{$Results.Add("View Licensing", "Licensing")}
 
-			"Logging_Delete"											{$Results.Add("Delete Configuration Logs", "Logging"); Break}
-			"Logging_EditPreferences"									{$Results.Add("Edit Logging Preferences", "Logging"); Break}
-			"Logging_Read"												{$Results.Add("View Configuration Logs", "Logging"); Break}
+			"Logging_Delete"											{$Results.Add("Delete Configuration Logs", "Logging")}
+			"Logging_EditPreferences"									{$Results.Add("Edit Logging Preferences", "Logging")}
+			"Logging_Read"												{$Results.Add("View Configuration Logs", "Logging")}
 
-			"Catalog_AddMachines"										{$Results.Add("Add Machines to Machine Catalog", "Machine Catalogs"); Break}
-			"Catalog_AddScope"											{$Results.Add("Add Machine Catalog to Scope", "Machine Catalogs"); Break}
-			"Catalog_AppDNAAnalyzeMachine"								{$Results.Add("Capture AppDNA OS snapshot", "Machine Catalogs"); Break}
-			"Catalog_CancelProvTask"									{$Results.Add("Cancel Provisioning Task", "Machine Catalogs"); Break}
-			"Catalog_ChangeMachineMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of a machine via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_ChangeMaintenanceMode"								{$Results.Add("Enable/disable maintenance mode on Desktop via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_ChangeTags"										{$Results.Add("Edit Catalog tags", "Machine Catalogs"); Break}
-			"Catalog_ChangeUserAssignment"								{$Results.Add("Change users assigned to a machine", "Machine Catalogs"); Break}
-			"Catalog_ConsumeMachines"									{$Results.Add("Allow machines to be consumed by a Delivery Group", "Machine Catalogs"); Break}
-			"Catalog_Create"											{$Results.Add("Create Machine Catalog", "Machine Catalogs"); Break}
-			"Catalog_Delete"											{$Results.Add("Delete Machine Catalog", "Machine Catalogs"); Break}
-			"Catalog_EditProperties"									{$Results.Add("Edit Machine Catalog Properties", "Machine Catalogs"); Break}
-			"Catalog_Manage_ChangeTags"									{$Results.Add("Edit Catalog machine tags", "Machine Catalogs"); Break}
-			"Catalog_ManageAccounts"									{$Results.Add("Manage Active Directory Accounts", "Machine Catalogs"); Break}
-			"Catalog_PowerOperations_RDS"								{$Results.Add("Perform power operations on Windows Server machines via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_PowerOperations_VDI"								{$Results.Add("Perform power operations on Windows Desktop machines via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_Read"												{$Results.Add("View Machine Catalogs", "Machine Catalogs"); Break}
-			"Catalog_RemoveMachine"										{$Results.Add("Remove Machines from Machine Catalog", "Machine Catalogs"); Break}
-			"Catalog_RemoveScope"										{$Results.Add("Remove Machine Catalog from Scope", "Machine Catalogs"); Break}
-			"Catalog_SessionManagement"									{$Results.Add("Perform session management on machines via Machine Catalog membership", "Machine Catalogs"); Break}
-			"Catalog_UpdateMasterImage"									{$Results.Add("Perform Machine update", "Machine Catalogs"); Break}
+			"Catalog_AddMachines"										{$Results.Add("Add Machines to Machine Catalog", "Machine Catalogs")}
+			"Catalog_AddScope"											{$Results.Add("Add Machine Catalog to Scope", "Machine Catalogs")}
+			"Catalog_AppDNAAnalyzeMachine"								{$Results.Add("Capture AppDNA OS snapshot", "Machine Catalogs")}
+			"Catalog_CancelProvTask"									{$Results.Add("Cancel Provisioning Task", "Machine Catalogs")}
+			"Catalog_ChangeMachineMaintenanceMode"						{$Results.Add("Enable/disable maintenance mode of a machine via Machine Catalog membership", "Machine Catalogs")}
+			"Catalog_ChangeMaintenanceMode"								{$Results.Add("Enable/disable maintenance mode on Desktop via Machine Catalog membership", "Machine Catalogs")}
+			"Catalog_ChangeTags"										{$Results.Add("Edit Catalog tags", "Machine Catalogs")}
+			"Catalog_ChangeUserAssignment"								{$Results.Add("Change users assigned to a machine", "Machine Catalogs")}
+			"Catalog_ConsumeMachines"									{$Results.Add("Allow machines to be consumed by a Delivery Group", "Machine Catalogs")}
+			"Catalog_Create"											{$Results.Add("Create Machine Catalog", "Machine Catalogs")}
+			"Catalog_Delete"											{$Results.Add("Delete Machine Catalog", "Machine Catalogs")}
+			"Catalog_EditProperties"									{$Results.Add("Edit Machine Catalog Properties", "Machine Catalogs")}
+			"Catalog_Manage_ChangeTags"									{$Results.Add("Edit Catalog machine tags", "Machine Catalogs")}
+			"Catalog_ManageAccounts"									{$Results.Add("Manage Active Directory Accounts", "Machine Catalogs")}
+			"Catalog_PowerOperations_RDS"								{$Results.Add("Perform power operations on Windows Server machines via Machine Catalog membership", "Machine Catalogs")}
+			"Catalog_PowerOperations_VDI"								{$Results.Add("Perform power operations on Windows Desktop machines via Machine Catalog membership", "Machine Catalogs")}
+			"Catalog_Read"												{$Results.Add("View Machine Catalogs", "Machine Catalogs")}
+			"Catalog_RemoveMachine"										{$Results.Add("Remove Machines from Machine Catalog", "Machine Catalogs")}
+			"Catalog_RemoveScope"										{$Results.Add("Remove Machine Catalog from Scope", "Machine Catalogs")}
+			"Catalog_SessionManagement"									{$Results.Add("Perform session management on machines via Machine Catalog membership", "Machine Catalogs")}
+			"Catalog_UpdateMasterImage"									{$Results.Add("Perform Machine update", "Machine Catalogs")}
 
-			"Configuration_Read"										{$Results.Add("Read Site Configuration (Configuration_Read)", "Other permissions"); Break}
-			"Configuration_Write"										{$Results.Add("Update Site Configuration (Configuration_Write)", "Other permissions"); Break}
-			"EnvTest"													{$Results.Add("Run environment tests", "Other permissions"); Break}
-			"Global_Read"												{$Results.Add("Read Site Configuration (Global_Read)", "Other permissions"); Break}
-			"Global_Write"												{$Results.Add("Update Site Configuration (Global_Write)", "Other permissions"); Break}
-			"Orchestration_RestApi"										{$Results.Add("Manage Orchestration Service REST API", "Other permissions"); Break}
-			"PerformUpgrade"											{$Results.Add("Perform upgrade", "Other permissions"); Break}
-			"Tag_Create"												{$Results.Add("Create tags", "Other permissions"); Break}
-			"Tag_Delete"												{$Results.Add("Delete tags", "Other permissions"); Break}
-			"Tag_Edit"													{$Results.Add("Edit tags", "Other permissions"); Break}
-			"Tag_Read"													{$Results.Add("Read tags", "Other permissions"); Break}
-			"Trust_ServiceKeys"											{$Results.Add("Manage Trust Service Keys", "Other permissions"); Break}
+			"Configuration_Read"										{$Results.Add("Read Site Configuration (Configuration_Read)", "Other permissions")}
+			"Configuration_Write"										{$Results.Add("Update Site Configuration (Configuration_Write)", "Other permissions")}
+			"EnvTest"													{$Results.Add("Run environment tests", "Other permissions")}
+			"Global_Read"												{$Results.Add("Read Site Configuration (Global_Read)", "Other permissions")}
+			"Global_Write"												{$Results.Add("Update Site Configuration (Global_Write)", "Other permissions")}
+			"Orchestration_RestApi"										{$Results.Add("Manage Orchestration Service REST API", "Other permissions")}
+			"PerformUpgrade"											{$Results.Add("Perform upgrade", "Other permissions")}
+			"Tag_Create"												{$Results.Add("Create tags", "Other permissions")}
+			"Tag_Delete"												{$Results.Add("Delete tags", "Other permissions")}
+			"Tag_Edit"													{$Results.Add("Edit tags", "Other permissions")}
+			"Tag_Read"													{$Results.Add("Read tags", "Other permissions")}
+			"Trust_ServiceKeys"											{$Results.Add("Manage Trust Service Keys", "Other permissions")}
 
-			"Policies_Manage"											{$Results.Add("Manage Policies", "Policies"); Break}
-			"Policies_Read"												{$Results.Add("View Policies", "Policies"); Break}
+			"Policies_Manage"											{$Results.Add("Manage Policies", "Policies")}
+			"Policies_Read"												{$Results.Add("View Policies", "Policies")}
 
-			"Storefront_Create"											{$Results.Add("Create a new StoreFront definition", "StoreFronts"); Break}
-			"Storefront_Delete"											{$Results.Add("Delete a StoreFront definition", "StoreFronts"); Break}
-			"Storefront_Read"											{$Results.Add("Read StoreFront definitions", "StoreFronts"); Break}
-			"Storefront_Update"											{$Results.Add("Update a StoreFront definition", "StoreFronts"); Break}
+			"Storefront_Create"											{$Results.Add("Create a new StoreFront definition", "StoreFronts")}
+			"Storefront_Delete"											{$Results.Add("Delete a StoreFront definition", "StoreFronts")}
+			"Storefront_Read"											{$Results.Add("Read StoreFront definitions", "StoreFronts")}
+			"Storefront_Update"											{$Results.Add("Update a StoreFront definition", "StoreFronts")}
 
-			"EdgeServer_Manage"											{$Results.Add("Manage Citrix Cloud Connector", "Zones"); Break}
-			"EdgeServer_Read"											{$Results.Add("View Citrix Cloud Connector", "Zones"); Break}
-			"Zone_Create"												{$Results.Add("Create Zone", "Zones"); Break}
-			"Zone_Delete"												{$Results.Add("Delete Zone", "Zones"); Break}
-			"Zone_EditProperties"										{$Results.Add("Edit Zone", "Zones"); Break}
-			"Zone_Read"													{$Results.Add("View Zones", "Zones"); Break}
+			"EdgeServer_Manage"											{$Results.Add("Manage Citrix Cloud Connector", "Zones")}
+			"EdgeServer_Read"											{$Results.Add("View Citrix Cloud Connector", "Zones")}
+			"Zone_Create"												{$Results.Add("Create Zone", "Zones")}
+			"Zone_Delete"												{$Results.Add("Delete Zone", "Zones")}
+			"Zone_EditProperties"										{$Results.Add("Edit Zone", "Zones")}
+			"Zone_Read"													{$Results.Add("View Zones", "Zones")}
 		}
 	}
 
