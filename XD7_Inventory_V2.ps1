@@ -1073,7 +1073,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.36
 	AUTHOR: Carl Webster
-	LASTEDIT: August 15, 2020
+	LASTEDIT: September 4, 2020
 #>
 
 #endregion
