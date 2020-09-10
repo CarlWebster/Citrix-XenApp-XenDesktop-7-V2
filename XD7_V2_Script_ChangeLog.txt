@@ -92,7 +92,13 @@
 #			Delete Zone
 #			Edit Zone
 #			Manage Citrix Cloud Connector
+#	Add a switch statement for the appdisk/machine/desktop/server Power State
+#	Change all Write-Verbose $(Get-Date) to add -Format G to put the dates in the user's locale
 #	Change Policy Filter from Citrix CloudBridge to NetScaler SD-WAN
+#	Change checking some String variables from just $Null to [String]::IsNullOrEmpty.
+#		Some cmdlet's string properties are sometimes Null and sometimes an empty string
+#	Change checking the way a machine is online or offline.
+#	Change some cmdlets to sort on the left of the pipeline using the cmdlet's -SortBy option
 #	Change some Write-Error to Write-Warning and changed some Write-Warning to Write-Host
 #		Added Function OutputNotice
 #	Fix bugs found while working on the V3 script
@@ -102,6 +108,8 @@
 #	Fix totals for the Summary Page
 #	Fix loading the SQL Server Assembly
 #	Fix missing L_25 VDA Version checking for CVAD 2003
+#	Fixed an issue with "Connections meeting any of the following (Access Gateway) filters".
+#		If you selected HTML and any other output format in the same run, only the HTML output had any Access Gateway data.
 #	Fixed an issue for RemotePC machine catalogs based on OUs. (Thanks to Rene Bigler)
 #		Added all OUs defined
 #		Added Allow SubOUs by each defined OU
@@ -113,10 +121,19 @@
 #		If it is, create a dummy row of data for the hashtable
 #		For example, a RemotePC catalog based on OU that contains no machines, or Applications with no administrators. 
 #		Instead of having a missing table, the table will now have a row that says "None found"
+#	Fixed output issues with Power Management settings
 #	Fixed several more array out of bounds issues when accessing element 0 when the array was empty
+#	For Appendix A, Text output, change the column heading "DDC Name" to "Computer Name" to match the HTML and MSWord/PDF output
+#	For checking the registry on a Delivery Controller for installed Citrix components, test the RemoteRegistry service for its status.
+#		If the service is not running, set $GotCtxComponents to $False
+#	For the three datastore databases, check if the various variable are null or empty and if so, change the value to "Unable to determine"
+#	For Zones, add MemType into the Sort-Object for Site View and Zone View
 #	If PDF is selected for Output and Microsoft Word is not installed, update the error message to state that PDF uses Word's SaveAs PDF function
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
+#	Since the RegistrationState property is an enum, add .ToString() to the machine/desktop/server variable so HTML output is correct
+#	When getting the provisioning scheme data for a machine, only process machines with a provisioning type of MCS
+#		There is no provisioning scheme data for manually or PVS provisioned machines
 #	When VDARegistryKeys is used, now test the RemoteRegistry service for its status.
 #		If the service is not running, add that information into the AllVDARegistryItems array
 
