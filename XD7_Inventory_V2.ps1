@@ -1073,7 +1073,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.36
 	AUTHOR: Carl Webster
-	LASTEDIT: September 10, 2020
+	LASTEDIT: September 12, 2020
 #>
 
 #endregion
@@ -1369,6 +1369,7 @@ Param(
 #	Change some cmdlets to sort on the left of the pipeline using the cmdlet's -SortBy option
 #	Change some Write-Error to Write-Warning and changed some Write-Warning to Write-Host
 #		Added Function OutputNotice
+#	Changed testing for existing PSDrives from Get-PSDrive to Test-Path
 #	Fix bugs found while working on the V3 script
 #	Fix formatting issues found with Text and HTML code
 #	Fix issue with Word tables with 8 or 9 point font having a black background 
@@ -9786,7 +9787,7 @@ Function OutputMachineDetails
 
 	If([String]::IsNullOrEmpty($Machine.HypervisorConnectionName))
 	{
-		$xHypervisorConnectionNamee = "-"
+		$xHypervisorConnectionName = "-"
 	}
 	Else
 	{
@@ -16473,7 +16474,7 @@ Function ProcessPolicies
 	{
 	
 		Write-Verbose "$(Get-Date -Format G): `tDoes localfarmgpo PSDrive already exist?"
-		If(Get-PSDrive localfarmgpo -EA 0)
+		If(Test-Path localfarmgpo: -EA 0)
 		{
 			Write-Verbose "$(Get-Date -Format G): `tRemoving the current localfarmgpo PSDrive"
 			Remove-PSDrive localfarmgpo -EA 0 4>$Null
@@ -16484,7 +16485,7 @@ Function ProcessPolicies
 		
 		#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
 		TranscriptLogging
-		If(Get-PSDrive localfarmgpo -EA 0)
+		If(Test-Path localfarmgpo: -EA 0)
 		{
 			ProcessCitrixPolicies "localfarmgpo" "Computer" ""
 			Write-Verbose "$(Get-Date -Format G): Finished Processing Citrix Site Computer Policies"
@@ -16500,7 +16501,7 @@ Function ProcessPolicies
 		
 		#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
 		TranscriptLogging
-		If(Get-PSDrive localfarmgpo -EA 0)
+		If(Test-Path localfarmgpo: -EA 0)
 		{
 			ProcessCitrixPolicies "localfarmgpo" "User" ""
 			Write-Verbose "$(Get-Date -Format G): Finished Processing Citrix Site User Policies"
@@ -16537,7 +16538,7 @@ Function ProcessPolicies
 		
 					#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
 					TranscriptLogging
-					If(Get-PSDrive ADGpoDrv -EA 0)
+					If(Test-Path ADGpoDrv: -EA 0)
 					{
 						Write-Verbose "$(Get-Date -Format G): `tProcessing Citrix AD Policy $($CtxGPO)"
 					
@@ -16557,7 +16558,7 @@ Function ProcessPolicies
 		
 					#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
 					TranscriptLogging
-					If(Get-PSDrive ADGpoDrv -EA 0)
+					If(Test-Path ADGpoDrv: -EA 0)
 					{
 						Write-Verbose "$(Get-Date -Format G): `tProcessing Citrix AD Policy $($CtxGPO)"
 					
@@ -16589,7 +16590,7 @@ Function ProcessPolicies
 Function ProcessPolicySummary
 {
 	Write-Verbose "$(Get-Date -Format G): `tDoes localfarmgpo PSDrive already exist?"
-	If(Get-PSDrive localfarmgpo -EA 0)
+	If(Test-Path localfarmgpo: -EA 0)
 	{
 		Write-Verbose "$(Get-Date -Format G): `tRemoving the current localfarmgpo PSDrive"
 		Remove-PSDrive localfarmgpo -EA 0 4>$Null
@@ -16601,7 +16602,7 @@ Function ProcessPolicySummary
 	#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
 	TranscriptLogging
 
-	If(Get-PSDrive localfarmgpo -EA 0)
+	If(Test-Path localfarmgpo: -EA 0)
 	{
 		$HDXPolicies = Get-CtxGroupPolicy -DriveName localfarmgpo -EA 0 `
 		| Select-Object PolicyName, Type, Description, Enabled, Priority `
@@ -16638,7 +16639,7 @@ Function ProcessPolicySummary
 		
 				#V2.10 using Citrix policy stuff and new-psdrive breaks transcript logging so restart transcript logging
 				TranscriptLogging
-				If(Get-PSDrive ADGpoDrv -EA 0)
+				If(Test-Path ADGpoDrv: -EA 0)
 				{
 					Write-Verbose "$(Get-Date -Format G): `tProcessing Citrix AD Policy $($CtxGPO)"
 				

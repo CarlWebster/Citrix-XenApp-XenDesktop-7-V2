@@ -101,6 +101,7 @@
 #	Change some cmdlets to sort on the left of the pipeline using the cmdlet's -SortBy option
 #	Change some Write-Error to Write-Warning and changed some Write-Warning to Write-Host
 #		Added Function OutputNotice
+#	Changed testing for existing PSDrives from Get-PSDrive to Test-Path
 #	Fix bugs found while working on the V3 script
 #	Fix formatting issues found with Text and HTML code
 #	Fix issue with Word tables with 8 or 9 point font having a black background 
