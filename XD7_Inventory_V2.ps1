@@ -1073,7 +1073,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.36
 	AUTHOR: Carl Webster
-	LASTEDIT: September 12, 2020
+	LASTEDIT: September 19, 2020
 #>
 
 #endregion
@@ -1401,6 +1401,7 @@ Param(
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
 #	Since the RegistrationState property is an enum, add .ToString() to the machine/desktop/server variable so HTML output is correct
+#	When getting the Master VM for an MCS based machine catalog, also check for images ending in .template for Nutanix
 #	When getting the provisioning scheme data for a machine, only process machines with a provisioning type of MCS
 #		There is no provisioning scheme data for manually or PVS provisioned machines
 #	When VDARegistryKeys is used, now test the RemoteRegistry service for its status.
@@ -7358,7 +7359,7 @@ Function OutputMachines
 					$MasterVM = ""
 					ForEach($Item in $tmp1)
 					{
-						If($Item.EndsWith(".vm"))
+						If(($Item.EndsWith(".vm")) -or ($Item.EndsWith(".template"))) #.template for Nutanix
 						{
 							$MasterVM = $Item
 						}
@@ -12408,6 +12409,12 @@ Function OutputDeliveryGroupDetails
 					$xAGFilters = @()
 					$xAGFilters += "N/A"
 				}
+			}
+			Else
+			{
+				$xAllConnections = ""
+				$xNSConnection = ""
+				$xAGFilters = @()
 			}
 		}
 		
@@ -38208,10 +38215,10 @@ Function ProcessScriptSetup
 	}
 	ElseIf(!(Check-LoadedModule "Citrix.GroupPolicy.Commands") -and $Policies -eq $False)
 	{
-		Write-Warning "The Citrix Group Policy module Citrix.GroupPolicy.Commands.psm1 could not be loaded `n
-		Please see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb). 
-		`nCitrix Policy documentation will not take place"
-		Write-Verbose "$(Get-Date -Format G): "
+		#Write-Warning "The Citrix Group Policy module Citrix.GroupPolicy.Commands.psm1 could not be loaded `n
+		#Please see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb). 
+		#`nCitrix Policy documentation will not take place"
+		#Write-Verbose "$(Get-Date -Format G): "
 		$Script:DoPolicies = $False
 	}
 	ElseIf(!(Check-LoadedModule "Citrix.GroupPolicy.Commands") -and $Policies -eq $True)

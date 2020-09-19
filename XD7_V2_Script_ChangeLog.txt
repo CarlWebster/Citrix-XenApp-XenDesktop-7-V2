@@ -133,10 +133,35 @@
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
 #	Since the RegistrationState property is an enum, add .ToString() to the machine/desktop/server variable so HTML output is correct
+#	When getting the Master VM for an MCS based machine catalog, also check for images ending in .template for Nutanix
 #	When getting the provisioning scheme data for a machine, only process machines with a provisioning type of MCS
 #		There is no provisioning scheme data for manually or PVS provisioned machines
 #	When VDARegistryKeys is used, now test the RemoteRegistry service for its status.
 #		If the service is not running, add that information into the AllVDARegistryItems array
+#
+#Version 2.35 1-JUL-2020
+#	THIS IS THE FINAL UPDATE FOR THE V2 SCRIPT, except for bug fixes
+#	Added new Computer policy settings for CVAD 2006
+#		ICA\Virtual channel white list
+#	Added new User policy settings for CVAD 2006
+#		ICA\Keyboard and IME\Client keyboard layout synchronization and IME improvement
+#		ICA\Keyboard and IME\Enable Unicode keyboard layout mapping
+#		ICA\Keyboard and IME\Hide keyboard layout switch pop-up message box
+#	Added version 7.26 equals 2006
+
+#Version 2.34 8-May-2020
+#	Add checking for a Word version of 0, which indicates the Office installation needs repairing
+#	Add Receive Side Scaling setting to Function OutputNICItem
+#	Change color variables $wdColorGray15 and $wdColorGray05 from [long] to [int]
+#	Change location of the -Dev, -Log, and -ScriptInfo output files from the script folder to the -Folder location (Thanks to Guy Leech for the "suggestion")
+#	Reformatted the terminating Write-Error messages to make them more visible and readable in the console
+#	Remove the SMTP parameterset and manually verify the parameters
+#		Remove the code to manually test for conflicting output parameters
+#	Update Function SendEmail to handle anonymous unauthenticated email
+#	Update Function SetWordCellFormat to change parameter $BackgroundColor to [int]
+#	Update Function ShowScriptOptions to add the missing Dev parameter
+#	Update Functions GetComputerWMIInfo and OutputNicInfo to fix two bugs in NIC Power Management settings
+#	Update Help Text
 
 #Version 2.35 1-JUL-2020
 #	THIS IS THE FINAL UPDATE FOR THE V2 SCRIPT, except for bug fixes
