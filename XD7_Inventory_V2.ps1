@@ -60,6 +60,8 @@
 
 	Using both the MachineCatalogs and DeliveryGroups parameters can cause the report to 
 	take an extremely long time to complete and generate an exceptionally long report.
+	
+	Using BrokerRegistryKeys requires the script is run elevated.
 
 	Creates an output file named after the XenDesktop 7.8+ Site.
 	
@@ -122,6 +124,8 @@
 .PARAMETER BrokerRegistryKeys
 	Adds information on 315 registry keys to the Controller section.
 	
+	*****Requires the script is run elevated*****
+
 	For Word and PDF output, this adds eights pages, per Controller, to the report.
 	For Text and HTML, this adds 315 lines, per Controller, to the report.
 
@@ -349,6 +353,8 @@
 		StoreFront
 		VDARegistryKeys
 
+	*****Requires the script is run elevated*****
+
 	Does not change the value of NoADPolicies.
 	Does not change the value of NoSessions.
 	
@@ -384,11 +390,6 @@
 	
 	Using the Policies parameter can cause the report to take a very long time 
 	to complete and can generate an extremely long report.
-	
-	Note: The Citrix Group Policy PowerShell module will not load from an elevated 
-	PowerShell session. 
-	If the module is manually imported, the module is not detected from an elevated 
-	PowerShell session.
 	
 	There are three related parameters: Policies, NoPolicies, and NoADPolicies.
 	
@@ -893,6 +894,8 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -BrokerRegistryKeys
 	
+	*****Requires the script is run elevated*****
+
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
@@ -947,6 +950,8 @@
 		
 		NoPolicies          = False
 		Section             = "All"
+
+	*****Requires the script is run elevated*****
 		
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Dev -ScriptInfo -Log
@@ -1073,7 +1078,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.36
 	AUTHOR: Carl Webster
-	LASTEDIT: September 19, 2020
+	LASTEDIT: October 1, 2020
 #>
 
 #endregion
@@ -1397,6 +1402,8 @@ Param(
 #		If the service is not running, set $GotCtxComponents to $False
 #	For the three datastore databases, check if the various variable are null or empty and if so, change the value to "Unable to determine"
 #	For Zones, add MemType into the Sort-Object for Site View and Zone View
+#	If BrokerRegistryKeys is True, test for elevation
+#		Update help text to show elevation is required when using BrokerRegistryKeys
 #	If PDF is selected for Output and Microsoft Word is not installed, update the error message to state that PDF uses Word's SaveAs PDF function
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
@@ -2267,6 +2274,28 @@ If($MaxDetails)
 	
 	$NoPolicies			= $False
 	$Section			= "All"
+}
+
+#added 30-Sep-2020, if BrokerRegistryKeys is True, test for elevation
+
+If($BrokerRegistryKeys -eq $True)
+{
+	$currentPrincipal = New-Object Security.Principal.WindowsPrincipal( [Security.Principal.WindowsIdentity]::GetCurrent() )
+
+	If($currentPrincipal.IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator ))
+	{
+		Write-Host "This is an elevated PowerShell session" -ForegroundColor
+	}
+	Else
+	{
+		Write-Error "
+		`n
+		BrokerRegistryKeys was specified and this is NOT an elevated PowerShell session.
+		`n
+		Script will exit.
+		`n"
+		Exit
+	}
 }
 
 If($NoPolicies)

@@ -129,6 +129,8 @@
 #		If the service is not running, set $GotCtxComponents to $False
 #	For the three datastore databases, check if the various variable are null or empty and if so, change the value to "Unable to determine"
 #	For Zones, add MemType into the Sort-Object for Site View and Zone View
+#	If BrokerRegistryKeys is True, test for elevation
+#		Update help text to show elevation is required when using BrokerRegistryKeys
 #	If PDF is selected for Output and Microsoft Word is not installed, update the error message to state that PDF uses Word's SaveAs PDF function
 #	Remove the block on not processing Policies if running from an elevated session.
 #		Citrix and I did a remote session to test this and we can't get it to fail.
