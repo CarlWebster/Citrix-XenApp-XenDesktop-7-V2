@@ -1076,9 +1076,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.36
+	VERSION: 2.37
 	AUTHOR: Carl Webster
-	LASTEDIT: October 1, 2020
+	LASTEDIT: November 21, 2020
 #>
 
 #endregion
@@ -1275,6 +1275,13 @@ Param(
 #started updating for version 7.8+ on April 17, 2016
 
 # This script is based on the 1.20 script
+
+#Version 2.37
+#	Added new VDA registry key for 1912 CU2 VDAs
+#		HKLM:\SOFTWARE\Citrix\Graphics\CursorShapeChangeMinInterval
+#		HKLM:\SOFTWARE\Citrix\Audio\KeepAliveTimer
+#		HKLM:\SOFTWARE\WOW6432Node\Citrix\Audio\KeepAliveTimer
+#		HKLM:\Software\Policies\Citrix\VirtualDesktopAgent\SupportMultipleForestDdcLookup
 
 #Version 2.36 15-Aug-2020
 #	Added the following missing Administrator Role permissions:
@@ -9243,6 +9250,12 @@ Function GetVDARegistryKeys
 
 	If($xType -eq "Server")
 	{
+		#Added in 1912 LTSR CU2
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Graphics" "CursorShapeChangeMinInterval" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Audio" "KeepAliveTimer" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\WOW6432Node\Citrix\Audio" "KeepAliveTimer" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Policies\Citrix\VirtualDesktopAgent" "SupportMultipleForestDdcLookup" $ComputerName $xType
+
 		#V2.33 added for VDA 2003
 		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Graphics" "BTLLossyThreshold" $ComputerName $xType
 		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxDNDSvc" "Enabled" $ComputerName $xType
@@ -9325,6 +9338,11 @@ Function GetVDARegistryKeys
 	}
 	ElseIf($xType -eq "Desktop")
 	{
+		#Added in 1912 LTSR CU2
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\Citrix\Audio" "KeepAliveTimer" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\SOFTWARE\WOW6432Node\Citrix\Audio" "KeepAliveTimer" $ComputerName $xType
+		Get-VDARegKeyToObject "HKLM:\Software\Policies\Citrix\VirtualDesktopAgent" "SupportMultipleForestDdcLookup" $ComputerName $xType
+
 		#V2.33 added for VDA 2003
 		Get-VDARegKeyToObject "HKLM:\Software\Citrix\Graphics" "BTLLossyThreshold" $ComputerName $xType
 		Get-VDARegKeyToObject "HKLM:\SYSTEM\CurrentControlSet\Services\CtxDNDSvc" "Enabled" $ComputerName $xType
@@ -35285,6 +35303,7 @@ Function ProcessHosting
 						$xScopes += "All"
 						$xMaintMode = $Connection.MaintenanceMode
 						$xConnectionType = $Connection.ConnectionType
+						$xConnectionPluginID = $Connection.PluginID
 						$xState = $Hypervisor.State
 						$xZoneName = $Connection.ZoneName
 						$xPowerActions = $Connection.metadata
@@ -35302,7 +35321,7 @@ Function ProcessHosting
 				OutputWarning $txt
 			}
 			#added V2.23 added $hypIntelliCache
-			OutputHosting $Hypervisor $xConnectionType $xAddress $xState `
+			OutputHosting $Hypervisor $xConnectionType $xConnectionPluginID $xAddress $xState `
 			$xUserName $xMaintMode $xStorageName $xHAAddress `
 			$xPowerActions $xScopes $xZoneName $hypvmstorage `
 			$hyppvdstorage $hypnetwork $hyptmpstorage $hypIntelliCache
@@ -35325,6 +35344,7 @@ Function OutputHosting
 {
 	Param([object] $Hypervisor, 
 	[string] $xConnectionType, 
+	[string] $xConnectionPluginID, 
 	[string] $xAddress, 
 	[string] $xState, 
 	[string] $xUserName, 
@@ -35425,7 +35445,14 @@ Function OutputHosting
 		"XenServer" {$xxConnectionType = "Citrix Hypervisor"; Break}
 		"SCVMM"     {$xxConnectionType = "Microsoft System Center Virtual Machine Manager"; Break}
 		"vCenter"   {$xxConnectionType = "VMware vSphere"; Break}
-		"Custom"    {$xxConnectionType = "Custom"; Break}
+		"Custom"    {
+						Switch ($xConnectionPluginID)
+						{
+							"AzureRmFactory" 		{$xxConnectionType = "Microsoft Azure";}
+							"AzureClassicFactory"	{$xxConnectionType = "Microsoft Azure Classic";}
+							Default     			{$xxConnectionType = "Custom Hypervisor Type PluginID could not be determined: $($xConnectionPluginID)"; Break}
+						}
+					}
 		Default     {$xxConnectionType = "Hypervisor Type could not be determined: $($xConnectionType)"; Break}
 	}
 
