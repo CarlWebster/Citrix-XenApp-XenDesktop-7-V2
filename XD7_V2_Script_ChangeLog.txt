@@ -3,6 +3,46 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.37
+#	Added a ValidateSet to the Sections parameter. You can use -Section, press tab, and tab through all the section options. (Credit to Guy Leech)
+#	Added new VDA registry key for 1912 CU2 VDAs
+#		HKLM:\SOFTWARE\Citrix\Graphics\CursorShapeChangeMinInterval
+#		HKLM:\SOFTWARE\Citrix\Audio\KeepAliveTimer
+#		HKLM:\SOFTWARE\WOW6432Node\Citrix\Audio\KeepAliveTimer
+#		HKLM:\Software\Policies\Citrix\VirtualDesktopAgent\SupportMultipleForestDdcLookup
+#	Added to Hosting Connection section:
+#	Thanks to fellow CTPs Neil Spellings, Kees Baggerman, and Trond Eirik Haavarstein for getting this info for me
+#		Amazon EC2                                      
+#		CloudPlatform                                   
+#		Microsoft Azure
+#		Microsoft Azure Classic
+#		Microsoft Configuration Manager Wake on LAN    
+#		Nutanix AHV
+#	Added to the Site Settings section, Site Provisioning Settings based on CTX241288 (Thanks to Per Lorentzen)
+#		https://support.citrix.com/article/CTX241288
+#	Changed how the SQL Server Assembly is loaded because 1912 LTSR CU2 broke it
+#	Fixed bug reported by David Prows in the Hosting section. First, check to see if the hosting connection's 
+#		AdditionalStorage.StorageLocations is valid
+#	Fixed some alignment issues in the text output
+#	For all calls to Get-AdminAdministrator, remove the -SortBy Name. Sorting by Name is the default behavior.
+#	For HTML and MSWord/PDF output, changed the formatting for the Application setting "How do you want to control the use of this application?"
+#	For MCS Machine Catalogs:
+#		Check that the catalog's ProvisioningSchemeId is not $Null before retrieving the Provision Scheme's machine data
+#		Check that $MachneData is not $Null before checking for HostingUnitName
+#	For the Hosting section, for High Availability Servers and Power Actions, handle empty arrays
+#	In Function GetAdmins, for Hosting Connections, handle the error "The property 'ScopeId' cannot be found on this object. Verify that the property exists."
+#		Also, add some white space to make the function easier for me to read
+#	In Function OutputAdminsForDetails, add "No Admins found" to replace blank tables and text output
+#	In Function OutputDeliveryGroupCatalogs, handle the case where a Delivery Group has no Machine Catalog(s) assigned
+#	In Function OutputMachineDetails, when using Test-NetConnection, add Resolve-DnsName first to see if the machine name is resolvable. 
+#		This prevents every call to Test-NetConnection from failing with "<MachineName> was not found in DNS". Add error message:
+#		<MachineName> was not found in DNS. VDA Registry Key data cannot be gathered.
+#		Otherwise, every machine was reported as offline, which may not be true.
+#	In Function OutputPerZoneView, add "There are no zone members for Zone <ZoneName>" to replace blank tables and text output
+#	In Function OutputXenDesktopLicenses, if there are no licenses installed, output the text "Citrix Virtual Desktops 7 Premium (30-day trial)"
+#	Reformatted a lot of the HTML output
+#	Reordered the parameters in an order recommended by Guy Leech
+
 #Version 2.36 15-Aug-2020
 #	Added the following missing Administrator Role permissions:
 #		Administrators
