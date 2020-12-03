@@ -42,6 +42,7 @@
 #	In Function OutputXenDesktopLicenses, if there are no licenses installed, output the text "Citrix Virtual Desktops 7 Premium (30-day trial)"
 #	Reformatted a lot of the HTML output
 #	Reordered the parameters in an order recommended by Guy Leech
+#	Updated the ReadMe file
 
 #Version 2.36 15-Aug-2020
 #	Added the following missing Administrator Role permissions:
