@@ -1077,7 +1077,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.37
 	AUTHOR: Carl Webster
-	LASTEDIT: December 3, 2020
+	LASTEDIT: December 5, 2020
 #>
 
 #endregion
@@ -1277,7 +1277,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.37
+#Version 2.37 5-Dec-2020
 #	Added a ValidateSet to the Sections parameter. You can use -Section, press tab, and tab through all the section options. (Credit to Guy Leech)
 #	Added new VDA registry key for 1912 CU2 VDAs
 #		HKLM:\SOFTWARE\Citrix\Graphics\CursorShapeChangeMinInterval

@@ -3,7 +3,7 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
-#Version 2.37
+#Version 2.37 5-Dec-2020
 #	Added a ValidateSet to the Sections parameter. You can use -Section, press tab, and tab through all the section options. (Credit to Guy Leech)
 #	Added new VDA registry key for 1912 CU2 VDAs
 #		HKLM:\SOFTWARE\Citrix\Graphics\CursorShapeChangeMinInterval
