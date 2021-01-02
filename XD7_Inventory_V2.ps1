@@ -305,8 +305,8 @@
 .PARAMETER AddDateTime
 	Adds a date timestamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2020 at 6PM is 2020-06-01_1800.
-	Output filename will be ReportName_2020-06-01_1800.docx (or .pdf).
+	June 1, 2021 at 6PM is 2021-06-01_1800.
+	Output filename will be ReportName_2021-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 	This parameter has an alias of ADT.
 .PARAMETER CSV
@@ -650,11 +650,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2020
-	-EndDate 01/31/2020	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2021
+	-EndDate 01/31/2021	
 	
-	Creates a report with Configuration Logging details for the dates 01/01/2020 through 
-	01/31/2020.
+	Creates a report with Configuration Logging details for the dates 01/01/2021 through 
+	01/31/2021.
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
@@ -666,11 +666,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2020 10:00:00"
-	-EndDate "06/01/2020 14:00:00"	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2021 10:00:00"
+	-EndDate "06/01/2021 14:00:00"	
 	
 	Creates a report with Configuration Logging details for the time range 
-	06/01/2020 10:00:00AM through 06/01/2020 02:00:00PM.
+	06/01/2021 10:00:00AM through 06/01/2021 02:00:00PM.
 	
 	Narrowing the report down to seconds does not work. Seconds must be either 00 or 59.
 	
@@ -806,8 +806,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2020 at 6PM is 2020-06-01_1800.
-	Output filename will be XD7SiteName_2020-06-01_1800.docx
+	June 1, 2021 at 6PM is 2021-06-01_1800.
+	Output filename will be XD7SiteName_2021-06-01_1800.docx
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF -AddDateTime
 	
@@ -823,8 +823,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2020 at 6PM is 2020-06-01_1800.
-	Output filename will be XD7SiteName_2020-06-01_1800.pdf
+	June 1, 2021 at 6PM is 2021-06-01_1800.
+	Output filename will be XD7SiteName_2021-06-01_1800.pdf
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hardware
 	
@@ -1075,9 +1075,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.37
+	VERSION: 2.38
 	AUTHOR: Carl Webster
-	LASTEDIT: December 5, 2020
+	LASTEDIT: January 2, 2021
 #>
 
 #endregion
@@ -1277,6 +1277,11 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.38
+#	Added to the Computer Hardware section, the server's Power Plan
+#	Updated help text
+#	Updated ReadMe file
+#
 #Version 2.37 5-Dec-2020
 #	Added a ValidateSet to the Sections parameter. You can use -Section, press tab, and tab through all the section options. (Credit to Guy Leech)
 #	Added new VDA registry key for 1912 CU2 VDAs
@@ -2748,7 +2753,7 @@ Function GetComputerWMIInfo
 
 		ForEach($Item in $ComputerItems)
 		{
-			OutputComputerItem $Item $ComputerOS
+			OutputComputerItem $Item $ComputerOS $RemoteComputerName
 		}
 	}
 	ElseIf(!$?)
@@ -3126,7 +3131,25 @@ Function GetComputerWMIInfo
 
 Function OutputComputerItem
 {
-	Param([object]$Item, [string]$OS)
+	Param([object]$Item, [string]$OS, [string]$RemoteComputerName)
+	
+	#get computer's power plan
+	#https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/get-the-active-power-plan-of-multiple-servers-with-powershell/ba-p/370429
+	
+	try 
+	{
+
+		$PowerPlan = (Get-WmiObject -ComputerName $RemoteComputerName -Class Win32_PowerPlan -Namespace "root\cimv2\power" |
+			Where-Object {$_.IsActive -eq $true} |
+			Select-Object @{Name = "PowerPlan"; Expression = {$_.ElementName}}).PowerPlan
+	}
+
+	catch 
+	{
+
+		$PowerPlan = $_.Exception
+
+	}	
 	
 	If($MSWord -or $PDF)
 	{
@@ -3135,12 +3158,14 @@ Function OutputComputerItem
 		$ItemInformation.Add(@{ Data = "Model"; Value = $Item.model; }) > $Null
 		$ItemInformation.Add(@{ Data = "Domain"; Value = $Item.domain; }) > $Null
 		$ItemInformation.Add(@{ Data = "Operating System"; Value = $OS; }) > $Null
+		$ItemInformation.Add(@{ Data = "Power Plan"; Value = $PowerPlan; }) > $Null
 		$ItemInformation.Add(@{ Data = "Total Ram"; Value = "$($Item.totalphysicalram) GB"; }) > $Null
 		$ItemInformation.Add(@{ Data = "Physical Processors (sockets)"; Value = $Item.NumberOfProcessors; }) > $Null
 		$ItemInformation.Add(@{ Data = "Logical Processors (cores w/HT)"; Value = $Item.NumberOfLogicalProcessors; }) > $Null
 		$Table = AddWordTable -Hashtable $ItemInformation `
 		-Columns Data,Value `
 		-List `
+		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitFixed;
 
 		## Set first column format
@@ -3156,31 +3181,34 @@ Function OutputComputerItem
 		$Table = $Null
 		WriteWordLine 0 0 ""
 	}
-	ElseIf($Text)
+	If($Text)
 	{
 		Line 2 "Manufacturer`t`t`t: " $Item.manufacturer
 		Line 2 "Model`t`t`t`t: " $Item.model
 		Line 2 "Domain`t`t`t`t: " $Item.domain
 		Line 2 "Operating System`t`t: " $OS
+		Line 2 "Power Plan`t`t`t: " $PowerPlan
 		Line 2 "Total Ram`t`t`t: $($Item.totalphysicalram) GB"
 		Line 2 "Physical Processors (sockets)`t: " $Item.NumberOfProcessors
 		Line 2 "Logical Processors (cores w/HT)`t: " $Item.NumberOfLogicalProcessors
 		Line 2 ""
 	}
-	ElseIf($HTML)
+	If($HTML)
 	{
 		$rowdata = @()
-		$columnHeaders = @("Manufacturer",($global:htmlsb),$Item.manufacturer,$htmlwhite)
-		$rowdata += @(,('Model',($global:htmlsb),$Item.model,$htmlwhite))
-		$rowdata += @(,('Domain',($global:htmlsb),$Item.domain,$htmlwhite))
-		$rowdata += @(,('Operating System',($global:htmlsb),$OS,$htmlwhite))
-		$rowdata += @(,('Total Ram',($global:htmlsb),"$($Item.totalphysicalram) GB",$htmlwhite))
-		$rowdata += @(,('Physical Processors (sockets)',($global:htmlsb),$Item.NumberOfProcessors,$htmlwhite))
-		$rowdata += @(,('Logical Processors (cores w/HT)',($global:htmlsb),$Item.NumberOfLogicalProcessors,$htmlwhite))
+		$columnHeaders = @("Manufacturer",($htmlsilver -bor $htmlBold),$Item.manufacturer,$htmlwhite)
+		$rowdata += @(,('Model',($htmlsilver -bor $htmlBold),$Item.model,$htmlwhite))
+		$rowdata += @(,('Domain',($htmlsilver -bor $htmlBold),$Item.domain,$htmlwhite))
+		$rowdata += @(,('Operating System',($htmlsilver -bor $htmlBold),$OS,$htmlwhite))
+		$rowdata += @(,('Power Plan',($htmlsilver -bor $htmlBold),$PowerPlan,$htmlwhite))
+		$rowdata += @(,('Total Ram',($htmlsilver -bor $htmlBold),"$($Item.totalphysicalram) GB",$htmlwhite))
+		$rowdata += @(,('Physical Processors (sockets)',($htmlsilver -bor $htmlBold),$Item.NumberOfProcessors,$htmlwhite))
+		$rowdata += @(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlBold),$Item.NumberOfLogicalProcessors,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 
