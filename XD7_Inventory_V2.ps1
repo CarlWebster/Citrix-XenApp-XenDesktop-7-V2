@@ -305,8 +305,8 @@
 .PARAMETER AddDateTime
 	Adds a date timestamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2020 at 6PM is 2020-06-01_1800.
-	Output filename will be ReportName_2020-06-01_1800.docx (or .pdf).
+	June 1, 2021 at 6PM is 2021-06-01_1800.
+	Output filename will be ReportName_2021-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 	This parameter has an alias of ADT.
 .PARAMETER CSV
@@ -650,11 +650,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2020
-	-EndDate 01/31/2020	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2021 -EndDate 
+	01/31/2021	
 	
-	Creates a report with Configuration Logging details for the dates 01/01/2020 through 
-	01/31/2020.
+	Creates a report with Configuration Logging details for the dates 01/01/2021 through 
+	01/31/2021.
 	
 	Will use all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
@@ -666,11 +666,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2020 10:00:00"
-	-EndDate "06/01/2020 14:00:00"	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2021 10:00:00" 
+	-EndDate "06/01/2021 14:00:00"	
 	
 	Creates a report with Configuration Logging details for the time range 
-	06/01/2020 10:00:00AM through 06/01/2020 02:00:00PM.
+	06/01/2021 10:00:00AM through 06/01/2021 02:00:00PM.
 	
 	Narrowing the report down to seconds does not work. Seconds must be either 00 or 59.
 	
@@ -710,8 +710,8 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs -DeliveryGroups 
-	-Applications -Policies -Hosting -StoreFront	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs -DeliveryGroups -Applications 
+	-Policies -Hosting -StoreFront	
 	
 	Creates a report with full details for all:
 		Machines in all Machine Catalogs
@@ -750,7 +750,7 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting"
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting" 
 	-CoverPage "Mod" -UserName "Carl Webster" -AdminAddress DDC01
 	
 	Will use:
@@ -759,7 +759,7 @@
 		Carl Webster for the User Name.
 		Controller named DDC01 for the AdminAddress.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod"
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod" 
 	-UN "Carl Webster"
 	
 	Will use:
@@ -768,11 +768,9 @@
 		Carl Webster for the User Name (alias UN).
 		The computer running the script for the AdminAddress.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
-	-CoverPage Exposure -UserName "Dr. Watson"
-	-CompanyAddress "221B Baker Street, London, England"
-	-CompanyFax "+44 1753 276600"
-	-CompanyPhone "+44 1753 276200"
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" 
+	-CoverPage Exposure -UserName "Dr. Watson" -CompanyAddress "221B Baker Street, London, 
+	England" -CompanyFax "+44 1753 276600" -CompanyPhone "+44 1753 276200"
 	
 	Will use:
 		Sherlock Holmes Consulting for the Company Name.
@@ -782,9 +780,8 @@
 		+44 1753 276600 for the Company Fax.
 		+44 1753 276200 for the Company Phone.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
-	-CoverPage Facet -UserName "Dr. Watson"
-	-CompanyEmail SuperSleuth@SherlockHolmes.com
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" 
+	-CoverPage Facet -UserName "Dr. Watson" -CompanyEmail SuperSleuth@SherlockHolmes.com
 
 	Will use:
 		Sherlock Holmes Consulting for the Company Name.
@@ -806,8 +803,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2020 at 6PM is 2020-06-01_1800.
-	Output filename will be XD7SiteName_2020-06-01_1800.docx
+	June 1, 2021 at 6PM is 2021-06-01_1800.
+	Output filename will be XD7SiteName_2021-06-01_1800.docx
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF -AddDateTime
 	
@@ -823,8 +820,8 @@
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2020 at 6PM is 2020-06-01_1800.
-	Output filename will be XD7SiteName_2020-06-01_1800.pdf
+	June 1, 2021 at 6PM is 2021-06-01_1800.
+	Output filename will be XD7SiteName_2021-06-01_1800.pdf
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hardware
 	
@@ -968,8 +965,8 @@
 	Creates a text file named XAXDV2InventoryScriptErrors_yyyy-MM-dd_HHmm.txt that 
 	contains up to the last 250 errors reported by the script.
 	
-	Creates a text file named XAXDV2InventoryScriptInfo_yyyy-MM-dd_HHmm.txt that 
-	contains all the script parameters and other basic information.
+	Creates a text file named XAXDV2InventoryScriptInfo_yyyy-MM-dd_HHmm.txt that contains 
+	all the script parameters and other basic information.
 	
 	Creates a text file for transcript logging named 
 	XDV2DocScriptTranscript_yyyy-MM-dd_HHmm.txt.
@@ -980,33 +977,29 @@
 	LocalHost for AdminAddress.
 	Creates a CSV file for each Appendix.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer mail.domain.tld
-	-From XDAdmin@domain.tld 
-	-To ITGroup@domain.tld	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer mail.domain.tld -From 
+	XDAdmin@domain.tld -To ITGroup@domain.tld	
 
-	The script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
+	The script uses the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
 	sending to ITGroup@domain.tld.
 
 	The script will use the default SMTP port 25 and will not use SSL.
 
 	If the current user's credentials are not valid to send email, 
-	the user will be prompted to enter valid credentials.
+	the script prompts the user to enter valid credentials.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer mailrelay.domain.tld
-	-From Anonymous@domain.tld 
-	-To ITGroup@domain.tld	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer mailrelay.domain.tld -From 
+	Anonymous@domain.tld -To ITGroup@domain.tld	
 
 	***SENDING UNAUTHENTICATED EMAIL***
 
-	The script will use the email server mailrelay.domain.tld, sending from 
+	The script uses the email server mailrelay.domain.tld, sending from 
 	anonymous@domain.tld, sending to ITGroup@domain.tld.
 
 	To send unauthenticated email using an email relay server requires the From email account 
 	to use the name Anonymous.
 
-	The script will use the default SMTP port 25 and will not use SSL.
+	The script uses the default SMTP port 25 and does not use SSL.
 	
 	***GMAIL/G SUITE SMTP RELAY***
 	https://support.google.com/a/answer/2956491?hl=en
@@ -1016,14 +1009,12 @@
 	the "Less secure app access" option on your account.
 	***GMAIL/G SUITE SMTP RELAY***
 
-	The script will generate an anonymous secure password for the anonymous@domain.tld 
+	The script generates an anonymous secure password for anonymous@domain.tld 
 	account.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer labaddomain-com.mail.protection.outlook.com
-	-UseSSL
-	-From SomeEmailAddress@labaddomain.com 
-	-To ITGroupDL@labaddomain.com	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer 
+	labaddomain-com.mail.protection.outlook.com -UseSSL -From 
+	SomeEmailAddress@labaddomain.com -To ITGroupDL@labaddomain.com	
 
 	***OFFICE 365 Example***
 
@@ -1033,41 +1024,33 @@
 	
 	***OFFICE 365 Example***
 
-	The script will use the email server labaddomain-com.mail.protection.outlook.com, 
+	The script uses the email server labaddomain-com.mail.protection.outlook.com, 
 	sending from SomeEmailAddress@labaddomain.com, sending to ITGroupDL@labaddomain.com.
 
-	The script will use the default SMTP port 25 and will use SSL.
+	The script uses the default SMTP port 25 and SSL.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer smtp.office365.com 
-	-SmtpPort 587
-	-UseSSL 
-	-From Webster@CarlWebster.com 
-	-To ITGroup@CarlWebster.com	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer smtp.office365.com -SmtpPort 587 
+	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com	
 
-	The script will use the email server smtp.office365.com on port 587 using SSL, 
+	The script uses the email server smtp.office365.com on port 587 using SSL, 
 	sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
 
 	If the current user's credentials are not valid to send email, 
-	the user will be prompted to enter valid credentials.
+	the script prompts the user to enter valid credentials.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer smtp.gmail.com 
-	-SmtpPort 587
-	-UseSSL 
-	-From Webster@CarlWebster.com 
-	-To ITGroup@CarlWebster.com	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer smtp.gmail.com -SmtpPort 587 
+	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com	
 
 	*** NOTE ***
 	To send email using a Gmail or g-suite account, you may have to turn ON
 	the "Less secure app access" option on your account.
 	*** NOTE ***
 	
-	The script will use the email server smtp.gmail.com on port 587 using SSL, 
+	The script uses the email server smtp.gmail.com on port 587 using SSL, 
 	sending from webster@gmail.com, sending to ITGroup@carlwebster.com.
 
 	If the current user's credentials are not valid to send email, 
-	the user will be prompted to enter valid credentials.
+	the script prompts the user to enter valid credentials.
 .INPUTS
 	None. You cannot pipe objects to this script.
 .OUTPUTS
@@ -1075,9 +1058,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.37
+	VERSION: 2.38
 	AUTHOR: Carl Webster
-	LASTEDIT: December 5, 2020
+	LASTEDIT: January 18, 2021
 #>
 
 #endregion
@@ -1277,6 +1260,11 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.38 18-Jan-2021
+#	Added to the Computer Hardware section, the server's Power Plan
+#	Updated help text
+#	Updated ReadMe file
+#
 #Version 2.37 5-Dec-2020
 #	Added a ValidateSet to the Sections parameter. You can use -Section, press tab, and tab through all the section options. (Credit to Guy Leech)
 #	Added new VDA registry key for 1912 CU2 VDAs
@@ -2748,7 +2736,7 @@ Function GetComputerWMIInfo
 
 		ForEach($Item in $ComputerItems)
 		{
-			OutputComputerItem $Item $ComputerOS
+			OutputComputerItem $Item $ComputerOS $RemoteComputerName
 		}
 	}
 	ElseIf(!$?)
@@ -3126,7 +3114,25 @@ Function GetComputerWMIInfo
 
 Function OutputComputerItem
 {
-	Param([object]$Item, [string]$OS)
+	Param([object]$Item, [string]$OS, [string]$RemoteComputerName)
+	
+	#get computer's power plan
+	#https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/get-the-active-power-plan-of-multiple-servers-with-powershell/ba-p/370429
+	
+	try 
+	{
+
+		$PowerPlan = (Get-WmiObject -ComputerName $RemoteComputerName -Class Win32_PowerPlan -Namespace "root\cimv2\power" |
+			Where-Object {$_.IsActive -eq $true} |
+			Select-Object @{Name = "PowerPlan"; Expression = {$_.ElementName}}).PowerPlan
+	}
+
+	catch 
+	{
+
+		$PowerPlan = $_.Exception
+
+	}	
 	
 	If($MSWord -or $PDF)
 	{
@@ -3135,12 +3141,14 @@ Function OutputComputerItem
 		$ItemInformation.Add(@{ Data = "Model"; Value = $Item.model; }) > $Null
 		$ItemInformation.Add(@{ Data = "Domain"; Value = $Item.domain; }) > $Null
 		$ItemInformation.Add(@{ Data = "Operating System"; Value = $OS; }) > $Null
+		$ItemInformation.Add(@{ Data = "Power Plan"; Value = $PowerPlan; }) > $Null
 		$ItemInformation.Add(@{ Data = "Total Ram"; Value = "$($Item.totalphysicalram) GB"; }) > $Null
 		$ItemInformation.Add(@{ Data = "Physical Processors (sockets)"; Value = $Item.NumberOfProcessors; }) > $Null
 		$ItemInformation.Add(@{ Data = "Logical Processors (cores w/HT)"; Value = $Item.NumberOfLogicalProcessors; }) > $Null
 		$Table = AddWordTable -Hashtable $ItemInformation `
 		-Columns Data,Value `
 		-List `
+		-Format $wdTableGrid `
 		-AutoFit $wdAutoFitFixed;
 
 		## Set first column format
@@ -3156,31 +3164,34 @@ Function OutputComputerItem
 		$Table = $Null
 		WriteWordLine 0 0 ""
 	}
-	ElseIf($Text)
+	If($Text)
 	{
 		Line 2 "Manufacturer`t`t`t: " $Item.manufacturer
 		Line 2 "Model`t`t`t`t: " $Item.model
 		Line 2 "Domain`t`t`t`t: " $Item.domain
 		Line 2 "Operating System`t`t: " $OS
+		Line 2 "Power Plan`t`t`t: " $PowerPlan
 		Line 2 "Total Ram`t`t`t: $($Item.totalphysicalram) GB"
 		Line 2 "Physical Processors (sockets)`t: " $Item.NumberOfProcessors
 		Line 2 "Logical Processors (cores w/HT)`t: " $Item.NumberOfLogicalProcessors
 		Line 2 ""
 	}
-	ElseIf($HTML)
+	If($HTML)
 	{
 		$rowdata = @()
-		$columnHeaders = @("Manufacturer",($global:htmlsb),$Item.manufacturer,$htmlwhite)
-		$rowdata += @(,('Model',($global:htmlsb),$Item.model,$htmlwhite))
-		$rowdata += @(,('Domain',($global:htmlsb),$Item.domain,$htmlwhite))
-		$rowdata += @(,('Operating System',($global:htmlsb),$OS,$htmlwhite))
-		$rowdata += @(,('Total Ram',($global:htmlsb),"$($Item.totalphysicalram) GB",$htmlwhite))
-		$rowdata += @(,('Physical Processors (sockets)',($global:htmlsb),$Item.NumberOfProcessors,$htmlwhite))
-		$rowdata += @(,('Logical Processors (cores w/HT)',($global:htmlsb),$Item.NumberOfLogicalProcessors,$htmlwhite))
+		$columnHeaders = @("Manufacturer",($htmlsilver -bor $htmlBold),$Item.manufacturer,$htmlwhite)
+		$rowdata += @(,('Model',($htmlsilver -bor $htmlBold),$Item.model,$htmlwhite))
+		$rowdata += @(,('Domain',($htmlsilver -bor $htmlBold),$Item.domain,$htmlwhite))
+		$rowdata += @(,('Operating System',($htmlsilver -bor $htmlBold),$OS,$htmlwhite))
+		$rowdata += @(,('Power Plan',($htmlsilver -bor $htmlBold),$PowerPlan,$htmlwhite))
+		$rowdata += @(,('Total Ram',($htmlsilver -bor $htmlBold),"$($Item.totalphysicalram) GB",$htmlwhite))
+		$rowdata += @(,('Physical Processors (sockets)',($htmlsilver -bor $htmlBold),$Item.NumberOfProcessors,$htmlwhite))
+		$rowdata += @(,('Logical Processors (cores w/HT)',($htmlsilver -bor $htmlBold),$Item.NumberOfLogicalProcessors,$htmlwhite))
 
 		$msg = ""
 		$columnWidths = @("150px","200px")
-		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths
+		FormatHTMLTable $msg -rowarray $rowdata -columnArray $columnheaders -fixedWidth $columnWidths -tablewidth "350"
+		WriteHTMLLine 0 0 " "
 	}
 }
 
