@@ -650,8 +650,8 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2021
-	-EndDate 01/31/2021	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2021 -EndDate 
+	01/31/2021	
 	
 	Creates a report with Configuration Logging details for the dates 01/01/2021 through 
 	01/31/2021.
@@ -666,7 +666,7 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2021 10:00:00"
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2021 10:00:00" 
 	-EndDate "06/01/2021 14:00:00"	
 	
 	Creates a report with Configuration Logging details for the time range 
@@ -710,8 +710,8 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs -DeliveryGroups 
-	-Applications -Policies -Hosting -StoreFront	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs -DeliveryGroups -Applications 
+	-Policies -Hosting -StoreFront	
 	
 	Creates a report with full details for all:
 		Machines in all Machine Catalogs
@@ -750,7 +750,7 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting"
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting" 
 	-CoverPage "Mod" -UserName "Carl Webster" -AdminAddress DDC01
 	
 	Will use:
@@ -759,7 +759,7 @@
 		Carl Webster for the User Name.
 		Controller named DDC01 for the AdminAddress.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod"
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod" 
 	-UN "Carl Webster"
 	
 	Will use:
@@ -768,11 +768,9 @@
 		Carl Webster for the User Name (alias UN).
 		The computer running the script for the AdminAddress.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
-	-CoverPage Exposure -UserName "Dr. Watson"
-	-CompanyAddress "221B Baker Street, London, England"
-	-CompanyFax "+44 1753 276600"
-	-CompanyPhone "+44 1753 276200"
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" 
+	-CoverPage Exposure -UserName "Dr. Watson" -CompanyAddress "221B Baker Street, London, 
+	England" -CompanyFax "+44 1753 276600" -CompanyPhone "+44 1753 276200"
 	
 	Will use:
 		Sherlock Holmes Consulting for the Company Name.
@@ -782,9 +780,8 @@
 		+44 1753 276600 for the Company Fax.
 		+44 1753 276200 for the Company Phone.
 .EXAMPLE
-	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting"
-	-CoverPage Facet -UserName "Dr. Watson"
-	-CompanyEmail SuperSleuth@SherlockHolmes.com
+	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" 
+	-CoverPage Facet -UserName "Dr. Watson" -CompanyEmail SuperSleuth@SherlockHolmes.com
 
 	Will use:
 		Sherlock Holmes Consulting for the Company Name.
@@ -968,8 +965,8 @@
 	Creates a text file named XAXDV2InventoryScriptErrors_yyyy-MM-dd_HHmm.txt that 
 	contains up to the last 250 errors reported by the script.
 	
-	Creates a text file named XAXDV2InventoryScriptInfo_yyyy-MM-dd_HHmm.txt that 
-	contains all the script parameters and other basic information.
+	Creates a text file named XAXDV2InventoryScriptInfo_yyyy-MM-dd_HHmm.txt that contains 
+	all the script parameters and other basic information.
 	
 	Creates a text file for transcript logging named 
 	XDV2DocScriptTranscript_yyyy-MM-dd_HHmm.txt.
@@ -980,33 +977,29 @@
 	LocalHost for AdminAddress.
 	Creates a CSV file for each Appendix.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer mail.domain.tld
-	-From XDAdmin@domain.tld 
-	-To ITGroup@domain.tld	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer mail.domain.tld -From 
+	XDAdmin@domain.tld -To ITGroup@domain.tld	
 
-	The script will use the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
+	The script uses the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
 	sending to ITGroup@domain.tld.
 
 	The script will use the default SMTP port 25 and will not use SSL.
 
 	If the current user's credentials are not valid to send email, 
-	the user will be prompted to enter valid credentials.
+	the script prompts the user to enter valid credentials.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer mailrelay.domain.tld
-	-From Anonymous@domain.tld 
-	-To ITGroup@domain.tld	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer mailrelay.domain.tld -From 
+	Anonymous@domain.tld -To ITGroup@domain.tld	
 
 	***SENDING UNAUTHENTICATED EMAIL***
 
-	The script will use the email server mailrelay.domain.tld, sending from 
+	The script uses the email server mailrelay.domain.tld, sending from 
 	anonymous@domain.tld, sending to ITGroup@domain.tld.
 
 	To send unauthenticated email using an email relay server requires the From email account 
 	to use the name Anonymous.
 
-	The script will use the default SMTP port 25 and will not use SSL.
+	The script uses the default SMTP port 25 and does not use SSL.
 	
 	***GMAIL/G SUITE SMTP RELAY***
 	https://support.google.com/a/answer/2956491?hl=en
@@ -1016,14 +1009,12 @@
 	the "Less secure app access" option on your account.
 	***GMAIL/G SUITE SMTP RELAY***
 
-	The script will generate an anonymous secure password for the anonymous@domain.tld 
+	The script generates an anonymous secure password for anonymous@domain.tld 
 	account.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer labaddomain-com.mail.protection.outlook.com
-	-UseSSL
-	-From SomeEmailAddress@labaddomain.com 
-	-To ITGroupDL@labaddomain.com	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer 
+	labaddomain-com.mail.protection.outlook.com -UseSSL -From 
+	SomeEmailAddress@labaddomain.com -To ITGroupDL@labaddomain.com	
 
 	***OFFICE 365 Example***
 
@@ -1033,41 +1024,33 @@
 	
 	***OFFICE 365 Example***
 
-	The script will use the email server labaddomain-com.mail.protection.outlook.com, 
+	The script uses the email server labaddomain-com.mail.protection.outlook.com, 
 	sending from SomeEmailAddress@labaddomain.com, sending to ITGroupDL@labaddomain.com.
 
-	The script will use the default SMTP port 25 and will use SSL.
+	The script uses the default SMTP port 25 and SSL.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer smtp.office365.com 
-	-SmtpPort 587
-	-UseSSL 
-	-From Webster@CarlWebster.com 
-	-To ITGroup@CarlWebster.com	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer smtp.office365.com -SmtpPort 587 
+	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com	
 
-	The script will use the email server smtp.office365.com on port 587 using SSL, 
+	The script uses the email server smtp.office365.com on port 587 using SSL, 
 	sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
 
 	If the current user's credentials are not valid to send email, 
-	the user will be prompted to enter valid credentials.
+	the script prompts the user to enter valid credentials.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 
-	-SmtpServer smtp.gmail.com 
-	-SmtpPort 587
-	-UseSSL 
-	-From Webster@CarlWebster.com 
-	-To ITGroup@CarlWebster.com	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer smtp.gmail.com -SmtpPort 587 
+	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com	
 
 	*** NOTE ***
 	To send email using a Gmail or g-suite account, you may have to turn ON
 	the "Less secure app access" option on your account.
 	*** NOTE ***
 	
-	The script will use the email server smtp.gmail.com on port 587 using SSL, 
+	The script uses the email server smtp.gmail.com on port 587 using SSL, 
 	sending from webster@gmail.com, sending to ITGroup@carlwebster.com.
 
 	If the current user's credentials are not valid to send email, 
-	the user will be prompted to enter valid credentials.
+	the script prompts the user to enter valid credentials.
 .INPUTS
 	None. You cannot pipe objects to this script.
 .OUTPUTS
@@ -1077,7 +1060,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.38
 	AUTHOR: Carl Webster
-	LASTEDIT: January 2, 2021
+	LASTEDIT: January 18, 2021
 #>
 
 #endregion
@@ -1277,7 +1260,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.38
+#Version 2.38 18-Jan-2021
 #	Added to the Computer Hardware section, the server's Power Plan
 #	Updated help text
 #	Updated ReadMe file

@@ -3,7 +3,7 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
-#Version 2.38
+#Version 2.38 18-Jan-2021
 #	Added to the Computer Hardware section, the server's Power Plan
 #	Updated help text
 #	Updated ReadMe file
