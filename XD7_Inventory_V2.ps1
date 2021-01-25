@@ -38615,7 +38615,7 @@ Script cannot continue
 		"
 				AbortScript
 			}
-			Else
+			ElseIf($CVADSiteVersion.Major -eq 7 -and ($CVADSiteVersion.Minor -lt 8 -or $CVADSiteVersion.Minor -gt 26))
 			{
 				Write-Host "You are running version $CVADSiteVersion ($CVADSiteVersionReal)" -ForegroundColor White
 				Write-Error "
@@ -38794,7 +38794,7 @@ Script cannot continue
 	}
 	Write-Verbose "$(Get-Date -Format G): You are running version $Script:CVADSiteVersion ($Script:CVADSiteVersionReal)"
 
-	If($MajorVersion -eq 0 -and $MinorVersion -eq 0)
+	If($Script:CVADSiteVersion.Major -eq 0 -and $Script:CVADSiteVersion.Minor -eq 0)
 	{
 		#something is wrong, we shouldn't be here
 		Write-Error "
@@ -38806,7 +38806,7 @@ Script cannot continue
 		"
 		AbortScript
 	}
-	Else
+	ElseIf($Script:CVADSiteVersion.Major -eq 7 -and ($Script:CVADSiteVersion.Minor -lt 8 -or $Script:CVADSiteVersion.Minor -gt 26))
 	{
 		#this is not a XenDesktop 7.x Site, script cannot proceed
 		Write-Host "You are running version $Script:CVADSiteVersion ($Script:CVADSiteVersionReal)" -ForegroundColor White
