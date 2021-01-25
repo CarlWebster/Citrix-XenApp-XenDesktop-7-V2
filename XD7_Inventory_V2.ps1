@@ -21,6 +21,15 @@
 	
 	This script supports versions of XenApp/XenDesktop starting with 7.8 through CVAD 2006.
 	
+	If you are running XA/XD 7.0 through 7.7, please use: 
+	https://carlwebster.com/downloads/download-info/xenappxendesktop-7-x-documentation-script/
+
+	If you are running CVAD 2006 and later, please use:
+	https://carlwebster.com/downloads/download-info/citrix-virtual-apps-and-desktops-v3-script/
+
+	If you are running Citrix Cloud, please use:
+	https://carlwebster.com/downloads/download-info/citrix-cloud-citrix-virtual-apps-and-desktops-service/
+	
 	NOTE: The account used to run this script must have at least Read access to the SQL 
 	Server(s) that hold(s) the Citrix Site, Monitoring, and Logging databases.
 	
@@ -61,7 +70,7 @@
 	Using both the MachineCatalogs and DeliveryGroups parameters can cause the report to 
 	take an extremely long time to complete and generate an exceptionally long report.
 	
-	Using BrokerRegistryKeys requires the script is run elevated.
+	Using BrokerRegistryKeys requires the script runs elevated.
 
 	Creates an output file named after the XenDesktop 7.8 through CVAD 2006 Site.
 	
@@ -108,7 +117,7 @@
 .PARAMETER BrokerRegistryKeys
 	Adds information on 315 registry keys to the Controller section.
 	
-	*****Requires the script is run elevated*****
+	*****Requires the script runs elevated*****
 
 	For Word and PDF output, this adds eights pages, per Controller, to the report.
 	For Text and HTML, this adds 315 lines, per Controller, to the report.
@@ -228,7 +237,7 @@
 	This parameter is disabled by default.
 	This parameter has an alias of NS.
 .PARAMETER Policies
-	Give detailed information for both Site and Citrix AD based Policies.
+	Give detailed information for both Site and Citrix AD-based Policies.
 	
 	Using the Policies parameter can cause the report to take a very long time 
 	to complete and can generate an extremely long report.
@@ -268,7 +277,7 @@
 		StoreFront
 		VDARegistryKeys
 
-	*****Requires the script is run elevated*****
+	*****Requires the script runs elevated*****
 
 	Does not change the value of NoADPolicies.
 	Does not change the value of NoSessions.
@@ -328,7 +337,7 @@
 	Outputs all errors to a text file at the end of the script.
 	
 	This is used when the script developer requests more troubleshooting data.
-	The text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script runs.
 	
 	This parameter is disabled by default.
 .PARAMETER Folder
@@ -337,7 +346,7 @@
 	Generates a log file for troubleshooting.
 .PARAMETER ScriptInfo
 	Outputs information about the script to a text file.
-	The text file is placed in the same folder from where the script is run.
+	The text file is placed in the same folder from where the script runs.
 	
 	This parameter is disabled by default.
 	This parameter has an alias of SI.
@@ -471,7 +480,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1
 	
-	Will use all default values.
+	Uses all default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -484,7 +493,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -AdminAddress DDC01
 	
-	Will use all default values.
+	Uses all default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -497,7 +506,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF
 	
-	Will use all default values and save the document as a PDF file.
+	Uses all default values and saves the document as a PDF file.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -510,16 +519,16 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -TEXT
 
-	Will use all default values and save the document as a formatted text file.
+	Uses all default values and saves the document as a formatted text file.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -HTML
 
-	Will use all default values and save the document as an HTML file.
+	Uses all default values and saves the document as an HTML file.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs
 	
 	Creates a report with full details for all machines in all Machine Catalogs.
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -532,7 +541,7 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -DeliveryGroups
 	
 	Creates a report with full details for all desktops in all Desktop (Delivery) Groups.
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -545,7 +554,7 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -DeliveryGroupsUtilization
 	
 	Creates a report with utilization details for all Desktop (Delivery) Groups.
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -559,7 +568,7 @@
 	
 	Creates a report with full details for all machines in all Machine Catalogs and 
 	all desktops in all Delivery Groups.
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -572,7 +581,7 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Applications
 	
 	Creates a report with full details for all applications.
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -585,7 +594,7 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Policies
 	
 	Creates a report with full details for Policies.
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -598,7 +607,7 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -NoPolicies
 	
 	Creates a report with no Policy information.
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -610,8 +619,8 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -NoADPolicies
 	
-	Creates a report with no Citrix AD based Policy information.
-	Will use all Default values.
+	Creates a report with no Citrix AD-based Policy information.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -624,9 +633,9 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Policies -NoADPolicies
 	
 	Creates a report with full details on Site policies created in Studio but 
-	no Citrix AD based Policy information.
+	no Citrix AD-based Policy information.
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -640,7 +649,7 @@
 	
 	Creates a report with full details on Administrator Scopes and Roles.
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -656,7 +665,7 @@
 	Creates a report with Configuration Logging details for the dates 01/01/2021 through 
 	01/31/2021.
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -674,7 +683,7 @@
 	
 	Narrowing the report down to seconds does not work. Seconds must be either 00 or 59.
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -687,7 +696,7 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hosting
 	
 	Creates a report with full details for Hosts, Host Connections, and Resources.
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -700,7 +709,7 @@
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -StoreFront
 	
 	Creates a report with full details for StoreFront.
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -721,7 +730,7 @@
 		Hosts, Host Connections, and Resources
 		StoreFront
 		
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -740,7 +749,7 @@
 		Policies
 		Hosts, Host Connections, and Resources
 		
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -753,7 +762,7 @@
 	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting" 
 	-CoverPage "Mod" -UserName "Carl Webster" -AdminAddress DDC01
 	
-	Will use:
+	Uses:
 		Carl Webster Consulting for the Company Name.
 		Mod for the Cover Page format.
 		Carl Webster for the User Name.
@@ -762,7 +771,7 @@
 	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod" 
 	-UN "Carl Webster"
 	
-	Will use:
+	Uses:
 		Carl Webster Consulting for the Company Name (alias CN).
 		Mod for the Cover Page format (alias CP).
 		Carl Webster for the User Name (alias UN).
@@ -772,7 +781,7 @@
 	-CoverPage Exposure -UserName "Dr. Watson" -CompanyAddress "221B Baker Street, London, 
 	England" -CompanyFax "+44 1753 276600" -CompanyPhone "+44 1753 276200"
 	
-	Will use:
+	Uses:
 		Sherlock Holmes Consulting for the Company Name.
 		Exposure for the Cover Page format.
 		Dr. Watson for the User Name.
@@ -783,7 +792,7 @@
 	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" 
 	-CoverPage Facet -UserName "Dr. Watson" -CompanyEmail SuperSleuth@SherlockHolmes.com
 
-	Will use:
+	Uses:
 		Sherlock Holmes Consulting for the Company Name.
 		Facet for the Cover Page format.
 		Dr. Watson for the User Name.
@@ -791,7 +800,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -AddDateTime
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -808,7 +817,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF -AddDateTime
 	
-	Will use all Default values and save the document as a PDF file.
+	Uses all Default values and saves the document as a PDF file.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -825,7 +834,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hardware
 	
-	Will use all default values.
+	Uses all default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -837,7 +846,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Folder \\FileServer\ShareName
 	
-	Will use all default values.
+	Uses all default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -847,11 +856,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	
-	Output file will be saved in the path \\FileServer\ShareName
+	Output file is saved in the path \\FileServer\ShareName
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Section Policies
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -864,7 +873,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Section Groups -DG
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -877,7 +886,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Section Groups
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -890,9 +899,9 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -BrokerRegistryKeys
 	
-	*****Requires the script is run elevated*****
+	*****Requires the script runs elevated*****
 
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -905,7 +914,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -VDARegistryKeys
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -919,7 +928,7 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MaxDetails
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -947,12 +956,12 @@
 		NoPolicies          = False
 		Section             = "All"
 
-	*****Requires the script is run elevated*****
+	*****Requires the script runs elevated*****
 		
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Dev -ScriptInfo -Log
 	
-	Will use all Default values.
+	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
 	Webster" or 
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\Company="Carl Webster"
@@ -973,20 +982,20 @@
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -CSV
 	
-	Will use all Default values.
+	Uses all Default values.
 	LocalHost for AdminAddress.
 	Creates a CSV file for each Appendix.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer mail.domain.tld -From 
 	XDAdmin@domain.tld -To ITGroup@domain.tld	
 
-	The script uses the email server mail.domain.tld, sending from XDAdmin@domain.tld, 
+	The script uses the email server mail.domain.tld, sending from XDAdmin@domain.tld and 
 	sending to ITGroup@domain.tld.
 
-	The script will use the default SMTP port 25 and will not use SSL.
+	The script Uses the default SMTP port 25 and does not use SSL.
 
-	If the current user's credentials are not valid to send email, 
-	the script prompts the user to enter valid credentials.
+	If the current user's credentials are not valid to send email, the script prompts 
+	the user to enter valid credentials.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer mailrelay.domain.tld -From 
 	Anonymous@domain.tld -To ITGroup@domain.tld	
@@ -994,9 +1003,9 @@
 	***SENDING UNAUTHENTICATED EMAIL***
 
 	The script uses the email server mailrelay.domain.tld, sending from 
-	anonymous@domain.tld, sending to ITGroup@domain.tld.
+	anonymous@domain.tld and sending to ITGroup@domain.tld.
 
-	To send unauthenticated email using an email relay server requires the From email account 
+	To send an unauthenticated email using an email relay server requires the From email account 
 	to use the name Anonymous.
 
 	The script uses the default SMTP port 25 and does not use SSL.
@@ -1005,11 +1014,11 @@
 	https://support.google.com/a/answer/2956491?hl=en
 	https://support.google.com/a/answer/176600?hl=en
 
-	To send email using a Gmail or g-suite account, you may have to turn ON
-	the "Less secure app access" option on your account.
+	To send an email using a Gmail or g-suite account, you may have to turn ON the "Less 
+	secure app access" option on your account.
 	***GMAIL/G SUITE SMTP RELAY***
 
-	The script generates an anonymous secure password for anonymous@domain.tld 
+	The script generates an anonymous, secure password for anonymous@domain.tld 
 	account.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer 
@@ -1024,33 +1033,33 @@
 	
 	***OFFICE 365 Example***
 
-	The script uses the email server labaddomain-com.mail.protection.outlook.com, 
-	sending from SomeEmailAddress@labaddomain.com, sending to ITGroupDL@labaddomain.com.
+	The script uses the email server labaddomain-com.mail.protection.outlook.com, sending 
+	from SomeEmailAddress@labaddomain.com and sending to ITGroupDL@labaddomain.com.
 
 	The script uses the default SMTP port 25 and SSL.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer smtp.office365.com -SmtpPort 587 
 	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com	
 
-	The script uses the email server smtp.office365.com on port 587 using SSL, 
-	sending from webster@carlwebster.com, sending to ITGroup@carlwebster.com.
+	The script uses the email server smtp.office365.com on port 587 using SSL, sending from 
+	webster@carlwebster.com and sending to ITGroup@carlwebster.com.
 
-	If the current user's credentials are not valid to send email, 
-	the script prompts the user to enter valid credentials.
+	If the current user's credentials are not valid to send an email, the script prompts 
+	the user to enter valid credentials.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -SmtpServer smtp.gmail.com -SmtpPort 587 
 	-UseSSL -From Webster@CarlWebster.com -To ITGroup@CarlWebster.com	
 
 	*** NOTE ***
-	To send email using a Gmail or g-suite account, you may have to turn ON
-	the "Less secure app access" option on your account.
+	To send an email using a Gmail or g-suite account, you may have to turn ON the "Less 
+	secure app access" option on your account.
 	*** NOTE ***
 	
-	The script uses the email server smtp.gmail.com on port 587 using SSL, 
-	sending from webster@gmail.com, sending to ITGroup@carlwebster.com.
+	The script uses the email server smtp.gmail.com on port 587 using SSL, sending from 
+	webster@gmail.com and sending to ITGroup@carlwebster.com.
 
-	If the current user's credentials are not valid to send email, 
-	the script prompts the user to enter valid credentials.
+	If the current user's credentials are not valid to send an email, the script prompts 
+	the user to enter valid credentials.
 .INPUTS
 	None. You cannot pipe objects to this script.
 .OUTPUTS
@@ -1058,9 +1067,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.38
+	VERSION: 2.39
 	AUTHOR: Carl Webster
-	LASTEDIT: January 18, 2021
+	LASTEDIT: January 25, 2021
 #>
 
 #endregion
@@ -1260,6 +1269,12 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.39 25-Jan-2021
+#	Added error checking in Function Check-NeededPSSnapins (Requested by Guy Leech)
+#	Updated Function ProcessScriptSetup to have standard error checking between the four XA/XD/CVAD/CC doc scripts
+#	Updated the help text
+#	Updated the ReadMe file
+#
 #Version 2.38 18-Jan-2021
 #	Added to the Computer Hardware section, the server's Power Plan
 #	Updated help text
@@ -1774,7 +1789,7 @@ Param(
 #	In Function OutputAdministrators, fix for when $Admin.Rights.ScopeName and $Admin.Rights.RoleName are arrays (Found by Ken Avram)
 #	In Function OutputDatastores, if the Principal, Mirror, Mirror Partner, or Mirror Witness contains a "\", 
 #		then get the IP address for the server name before the "\" (Found by Ken Avram)
-#		This should mean the database is running on SQL Server Express or has an Instance name
+#		This should mean the database runsning on SQL Server Express or has an Instance name
 #	In Function OutputXenDesktopLicenses, fix for when the property LicenseExpirationDate is $Null which means 
 #		the license Expiration Date is "Permanent" (Found by Ken Avram)
 #	In Machine Catalog details, check if MetadataMap contains data, if so add it to output. For example:
@@ -4297,7 +4312,7 @@ Function CheckWordPrereq
 	#find out our session (usually "1" except on TS/RDC or Citrix)
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
-	#Find out if winword is running in our session
+	#Find out if winword runsning in our session
 	[bool]$wordrunning = $null –ne ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID})
 	If($wordrunning)
 	{
@@ -6177,7 +6192,7 @@ Function CheckExcelPrereq
 	#find out our session (usually "1" except on TS/RDC or Citrix)
 	$SessionID = (Get-Process -PID $PID).SessionId
 	
-	#Find out if excel is running in our session
+	#Find out if excel runsning in our session
 	#[bool]$excelrunning = ((Get-Process 'Excel' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) -ne $Null
 	#fix by MBS in V2.20
 	[bool]$excelrunning = $null –ne ((Get-Process 'Excel' -ea 0) | Where-Object {$_.SessionId -eq $SessionID})
@@ -6268,7 +6283,19 @@ Function Check-NeededPSSnapins
 			Else
 			{
 				#Snapin is registered, but not loaded, loading it now:
-				Add-PSSnapin -Name $snapin -EA 0 *>$Null
+				Write-Host "Loading Windows PowerShell snap-in: $snapin"
+				Add-PSSnapin -Name $snapin -EA 0
+
+				If(!($?))
+				{
+					Write-Error "
+	`n`n
+	Error loading snapin: $($error[0].Exception.Message)
+	`n`n
+	Script cannot continue.
+	`n`n"
+					Return $false
+				}				
 			}
 		}
 	}
@@ -6276,7 +6303,9 @@ Function Check-NeededPSSnapins
 	If($FoundMissingSnapin)
 	{
 		Write-Warning "Missing Windows PowerShell snap-ins Detected:"
-		$missingSnapins | ForEach-Object {Write-Warning "($_)"}
+		Write-Host ""
+		$missingSnapins | ForEach-Object {Write-Host "`tMissing Snapin: ($_)"}
+		Write-Host ""
 		Return $False
 	}
 	Else
@@ -6373,7 +6402,7 @@ Function SaveandCloseDocumentandShutdownWord
 					#find out our session (usually "1" except on TS/RDC or Citrix)
 					$SessionID = (Get-Process -PID $PID).SessionId
 					
-					#Find out if winword is running in our session
+					#Find out if winword runsning in our session
 					$wordprocess = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}).Id
 					If($wordprocess -gt 0)
 					{
@@ -6401,7 +6430,7 @@ Function SaveandCloseDocumentandShutdownWord
 	#find out our session (usually "1" except on TS/RDC or Citrix)
 	$SessionID = (Get-Process -PID $PID).SessionId
 
-	#Find out if winword is running in our session
+	#Find out if winword runsning in our session
 	$wordprocess = $Null
 	$wordprocess = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}).Id
 	If($null -ne $wordprocess -and $wordprocess -gt 0)
@@ -16716,15 +16745,15 @@ Function ProcessPolicies
 		}
 		Else
 		{
-			#thanks to the Citrix Engineering Team for helping me solve processing Citrix AD based Policies
+			#thanks to the Citrix Engineering Team for helping me solve processing Citrix AD-based Policies
 			Write-Verbose "$(Get-Date -Format G): "
-			Write-Verbose "$(Get-Date -Format G): `tSee if there are any Citrix AD based policies to process"
+			Write-Verbose "$(Get-Date -Format G): `tSee if there are any Citrix AD-based policies to process"
 			$CtxGPOArray = @()
 			$CtxGPOArray = GetCtxGPOsInAD
 			If($CtxGPOArray -is [Array] -and $CtxGPOArray.Count -gt 0)
 			{
 				Write-Verbose "$(Get-Date -Format G): "
-				Write-Verbose "$(Get-Date -Format G): `tThere are $($CtxGPOArray.Count) Citrix AD based policies to process"
+				Write-Verbose "$(Get-Date -Format G): `tThere are $($CtxGPOArray.Count) Citrix AD-based policies to process"
 				Write-Verbose "$(Get-Date -Format G): "
 
 				[array]$CtxGPOArray = $CtxGPOArray | Sort-Object -unique
@@ -16776,7 +16805,7 @@ Function ProcessPolicies
 			}
 			Else
 			{
-				Write-Verbose "$(Get-Date -Format G): There are no Citrix AD based policies to process"
+				Write-Verbose "$(Get-Date -Format G): There are no Citrix AD-based policies to process"
 				Write-Verbose "$(Get-Date -Format G): "
 			}
 		}
@@ -16820,14 +16849,14 @@ Function ProcessPolicySummary
 	Else
 	{
 		Write-Verbose "$(Get-Date -Format G): "
-		Write-Verbose "$(Get-Date -Format G): See if there are any Citrix AD based policies to process"
+		Write-Verbose "$(Get-Date -Format G): See if there are any Citrix AD-based policies to process"
 		$CtxGPOArray = @()
 		$CtxGPOArray = GetCtxGPOsInAD
 		If($CtxGPOArray -is [Array] -and $CtxGPOArray.Count -gt 0)
 		{
 			[array]$CtxGPOArray = $CtxGPOArray | Sort-Object -unique
 			Write-Verbose "$(Get-Date -Format G): "
-			Write-Verbose "$(Get-Date -Format G): `tThere are $($CtxGPOArray.Count) Citrix AD based policies to process"
+			Write-Verbose "$(Get-Date -Format G): `tThere are $($CtxGPOArray.Count) Citrix AD-based policies to process"
 			Write-Verbose "$(Get-Date -Format G): "
 			
 			ForEach($CtxGPO in $CtxGPOArray)
@@ -16863,7 +16892,7 @@ Function ProcessPolicySummary
 		}
 		Else
 		{
-			Write-Verbose "$(Get-Date -Format G): There are no Citrix AD based policies to process"
+			Write-Verbose "$(Get-Date -Format G): There are no Citrix AD-based policies to process"
 			Write-Verbose "$(Get-Date -Format G): "
 		}
 	}
@@ -34798,7 +34827,7 @@ Function OutputControllers
 				$testresults = Test-NetConnection -ComputerName $Controller.DNSName -InformationLevel Quiet -EA 0 3>$Null
 				If($testresults)
 				{
-					#Second, see if the remote registy service is running
+					#Second, see if the remote registy service runsning
 					$serviceresults = Get-Service -ComputerName $Controller.DNSName -Name "RemoteRegistry" -EA 0
 					If($? -and $Null -ne $serviceresults)
 					{
@@ -38537,24 +38566,105 @@ Function ProcessScriptSetup
 	{
 		#We're missing Citrix Snapins that we need
 		$ErrorActionPreference = $SaveEAPreference
-		Write-Error "
-		`n`n
-		`t`t
-		Missing Citrix PowerShell Snap-ins Detected, check the console above for more information. 
-		`n`n
-		`t`t
-		Are you sure you are running this script against a XenDesktop 7.8 or later Controller? 
-		`n`n
-		`t`t
-		If you are running the script remotely, did you install Studio or the PowerShell snapins on $($env:computername)?
-		`n`n
-		`t`t
-		Please see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb).
-		`n`n
-		`t`tScript will now close.
-		`n`n
+		If(Get-Command Get-ConfigSite)
+		{
+			$XDSite2 = Get-ConfigSite -AdminAddress $AdminAddress -EA 0
+
+			[version]$CVADSiteVersion = $XDSite2.ProductVersion
+			$CVADSiteVersionReal = "Unknown"
+			Switch ($CVADSiteVersion)
+			{
+				"7.28"	{$CVADSiteVersionReal = "CVAD 2012"; Break}
+				"7.27"	{$CVADSiteVersionReal = "CVAD 2009"; Break}
+				"7.26"	{$CVADSiteVersionReal = "CVAD 2006"; Break}
+				"7.25"	{$CVADSiteVersionReal = "CVAD 2003"; Break}
+				"7.24"	{$CVADSiteVersionReal = "CVAD 1912"; Break}
+				"7.23"	{$CVADSiteVersionReal = "CVAD 1909"; Break}
+				"7.22"	{$CVADSiteVersionReal = "CVAD 1906"; Break}
+				"7.21"	{$CVADSiteVersionReal = "CVAD 1903"; Break}
+				"7.20"	{$CVADSiteVersionReal = "CVAD 1811"; Break}
+				"7.19"	{$CVADSiteVersionReal = "CVAD 1808"; Break}
+				"7.18"	{$CVADSiteVersionReal = "XA/XD 7.18"; Break}
+				"7.17"	{$CVADSiteVersionReal = "XA/XD 7.17"; Break}
+				"7.16"	{$CVADSiteVersionReal = "XA/XD 7.16"; Break}
+				"7.15"	{$CVADSiteVersionReal = "XA/XD 7.15"; Break}
+				"7.14"	{$CVADSiteVersionReal = "XA/XD 7.14"; Break}
+				"7.13"	{$CVADSiteVersionReal = "XA/XD 7.13"; Break}
+				"7.12"	{$CVADSiteVersionReal = "XA/XD 7.12"; Break}
+				"7.11"	{$CVADSiteVersionReal = "XA/XD 7.11"; Break}
+				"7.9"	{$CVADSiteVersionReal = "XA/XD 7.9"; Break}
+				"7.8"	{$CVADSiteVersionReal = "XA/XD 7.8"; Break}
+				"7.7"	{$CVADSiteVersionReal = "XA/XD 7.7"; Break}
+				"7.6"	{$CVADSiteVersionReal = "XA/XD 7.6"; Break}
+				"7.5"	{$CVADSiteVersionReal = "XA/XD 7.5"; Break}
+				"7.1"	{$CVADSiteVersionReal = "XD 7.1"; Break}
+				"7.0"	{$CVADSiteVersionReal = "XD 7.0"; Break}
+				Default	{$CVADSiteVersionReal = "Unknown"; Break}
+			}
+			Write-Verbose "$(Get-Date -Format G): You are running version $CVADSiteVersion ($CVADSiteVersionReal)"
+	
+			If($CVADSiteVersion.Major -eq 0 -and $CVADSiteVersion.Minor -eq 0)
+			{
+				#something is wrong, we shouldn't be here
+				Write-Error "
+	`n`n
+Something bad happened. We shouldn't be here. Could not find the version information.
+	`n`n
+Script cannot continue
+	`n`n
 		"
-		Exit
+				AbortScript
+			}
+			Else
+			{
+				Write-Host "You are running version $CVADSiteVersion ($CVADSiteVersionReal)" -ForegroundColor White
+				Write-Error "
+	`n`n
+	Missing Citrix PowerShell Snap-ins Detected, check the console above for more information. 
+	`n`n
+	This script is designed for XenApp/XenDesktop 7.8 through CVAD 2006 and should not be run on $CVADSiteVersionReal.
+	`n`n
+	If you are running XA/XD 7.0 through 7.7, please use: 
+	https://carlwebster.com/downloads/download-info/xenappxendesktop-7-x-documentation-script/
+	`n`n
+	If you are running CVAD 2006 and later, please use:
+	https://carlwebster.com/downloads/download-info/citrix-virtual-apps-and-desktops-v3-script/
+	`n`n
+	If you are running Citrix Cloud, please use:
+	https://carlwebster.com/downloads/download-info/citrix-cloud-citrix-virtual-apps-and-desktops-service/
+	`n`n
+	Script cannot continue
+	`n`n
+		"
+				AbortScript
+			}
+		}
+		Else
+		{
+			Write-Error "
+	`n`n
+	Missing Citrix PowerShell Snap-ins Detected, check the console above for more information. 
+	`n`n
+	This script is designed for XenApp/XenDesktop 7.8 through CVAD 2006 and should not be run on any other version.
+	`n`n
+	If you are running XA/XD 7.0 through 7.7, please use: 
+	https://carlwebster.com/downloads/download-info/xenappxendesktop-7-x-documentation-script/
+	`n`n
+	If you are running CVAD 2006 and later, please use:
+	https://carlwebster.com/downloads/download-info/citrix-virtual-apps-and-desktops-v3-script/
+	`n`n
+	If you are running Citrix Cloud, please use:
+	https://carlwebster.com/downloads/download-info/citrix-cloud-citrix-virtual-apps-and-desktops-service/
+	`n`n
+	If you are running the script remotely, did you install Studio or the PowerShell snapins on $($env:computername)?
+	`n`n
+	Please see the Prerequisites section in the ReadMe file https://carlwebster.sharefile.com/d-s4b07f1b891548ddb
+	`n`n
+	Script will now close.
+	`n`n
+		"
+			Exit
+		}
 	}
 
 	$Script:DoPolicies = $True
@@ -38651,63 +38761,74 @@ Function ProcessScriptSetup
 	}
 
 	#new for 2.28
-	$Script:XDSiteVersion = $Script:XDSite2.ProductVersion #added V2.28
-	$tmp = $Script:XDSiteVersion.Split(".")
-	[int]$MajorVersion = $tmp[0]
-	[int]$MinorVersion = $tmp[1]
-
-	If($MajorVersion -eq 7)
+	[version]$Script:CVADSiteVersion = $Script:XDSite2.ProductVersion
+	$Script:CVADSiteVersionReal = "Unknown"
+	Switch ($Script:CVADSiteVersion)
 	{
-		#this is a XenDesktop 7.x Site, now test to see if it is less than 7.8
-		If($MinorVersion -lt 8)
-		{
-			Write-Warning "You are running version $Script:XDSiteVersion"
-			Write-Warning "Are the PowerShell Snapins or Studio installed?"
-			Write-Warning "This script is designed for XenDesktop 7.8 and later and should not be run on 7.7 and earlier.
-			`n`n
-			Script cannot continue
-			`n"
-			AbortScript
-		}
+		"7.28"	{$Script:CVADSiteVersionReal = "CVAD 2012"; Break}
+		"7.27"	{$Script:CVADSiteVersionReal = "CVAD 2009"; Break}
+		"7.26"	{$Script:CVADSiteVersionReal = "CVAD 2006"; Break}
+		"7.25"	{$Script:CVADSiteVersionReal = "CVAD 2003"; Break}
+		"7.24"	{$Script:CVADSiteVersionReal = "CVAD 1912"; Break}
+		"7.23"	{$Script:CVADSiteVersionReal = "CVAD 1909"; Break}
+		"7.22"	{$Script:CVADSiteVersionReal = "CVAD 1906"; Break}
+		"7.21"	{$Script:CVADSiteVersionReal = "CVAD 1903"; Break}
+		"7.20"	{$Script:CVADSiteVersionReal = "CVAD 1811"; Break}
+		"7.19"	{$Script:CVADSiteVersionReal = "CVAD 1808"; Break}
+		"7.18"	{$Script:CVADSiteVersionReal = "XA/XD 7.18"; Break}
+		"7.17"	{$Script:CVADSiteVersionReal = "XA/XD 7.17"; Break}
+		"7.16"	{$Script:CVADSiteVersionReal = "XA/XD 7.16"; Break}
+		"7.15"	{$Script:CVADSiteVersionReal = "XA/XD 7.15"; Break}
+		"7.14"	{$Script:CVADSiteVersionReal = "XA/XD 7.14"; Break}
+		"7.13"	{$Script:CVADSiteVersionReal = "XA/XD 7.13"; Break}
+		"7.12"	{$Script:CVADSiteVersionReal = "XA/XD 7.12"; Break}
+		"7.11"	{$Script:CVADSiteVersionReal = "XA/XD 7.11"; Break}
+		"7.9"	{$Script:CVADSiteVersionReal = "XA/XD 7.9"; Break}
+		"7.8"	{$Script:CVADSiteVersionReal = "XA/XD 7.8"; Break}
+		"7.7"	{$Script:CVADSiteVersionReal = "XA/XD 7.7"; Break}
+		"7.6"	{$Script:CVADSiteVersionReal = "XA/XD 7.6"; Break}
+		"7.5"	{$Script:CVADSiteVersionReal = "XA/XD 7.5"; Break}
+		"7.1"	{$Script:CVADSiteVersionReal = "XD 7.1"; Break}
+		"7.0"	{$Script:CVADSiteVersionReal = "XD 7.0"; Break}
+		Default	{$Script:CVADSiteVersionReal = "Unknown"; Break}
 	}
-	ElseIf($MajorVersion -eq 0 -and $MinorVersion -eq 0)
+	Write-Verbose "$(Get-Date -Format G): You are running version $Script:CVADSiteVersion ($Script:CVADSiteVersionReal)"
+
+	If($MajorVersion -eq 0 -and $MinorVersion -eq 0)
 	{
 		#something is wrong, we shouldn't be here
-		Write-Verbose "$(Get-Date -Format G): Something bad happened. We shouldn't be here. Could not find the version information.
-		`n`n
-		Script cannot continue
-		`n"
+		Write-Error "
+	`n`n
+	Something bad happened. We shouldn't be here. Could not find the version information.
+	`n`n
+	Script cannot continue
+	`n`n
+		"
 		AbortScript
 	}
 	Else
 	{
 		#this is not a XenDesktop 7.x Site, script cannot proceed
-		Write-Warning "You are running version $Script:XDSiteVersion"
-		Write-Warning "Are the PowerShell Snapins or Studio installed?"
-		Write-Warning "This script is designed for XenDesktop 7.8 and later and should not be run on other versions of XenDesktop.
-		`n`n
-		Script cannot continue
-		`n"
+		Write-Host "You are running version $Script:CVADSiteVersion ($Script:CVADSiteVersionReal)" -ForegroundColor White
+		Write-Error "
+	`n`n
+	This script is designed for XenApp/XenDesktop 7.8 through CVAD 2006 and should not be run on $Script:CVADSiteVersionReal.
+	`n`n
+	If you are running XA/XD 7.0 through 7.7, please use: 
+	https://carlwebster.com/downloads/download-info/xenappxendesktop-7-x-documentation-script/
+	`n`n
+	If you are running CVAD 2006 and later, please use:
+	https://carlwebster.com/downloads/download-info/citrix-virtual-apps-and-desktops-v3-script/
+	`n`n
+	If you are running Citrix Cloud, please use:
+	https://carlwebster.com/downloads/download-info/citrix-cloud-citrix-virtual-apps-and-desktops-service/
+	`n`n
+	Script cannot continue
+	`n`n
+		"
 		AbortScript
 	}
 	
-	#V2.28 build real version 
-	$tmp = $Script:XDSiteVersion
-	Switch ($tmp)
-	{
-		"7.26"	{$Script:XDSiteVersion = "2006"; Break}	#added in 2.34
-		"7.25"	{$Script:XDSiteVersion = "2003"; Break}	#added in 2.33
-		"7.24"	{$Script:XDSiteVersion = "1912"; Break}	#added in 2.30
-		"7.23"	{$Script:XDSiteVersion = "1909"; Break}
-		"7.22"	{$Script:XDSiteVersion = "1906"; Break}
-		"7.21"	{$Script:XDSiteVersion = "1903"; Break}
-		"7.20"	{$Script:XDSiteVersion = "1811"; Break}
-		"7.19"	{$Script:XDSiteVersion = "1808"; Break}
-		Default	{$Script:XDSiteVersion = $tmp; Break}
-	}
-	Write-Verbose "$(Get-Date -Format G): You are running version $Script:XDSiteVersion"
-	#end of new for 2.28
-
 	[string]$Script:XDSiteName = $Script:XDSite2.SiteName
 	Switch ($Section)
 	{
