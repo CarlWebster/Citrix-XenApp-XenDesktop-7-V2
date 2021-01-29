@@ -7190,7 +7190,7 @@ Function OutputMachines
 	ElseIf($Text)
 	{
 		Line 0 "                                                                              No. of   Allocated Allocation                                            "
-		Line 0 "Machine Catalog                           Machine Type                        Machines Machines  Type       User Data         Provisioning Method      "
+		Line 0 "Machine Catalog                          Machine Type                         Machines Machines  Type       User Data         Provisioning Method      "
 		Line 0 "======================================================================================================================================================="
 		#       1234567890123456789012345678901234567890S123456789012345678901234567890123456S12345678S12345678SS1234567890S12345678901234567S1234567890123456789012345
 		#                                                Single-session OS (Remote PC Access)                               On personal vDisk Machine creation services
@@ -39560,7 +39560,7 @@ Function OutputAppendixD
 		Line 0 "Appendix D - Citrix Installed Components"
 		Line 0 "This Appendix is for Controller comparison only"
 		Line 0 ""
-		Line 1 "Display Name                                                       Display Version          DDC Name                                "
+		Line 1 "Display Name                                                      Display Version           DDC Name                                "
 		Line 1 "===================================================================================================================================="
 		#       12345678901234567890123456789012345678901234567890123456789012345S1234567890123456789012345S1234567890123456789012345678901234567890
 		#       Citrix Delegated Administration Service PowerShell snap-in - x64  11.16.6.0 build 33000     DDC123456789012.123456789012345.local 
