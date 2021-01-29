@@ -7210,7 +7210,7 @@ Function OutputMachines
 		#updated for CVAD 1909 in V2.28
 		If($Catalog.MachinesArePhysical -eq $True -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "SingleSession")
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Single-session OS"
 			}
@@ -7222,7 +7222,7 @@ Function OutputMachines
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $True -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "MultiSession")
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Multi-session OS"
 			}
@@ -7234,7 +7234,7 @@ Function OutputMachines
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $False -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "SingleSession")
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Single-session OS (Virtual)"
 			}
@@ -7246,7 +7246,7 @@ Function OutputMachines
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $False -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "MultiSession")
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Multi-session OS (Virtual)"
 			}
@@ -7258,7 +7258,7 @@ Function OutputMachines
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $True -and $Catalog.IsRemotePC -eq $True)
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Single-session OS (Remote PC Access)"
 			}
@@ -7390,7 +7390,7 @@ Function OutputMachines
 		#updated for CVAD 1909 in V2.28
 		If($Catalog.MachinesArePhysical -eq $True -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "SingleSession")
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Single-session OS"
 			}
@@ -7401,7 +7401,7 @@ Function OutputMachines
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $True -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "MultiSession")
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Multi-session OS"
 			}
@@ -7412,7 +7412,7 @@ Function OutputMachines
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $False -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "SingleSession")
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Single-session OS (Virtual)"
 			}
@@ -7423,7 +7423,7 @@ Function OutputMachines
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $False -and $Catalog.IsRemotePC -eq $False -and $Catalog.SessionSupport -eq "MultiSession")
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Multi-session OS (Virtual)"
 			}
@@ -7434,7 +7434,7 @@ Function OutputMachines
 		}
 		ElseIf($Catalog.MachinesArePhysical -eq $True -and $Catalog.IsRemotePC -eq $True)
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xCatalogType = "Single-session OS (Remote PC Access)"
 			}
@@ -11764,7 +11764,7 @@ Function OutputDeliveryGroupTable
 		#updated for CVAD 1909 in V2.28
 		If($Group.SessionSupport -eq "SingleSession")
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xSingleSession = "Single-session OS"
 			}
@@ -11775,7 +11775,7 @@ Function OutputDeliveryGroupTable
 		}
 		Else
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$xSingleSession = "Multi-session OS"
 			}
@@ -11921,7 +11921,7 @@ Function OutputDeliveryGroup
 	#updated for CVAD 1909 in V2.28
 	If($Group.SessionSupport -eq "SingleSession")
 	{
-		If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+		If($Script:XDSiteVersion -ge 7.23)
 		{
 			$xSingleSession = "Single-session OS"
 		}
@@ -11932,7 +11932,7 @@ Function OutputDeliveryGroup
 	}
 	Else
 	{
-		If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+		If($Script:XDSiteVersion -ge 7.23)
 		{
 			$xSingleSession = "Multi-session OS"
 		}
@@ -36176,7 +36176,7 @@ Function OutputHosting
 			OutputWarning $txt
 		}
 
-		If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+		If($Script:XDSiteVersion -ge 7.23)
 		{
 			Write-Verbose "$(Get-Date -Format G): `tProcessing Single-session OS Data"
 		}
@@ -36193,7 +36193,7 @@ Function OutputHosting
 			If($MSWord -or $PDF)
 			{
 				$Selection.InsertNewPage()
-				If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+				If($Script:XDSiteVersion -ge 7.23)
 				{
 					WriteWordLine 4 0 "Single-session OS Machines ($($cnt))"
 				}
@@ -36204,7 +36204,7 @@ Function OutputHosting
 			}
 			ElseIf($Text)
 			{
-				If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+				If($Script:XDSiteVersion -ge 7.23)
 				{
 					Line 0 "Single-session OS Machines ($($cnt))"
 				}
@@ -36216,7 +36216,7 @@ Function OutputHosting
 			}
 			ElseIf($HTML)
 			{
-				If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+				If($Script:XDSiteVersion -ge 7.23)
 				{
 					WriteHTMLLine 4 0 "Single-session OS Machines ($($cnt))"
 				}
@@ -36233,7 +36233,7 @@ Function OutputHosting
 		}
 		ElseIf($? -and ($Null -eq $DesktopOSMachines))
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$txt = "There are no Single-session OS Machines"
 			}
@@ -36245,7 +36245,7 @@ Function OutputHosting
 		}
 		Else
 		{
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$txt = "Unable to retrieve Single-session OS Machines"
 			}
@@ -36257,7 +36257,7 @@ Function OutputHosting
 		}
 
 		#updated for CVAD 1909 in V2.28
-		If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+		If($Script:XDSiteVersion -ge 7.23)
 		{
 			Write-Verbose "$(Get-Date -Format G): `tProcessing Multi-session OS Data"
 		}
@@ -36275,7 +36275,7 @@ Function OutputHosting
 			{
 				$Selection.InsertNewPage()
 				#updated for CVAD 1909 in V2.28
-				If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+				If($Script:XDSiteVersion -ge 7.23)
 				{
 					WriteWordLine 4 0 "Multi-session OS Machines ($($cnt))"
 				}
@@ -36288,7 +36288,7 @@ Function OutputHosting
 			{
 				Line 0 ""
 				#updated for CVAD 1909 in V2.28
-				If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+				If($Script:XDSiteVersion -ge 7.23)
 				{
 					Line 0 "Multi-session OS Machines ($($cnt))"
 				}
@@ -36301,7 +36301,7 @@ Function OutputHosting
 			ElseIf($HTML)
 			{
 				#updated for CVAD 1909 in V2.28
-				If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+				If($Script:XDSiteVersion -ge 7.23)
 				{
 					WriteHTMLLine 4 0 "Multi-session OS Machines ($($cnt))"
 				}
@@ -36319,7 +36319,7 @@ Function OutputHosting
 		ElseIf($? -and ($Null -eq $ServerOSMachines))
 		{
 			#updated for CVAD 1909 in V2.28
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$txt = "There are no Multi-session OS Machines"
 			}
@@ -36332,7 +36332,7 @@ Function OutputHosting
 		Else
 		{
 			#updated for CVAD 1909 in V2.28
-			If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+			If($Script:XDSiteVersion -ge 7.23)
 			{
 				$txt = "Unable to retrieve Multi-session OS Machines"
 			}
@@ -38039,7 +38039,7 @@ Function OutputSummaryPage
 		$ScriptInformation = New-Object System.Collections.ArrayList
 		WriteWordLine 4 0 "Machine Catalogs"
 		#updated for CVAD 1909 in V2.28
-		If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+		If($Script:XDSiteVersion -ge 7.23)
 		{
 			$ScriptInformation.Add(@{Data = "Total Multi-session OS Catalogs"; Value = $Script:TotalServerOSCatalogs.ToString(); }) > $Null
 			$ScriptInformation.Add(@{Data = 'Total Single-session OS Catalogs'; Value = $Script:TotalDesktopOSCatalogs.ToString(); }) > $Null
@@ -38325,7 +38325,7 @@ Function OutputSummaryPage
 	{
 		Line 0 "Machine Catalogs"
 		#updated for CVAD 1909 in V2.28
-		If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+		If($Script:XDSiteVersion -ge 7.23)
 		{
 			Line 1 "Total Multi-session OS Catalogs`t: " $Script:TotalServerOSCatalogs
 			Line 1 "Total Single-session OS Catalogs: " $Script:TotalDesktopOSCatalogs
@@ -38407,7 +38407,7 @@ Function OutputSummaryPage
 	{
 		$rowdata = @()
 		#updated for CVAD 1909 in V2.28
-		If([Single]::Parse($Script:XDSiteVersion) -ge 1909)
+		If($Script:XDSiteVersion -ge 7.23)
 		{
 			$columnHeaders = @("Total Multi-session OS Catalogs",($global:htmlsb),$Script:TotalServerOSCatalogs.ToString(),$htmlwhite)
 			$rowdata += @(,('Total Single-session OS Catalogs',($global:htmlsb),$Script:TotalDesktopOSCatalogs.ToString(),$htmlwhite))
@@ -38761,40 +38761,40 @@ Script cannot continue
 	}
 
 	#new for 2.28
-	[version]$Script:CVADSiteVersion = $Script:XDSite2.ProductVersion
-	$Script:CVADSiteVersionReal = "Unknown"
-	Switch ($Script:CVADSiteVersion)
+	[version]$Script:XDSiteVersion = $Script:XDSite2.ProductVersion
+	$Script:XDSiteVersionReal = "Unknown"
+	Switch ($Script:XDSiteVersion)
 	{
-		"7.28"	{$Script:CVADSiteVersionReal = "CVAD 2012"; Break}
-		"7.27"	{$Script:CVADSiteVersionReal = "CVAD 2009"; Break}
-		"7.26"	{$Script:CVADSiteVersionReal = "CVAD 2006"; Break}
-		"7.25"	{$Script:CVADSiteVersionReal = "CVAD 2003"; Break}
-		"7.24"	{$Script:CVADSiteVersionReal = "CVAD 1912"; Break}
-		"7.23"	{$Script:CVADSiteVersionReal = "CVAD 1909"; Break}
-		"7.22"	{$Script:CVADSiteVersionReal = "CVAD 1906"; Break}
-		"7.21"	{$Script:CVADSiteVersionReal = "CVAD 1903"; Break}
-		"7.20"	{$Script:CVADSiteVersionReal = "CVAD 1811"; Break}
-		"7.19"	{$Script:CVADSiteVersionReal = "CVAD 1808"; Break}
-		"7.18"	{$Script:CVADSiteVersionReal = "XA/XD 7.18"; Break}
-		"7.17"	{$Script:CVADSiteVersionReal = "XA/XD 7.17"; Break}
-		"7.16"	{$Script:CVADSiteVersionReal = "XA/XD 7.16"; Break}
-		"7.15"	{$Script:CVADSiteVersionReal = "XA/XD 7.15"; Break}
-		"7.14"	{$Script:CVADSiteVersionReal = "XA/XD 7.14"; Break}
-		"7.13"	{$Script:CVADSiteVersionReal = "XA/XD 7.13"; Break}
-		"7.12"	{$Script:CVADSiteVersionReal = "XA/XD 7.12"; Break}
-		"7.11"	{$Script:CVADSiteVersionReal = "XA/XD 7.11"; Break}
-		"7.9"	{$Script:CVADSiteVersionReal = "XA/XD 7.9"; Break}
-		"7.8"	{$Script:CVADSiteVersionReal = "XA/XD 7.8"; Break}
-		"7.7"	{$Script:CVADSiteVersionReal = "XA/XD 7.7"; Break}
-		"7.6"	{$Script:CVADSiteVersionReal = "XA/XD 7.6"; Break}
-		"7.5"	{$Script:CVADSiteVersionReal = "XA/XD 7.5"; Break}
-		"7.1"	{$Script:CVADSiteVersionReal = "XD 7.1"; Break}
-		"7.0"	{$Script:CVADSiteVersionReal = "XD 7.0"; Break}
-		Default	{$Script:CVADSiteVersionReal = "Unknown"; Break}
+		"7.28"	{$Script:XDSiteVersionReal = "CVAD 2012"; Break}
+		"7.27"	{$Script:XDSiteVersionReal = "CVAD 2009"; Break}
+		"7.26"	{$Script:XDSiteVersionReal = "CVAD 2006"; Break}
+		"7.25"	{$Script:XDSiteVersionReal = "CVAD 2003"; Break}
+		"7.24"	{$Script:XDSiteVersionReal = "CVAD 1912"; Break}
+		"7.23"	{$Script:XDSiteVersionReal = "CVAD 1909"; Break}
+		"7.22"	{$Script:XDSiteVersionReal = "CVAD 1906"; Break}
+		"7.21"	{$Script:XDSiteVersionReal = "CVAD 1903"; Break}
+		"7.20"	{$Script:XDSiteVersionReal = "CVAD 1811"; Break}
+		"7.19"	{$Script:XDSiteVersionReal = "CVAD 1808"; Break}
+		"7.18"	{$Script:XDSiteVersionReal = "XA/XD 7.18"; Break}
+		"7.17"	{$Script:XDSiteVersionReal = "XA/XD 7.17"; Break}
+		"7.16"	{$Script:XDSiteVersionReal = "XA/XD 7.16"; Break}
+		"7.15"	{$Script:XDSiteVersionReal = "XA/XD 7.15"; Break}
+		"7.14"	{$Script:XDSiteVersionReal = "XA/XD 7.14"; Break}
+		"7.13"	{$Script:XDSiteVersionReal = "XA/XD 7.13"; Break}
+		"7.12"	{$Script:XDSiteVersionReal = "XA/XD 7.12"; Break}
+		"7.11"	{$Script:XDSiteVersionReal = "XA/XD 7.11"; Break}
+		"7.9"	{$Script:XDSiteVersionReal = "XA/XD 7.9"; Break}
+		"7.8"	{$Script:XDSiteVersionReal = "XA/XD 7.8"; Break}
+		"7.7"	{$Script:XDSiteVersionReal = "XA/XD 7.7"; Break}
+		"7.6"	{$Script:XDSiteVersionReal = "XA/XD 7.6"; Break}
+		"7.5"	{$Script:XDSiteVersionReal = "XA/XD 7.5"; Break}
+		"7.1"	{$Script:XDSiteVersionReal = "XD 7.1"; Break}
+		"7.0"	{$Script:XDSiteVersionReal = "XD 7.0"; Break}
+		Default	{$Script:XDSiteVersionReal = "Unknown"; Break}
 	}
-	Write-Verbose "$(Get-Date -Format G): You are running version $Script:CVADSiteVersion ($Script:CVADSiteVersionReal)"
+	Write-Verbose "$(Get-Date -Format G): You are running version $Script:XDSiteVersion ($Script:XDSiteVersionReal)"
 
-	If($Script:CVADSiteVersion.Major -eq 0 -and $Script:CVADSiteVersion.Minor -eq 0)
+	If($Script:XDSiteVersion.Major -eq 0 -and $Script:XDSiteVersion.Minor -eq 0)
 	{
 		#something is wrong, we shouldn't be here
 		Write-Error "
@@ -38806,13 +38806,13 @@ Script cannot continue
 		"
 		AbortScript
 	}
-	ElseIf($Script:CVADSiteVersion.Major -eq 7 -and ($Script:CVADSiteVersion.Minor -lt 8 -or $Script:CVADSiteVersion.Minor -gt 26))
+	ElseIf($Script:XDSiteVersion.Major -eq 7 -and ($Script:XDSiteVersion.Minor -lt 8 -or $Script:XDSiteVersion.Minor -gt 26))
 	{
 		#this is not a XenDesktop 7.x Site, script cannot proceed
-		Write-Host "You are running version $Script:CVADSiteVersion ($Script:CVADSiteVersionReal)" -ForegroundColor White
+		Write-Host "You are running version $Script:XDSiteVersion ($Script:XDSiteVersionReal)" -ForegroundColor White
 		Write-Error "
 	`n`n
-	This script is designed for XenApp/XenDesktop 7.8 through CVAD 2006 and should not be run on $Script:CVADSiteVersionReal.
+	This script is designed for XenApp/XenDesktop 7.8 through CVAD 2006 and should not be run on $Script:XDSiteVersionReal.
 	`n`n
 	If you are running XA/XD 7.0 through 7.7, please use: 
 	https://carlwebster.com/downloads/download-info/xenappxendesktop-7-x-documentation-script/
