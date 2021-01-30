@@ -3,6 +3,13 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.40 30-Jan-2021
+#	Added getting hardware information for the license server when -Hardware is used
+#	Added getting hardware information for the SQL Server(s) when -Hardware is used
+#	Fixed duplicate item in the HTML output for Machine Catalogs
+#	Fixed wrong variable name when getting the Monitoring database mirroring information
+#	Updated the WMI query code for getting the Power Plan to handle the case where the Power Plan data is missing in the WMI repository
+
 #Version 2.39 25-Jan-2021
 #	Added error checking in Function Check-NeededPSSnapins (Requested by Guy Leech)
 #	Updated Function ProcessScriptSetup to have standard error checking between the four XA/XD/CVAD/CC doc scripts
