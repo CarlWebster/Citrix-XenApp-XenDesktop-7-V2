@@ -1067,9 +1067,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.39
+	VERSION: 2.40
 	AUTHOR: Carl Webster
-	LASTEDIT: January 25, 2021
+	LASTEDIT: January 30, 2021
 #>
 
 #endregion
@@ -1269,6 +1269,13 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.40 30-Jan-2021
+#	Added getting hardware information for the license server when -Hardware is used
+#	Added getting hardware information for the SQL Server(s) when -Hardware is used
+#	Fixed duplicate item in the HTML output for Machine Catalogs
+#	Fixed wrong variable name when getting the Monitoring database mirroring information
+#	Updated the WMI query code for getting the Power Plan to handle the case where the Power Plan data is missing in the WMI repository
+#	
 #Version 2.39 25-Jan-2021
 #	Added error checking in Function Check-NeededPSSnapins (Requested by Guy Leech)
 #	Updated Function ProcessScriptSetup to have standard error checking between the four XA/XD/CVAD/CC doc scripts
@@ -3137,7 +3144,7 @@ Function OutputComputerItem
 	try 
 	{
 
-		$PowerPlan = (Get-WmiObject -ComputerName $RemoteComputerName -Class Win32_PowerPlan -Namespace "root\cimv2\power" |
+		$PowerPlan = (Get-WmiObject -ComputerName $RemoteComputerName -Class Win32_PowerPlan -Namespace "root\cimv2\power" -EA 0 |
 			Where-Object {$_.IsActive -eq $true} |
 			Select-Object @{Name = "PowerPlan"; Expression = {$_.ElementName}}).PowerPlan
 	}
@@ -3145,7 +3152,7 @@ Function OutputComputerItem
 	catch 
 	{
 
-		$PowerPlan = $_.Exception
+		$PowerPlan = $_.Exception.Message
 
 	}	
 	
@@ -8269,10 +8276,9 @@ Function OutputMachines
 		{
 			WriteHTMLLine 2 0 "Machine Catalog: $($Catalog.Name)"
 			$rowdata = @()
-			$columnHeaders = @("Machine type",($global:htmlsb),$xCatalogType,$htmlwhite)
+			$columnHeaders = @("Description",($global:htmlsb),$Catalog.Description,$htmlwhite)
 			If($Catalog.ProvisioningType -eq "MCS")
 			{
-				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
 				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
 				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines.ToString(),$htmlwhite))
 				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount.ToString(),$htmlwhite))
@@ -8376,7 +8382,6 @@ Function OutputMachines
 			}
 			ElseIf($Catalog.ProvisioningType -eq "PVS")
 			{
-				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
 				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
 				$rowdata += @(,('Provisioning method',($global:htmlsb),$xProvisioningType,$htmlwhite))
 				$rowdata += @(,('PVS address',($global:htmlsb),$Catalog.PvsAddress,$htmlwhite))
@@ -8418,8 +8423,6 @@ Function OutputMachines
 			}
 			ElseIf($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -eq $True)
 			{
-				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
-
 				If($RemotePCAccounts -is [array])
 				{
 					ForEach($RemotePCAccount in $RemotePCAccounts)
@@ -8517,7 +8520,6 @@ Function OutputMachines
 			}
 			ElseIf($Catalog.ProvisioningType -eq "Manual" -and $Catalog.IsRemotePC -ne $True)
 			{
-				$rowdata += @(,('Description',($global:htmlsb),$Catalog.Description,$htmlwhite))
 				$rowdata += @(,('Machine Type',($global:htmlsb),$xCatalogType,$htmlwhite))
 				$rowdata += @(,('No. of machines',($global:htmlsb),$NumberOfMachines.ToString(),$htmlwhite))
 				$rowdata += @(,('Allocated machines',($global:htmlsb),$Catalog.UsedCount.ToString(),$htmlwhite))
@@ -31560,6 +31562,7 @@ Function OutputDatastores
 	[string]$ConfigDBSQLVersion = "Unable to determine"
 	[string]$ConfigSQLServerPrincipalNameIPAddress = ""
 	[string]$ConfigSQLServerMirrorNameIPAddress = ""
+	$SQLServerNames = @()
 	
 	$ConfigDBs = Get-ConfigDBConnection @XDParams1
 
@@ -31583,10 +31586,14 @@ Function OutputDatastores
 		If($ConfigSQLServerPrincipalName.Contains("\"))
 		{
 			$ConfigSQLServerPrincipalNameIPAddress = Get-IPAddress $ConfigSQLServerPrincipalName.Substring(0,$ConfigSQLServerPrincipalName.IndexOf("\"))
+			#add in V2.40 get hardware info for the sql server(s)
+			$SQLServerNames += $ConfigSQLServerPrincipalName.Substring(0,$ConfigSQLServerPrincipalName.IndexOf("\"))
 		}
 		Else
 		{
 			$ConfigSQLServerPrincipalNameIPAddress = Get-IPAddress $ConfigSQLServerPrincipalName
+			#add in V2.40 get hardware info for the sql server(s)
+			$SQLServerNames += $ConfigSQLServerPrincipalName
 		}
 
 		If($ConfigSQLServerMirrorName -ne "Not Configured")
@@ -31594,10 +31601,14 @@ Function OutputDatastores
 			If($ConfigSQLServerMirrorName.Contains("\"))
 			{
 				$ConfigSQLServerMirrorNameIPAddress = Get-IPAddress $ConfigSQLServerMirrorName.Substring(0,$ConfigSQLServerMirrorName.IndexOf("\"))
+				#add in V2.40 get hardware info for the sql server(s)
+				$SQLServerNames += $ConfigSQLServerMirrorName.Substring(0,$ConfigSQLServerMirrorName.IndexOf("\"))
 			}
 			Else
 			{
 				$ConfigSQLServerMirrorNameIPAddress = Get-IPAddress $ConfigSQLServerMirrorName
+				#add in V2.40 get hardware info for the sql server(s)
+				$SQLServerNames += $ConfigSQLServerMirrorName
 			}
 		}
 		Else
@@ -31662,10 +31673,14 @@ Function OutputDatastores
 				If($Configdb.MirroringPartner.Contains("\"))
 				{
 					$ConfigDBMirroringPartnerIPAddress = Get-IPAddress $Configdb.MirroringPartner.Substring(0,$Configdb.MirroringPartner.IndexOf("\"))
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Configdb.MirroringPartner.Substring(0,$Configdb.MirroringPartner.IndexOf("\"))
 				}
 				Else
 				{
 					$ConfigDBMirroringPartnerIPAddress = Get-IPAddress $Configdb.MirroringPartner
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Configdb.MirroringPartner
 				}
 				$ConfigDBMirroringPartnerInstance	= $Configdb.MirroringPartnerInstance
 				$ConfigDBMirroringSafetyLevel		= $Configdb.MirroringSafetyLevel
@@ -31675,10 +31690,14 @@ Function OutputDatastores
 				If($Configdb.MirroringPartner.Contains("\"))
 				{
 					$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness.Substring(0,$Configdb.MirroringWitness.IndexOf("\"))
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Configdb.MirroringWitness.Substring(0,$Configdb.MirroringWitness.IndexOf("\"))
 				}
 				Else
 				{
 					$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Configdb.MirroringWitness
 				}
 				$ConfigDBMirroringWitnessStatus		= $Configdb.MirroringWitnessStatus
 			}
@@ -31760,10 +31779,14 @@ Function OutputDatastores
 		If($LogSQLServerPrincipalName.Contains("\"))
 		{
 			$LogSQLServerPrincipalNameIPAddress = Get-IPAddress $LogSQLServerPrincipalName.Substring(0,$LogSQLServerPrincipalName.IndexOf("\"))
+			#add in V2.40 get hardware info for the sql server(s)
+			$SQLServerNames += $LogSQLServerPrincipalName.Substring(0,$LogSQLServerPrincipalName.IndexOf("\"))
 		}
 		Else
 		{
 			$LogSQLServerPrincipalNameIPAddress = Get-IPAddress $LogSQLServerPrincipalName
+			#add in V2.40 get hardware info for the sql server(s)
+			$SQLServerNames += $LogSQLServerPrincipalName
 		}
 
 		If($LogSQLServerMirrorName -ne "Not Configured")
@@ -31771,10 +31794,14 @@ Function OutputDatastores
 			If($LogSQLServerMirrorName.Contains("\"))
 			{
 				$LogSQLServerMirrorNameIPAddress = Get-IPAddress $LogSQLServerMirrorName.Substring(0,$LogSQLServerMirrorName.IndexOf("\"))
+				#add in V2.40 get hardware info for the sql server(s)
+				$SQLServerNames += $LogSQLServerMirrorName.Substring(0,$LogSQLServerMirrorName.IndexOf("\"))
 			}
 			Else
 			{
 				$LogSQLServerMirrorNameIPAddress = Get-IPAddress $LogSQLServerMirrorName
+				#add in V2.40 get hardware info for the sql server(s)
+				$SQLServerNames += $LogSQLServerMirrorName
 			}
 		}
 		Else
@@ -31839,10 +31866,14 @@ Function OutputDatastores
 				If($Logdb.MirroringPartner.Contains("\"))
 				{
 					$LogDBMirroringPartnerIPAddress = Get-IPAddress $Logdb.MirroringPartner.Substring(0,$Logdb.MirroringPartner.IndexOf("\"))
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Logdb.MirroringPartner.Substring(0,$Logdb.MirroringPartner.IndexOf("\"))
 				}
 				Else
 				{
 					$LogDBMirroringPartnerIPAddress = Get-IPAddress $Logdb.MirroringPartner
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Logdb.MirroringPartner
 				}
 				$LogDBMirroringPartnerInstance	= $LogDB.MirroringPartnerInstance
 				$LogDBMirroringSafetyLevel		= $LogDB.MirroringSafetyLevel
@@ -31851,10 +31882,14 @@ Function OutputDatastores
 				If($Logdb.MirroringPartner.Contains("\"))
 				{
 					$LogDBMirroringWitnessIPAddress = Get-IPAddress $Logdb.MirroringWitness.Substring(0,$Logdb.MirroringWitness.IndexOf("\"))
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Logdb.MirroringWitness.Substring(0,$Logdb.MirroringWitness.IndexOf("\"))
 				}
 				Else
 				{
 					$LogDBMirroringWitnessIPAddress = Get-IPAddress $Logdb.MirroringWitness
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Logdb.MirroringWitness
 				}
 				$LogDBMirroringWitnessStatus	= $LogDB.MirroringWitnessStatus
 			}
@@ -31939,10 +31974,14 @@ Function OutputDatastores
 		If($MonitorSQLServerPrincipalName.Contains("\"))
 		{
 			$MonitorSQLServerPrincipalNameIPAddress = Get-IPAddress $MonitorSQLServerPrincipalName.Substring(0,$MonitorSQLServerPrincipalName.IndexOf("\"))
+			#add in V2.40 get hardware info for the sql server(s)
+			$SQLServerNames += $MonitorSQLServerPrincipalName.Substring(0,$MonitorSQLServerPrincipalName.IndexOf("\"))
 		}
 		Else
 		{
 			$MonitorSQLServerPrincipalNameIPAddress = Get-IPAddress $MonitorSQLServerPrincipalName
+			#add in V2.40 get hardware info for the sql server(s)
+			$SQLServerNames += $MonitorSQLServerPrincipalName
 		}
 
 		If($MonitorSQLServerMirrorName -ne "Not Configured")
@@ -31950,10 +31989,14 @@ Function OutputDatastores
 			If($MonitorSQLServerMirrorName.Contains("\"))
 			{
 				$MonitorSQLServerMirrorNameIPAddress = Get-IPAddress $MonitorSQLServerMirrorName.Substring(0,$MonitorSQLServerMirrorName.IndexOf("\"))
+				#add in V2.40 get hardware info for the sql server(s)
+				$SQLServerNames += $MonitorSQLServerMirrorName.Substring(0,$MonitorSQLServerMirrorName.IndexOf("\"))
 			}
 			Else
 			{
 				$MonitorSQLServerMirrorNameIPAddress = Get-IPAddress $MonitorSQLServerMirrorName
+				#add in V2.40 get hardware info for the sql server(s)
+				$SQLServerNames += $MonitorSQLServerMirrorName
 			}
 		}
 		Else
@@ -32018,10 +32061,14 @@ Function OutputDatastores
 				If($Monitordb.MirroringPartner.Contains("\"))
 				{
 					$MonitorDBMirroringPartnerIPAddress = Get-IPAddress $Monitordb.MirroringPartner.Substring(0,$Monitordb.MirroringPartner.IndexOf("\"))
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Monitordb.MirroringPartner.Substring(0,$Monitordb.MirroringPartner.IndexOf("\"))
 				}
 				Else
 				{
 					$MonitorDBMirroringPartnerIPAddress = Get-IPAddress $Monitordb.MirroringPartner
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $Monitordb.MirroringPartner
 				}
 				$MonitorDBMirroringPartnerInstance	= $MonitorDB.MirroringPartnerInstance
 				$MonitorDBMirroringSafetyLevel		= $MonitorDB.MirroringSafetyLevel
@@ -32029,11 +32076,15 @@ Function OutputDatastores
 				$MonitorDBMirroringWitness			= $MonitorDB.MirroringWitness
 				If($Configdb.MirroringPartner.Contains("\"))
 				{
-					$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness.Substring(0,$Configdb.MirroringWitness.IndexOf("\"))
+					$MonitorDBMirroringWitnessIPAddress = Get-IPAddress $MonitorDB.MirroringWitness.Substring(0,$MonitorDB.MirroringWitness.IndexOf("\"))
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $MonitorDB.MirroringWitness.Substring(0,$MonitorDB.MirroringWitness.IndexOf("\"))
 				}
 				Else
 				{
-					$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness
+					$MonitorDBMirroringWitnessIPAddress = Get-IPAddress $MonitorDB.MirroringWitness
+					#add in V2.40 get hardware info for the sql server(s)
+					$SQLServerNames += $MonitorDB.MirroringWitness
 				}
 				$MonitorDBMirroringWitnessStatus	= $MonitorDB.MirroringWitnessStatus
 			}
@@ -33084,6 +33135,20 @@ Function OutputDatastores
 			$msg = ""
 			$columnWidths = @("200","50")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "250"
+		}
+		
+		If($Hardware)
+		{
+			$SQLServerNames = $SQLServerNames | Sort-Object -Unique
+			
+			ForEach($SQLServerName in $SQLServerNames)
+			{
+				If($MSWord -or $PDF)
+				{
+					$Script:Selection.InsertNewPage()
+				}
+				GetComputerWMIInfo $SQLServerName
+			}
 		}
 	}
 	Else
@@ -37011,6 +37076,11 @@ Function OutputLicensingOverview
 		$msg = ""
 		$columnWidths = @("150","125")
 		FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "275"
+	}
+	
+	If($Hardware)
+	{
+		GetComputerWMIInfo $Script:XDSite1.LicenseServerName
 	}
 }
 
