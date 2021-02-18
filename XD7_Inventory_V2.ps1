@@ -15392,6 +15392,7 @@ Function OutputDeliveryGroupApplicationGroups
 			$msg = ""
 			$columnWidths = @("150","150","150")
 			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "450"
+			WriteHTMLLine 0 0 ""
 		}
 	}
 	ElseIf($? -and $Null -eq $ApplicationGroups)
