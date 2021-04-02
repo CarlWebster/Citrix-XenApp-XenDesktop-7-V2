@@ -3,6 +3,13 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.41 2-Apr-2021
+#	Added CVAD 2103/7.29 to version list
+#	Thanks to M. Foster for finding the following bugs:
+#	Update functions OutputConfigLogPreferences and OutputDatastores to handle configuration strings that contain "Data Source" instead of "Server"
+#	Update Function OutputDatastores to look for SQL Server names that contain "TCP://" and ":nnnn (port number)"
+#		Fixed several copy and paste errors that have been in the code for years
+
 #Version 2.40 30-Jan-2021
 #	Added getting hardware information for the license server when -Hardware is used
 #	Added getting hardware information for the SQL Server(s) when -Hardware is used
