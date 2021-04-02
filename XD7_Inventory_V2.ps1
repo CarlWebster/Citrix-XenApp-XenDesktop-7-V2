@@ -1067,9 +1067,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.40
+	VERSION: 2.41
 	AUTHOR: Carl Webster
-	LASTEDIT: January 30, 2021
+	LASTEDIT: April 2, 2021
 #>
 
 #endregion
@@ -1269,7 +1269,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.41
+#Version 2.41 2-Apr-2021
 #	Added CVAD 2103/7.29 to version list
 #	Thanks to M. Foster for finding the following bugs:
 #	Update functions OutputConfigLogPreferences and OutputDatastores to handle configuration strings that contain "Data Source" instead of "Server"
