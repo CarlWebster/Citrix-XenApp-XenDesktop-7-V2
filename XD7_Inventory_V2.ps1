@@ -14926,7 +14926,7 @@ Function OutputDeliveryGroupCatalogs
 	
 	If($? -and $Null -ne $MCs)
 	{
-		If($MCs.Count -gt 1)
+		If($MCs.Count -ge 1)
 		{
 			#V2.15 fix the sort -unique. Only the first item in the array was being returned.
 			#Adding -Property CatalogName was needed to get the full unique array returned
@@ -14950,7 +14950,7 @@ Function OutputDeliveryGroupCatalogs
 			$rowdata = @()
 		}
 
-		If($MCs.Count -gt 1)
+		If($MCs.Count -ge 1)
 		{
 			ForEach($MC in $MCs)
 			{
