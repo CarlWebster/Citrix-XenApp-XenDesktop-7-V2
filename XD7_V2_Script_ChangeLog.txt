@@ -3,6 +3,50 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.42 12-Apr-2021
+#	Changed how the Session Recording Status was obtained
+#	Fixed four typos of "Unabled" to "Unable"
+#	For the following three Delivery Group properties, if there is no data or value, use "-" to match all the other empty values
+#		All connections not through NetScaler Gateway
+#		Connections through NetScaler Gateway
+#		Restrict to tag
+#	In Machine details added 
+#		Draining Until Shutdown (Multi-session only)
+#		Last Connection Failure reason
+#			"None"                = "None"
+#			"SessionPreparation"  = "Session preparation"
+#			"RegistrationTimeout" = "Registration timeout"
+#			"ConnectionTimeout"   = "Connection Timeout"
+#			"Licensing"           = "Licensing"
+#			"Ticketing"           = "Ticketing"
+#			"Other"               = "Other"
+#		Maintenance Mode reason
+#			"Administrator"          = "Machine was manually placed in maintenance mode by an administrator"
+#			"MaxFailedRegistrations" = "Machine was automatically placed in maintenance mode due to reaching the maximum failed registration limit"
+#			"None"                   = "Machine is not in maintenance mode"
+#		Will Shutdown After Use reason
+#			"None"                   = "Machine will not shutdown after use"
+#			"ResetDiskImage"         = "Machine will shutdown after use to reset its disk image"
+#			"ScheduledNaturalReboot" = "Machine will shutdown after use as part of the scheduled natural reboot process"
+#			"OnDemandNaturalReboot"  = "Machine will shutdown after use as part of an on-demand natural reboot process"
+#	In Machine Details, for MCS catalogs, if the Provisioning Scheme doesn't exist, set the $MasterVM variable to "Unable to retrieve details"
+#	To get the Master VM for an Azure Catalog, add searching for ".manageddisk"
+#		Also added ".snapshot" which was found in customer data
+#	Updated the text explanations for:
+#		Machine Fault State
+#			"None"          = "No fault; machine is healthy"
+#			"FailedToStart" = "Last power-on operation for machine failed"
+#			"StuckOnBoot"   = "Machine does not seem to have booted following power on"
+#			"Unregistered"  = "Machine has failed to register within expected period, or its registration has been rejected"
+#			"MaxCapacity"   = "Machine is reporting itself at maximum capacity"
+#		Machine Scheduled Reboot
+#			"None"       = "No reboot is scheduled"
+#			"Pending"    = "Machine is awaiting reboot but is available for us"
+#			"Draining"   = "Machine is awaiting reboot and is unavailable for new sessions; reconnections to existing connections are still allowed, however"
+#			"InProgress" = "Machine is actively undergoing a scheduled reboot"
+#			"Natural"    = "Natural reboot in progress. Machine is awaiting a restart"
+#	When testing a session for Session Recording status, add a test for $null -ne $results
+
 #Version 2.41 2-Apr-2021
 #	Added CVAD 2103/7.29 to version list
 #	Thanks to M. Foster for finding the following bugs:
