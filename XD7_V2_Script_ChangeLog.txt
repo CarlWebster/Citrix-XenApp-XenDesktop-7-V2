@@ -4,6 +4,7 @@
 # Created on October 20, 2013
 
 #Version 2.42 12-Apr-2021
+#	Added CVAD 2106/7.30 to version list
 #	Changed how the Session Recording Status was obtained
 #	Fixed four typos of "Unabled" to "Unable"
 #	For the following three Delivery Group properties, if there is no data or value, use "-" to match all the other empty values

@@ -1270,6 +1270,7 @@ Param(
 # This script is based on the 1.20 script
 
 #Version 2.42 12-Apr-2021
+#	Added CVAD 2106/7.30 to version list
 #	Changed how the Session Recording Status was obtained
 #	Fixed four typos of "Unabled" to "Unable"
 #	For the following three Delivery Group properties, if there is no data or value, use "-" to match all the other empty values
@@ -38911,6 +38912,7 @@ Function ProcessScriptSetup
 			$CVADSiteVersionReal = "Unknown"
 			Switch ($CVADSiteVersion)
 			{
+				"7.30"	{$CVADSiteVersionReal = "CVAD 2106"; Break}
 				"7.29"	{$CVADSiteVersionReal = "CVAD 2103"; Break}
 				"7.28"	{$CVADSiteVersionReal = "CVAD 2012"; Break}
 				"7.27"	{$CVADSiteVersionReal = "CVAD 2009"; Break}
@@ -39103,6 +39105,7 @@ Script cannot continue
 	$Script:XDSiteVersionReal = "Unknown"
 	Switch ($Script:XDSiteVersion)
 	{
+		"7.30"	{$Script:XDSiteVersionReal = "CVAD 2106"; Break}
 		"7.29"	{$Script:XDSiteVersionReal = "CVAD 2103"; Break}
 		"7.28"	{$Script:XDSiteVersionReal = "CVAD 2012"; Break}
 		"7.27"	{$Script:XDSiteVersionReal = "CVAD 2009"; Break}
