@@ -659,11 +659,11 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 .EXAMPLE
-	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 01/01/2021 -EndDate 
-	01/31/2021	
+	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 06/01/2021 -EndDate 
+	06/31/2021	
 	
-	Creates a report with Configuration Logging details for the dates 01/01/2021 through 
-	01/31/2021.
+	Creates a report with Configuration Logging details for the dates 06/01/2021 through 
+	06/31/2021.
 	
 	Uses all Default values.
 	HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo\CompanyName="Carl 
@@ -1067,9 +1067,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.42
+	VERSION: 2.43
 	AUTHOR: Carl Webster
-	LASTEDIT: April 12, 2021
+	LASTEDIT: July 29, 2021
 #>
 
 #endregion
@@ -1269,8 +1269,55 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.42 12-Apr-2021
+#Version 2.43 29-Jul-2021
+#	Added Computer Policy
+#		ICA\Graphics\Dynamic windows preview
+#		Profile Management\Enable profile streaming for folders
+#		Profile Management\Advanced settings\Enable credential-based access to user stores
+#		Profile Management\Advanced settings\Replicate user stores - Paths to replicate a user store
+#		Profile Management\File system\Large File Handling List - Files to be created as symbolic links
+#		Profile Management\Profile container settings\Enable local caching for profile containers
+#		Profile Management\Profile container settings\Folders to exclude in profile container
+#		Profile Management\Profile container settings\Folders to include in profile container
+#		Workspace Environment Management\Citrix Cloud Connectors
 #	Added CVAD 2106/7.30 to version list
+#	Changed the array built for the User policy setting ICA\Printing\Universal Printing\Universal printing optimization defaults
+#		from splitting on "," to splitting on ";"
+#	Changed the processing for the following policy settings. When they are Disabled in the console, the State value is still Enabled.
+#		If the State property is Enabled and the Value property is "", then show the policy setting as disabled.
+#			Profile Management\Basic settings\Migrate user store
+#			Profile Management\Basic settings\Path to user store
+#			Profile Management\Cross-Platform settings\Path to cross-platform definitions
+#			Profile Management\Cross-Platform settings\Path to cross-platform settings store
+#			Profile Management\Log settings\Path to log file
+#			Profile Management\Profile handling\Path to the template profile
+#			Profile Management\Citrix Virtual Apps Optimization settings\Path to Citrix Virtual Apps optimization definitions:
+#			ICA\Multimedia\Browser Content Redirection Proxy Configuration
+#			Profile Management\Folder Redirection\AppData(Roaming)\AppData(Roaming) path
+#			Profile Management\Folder Redirection\Contacts\Contacts path
+#			Profile Management\Folder Redirection\Desktop\Desktop path
+#			Profile Management\Folder Redirection\Documents\Documents path
+#			Profile Management\Folder Redirection\Downloads\Downloads path
+#			Profile Management\Folder Redirection\Favorites\Favorites path
+#			Profile Management\Folder Redirection\Links\Links path
+#			Profile Management\Folder Redirection\Music\Music path
+#			Profile Management\Folder Redirection\Pictures\Pictures path
+#			Profile Management\Folder Redirection\Saved Games\Saved Games path
+#			Profile Management\Folder Redirection\Searches\Searches path
+#			Profile Management\Folder Redirection\Start Menu\Start Menu path
+#			Profile Management\Folder Redirection\Videos\Videos path
+#	Changed the way the array was built and processed for ICA\Multi-Stream Connections\Multi-Port Policy\CGP default port and CGP default port priority
+#	Cleaned up text output for policy settings
+#	Fixed numerous typos in Switch statements for policy settings
+#	Fixed wrong variable name used to create array for Virtual Delivery Agent Settings\Monitoring\List of applications excluded from failure monitoring
+#	For Computer policy setting ICA\Keyboard and IME\Client keyboard layout synchronization and IME improvement, 
+#		add Disabled option to Switch statement
+#	Renamed Computer policy
+#		ICA\Virtual channel white list to ICA\Virtual channel allow list
+#		ICA\WebSockets\WebSocket connections to ICA\WebSockets\WebSockets connections
+#	Update the Site version Switch statement for version 7.30/2106
+#
+#Version 2.42 12-Apr-2021
 #	Changed how the Session Recording Status was obtained
 #	Fixed four typos of "Unabled" to "Unable"
 #	For the following three Delivery Group properties, if there is no data or value, use "-" to match all the other empty values
@@ -9861,7 +9908,7 @@ Function OutputMachineDetails
 		"SingleMultiSessionMismatch"			{$xLastDeregistrationReason = "Single Multi Session Mismatch"; Break}
 		"UnknownError"							{$xLastDeregistrationReason = "Unknown Error"; Break}
 		"UnsupportedCredentialSecurityVersion"	{$xLastDeregistrationReason = "Unsupported Credential Security Version"; Break} 
-		Default {$xLastDeregistrationReason = "Unable to determine LastDeregistrationReason: $($Machine.LastDeregistrationReason)"; Break}
+		Default 								{$xLastDeregistrationReason = "Unable to determine LastDeregistrationReason: $($Machine.LastDeregistrationReason)"; Break}
 	}
 
 	$xPersistUserChanges = ""
@@ -11950,13 +11997,13 @@ Function OutputDeliveryGroupTable
 		{
 			$WordTable += @{
 			DeliveryGroupName = $xGroupName; 
-			DeliveryType = $xDeliveryType
-			NoOfMachines = $Group.TotalDesktops; 
-			SessionsInUse = $Group.Sessions; 
-			AppDisks = $xAppDisks
-			MachineType = $xSingleSession; 
-			Unregistered = $Group.DesktopsUnregistered; 
-			Disconnected = $Group.DesktopsDisconnected; 
+			DeliveryType      = $xDeliveryType
+			NoOfMachines      = $Group.TotalDesktops; 
+			SessionsInUse     = $Group.Sessions; 
+			AppDisks          = $xAppDisks
+			MachineType       = $xSingleSession; 
+			Unregistered      = $Group.DesktopsUnregistered; 
+			Disconnected      = $Group.DesktopsDisconnected; 
 			}
 		}
 		ElseIf($Text)
@@ -12888,7 +12935,7 @@ Function OutputDeliveryGroupDetails
 						"Always" 			{$xSessionReconnection = "Always"; Break}
 						"DisconnectedOnly"	{$xSessionReconnection = "Disconnected Only"; Break}
 						"SameEndpointOnly"	{$xSessionReconnection = "Same Endpoint Only"; Break}
-						Default {$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSetting.SessionReconnection)"; Break}
+						Default				{$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSetting.SessionReconnection)"; Break}
 					}
 					#added in V2.19
 					If($Null -ne $DesktopSetting.SecureIcaRequired)
@@ -13572,7 +13619,7 @@ Function OutputDeliveryGroupDetails
 						"Always" 			{$xSessionReconnection = "Always"; Break}
 						"DisconnectedOnly"	{$xSessionReconnection = "Disconnected Only"; Break}
 						"SameEndpointOnly"	{$xSessionReconnection = "Same Endpoint Only"; Break}
-						Default {$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSetting.SessionReconnection)"; Break}
+						Default				{$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSetting.SessionReconnection)"; Break}
 					}
 					#added in V2.19
 					If($Null -ne $DesktopSetting.SecureIcaRequired)
@@ -14244,7 +14291,7 @@ Function OutputDeliveryGroupDetails
 						"Always" 			{$xSessionReconnection = "Always"; Break}
 						"DisconnectedOnly"	{$xSessionReconnection = "Disconnected Only"; Break}
 						"SameEndpointOnly"	{$xSessionReconnection = "Same Endpoint Only"; Break}
-						Default {$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSetting.SessionReconnection)"; Break}
+						Default				{$xSessionReconnection = "Unable to determine Session Reconnection value: $($DesktopSetting.SessionReconnection)"; Break}
 					}
 					#added in V2.19
 					If($Null -ne $DesktopSetting.SecureIcaRequired)
@@ -18007,7 +18054,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t  " $tmp
 									}
 								}
 								$txt = ""
@@ -18100,7 +18147,7 @@ Function ProcessCitrixPolicies
 							"DiagnosticMode"	{$tmp = "Diagnostic mode"; Break}
 							"Off"				{$tmp = "Off"; Break}
 							"Preferred"			{$tmp = "Preferred"; Break}
-							Default {$tmp = "HDX Enlightened Data Transport: $($Setting.HDXEnlightenedDataTransport.Value)"; Break}
+							Default				{$tmp = "HDX Enlightened Data Transport: $($Setting.HDXEnlightenedDataTransport.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -18132,7 +18179,7 @@ Function ProcessCitrixPolicies
 							"DiagnosticMode"	{$tmp = "Diagnostic mode"; Break}
 							"Off"				{$tmp = "Off"; Break}
 							"Preferred"			{$tmp = "Preferred"; Break}
-							Default {$tmp = "HDX Adaptive Transport: $($Setting.HDXAdaptiveTransport.Value)"; Break}
+							Default				{$tmp = "HDX Adaptive Transport: $($Setting.HDXAdaptiveTransport.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -18270,7 +18317,7 @@ Function ProcessCitrixPolicies
 							"AllUpdatesDenied"		{$tmp = "Select changes are not updated on neither client nor host"; Break}
 							"UpdateToClientDenied"	{$tmp = "Host selection changes are not updated to client"; Break}
 							"UpdateToHostDenied"	{$tmp = "Client selection changes are not updated to host"; Break}
-							Default					{$tmp = "Clipboard selection update mode: $($Setting.PrimarySelectionUpdateMode.Value)"; Break}
+							Default					{$tmp = "Primary selection update mode: $($Setting.PrimarySelectionUpdateMode.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -18430,7 +18477,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t   " $tmp
 									}
 								}
 								$txt = ""
@@ -18464,7 +18511,7 @@ Function ProcessCitrixPolicies
 					{
 						#V2.34
 						#CVAD 2006
-						$txt = "ICA\Virtual channel white list"
+						$txt = "ICA\Virtual channel allow list"
 						If(validStateProp $Setting VirtualChannelWhiteList Values )
 						{
 							$tmpArray = $Setting.VirtualChannelWhiteList.Values
@@ -18515,7 +18562,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t      " $tmp
 									}
 								}
 								$txt = ""
@@ -18600,7 +18647,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t`t" $tmp
 									}
 								}
 							}
@@ -18797,7 +18844,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t`t" $tmp
 									}
 								}
 							}
@@ -18891,7 +18938,7 @@ Function ProcessCitrixPolicies
 								}
 								ElseIf($Text)
 								{
-									OutputPolicySetting "" $tmp
+									OutputPolicySetting "`t`t`t`t`t`t" $tmp
 								}
 								$tmp = "URL Pattern: $($Url)"
 								If($MSWord -or $PDF)
@@ -18909,7 +18956,7 @@ Function ProcessCitrixPolicies
 								}
 								ElseIf($Text)
 								{
-									OutputPolicySetting "" $tmp
+									OutputPolicySetting "`t`t`t`t`t`t" $tmp
 								}
 								$tmp = "Flash Instance: $($FlashInstance)"
 								If($MSWord -or $PDF)
@@ -18927,7 +18974,7 @@ Function ProcessCitrixPolicies
 								}
 								ElseIf($Text)
 								{
-									OutputPolicySetting "" $tmp
+									OutputPolicySetting "`t`t`t`t`t`t" $tmp
 								}
 							}
 							$Values = $Null
@@ -19157,9 +19204,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.AutoClientReconnectAuthenticationRequired.Value)
 						{
-							"DoNotRequireAuthentication" {$tmp = "Do not require authentication"; Break}
-							"RequireAuthentication"      {$tmp = "Require authentication"; Break}
-							Default {$tmp = "Auto client reconnect authentication could not be determined: $($Setting.AutoClientReconnectAuthenticationRequired.Value)"; Break}
+							"DoNotRequireAuthentication"	{$tmp = "Do not require authentication"; Break}
+							"RequireAuthentication"			{$tmp = "Require authentication"; Break}
+							Default							{$tmp = "Auto client reconnect authentication could not be determined: $($Setting.AutoClientReconnectAuthenticationRequired.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -19186,9 +19233,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.AutoClientReconnectLogging.Value)
 						{
-							"DoNotLogAutoReconnectEvents" {$tmp = "Do Not Log auto-reconnect events"; Break}
-							"LogAutoReconnectEvents"      {$tmp = "Log auto-reconnect events"; Break}
-							Default {$tmp = "Auto client reconnect logging could not be determined: $($Setting.AutoClientReconnectLogging.Value)"; Break}
+							"DoNotLogAutoReconnectEvents"	{$tmp = "Do Not Log auto-reconnect events"; Break}
+							"LogAutoReconnectEvents"		{$tmp = "Log auto-reconnect events"; Break}
+							Default							{$tmp = "Auto client reconnect logging could not be determined: $($Setting.AutoClientReconnectLogging.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -20274,6 +20321,27 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.DisplayMemoryLimit.Value 
 						}	
 					}
+					If((validStateProp $Setting DynamicPreview State ) -and ($Setting.DynamicPreview.State -ne "NotConfigured"))
+					{
+						$txt = "ICA\Graphics\Dynamic windows preview"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.DynamicPreview.State;
+							}
+						}
+						If($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.DynamicPreview.State,$htmlwhite))
+						}
+						If($Text)
+						{
+							OutputPolicySetting $txt $Setting.DynamicPreview.State 
+						}	
+					}
 					If((validStateProp $Setting DisplayDegradePreference State ) -and ($Setting.DisplayDegradePreference.State -ne "NotConfigured"))
 					{
 						$txt = "ICA\Graphics\Display mode degrade preference"
@@ -20493,7 +20561,7 @@ Function ProcessCitrixPolicies
 							"DoNotUseVideoCodec"		{$tmp = "Do not use video codec"; Break}
 							"UseVideoCodecIfPreferred"	{$tmp = "Use when preferred"; Break}
 							"ActivelyChangingRegions"	{$tmp = "For actively changing regions"; Break}
-							Default {$tmp = "Use video codec for compression could not be determined: $($Setting.UseVideoCodecForCompression.Value)"; Break}
+							Default						{$tmp = "Use video codec for compression could not be determined: $($Setting.UseVideoCodecForCompression.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -20610,9 +20678,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.IcaKeepAlives.Value)
 						{
-							"DoNotSendKeepAlives" {$tmp = "Do not send ICA keep alive messages"; Break}
-							"SendKeepAlives"      {$tmp = "Send ICA keep alive messages"; Break}
-							Default {$tmp = "ICA keep alives could not be determined: $($Setting.IcaKeepAlives.Value)"; Break}
+							"DoNotSendKeepAlives"	{$tmp = "Do not send ICA keep alive messages"; Break}
+							"SendKeepAlives"		{$tmp = "Send ICA keep alive messages"; Break}
+							Default					{$tmp = "ICA keep alives could not be determined: $($Setting.IcaKeepAlives.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -20643,6 +20711,7 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.ClientKeyboardLayoutSyncAndIME.Value)
 						{
+							"NotSupport"						{$tmp = "Disabled"; Break}
 							"ClientKeyboardLayoutSync"			{$tmp = "Support dynamic client keyboard layout synchronization"; Break}
 							"ClientKeyboardLayoutSyncAndIME"	{$tmp = "Support dynamic client keyboard layout synchronization and IME improvement"; Break}
 							Default 							{$tmp = "Client keyboard layout synchronization and IME improvement: $($Setting.ClientKeyboardLayoutSyncAndIME.Value)"; Break}
@@ -20733,7 +20802,7 @@ Function ProcessCitrixPolicies
 					}
 					If((validStateProp $Setting URLRedirectionBlackList State ) -and ($Setting.URLRedirectionBlackList.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\Local App Access\URL redirection blacklist"
+						$txt = "ICA\Local App Access\URL redirection black list"
 						If(validStateProp $Setting URLRedirectionBlackList Values )
 						{
 							$tmpArray = $Setting.URLRedirectionBlackList.Values
@@ -20784,7 +20853,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t       " $tmp
 									}
 								}
 							}
@@ -20793,7 +20862,7 @@ Function ProcessCitrixPolicies
 						}
 						Else
 						{
-							$tmp = "No URL redirection blacklist were found"
+							$tmp = "No URL redirection black list were found"
 							If($MSWord -or $PDF)
 							{
 								$SettingsWordTable += @{
@@ -20866,7 +20935,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t       " $tmp
 									}
 								}
 							}
@@ -21054,7 +21123,7 @@ Function ProcessCitrixPolicies
 								}
 								ElseIf($Text)
 								{
-									OutputPolicySetting "" $tmp
+									OutputPolicySetting "`t`t`t`t`t`t" $tmp
 								}
 							}
 						}
@@ -21111,7 +21180,7 @@ Function ProcessCitrixPolicies
 									}
 									If($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t`t`t       " $tmp
 									}
 								}
 							}
@@ -21124,7 +21193,7 @@ Function ProcessCitrixPolicies
 						#new in 7.17
 						If( $Setting.WebBrowserRedirectionBlacklist.PSObject.Properties[ 'Values' ] )
 						{
-							$txt = "ICA\Multimedia\Browser Content Redirection Blacklist Configuration"
+							$txt = "ICA\Multimedia\Browser Content Redirection Block List Configuration"
 							$array = $Setting.WebBrowserRedirectionBlacklist.Values
 							$tmp = $array[0]
 							If($MSWord -or $PDF)
@@ -21169,7 +21238,7 @@ Function ProcessCitrixPolicies
 									}
 									If($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t`t`t`t   " $tmp
 									}
 								}
 							}
@@ -21181,7 +21250,27 @@ Function ProcessCitrixPolicies
 					{
 						#new in 7.16
 						$txt = "ICA\Multimedia\Browser Content Redirection Proxy Configuration"
-						If($Setting.WebBrowserRedirectionProxy.State -eq "Enabled")
+						If($Setting.WebBrowserRedirectionProxy.State -eq "Enabled" -and $Setting.WebBrowserRedirectionProxy.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -21199,26 +21288,6 @@ Function ProcessCitrixPolicies
 							ElseIf($Text)
 							{
 								OutputPolicySetting $txt $Setting.WebBrowserRedirectionProxy.Value 
-							}
-						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.WebBrowserRedirectionProxy.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.WebBrowserRedirectionProxy.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.WebBrowserRedirectionProxy.State 
 							}
 						}
 					}
@@ -21580,36 +21649,41 @@ Function ProcessCitrixPolicies
 							$Port1Priority = ""
 							$Port2Priority = ""
 							$Port3Priority = ""
-							[string]$cgpport1 = $Tmp.substring(0, $Tmp.indexof(";"))
-							[string]$cgpport2 = $Tmp.substring($cgpport1.length + 1 , ($Tmp.indexof(";")+1))
-							[string]$cgpport3 = $Tmp.substring((($cgpport1.length + 1)+($cgpport2.length + 1)) , ($Tmp.indexof(";")+1))
-							[string]$cgpport1priority = $cgpport1.substring($cgpport1.length -1, 1)
-							[string]$cgpport2priority = $cgpport2.substring($cgpport2.length -1, 1)
-							[string]$cgpport3priority = $cgpport3.substring($cgpport3.length -1, 1)
-							$cgpport1 = $cgpport1.substring(0, $cgpport1.indexof(","))
-							$cgpport2 = $cgpport2.substring(0, $cgpport2.indexof(","))
-							$cgpport3 = $cgpport3.substring(0, $cgpport3.indexof(","))
+							$TmpArray      = $Tmp.Split(";")
+							$TmpArray2                = $TmpArray[0].Split(",")
+							[string]$cgpport1         = $TmpArray2[0]
+							[string]$cgpport1priority = $TmpArray2[1]
+
+							$TmpArray2                = $TmpArray[1].Split(",")
+							[string]$cgpport2         = $TmpArray2[0]
+							[string]$cgpport2priority = $TmpArray2[1]
+
+							$TmpArray2                = $TmpArray[2].Split(",")
+							[string]$cgpport3         = $TmpArray2[0]
+							[string]$cgpport3priority = $TmpArray2[1]
+							
 							Switch ($cgpport1priority)
 							{
-								"0"	{$Port1Priority = "Very High"; Break}
-								"2"	{$Port1Priority = "Medium"; Break}
-								"3"	{$Port1Priority = "Low"; Break}
+								"0"		{$Port1Priority = "Very High"; Break}
+								"2"		{$Port1Priority = "Medium"; Break}
+								"3"		{$Port1Priority = "Low"; Break}
 								Default	{$Port1Priority = "Unknown"; Break}
 							}
 							Switch ($cgpport2priority)
 							{
-								"0"	{$Port2Priority = "Very High"; Break}
-								"2"	{$Port2Priority = "Medium"; Break}
-								"3"	{$Port2Priority = "Low"; Break}
+								"0"		{$Port2Priority = "Very High"; Break}
+								"2"		{$Port2Priority = "Medium"; Break}
+								"3"		{$Port2Priority = "Low"; Break}
 								Default	{$Port2Priority = "Unknown"; Break}
 							}
 							Switch ($cgpport3priority)
 							{
-								"0"	{$Port3Priority = "Very High"; Break}
-								"2"	{$Port3Priority = "Medium"; Break}
-								"3"	{$Port3Priority = "Low"; Break}
+								"0"		{$Port3Priority = "Very High"; Break}
+								"2"		{$Port3Priority = "Medium"; Break}
+								"3"		{$Port3Priority = "Low"; Break}
 								Default	{$Port3Priority = "Unknown"; Break}
 							}
+
 							$txt1 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP port1"
 							$txt2 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP port1 priority"
 							$txt3 = "ICA\Multi-Stream Connections\Multi-Port Policy\CGP port2"
@@ -21969,7 +22043,7 @@ Function ProcessCitrixPolicies
 							}
 							ElseIf($Text)
 							{
-								OutputPolicySetting "`t`t`t`t`t`t" $tmp
+								OutputPolicySetting "`t`t`t`t`t`t`t`t`t   " $tmp
 							}
 						}
 						$tmp = $Null
@@ -22090,9 +22164,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.DefaultClientPrinter.Value)
 						{
-							"ClientDefault" {$tmp = "Set Default printer to the client's main printer"; Break}
-							"DoNotAdjust"   {$tmp = "Do not adjust the user's Default printer"; Break}
-							Default {$tmp = "Default printer could not be determined: $($Setting.DefaultClientPrinter.Value)"; Break}
+							"ClientDefault"	{$tmp = "Set Default printer to the client's main printer"; Break}
+							"DoNotAdjust"	{$tmp = "Do not adjust the user's Default printer"; Break}
+							Default			{$tmp = "Default printer could not be determined: $($Setting.DefaultClientPrinter.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -22223,10 +22297,10 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.AutoCreationEventLogPreference.Value)
 						{
-							"LogErrorsOnly"        {$tmp = "Log errors only"; Break}
-							"LogErrorsAndWarnings" {$tmp = "Log errors and warnings"; Break}
-							"DoNotLog"             {$tmp = "Do not log errors or warnings"; Break}
-							Default {$tmp = "Printer auto-creation event log preference could not be determined: $($Setting.AutoCreationEventLogPreference.Value)"; Break}
+							"LogErrorsOnly"			{$tmp = "Log errors only"; Break}
+							"LogErrorsAndWarnings"	{$tmp = "Log errors and warnings"; Break}
+							"DoNotLog"				{$tmp = "Do not log errors or warnings"; Break}
+							Default					{$tmp = "Printer auto-creation event log preference could not be determined: $($Setting.AutoCreationEventLogPreference.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -22299,7 +22373,7 @@ Function ProcessCitrixPolicies
 											}
 											ElseIf($Text)
 											{
-												OutputPolicySetting "" $tmp
+												OutputPolicySetting "`t`t`t     " $tmp
 											}
 											$tmp = "Shared Name: $($share)"
 											If($MSWord -or $PDF)
@@ -22317,7 +22391,7 @@ Function ProcessCitrixPolicies
 											}
 											ElseIf($Text)
 											{
-												OutputPolicySetting "" $tmp
+												OutputPolicySetting "`t`t`t     " $tmp
 											}
 										}
 										$index = $Null
@@ -22343,7 +22417,7 @@ Function ProcessCitrixPolicies
 											}
 											ElseIf($Text)
 											{
-												OutputPolicySetting "" $tmp
+												OutputPolicySetting "`t`t`t     " $tmp
 											}
 										}
 										$tmp1 = $Null
@@ -22407,11 +22481,11 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.ClientPrinterAutoCreation.Value)
 						{
-							"DoNotAutoCreate"    {$tmp = "Do not auto-create client printers"; Break}
-							"DefaultPrinterOnly" {$tmp = "Auto-create the client's Default printer only"; Break}
-							"LocalPrintersOnly"  {$tmp = "Auto-create local (non-network) client printers only"; Break}
-							"AllPrinters"        {$tmp = "Auto-create all client printers"; Break}
-							Default {$tmp = "Auto-create client printers could not be determined: $($Setting.ClientPrinterAutoCreation.Value)"; Break}
+							"DoNotAutoCreate"		{$tmp = "Do not auto-create client printers"; Break}
+							"DefaultPrinterOnly"	{$tmp = "Auto-create the client's Default printer only"; Break}
+							"LocalPrintersOnly"		{$tmp = "Auto-create local (non-network) client printers only"; Break}
+							"AllPrinters"			{$tmp = "Auto-create all client printers"; Break}
+							Default					{$tmp = "Auto-create client printers could not be determined: $($Setting.ClientPrinterAutoCreation.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -22480,9 +22554,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.ClientPrinterNames.Value)
 						{
-							"StandardPrinterNames" {$tmp = "Standard printer names"; Break}
-							"LegacyPrinterNames"   {$tmp = "Legacy printer names"; Break}
-							Default {$tmp = "Client printer names could not be determined: $($Setting.ClientPrinterNames.Value)"; Break}
+							"StandardPrinterNames"	{$tmp = "Standard printer names"; Break}
+							"LegacyPrinterNames"	{$tmp = "Legacy printer names"; Break}
+							Default					{$tmp = "Client printer names could not be determined: $($Setting.ClientPrinterNames.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -22739,11 +22813,11 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.PrinterPropertiesRetention.Value)
 						{
-							"SavedOnClientDevice"   {$tmp = "Saved on the client device only"; Break}
-							"RetainedInUserProfile" {$tmp = "Retained in user profile only"; Break}
-							"FallbackToProfile"     {$tmp = "Held in profile only if not saved on client"; Break}
-							"DoNotRetain"           {$tmp = "Do not retain printer properties"; Break}
-							Default {$tmp = "Printer properties retention could not be determined: $($Setting.PrinterPropertiesRetention.Value)"; Break}
+							"SavedOnClientDevice"	{$tmp = "Saved on the client device only"; Break}
+							"RetainedInUserProfile"	{$tmp = "Retained in user profile only"; Break}
+							"FallbackToProfile"		{$tmp = "Held in profile only if not saved on client"; Break}
+							"DoNotRetain"			{$tmp = "Do not retain printer properties"; Break}
+							Default					{$tmp = "Printer properties retention could not be determined: $($Setting.PrinterPropertiesRetention.Value)"; Break}
 						}
 
 						If($MSWord -or $PDF)
@@ -22873,11 +22947,11 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.UniversalPrintDriverUsage.Value)
 						{
-							"SpecificOnly"       {$tmp = "Use only printer model specific drivers"; Break}
-							"UpdOnly"            {$tmp = "Use universal printing only"; Break}
-							"FallbackToUpd"      {$tmp = "Use universal printing only if requested driver is unavailable"; Break}
-							"FallbackToSpecific" {$tmp = "Use printer model specific drivers only if universal printing is unavailable"; Break}
-							Default {$tmp = "Universal print driver usage could not be determined: $($Setting.UniversalPrintDriverUsage.Value)"; Break}
+							"SpecificOnly"			{$tmp = "Use only printer model specific drivers"; Break}
+							"UpdOnly"				{$tmp = "Use universal printing only"; Break}
+							"FallbackToUpd"			{$tmp = "Use universal printing only if requested driver is unavailable"; Break}
+							"FallbackToSpecific"	{$tmp = "Use printer model specific drivers only if universal printing is unavailable"; Break}
+							Default					{$tmp = "Universal print driver usage could not be determined: $($Setting.UniversalPrintDriverUsage.Value)"; Break}
 						}
 
 						If($MSWord -or $PDF)
@@ -22937,9 +23011,9 @@ Function ProcessCitrixPolicies
 						$txt = "ICA\Printing\Universal Print Server\SSL Compliance Mode"
 						Switch ($Setting.UpcSslComplianceMode.Value)
 						{
-							"None"	{$tmp = "None"; Break}
+							"None"		{$tmp = "None"; Break}
 							"SP800_52"	{$tmp = "SP800-52"; Break}
-							Default	{$tmp = "Universal Print Server SSL Compliance Mode value could not be determined: $($Setting.UpcSslComplianceMode.Value)"; Break}
+							Default		{$tmp = "Universal Print Server SSL Compliance Mode value could not be determined: $($Setting.UpcSslComplianceMode.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -23093,7 +23167,7 @@ Function ProcessCitrixPolicies
 							"UpsEnabledWithFallback"	{$tmp = "Enabled with fallback to Windows' native remote printing"; Break}
 							"UpsOnlyEnabled"			{$tmp = "Enabled with no fallback to Windows' native remote printing"; Break}
 							"UpsDisabled"				{$tmp = "Disabled"; Break} #added V2.20
-							Default	{$tmp = "Universal Print Server enable value could not be determined: $($Setting.UpsEnable.Value)"; Break}
+							Default						{$tmp = "Universal Print Server enable value could not be determined: $($Setting.UpsEnable.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -23227,7 +23301,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t`t`t`t`t      " $tmp
 									}
 								}
 							}
@@ -23285,9 +23359,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.EMFProcessingMode.Value)
 						{
-							"ReprocessEMFsForPrinter" {$tmp = "Reprocess EMFs for printer"; Break}
-							"SpoolDirectlyToPrinter"  {$tmp = "Spool directly to printer"; Break}
-							Default {$tmp = "Universal printing EMF processing mode could not be determined: $($Setting.EMFProcessingMode.Value)"; Break}
+							"ReprocessEMFsForPrinter"	{$tmp = "Reprocess EMFs for printer"; Break}
+							"SpoolDirectlyToPrinter"	{$tmp = "Spool directly to printer"; Break}
+							Default						{$tmp = "Universal printing EMF processing mode could not be determined: $($Setting.EMFProcessingMode.Value)"; Break}
 						}
 						 
 						If($MSWord -or $PDF)
@@ -23315,12 +23389,12 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.ImageCompressionLimit.Value)
 						{
-							"NoCompression"       {$tmp = "No compression"; Break}
-							"LosslessCompression" {$tmp = "Best quality (lossless compression)"; Break}
-							"MinimumCompression"  {$tmp = "High quality"; Break}
-							"MediumCompression"   {$tmp = "Standard quality"; Break}
-							"MaximumCompression"  {$tmp = "Reduced quality (maximum compression)"; Break}
-							Default {$tmp = "Universal printing image compression limit could not be determined: $($Setting.ImageCompressionLimit.Value)"; Break}
+							"NoCompression"			{$tmp = "No compression"; Break}
+							"LosslessCompression"	{$tmp = "Best quality (lossless compression)"; Break}
+							"MinimumCompression"	{$tmp = "High quality"; Break}
+							"MediumCompression"		{$tmp = "Standard quality"; Break}
+							"MaximumCompression"	{$tmp = "Reduced quality (maximum compression)"; Break}
+							Default					{$tmp = "Universal printing image compression limit could not be determined: $($Setting.ImageCompressionLimit.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -23363,7 +23437,7 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt "" 
 						}
 						
-						$TmpArray = $Setting.UPDCompressionDefaults.Value.Split(',')
+						$TmpArray = $Setting.UPDCompressionDefaults.Value.Split(';')
 						$tmp = ""
 						ForEach($Thing in $TmpArray)
 						{
@@ -23465,11 +23539,11 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.UniversalPrintingPreviewPreference.Value)
 						{
-							"NoPrintPreview"        {$tmp = "Do not use print preview for auto-created or generic universal printers"; Break}
-							"AutoCreatedOnly"       {$tmp = "Use print preview for auto-created printers only"; Break}
-							"GenericOnly"           {$tmp = "Use print preview for generic universal printers only"; Break}
-							"AutoCreatedAndGeneric" {$tmp = "Use print preview for both auto-created and generic universal printers"; Break}
-							Default {$tmp = "Universal printing preview preference could not be determined: $($Setting.UniversalPrintingPreviewPreference.Value)"; Break}
+							"NoPrintPreview"		{$tmp = "Do not use print preview for auto-created or generic universal printers"; Break}
+							"AutoCreatedOnly"		{$tmp = "Use print preview for auto-created printers only"; Break}
+							"GenericOnly"			{$tmp = "Use print preview for generic universal printers only"; Break}
+							"AutoCreatedAndGeneric"	{$tmp = "Use print preview for both auto-created and generic universal printers"; Break}
+							Default					{$tmp = "Universal printing preview preference could not be determined: $($Setting.UniversalPrintingPreviewPreference.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -23502,7 +23576,7 @@ Function ProcessCitrixPolicies
 							"MediumResolution"	{$tmp = "Medium Resolution (600 DPI)"; Break}
 							"HighResolution"	{$tmp = "High Resolution (1200 DPI)"; Break}
 							"Unlimited"			{$tmp = "No Limit"; Break}
-							Default {$tmp = "Universal printing print quality limit could not be determined: $($Setting.DPILimit.Value)"; Break}
+							Default				{$tmp = "Universal printing print quality limit could not be determined: $($Setting.DPILimit.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -23657,7 +23731,7 @@ Function ProcessCitrixPolicies
 							}
 							ElseIf($Text)
 							{
-								OutputPolicySetting "`t`t`t`t`t`t" $tmp
+								OutputPolicySetting "`t`t`t`t`t`t       " $tmp
 							}
 						}
 						$tmp = $Null
@@ -23958,9 +24032,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.WatermarkStyle.Value)
 						{
-							"StyleMultiple" {$tmp = "Multiple"; Break}
-							"StyleSingle"   {$tmp = "Single"; Break}
-							Default {$tmp = "Session watermark style could not be determined: $($Setting.WatermarkStyle.Value)"; Break}
+							"StyleMultiple"	{$tmp = "Multiple"; Break}
+							"StyleSingle"	{$tmp = "Single"; Break}
+							Default			{$tmp = "Session watermark style could not be determined: $($Setting.WatermarkStyle.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -24119,9 +24193,9 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.SessionTimeZone.Value)
 						{
-							"UseServerTimeZone" {$tmp = "Use server time zone"; Break}
-							"UseClientTimeZone" {$tmp = "Use client time zone"; Break}
-							Default {$tmp = "Use local time of client could not be determined: $($Setting.SessionTimeZone.Value)"; Break}
+							"UseServerTimeZone"	{$tmp = "Use server time zone"; Break}
+							"UseClientTimeZone"	{$tmp = "Use client time zone"; Break}
+							Default				{$tmp = "Use local time of client could not be determined: $($Setting.SessionTimeZone.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -24267,7 +24341,7 @@ Function ProcessCitrixPolicies
 								}
 								ElseIf($Text)
 								{
-									OutputPolicySetting "" $tmp
+									OutputPolicySetting "`t`t`t`t`t`t" $tmp
 								}
 							}
 						}
@@ -24321,7 +24395,7 @@ Function ProcessCitrixPolicies
 								}
 								ElseIf($Text)
 								{
-									OutputPolicySetting "" $tmp
+									OutputPolicySetting "`t`t`t`t`t`t" $tmp
 								}
 							}
 						}
@@ -24379,7 +24453,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t`t    " $tmp
 									}
 								}
 							}
@@ -24478,7 +24552,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t`t   " $tmp
 									}
 								}
 							}
@@ -24539,7 +24613,7 @@ Function ProcessCitrixPolicies
 							"ColorDepth24Bit"	{$tmp = "24 bits per pixel"; Break}
 							"ColorDepth16Bit"	{$tmp = "16 bits per pixel"; Break}
 							"ColorDepth8Bit"	{$tmp = "8 bits per pixel"; Break}
-							"Default" {$tmp = "Preferred color depth for simple graphics could not be determined: $($Setting.PreferredColorDepthForSimpleGraphics.Value)"; Break}
+							"Default"			{$tmp = "Preferred color depth for simple graphics could not be determined: $($Setting.PreferredColorDepthForSimpleGraphics.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -24591,7 +24665,7 @@ Function ProcessCitrixPolicies
 							"High"				{$tmp = "High"; Break}
 							"Medium"			{$tmp = "Medium"; Break}
 							"Low"				{$tmp = "Low"; Break}
-							"Default" {$tmp = "Visual quality could not be determined: $($Setting.VisualQuality.Value)"; Break}
+							"Default"			{$tmp = "Visual quality could not be determined: $($Setting.VisualQuality.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -24619,12 +24693,12 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.MinimumAdaptiveDisplayJpegQuality.Value)
 						{
-							"UltraHigh" {$tmp = "Ultra high"; Break}
+							"UltraHigh"	{$tmp = "Ultra high"; Break}
 							"VeryHigh"  {$tmp = "Very high"; Break}
 							"High"      {$tmp = "High"; Break}
 							"Normal"    {$tmp = "Normal"; Break}
 							"Low"       {$tmp = "Low"; Break}
-							Default {$tmp = "Minimum image quality could not be determined: $($Setting.MinimumAdaptiveDisplayJpegQuality.Value)"; Break}
+							Default		{$tmp = "Minimum image quality could not be determined: $($Setting.MinimumAdaptiveDisplayJpegQuality.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -24679,7 +24753,7 @@ Function ProcessCitrixPolicies
 							"Normal"    {$tmp = "Normal"; Break}
 							"Low"       {$tmp = "Low"; Break}
 							"None"      {$tmp = "None"; Break}
-							Default {$tmp = "Progressive compression level could not be determined: $($Setting.ProgressiveCompressionLevel.Value)"; Break}
+							Default		{$tmp = "Progressive compression level could not be determined: $($Setting.ProgressiveCompressionLevel.Value)"; Break}
 						}
 						
 						If($MSWord -or $PDF)
@@ -24865,7 +24939,7 @@ Function ProcessCitrixPolicies
 					Write-Verbose "$(Get-Date -Format G): `t`t`tICA\WebSockets"
 					If((validStateProp $Setting AcceptWebSocketsConnections State ) -and ($Setting.AcceptWebSocketsConnections.State -ne "NotConfigured"))
 					{
-						$txt = "ICA\WebSockets\WebSocket connections"
+						$txt = "ICA\WebSockets\WebSockets connections"
 						If($MSWord -or $PDF)
 						{
 							$SettingsWordTable += @{
@@ -24952,7 +25026,7 @@ Function ProcessCitrixPolicies
 								}
 								ElseIf($Text)
 								{
-									OutputPolicySetting "" $tmp
+									OutputPolicySetting "`t`t`t`t`t`t    " $tmp
 								}
 							}
 						}
@@ -25055,7 +25129,7 @@ Function ProcessCitrixPolicies
 							{
 								"BelowNormalOrLow"	{$tmp = "Below Normal or Low"; Break}
 								"Low"				{$tmp = "Low"; Break}
-								Default {$tmp = "CPU usage excluded process priority could not be determined: $($Setting.CPUUsageExcludedProcessPriority.Value)"; Break}
+								Default				{$tmp = "CPU usage excluded process priority could not be determined: $($Setting.CPUUsageExcludedProcessPriority.Value)"; Break}
 							}
 							If($MSWord -or $PDF)
 							{
@@ -25250,6 +25324,28 @@ Function ProcessCitrixPolicies
 					}
 
 					Write-Verbose "$(Get-Date -Format G): `t`t`tProfile Management"
+					If((validStateProp $Setting PSForFoldersEnabled State ) -and ($Setting.PSForFoldersEnabled.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\Enable profile streaming for folders" #added in 2012
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.PSForFoldersEnabled.State;
+							}
+						}
+						If($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.PSForFoldersEnabled.State,$htmlwhite))
+						}
+						If($Text)
+						{
+							OutputPolicySetting $txt $Setting.PSForFoldersEnabled.State
+						}
+					}
+
 					Write-Verbose "$(Get-Date -Format G): `t`t`tProfile Management\Advanced settings"
 					If((validStateProp $Setting CEIPEnabled State ) -and ($Setting.CEIPEnabled.State -ne "NotConfigured"))
 					{
@@ -25293,11 +25389,32 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.DisableDynamicConfig.State
 						}
 					}
+					If((validStateProp $Setting CredBasedAccessEnabled State ) -and ($Setting.CredBasedAccessEnabled.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\Advanced settings\Enable credential-based access to user stores"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.CredBasedAccessEnabled.State;
+							}
+						}
+						If($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.CredBasedAccessEnabled.State,$htmlwhite))
+						}
+						If($Text)
+						{
+							OutputPolicySetting $txt $Setting.CredBasedAccessEnabled.State
+						}
+					}
 					If((validStateProp $Setting FSLogixProfileContainerSupport State ) -and ($Setting.FSLogixProfileContainerSupport.State -ne "NotConfigured"))
 					{
 						#new in CVAD 2003
 						#added in V2.33
-						$txt = "Profile Management\Advanced settings\Enable multi-session write-back for FSLogix Profile Container"
+						$txt = "Profile Management\Advanced settings\Enable multi-session write-back for profile containers" #renamed in 2103
 						If($MSWord -or $PDF)
 						{
 							$SettingsWordTable += @{
@@ -25423,6 +25540,89 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $Setting.ProcessCookieFiles.State
 						}
 					}
+					If((validStateProp $Setting MultiSiteReplication_Part State ) -and ($Setting.MultiSiteReplication_Part.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\Advanced settings\Replicate user stores - Paths to replicate a user store"
+						If(validStateProp $Setting MultiSiteReplication_Part Values )
+						{
+							$tmpArray = $Setting.MultiSiteReplication_Part.Values
+							$tmp = ""
+							$cnt = 0
+							ForEach($Thing in $TmpArray)
+							{
+								If($Null -eq $Thing)
+								{
+									$Thing = ''
+								}
+								$cnt++
+								$tmp = "$($Thing) "
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$SettingsWordTable += @{
+										Text = $txt;
+										Value = $tmp;
+										}
+									}
+									If($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									If($Text)
+									{
+										OutputPolicySetting $txt $tmp
+									}
+								}
+								Else
+								{
+									If($MSWord -or $PDF)
+									{
+										$SettingsWordTable += @{
+										Text = "";
+										Value = $tmp;
+										}
+									}
+									If($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									If($Text)
+									{
+										OutputPolicySetting "`t`t`t`t`t`t`t`t`t`t`t    " $tmp
+									}
+								}
+								$txt = ""
+							}
+							$TmpArray = $Null
+							$tmp = $Null
+						}
+						Else
+						{
+							$tmp = "No Paths to replicate a user store were found"
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = $tmp;
+								}
+							}
+							If($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							If($Text)
+							{
+								OutputPolicySetting $txt $tmp
+							}
+						}
+					}
 
 					Write-Verbose "$(Get-Date -Format G): `t`t`tProfile Management\Basic settings"
 					If((validStateProp $Setting PSMidSessionWriteBack State ) -and ($Setting.PSMidSessionWriteBack.State -ne "NotConfigured"))
@@ -25539,7 +25739,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t " $tmp
 										}
 									}
 								}
@@ -25593,7 +25793,27 @@ Function ProcessCitrixPolicies
 					{
 						#V2.28 new in CVAD 1909
 						$txt = "Profile Management\Basic settings\Migrate user store"
-						If($Setting.MigrateUserStore_Part.State -eq "Enabled")
+						If($Setting.MigrateUserStore_Part.State -eq "Enabled" -and $Setting.MigrateUserStore_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -25611,26 +25831,6 @@ Function ProcessCitrixPolicies
 							ElseIf($Text)
 							{
 								OutputPolicySetting $txt $Setting.MigrateUserStore_Part.Value 
-							}
-						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.MigrateUserStore_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.MigrateUserStore_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.MigrateUserStore_Part.State
 							}
 						}
 					}
@@ -25658,7 +25858,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting DATPath_Part State ) -and ($Setting.DATPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Basic settings\Path to user store"
-						If($Setting.DATPath_Part.State -eq "Enabled")
+						If($Setting.DATPath_Part.State -eq "Enabled" -and $Setting.DATPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -25676,26 +25896,6 @@ Function ProcessCitrixPolicies
 							ElseIf($Text)
 							{
 								OutputPolicySetting $txt $Setting.DATPath_Part.Value 
-							}
-						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.DATPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.DATPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.DATPath_Part.State
 							}
 						}
 					}
@@ -25771,7 +25971,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t  " $tmp
 										}
 									}
 								}
@@ -25876,7 +26076,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t" $tmp
 										}
 									}
 								}
@@ -25950,7 +26150,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting CPSchemaPathData State ) -and ($Setting.CPSchemaPathData.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Cross-Platform settings\Path to cross-platform definitions"
-						If($Setting.CPSchemaPathData.State -eq "Enabled")
+						If($Setting.CPSchemaPathData.State -eq "Enabled" -and $Setting.CPSchemaPathData.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ELseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -25970,31 +26190,31 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.CPSchemaPathData.Value 
 							}
 						}
-						Else
+					}
+					If((validStateProp $Setting CPPathData State ) -and ($Setting.CPPathData.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\Cross-Platform settings\Path to cross-platform settings store"
+						If($Setting.CPPathData.State -eq "Enabled" -and $Setting.CPPathData.Value -eq "")
 						{
 							If($MSWord -or $PDF)
 							{
 								$SettingsWordTable += @{
 								Text = $txt;
-								Value = $Setting.CPSchemaPathData.State;
+								Value = "Disabled";
 								}
 							}
 							ElseIf($HTML)
 							{
 								$rowdata += @(,(
 								$txt,$htmlbold,
-								$Setting.CPSchemaPathData.State,$htmlwhite))
+								"Disabled",$htmlwhite))
 							}
 							ElseIf($Text)
 							{
-								OutputPolicySetting $txt $Setting.CPSchemaPathData.State
+								OutputPolicySetting $txt "Disabled"
 							}
 						}
-					}
-					If((validStateProp $Setting CPPathData State ) -and ($Setting.CPPathData.State -ne "NotConfigured"))
-					{
-						$txt = "Profile Management\Cross-Platform settings\Path to cross-platform settings store"
-						If($Setting.CPPathData.State -eq "Enabled")
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -26012,26 +26232,6 @@ Function ProcessCitrixPolicies
 							ElseIf($Text)
 							{
 								OutputPolicySetting $txt $Setting.CPPathData.Value 
-							}
-						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.CPPathData.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.CPPathData.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.CPPathData.State
 							}
 						}
 					}
@@ -26088,6 +26288,108 @@ Function ProcessCitrixPolicies
 							OutputPolicySetting $txt $tmp 
 						}
 					}
+					If((validStateProp $Setting LargeFileHandlingList_Part State ) -and ($Setting.LargeFileHandlingList_Part.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\File system\Large File Handling List - Files to be created as symbolic links"
+						If($Setting.LargeFileHandlingList_Part.State -eq "Enabled")
+						{
+							If(validStateProp $Setting LargeFileHandlingList_Part Values )
+							{
+								$tmpArray = $Setting.LargeFileHandlingList_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
+								{
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
+									{
+										If($MSWord -or $PDF)
+										{
+											$SettingsWordTable += @{
+											Text = $txt;
+											Value = $tmp;
+											}
+										}
+										If($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										If($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
+									}
+									Else
+									{
+										If($MSWord -or $PDF)
+										{
+											$SettingsWordTable += @{
+											Text = "";
+											Value = $tmp;
+											}
+										}
+										If($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										If($Text)
+										{
+											OutputPolicySetting "`t`t`t`t`t`t`t`t`t`t`t       " $tmp
+										}
+									}
+								}
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Large File Handling List - Files to be created as symbolic links were found"
+								If($MSWord -or $PDF)
+								{
+									$SettingsWordTable += @{
+									Text = $txt;
+									Value = $tmp;
+									}
+								}
+								If($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								If($Text)
+								{
+									OutputPolicySetting $txt $tmp
+								}
+							}
+						}
+						Else
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = $Setting.LargeFileHandlingList_Part.State;
+								}
+							}
+							If($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.LargeFileHandlingList_Part.State,$htmlwhite))
+							}
+							If($Text)
+							{
+								OutputPolicySetting $txt $Setting.LargeFileHandlingList_Part_Part.State
+							}
+						}
+					}
+
 					Write-Verbose "$(Get-Date -Format G): `t`t`tProfile Management\File system\Default Exclusions"
 					If((validStateProp $Setting DefaultExclusionListSyncDir State ) -and ($Setting.DefaultExclusionListSyncDir.State -ne "NotConfigured"))
 					{
@@ -26794,7 +27096,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t`t`t      " $tmp
 										}
 									}
 								}
@@ -26895,7 +27197,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t`t`t" $tmp
 										}
 									}
 								}
@@ -26998,7 +27300,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t`t`t`t " $tmp
 										}
 									}
 								}
@@ -27099,7 +27401,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t" $tmp
 										}
 									}
 								}
@@ -27200,7 +27502,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t`t`t" $tmp
 										}
 									}
 								}
@@ -27301,7 +27603,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t`t`t`t`t`t`t`t`t  " $tmp
 										}
 									}
 								}
@@ -27357,7 +27659,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRAppDataPath_Part State ) -and ($Setting.FRAppDataPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\AppData(Roaming)\AppData(Roaming) path"
-						If($Setting.FRAppDataPath_Part.State -eq "Enabled")
+						If($Setting.FRAppDataPath_Part.State -eq "Enabled" -and $Setting.FRAppDataPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -27377,26 +27699,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRAppDataPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRAppDataPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRAppDataPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRAppDataPath_Part.State
-							}
-						}
 					}
 					If((validStateProp $Setting FRAppData_Part State ) -and ($Setting.FRAppData_Part.State -ne "NotConfigured"))
 					{
@@ -27404,8 +27706,8 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.FRAppData_Part.Value)
 						{
-							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRAppData_Part.Value)"; Break}
+							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
+							Default 			{$tmp = "Redirection settings for AppData(Roaming) cannot be determined: $($Setting.FRAppData_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -27474,7 +27776,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRContactsPath_Part State ) -and ($Setting.FRContactsPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Contacts\Contacts path"
-						If($Setting.FRContactsPath_Part.State -eq "Enabled")
+						If($Setting.FRContactsPath_Part.State -eq "Enabled" -and $Setting.FRContactsPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -27494,26 +27816,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRContactsPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRContactsPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRContactsPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRContactsPath_Part.State
-							}
-						}
 					}
 					If((validStateProp $Setting FRContacts_Part State ) -and ($Setting.FRContacts_Part.State -ne "NotConfigured"))
 					{
@@ -27522,7 +27824,7 @@ Function ProcessCitrixPolicies
 						Switch ($Setting.FRContacts_Part.Value)
 						{
 							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRContacts_Part.Value)"; Break}
+							Default 			{$tmp = "Redirection settings for Contacts cannot be determined: $($Setting.FRContacts_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -27547,7 +27849,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRDesktopPath_Part State ) -and ($Setting.FRDesktopPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Desktop\Desktop path"
-						If($Setting.FRDesktopPath_Part.State -eq "Enabled")
+						If($Setting.FRDesktopPath_Part.State -eq "Enabled" -and $Setting.FRDesktopPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -27567,26 +27889,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRDesktopPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRDesktopPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRDesktopPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRDesktopPath_Part.State
-							}
-						}
 					}
 					If((validStateProp $Setting FRDesktop_Part State ) -and ($Setting.FRDesktop_Part.State -ne "NotConfigured"))
 					{
@@ -27595,7 +27897,7 @@ Function ProcessCitrixPolicies
 						Switch ($Setting.FRDesktop_Part.Value)
 						{
 							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRDesktop_Part.Value)"; Break}
+							Default 			{$tmp = "Redirection settings for Desktop cannot be determined: $($Setting.FRDesktop_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -27620,7 +27922,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRDocumentsPath_Part State ) -and ($Setting.FRDocumentsPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Documents\Documents path"
-						If($Setting.FRDocumentsPath_Part.State -eq "Enabled")
+						If($Setting.FRDocumentsPath_Part.State -eq "Enabled" -and $Setting.FRDocumentsPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -27640,26 +27962,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRDocumentsPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRDocumentsPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRDocumentsPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRDocumentsPath_Part.State
-							}
-						}
 					}
 					If((validStateProp $Setting FRDocuments_Part State ) -and ($Setting.FRDocuments_Part.State -ne "NotConfigured"))
 					{
@@ -27669,7 +27971,7 @@ Function ProcessCitrixPolicies
 						{
 							"RedirectUncPath"		{$tmp = "Redirect to the following UNC path"; Break}
 							"RedirectRelativeHome"	{$tmp = "Redirect to the users' home directory"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRDocuments_Part.Value)"; Break}
+							Default 				{$tmp = "Redirection settings for Documents cannot be determined: $($Setting.FRDocuments_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -27694,7 +27996,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRDownloadsPath_Part State ) -and ($Setting.FRDownloadsPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Downloads\Downloads path"
-						If($Setting.FRDownloadsPath_Part.State -eq "Enabled")
+						If($Setting.FRDownloadsPath_Part.State -eq "Enabled" -and $Setting.FRDownloadsPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -27714,26 +28036,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRDownloadsPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRDownloadsPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRDownloadsPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRDownloadsPath_Part.State
-							}
-						}
 					}
 					If((validStateProp $Setting FRDownloads_Part State ) -and ($Setting.FRDownloads_Part.State -ne "NotConfigured"))
 					{
@@ -27741,8 +28043,8 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.FRDownloads_Part.Value)
 						{
-							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRDownloads_Part.Value)"; Break}
+							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
+							Default 			{$tmp = "Redirection settings for Downloads cannot be determined: $($Setting.FRDownloads_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -27767,7 +28069,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRFavoritesPath_Part State ) -and ($Setting.FRFavoritesPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Favorites\Favorites path"
-						If($Setting.FRFavoritesPath_Part.State -eq "Enabled")
+						If($Setting.FRFavoritesPath_Part.State -eq "Enabled" -and $Setting.FRFavoritesPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -27787,26 +28109,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRFavoritesPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRFavoritesPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRFavoritesPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRFavoritesPath_Part.State
-							}
-						}
 					}
 					If((validStateProp $Setting FRFavorites_Part State ) -and ($Setting.FRFavorites_Part.State -ne "NotConfigured"))
 					{
@@ -27814,8 +28116,8 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.FRFavorites_Part.Value)
 						{
-							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRFavorites_Part.Value)"; Break}
+							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
+							Default 			{$tmp = "Redirection settings for Favorites cannot be determined: $($Setting.FRFavorites_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -27840,7 +28142,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRLinksPath_Part State ) -and ($Setting.FRLinksPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Links\Links path"
-						If($Setting.FRLinksPath_Part.State -eq "Enabled")
+						If($Setting.FRLinksPath_Part.State -eq "Enabled" -and $Setting.FRLinksPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -27860,26 +28182,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRLinksPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRLinksPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRLinksPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRLinksPath_Part.State
-							}
-						}
 					}
 					If((validStateProp $Setting FRLinks_Part State ) -and ($Setting.FRLinks_Part.State -ne "NotConfigured"))
 					{
@@ -27887,8 +28189,8 @@ Function ProcessCitrixPolicies
 						$tmp = ""
 						Switch ($Setting.FRLinks_Part.Value)
 						{
-							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRLinks_Part.Value)"; Break}
+							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
+							Default 			{$tmp = "Redirection settings for Links cannot be determined: $($Setting.FRLinks_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -27913,7 +28215,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRMusicPath_Part State ) -and ($Setting.FRMusicPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Music\Music path"
-						If($Setting.FRMusicPath_Part.State -eq "Enabled")
+						If($Setting.FRMusicPath_Part.State -eq "Enabled" -and $Setting.FRMusicPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -27933,26 +28255,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRMusicPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRMusicPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRMusicPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRMusicPath_Part.State
-							}
-						}
 					}
 					If((validStateProp $Setting FRMusic_Part State ) -and ($Setting.FRMusic_Part.State -ne "NotConfigured"))
 					{
@@ -27962,7 +28264,7 @@ Function ProcessCitrixPolicies
 						{
 							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
 							"RedirectRelativeDocuments" {$tmp = "Redirect relative to Documents folder"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRMusic_Part.Value)"; Break}
+							Default 					{$tmp = "Redirection settings for Music cannot be determined: $($Setting.FRMusic_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -27987,7 +28289,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRPicturesPath_Part State ) -and ($Setting.FRPicturesPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Pictures\Pictures path"
-						If($Setting.FRPicturesPath_Part.State -eq "Enabled")
+						If($Setting.FRPicturesPath_Part.State -eq "Enabled" -and $Setting.FRPicturesPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -28007,26 +28329,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRPicturesPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRPicturesPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRPicturesPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRPicturesPath_Part.State
-							}
-						}
 					}
 					If((validStateProp $Setting FRPictures_Part State ) -and ($Setting.FRPictures_Part.State -ne "NotConfigured"))
 					{
@@ -28036,7 +28338,7 @@ Function ProcessCitrixPolicies
 						{
 							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
 							"RedirectRelativeDocuments" {$tmp = "Redirect relative to Documents folder"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRPictures_Part.Value)"; Break}
+							Default 					{$tmp = "Redirection settings for Pictures cannot be determined: $($Setting.FRPictures_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -28065,7 +28367,7 @@ Function ProcessCitrixPolicies
 						Switch ($Setting.FRSavedGames_Part.Value)
 						{
 							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRSavedGames_Part.Value)"; Break}
+							Default 			{$tmp = "Redirection settings for Saved Games cannot be determined: $($Setting.FRSavedGames_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -28088,7 +28390,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRSavedGamesPath_Part State ) -and ($Setting.FRSavedGamesPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Saved Games\Saved Games path"
-						If($Setting.FRSavedGamesPath_Part.State -eq "Enabled")
+						If($Setting.FRSavedGamesPath_Part.State -eq "Enabled" -and $Setting.FRSavedGamesPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -28108,26 +28430,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRSavedGamesPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRSavedGamesPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRSavedGamesPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRSavedGamesPath_Part.State
-							}
-						}
 					}
 
 					Write-Verbose "$(Get-Date -Format G): `t`t`tProfile Management\Folder Redirection\Searches"
@@ -28138,7 +28440,7 @@ Function ProcessCitrixPolicies
 						Switch ($Setting.FRSearches_Part.Value)
 						{
 							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
-							Default {$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRSearches_Part.Value)"; Break}
+							Default 			{$tmp = "Redirection settings for Searches cannot be determined: $($Setting.FRSearches_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -28161,7 +28463,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRSearchesPath_Part State ) -and ($Setting.FRSearchesPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Searches\Searches path"
-						If($Setting.FRSearchesPath_Part.State -eq "Enabled")
+						If($Setting.FRSearchesPath_Part.State -eq "Enabled" -and $Setting.FRSearchesPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -28181,26 +28503,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRSearchesPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRSearchesPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRSearchesPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRSearchesPath_Part.State
-							}
-						}
 					}
 
 					Write-Verbose "$(Get-Date -Format G): `t`t`tProfile Management\Folder Redirection\Start Menu"
@@ -28211,7 +28513,7 @@ Function ProcessCitrixPolicies
 						Switch ($Setting.FRStartMenu_Part.Value)
 						{
 							"RedirectUncPath"	{$tmp = "Redirect to the following UNC path"; Break}
-							Default 			{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRStartMenu_Part.Value)"; Break}
+							Default 			{$tmp = "Redirection settings for Start Menu cannot be determined: $($Setting.FRStartMenu_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -28234,7 +28536,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRStartMenuPath_Part State ) -and ($Setting.FRStartMenuPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Start Menu\Start Menu path"
-						If($Setting.FRStartMenuPath_Part.State -eq "Enabled")
+						If($Setting.FRStartMenuPath_Part.State -eq "Enabled" -and $Setting.FRStartMenuPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -28254,26 +28576,6 @@ Function ProcessCitrixPolicies
 								OutputPolicySetting $txt $Setting.FRStartMenuPath_Part.Value 
 							}
 						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRStartMenuPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRStartMenuPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRStartMenuPath_Part.State
-							}
-						}
 					}
 
 					Write-Verbose "$(Get-Date -Format G): `t`t`tProfile Management\Folder Redirection\Videos"
@@ -28285,7 +28587,7 @@ Function ProcessCitrixPolicies
 						{
 							"RedirectUncPath"			{$tmp = "Redirect to the following UNC path"; Break}
 							"RedirectRelativeDocuments" {$tmp = "Redirect relative to Documents folder"; Break}
-							Default 					{$tmp = "AppData(Roaming) path cannot be determined: $($Setting.FRVideos_Part.Value)"; Break}
+							Default 					{$tmp = "Redirection settings for Videos cannot be determined: $($Setting.FRVideos_Part.Value)"; Break}
 						}
 						If($MSWord -or $PDF)
 						{
@@ -28308,7 +28610,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting FRVideosPath_Part State ) -and ($Setting.FRVideosPath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Folder Redirection\Videos\Videos path"
-						If($Setting.FRVideosPath_Part.State -eq "Enabled")
+						If($Setting.FRVideosPath_Part.State -eq "Enabled" -and $Setting.FRVideosPath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -28326,26 +28648,6 @@ Function ProcessCitrixPolicies
 							ElseIf($Text)
 							{
 								OutputPolicySetting $txt $Setting.FRVideosPath_Part.Value 
-							}
-						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.FRVideosPath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.FRVideosPath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.FRVideosPath_Part.State
 							}
 						}
 					}
@@ -28543,7 +28845,27 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting DebugFilePath_Part State ) -and ($Setting.DebugFilePath_Part.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Log settings\Path to log file"
-						If($Setting.DebugFilePath_Part.State -eq "Enabled")
+						If($Setting.DebugFilePath_Part.State -eq "Enabled" -and $Setting.DebugFilePath_Part.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$SettingsWordTable += @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled"
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -28561,26 +28883,6 @@ Function ProcessCitrixPolicies
 							ElseIf($Text)
 							{
 								OutputPolicySetting $txt $Setting.DebugFilePath_Part.Value 
-							}
-						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$SettingsWordTable += @{
-								Text = $txt;
-								Value = $Setting.DebugFilePath_Part.State;
-								}
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.DebugFilePath_Part.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.DebugFilePath_Part.State
 							}
 						}
 					}
@@ -28666,6 +28968,239 @@ Function ProcessCitrixPolicies
 						ElseIf($Text)
 						{
 							OutputPolicySetting $txt $Setting.LogLevel_RegistryDifference.State
+						}
+					}
+
+					Write-Verbose "$(Get-Date -Format G): `t`t`tProfile Management\Profile container settings"
+					If((validStateProp $Setting ProfileContainerLocalCache State ) -and ($Setting.ProfileContainerLocalCache.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\Profile container settings\Enable local caching for profile containers"
+						If($MSWord -or $PDF)
+						{
+							$SettingsWordTable += @{
+							Text = $txt;
+							Value = $Setting.ProfileContainerLocalCache.State;
+							}
+						}
+						If($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.ProfileContainerLocalCache.State,$htmlwhite))
+						}
+						If($Text)
+						{
+							OutputPolicySetting $txt $Setting.ProfileContainerLocalCache.State
+						}
+					}
+					If((validStateProp $Setting ProfileContainerExclusionListDir_Part State ) -and ($Setting.ProfileContainerExclusionListDir_Part.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\Profile container settings\Folders to exclude in profile container"
+						If($Setting.ProfileContainerExclusionListDir_Part.State -eq "Enabled")
+						{
+							If(validStateProp $Setting ProfileContainerExclusionListDir_Part Values )
+							{
+								$tmpArray = $Setting.ProfileContainerExclusionListDir_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
+								{
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
+									{
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										If($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										If($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
+									}
+									Else
+									{
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										If($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										If($Text)
+										{
+											OutputPolicySetting "`t`t`t`t`t`t`t`t`t`t     " $tmp
+										}
+									}
+								}
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Exclusion list was found"
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
+									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								If($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								If($Text)
+								{
+									OutputPolicySetting $txt $tmp
+								}
+							}
+						}
+						Else
+						{
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $Setting.ProfileContainerExclusionListDir_Part.State;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							If($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.ProfileContainerExclusionListDir_Part.State,$htmlwhite))
+							}
+							If($Text)
+							{
+								OutputPolicySetting $txt $Setting.ProfileContainerExclusionListDir_Part.State
+							}
+						}
+					}
+					If((validStateProp $Setting ProfileContainerInclusionListDir_Part State ) -and ($Setting.ProfileContainerInclusionListDir_Part.State -ne "NotConfigured"))
+					{
+						$txt = "Profile Management\Profile container settings\Folders to include in profile container"
+						If($Setting.ProfileContainerInclusionListDir_Part.State -eq "Enabled")
+						{
+							If(validStateProp $Setting ProfileContainerInclusionListDir_Part Values )
+							{
+								$tmpArray = $Setting.ProfileContainerInclusionListDir_Part.Values
+								$tmp = ""
+								$cnt = 0
+								ForEach($Thing in $tmpArray)
+								{
+									$cnt++
+									$tmp = "$($Thing)"
+									If($cnt -eq 1)
+									{
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = $txt;
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										If($HTML)
+										{
+											$rowdata += @(,(
+											$txt,$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										If($Text)
+										{
+											OutputPolicySetting $txt $tmp
+										}
+									}
+									Else
+									{
+										If($MSWord -or $PDF)
+										{
+											$WordTableRowHash = @{
+											Text = "";
+											Value = $tmp;
+											}
+											$SettingsWordTable += $WordTableRowHash;
+										}
+										If($HTML)
+										{
+											$rowdata += @(,(
+											"",$htmlbold,
+											$tmp,$htmlwhite))
+										}
+										If($Text)
+										{
+											OutputPolicySetting "`t`t`t`t`t`t`t`t`t`t     " $tmp
+										}
+									}
+								}
+								$tmpArray = $Null
+								$tmp = $Null
+							}
+							Else
+							{
+								$tmp = "No Exclusion list was found"
+								If($MSWord -or $PDF)
+								{
+									$WordTableRowHash = @{
+									Text = $txt;
+									Value = $tmp;
+									}
+									$SettingsWordTable += $WordTableRowHash;
+								}
+								If($HTML)
+								{
+									$rowdata += @(,(
+									$txt,$htmlbold,
+									$tmp,$htmlwhite))
+								}
+								If($Text)
+								{
+									OutputPolicySetting $txt $tmp
+								}
+							}
+						}
+						Else
+						{
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $Setting.ProfileContainerInclusionListDir_Part.State;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							If($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$Setting.ProfileContainerInclusionListDir_Part.State,$htmlwhite))
+							}
+							If($Text)
+							{
+								OutputPolicySetting $txt $Setting.ProfileContainerInclusionListDir_Part.State
+							}
 						}
 					}
 
@@ -28796,24 +29331,24 @@ Function ProcessCitrixPolicies
 					If((validStateProp $Setting TemplateProfilePath State ) -and ($Setting.TemplateProfilePath.State -ne "NotConfigured"))
 					{
 						$txt = "Profile Management\Profile handling\Path to the template profile"
-						If($Setting.TemplateProfilePath.State -eq "Enabled")
+						If($Setting.TemplateProfilePath.State -eq "Enabled" -and $Setting.TemplateProfilePath.Value -eq "")
 						{
 							If($MSWord -or $PDF)
 							{
 								$SettingsWordTable += @{
 								Text = $txt;
-								Value = $Setting.TemplateProfilePath.Value;
+								Value = "Disabled";
 								}
 							}
-							ElseIf($HTML)
+							If($HTML)
 							{
 								$rowdata += @(,(
 								$txt,$htmlbold,
-								$Setting.TemplateProfilePath.Value,$htmlwhite))
+								"Disabled",$htmlwhite))
 							}
-							ElseIf($Text)
+							If($Text)
 							{
-								OutputPolicySetting $txt $Setting.TemplateProfilePath.Value 
+								OutputPolicySetting $txt "Disabled"
 							}
 						}
 						Else
@@ -28822,18 +29357,18 @@ Function ProcessCitrixPolicies
 							{
 								$SettingsWordTable += @{
 								Text = $txt;
-								Value = $Setting.TemplateProfilePath.State;
+								Value = $Setting.TemplateProfilePath.Value;
 								}
 							}
-							ElseIf($HTML)
+							If($HTML)
 							{
 								$rowdata += @(,(
 								$txt,$htmlbold,
-								$Setting.TemplateProfilePath.State,$htmlwhite))
+								$Setting.TemplateProfilePath.Value,$htmlwhite))
 							}
-							ElseIf($Text)
+							If($Text)
 							{
-								OutputPolicySetting $txt $Setting.TemplateProfilePath.State
+								OutputPolicySetting $txt $Setting.TemplateProfilePath.Value 
 							}
 						}
 					}
@@ -28955,7 +29490,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t  " $tmp
 										}
 									}
 								}
@@ -28964,7 +29499,7 @@ Function ProcessCitrixPolicies
 							}
 							Else
 							{
-								$tmp = "No Exclusion list were found"
+								$tmp = "No Exclusion list was found"
 								If($MSWord -or $PDF)
 								{
 									$WordTableRowHash = @{
@@ -29060,7 +29595,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t  " $tmp
 										}
 									}
 								}
@@ -29474,7 +30009,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t`t`t      " $tmp
 										}
 									}
 								}
@@ -29576,7 +30111,28 @@ Function ProcessCitrixPolicies
 					{
 						#new in 7.16 and renamed in 1808
 						$txt = "Profile Management\Citrix Virtual Apps Optimization settings\Path to Citrix Virtual Apps optimization definitions:"
-						If($Setting.XenAppOptimizationDefinitionPathData.State -eq "Enabled")
+						If($Setting.XenAppOptimizationDefinitionPathData.State -eq "Enabled" -and $Setting.XenAppOptimizationDefinitionPathData.Value -eq "")
+						{
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = "Disabled";
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							ElseIf($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								"Disabled",$htmlwhite))
+							}
+							ElseIf($Text)
+							{
+								OutputPolicySetting $txt "Disabled" 
+							}
+						}
+						Else
 						{
 							If($MSWord -or $PDF)
 							{
@@ -29595,27 +30151,6 @@ Function ProcessCitrixPolicies
 							ElseIf($Text)
 							{
 								OutputPolicySetting $txt $Setting.XenAppOptimizationDefinitionPathData.Value 
-							}
-						}
-						Else
-						{
-							If($MSWord -or $PDF)
-							{
-								$WordTableRowHash = @{
-								Text = $txt;
-								Value = $Setting.XenAppOptimizationDefinitionPathData.State;
-								}
-								$SettingsWordTable += $WordTableRowHash;
-							}
-							ElseIf($HTML)
-							{
-								$rowdata += @(,(
-								$txt,$htmlbold,
-								$Setting.XenAppOptimizationDefinitionPathData.State,$htmlwhite))
-							}
-							ElseIf($Text)
-							{
-								OutputPolicySetting $txt $Setting.XenAppOptimizationDefinitionPathData.State 
 							}
 						}
 					}
@@ -29728,7 +30263,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t`t" $tmp
 									}
 								}
 								$xxx = $Null
@@ -29760,7 +30295,7 @@ Function ProcessCitrixPolicies
 							}
 							ElseIf($Text)
 							{
-								OutputPolicySetting "" $tmp
+								OutputPolicySetting "`t`t`t`t`t`t" $tmp
 							}
 						}
 					}
@@ -30228,9 +30763,9 @@ Function ProcessCitrixPolicies
 						$txt = "Virtual Delivery Agent Settings\Monitoring\List of applications excluded from failure monitoring"
 						If($Setting.StreamingExclusionList_Part.State -eq "Enabled")
 						{
-							If(validStateProp $Setting AppFailureExclusionList Values )
+							If(validStateProp $Setting AppFailureExclusionList Value )
 							{
-								$tmpArray = $Setting.AppFailureExclusionList.Values.Split(",")
+								$tmpArray = $Setting.AppFailureExclusionList.Value.Split(",")
 								$tmp = ""
 								$cnt = 0
 								ForEach($Thing in $tmpArray)
@@ -30276,7 +30811,7 @@ Function ProcessCitrixPolicies
 										}
 										ElseIf($Text)
 										{
-											OutputPolicySetting "" $tmp
+											OutputPolicySetting "`t`t`t`t`t`t`t`t`t`t`t`t" $tmp
 										}
 									}
 								}
@@ -30500,7 +31035,7 @@ Function ProcessCitrixPolicies
 									}
 									ElseIf($Text)
 									{
-										OutputPolicySetting "" $tmp
+										OutputPolicySetting "`t`t`t`t`t`t    " $tmp
 									}
 								}
 							}
@@ -30531,6 +31066,114 @@ Function ProcessCitrixPolicies
 						}
 					}
 				}
+
+				Write-Verbose "$(Get-Date -Format G): `t`t`tWorkspace Environment Management"
+				If((validStateProp $Setting WemCloudConnectorList State ) -and ($Setting.WemCloudConnectorList.State -ne "NotConfigured"))
+				{
+					$txt = "Workspace Environment Management\Citrix Cloud Connectors" #addedin 2103
+					If($Setting.WemCloudConnectorList.State -eq "Enabled")
+					{
+						If(validStateProp $Setting WemCloudConnectorList Values )
+						{
+							$tmpArray = $Setting.WemCloudConnectorList.Values.Split(",")
+							$tmp = ""
+							$cnt = 0
+							ForEach($Thing in $tmpArray)
+							{
+								$cnt++
+								$tmp = "$($Thing)"
+								If($cnt -eq 1)
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = $txt;
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									If($HTML)
+									{
+										$rowdata += @(,(
+										$txt,$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									If($Text)
+									{
+										OutputPolicySetting $txt $tmp
+									}
+								}
+								Else
+								{
+									If($MSWord -or $PDF)
+									{
+										$WordTableRowHash = @{
+										Text = "";
+										Value = $tmp;
+										}
+										$SettingsWordTable += $WordTableRowHash;
+									}
+									If($HTML)
+									{
+										$rowdata += @(,(
+										"",$htmlbold,
+										$tmp,$htmlwhite))
+									}
+									If($Text)
+									{
+										OutputPolicySetting "`t`t`t`t`t`t`t" $tmp
+									}
+								}
+							}
+							$tmpArray = $Null
+							$tmp = $Null
+						}
+						Else
+						{
+							$tmp = "No Citrix Cloud Connectors were found"
+							If($MSWord -or $PDF)
+							{
+								$WordTableRowHash = @{
+								Text = $txt;
+								Value = $tmp;
+								}
+								$SettingsWordTable += $WordTableRowHash;
+							}
+							If($HTML)
+							{
+								$rowdata += @(,(
+								$txt,$htmlbold,
+								$tmp,$htmlwhite))
+							}
+							If($Text)
+							{
+								OutputPolicySetting $txt $tmp
+							}
+						}
+					}
+					Else
+					{
+						If($MSWord -or $PDF)
+						{
+							$WordTableRowHash = @{
+							Text = $txt;
+							Value = $Setting.WemCloudConnectorList.State;
+							}
+							$SettingsWordTable += $WordTableRowHash;
+						}
+						If($HTML)
+						{
+							$rowdata += @(,(
+							$txt,$htmlbold,
+							$Setting.WemCloudConnectorList.State,$htmlwhite))
+						}
+						If($Text)
+						{
+							OutputPolicySetting $txt $Setting.WemCloudConnectorList.State 
+						}
+					}
+				}
+
 				If($MSWord -or $PDF)
 				{
 					If($SettingsWordTable.Count -gt 0) #V2.10 don't process if array is empty
@@ -30675,9 +31318,9 @@ Function Get-PrinterModifiedSettings
 				$tmp1 = $xelement.SubString($index + 1)
 				Switch ($tmp1)
 				{
-					1 {$tmp2 = "Monochrome"; Break}
-					2 {$tmp2 = "Color"; Break}
-					Default {$tmp2 = "Color could not be determined: $($xelement) "; Break}
+					1		{$tmp2 = "Monochrome"; Break}
+					2		{$tmp2 = "Color"; Break}
+					Default	{$tmp2 = "Color could not be determined: $($xelement) "; Break}
 				}
 				$ReturnStr = "$txt $tmp2"
 			}
@@ -30691,10 +31334,10 @@ Function Get-PrinterModifiedSettings
 				$tmp1 = $xelement.SubString($index + 1)
 				Switch ($tmp1)
 				{
-					-1 {$tmp2 = "150 dpi"; Break}
-					-2 {$tmp2 = "300 dpi"; Break}
-					-3 {$tmp2 = "600 dpi"; Break}
-					-4 {$tmp2 = "1200 dpi"; Break}
+					-1		{$tmp2 = "150 dpi"; Break}
+					-2		{$tmp2 = "300 dpi"; Break}
+					-3		{$tmp2 = "600 dpi"; Break}
+					-4		{$tmp2 = "1200 dpi"; Break}
 					Default {$tmp2 = "Custom...X resolution: $tmp1"; Break}
 				}
 				$ReturnStr = "$txt $tmp2"
@@ -30721,7 +31364,7 @@ Function Get-PrinterModifiedSettings
 				{
 					"portrait"  {$tmp2 = "Portrait"; Break}
 					"landscape" {$tmp2 = "Landscape"; Break}
-					Default {$tmp2 = "Orientation could not be determined: $($xelement) ; Break"}
+					Default		{$tmp2 = "Orientation could not be determined: $($xelement) ; Break"}
 				}
 				$ReturnStr = "$txt $tmp2"
 			}
@@ -30735,10 +31378,10 @@ Function Get-PrinterModifiedSettings
 				$tmp1 = $xelement.SubString($index + 1)
 				Switch ($tmp1)
 				{
-					1 {$tmp2 = "Simplex"; Break}
-					2 {$tmp2 = "Vertical"; Break}
-					3 {$tmp2 = "Horizontal"; Break}
-					Default {$tmp2 = "Duplex could not be determined: $($xelement) "; Break}
+					1		{$tmp2 = "Simplex"; Break}
+					2		{$tmp2 = "Vertical"; Break}
+					3		{$tmp2 = "Horizontal"; Break}
+					Default	{$tmp2 = "Duplex could not be determined: $($xelement) "; Break}
 				}
 				$ReturnStr = "$txt $tmp2"
 			}
@@ -30896,11 +31539,11 @@ Function Get-PrinterModifiedSettings
 				$tmp1 = $xelement.SubString($index + 1)
 				Switch ($tmp1)
 				{
-					1 {$tmp2 = "Bitmap"; Break}
-					2 {$tmp2 = "Download"; Break}
-					3 {$tmp2 = "Substitute"; Break}
-					4 {$tmp2 = "Outline"; Break}
-					Default {$tmp2 = "TrueType could not be determined: $($xelement) "; Break}
+					1		{$tmp2 = "Bitmap"; Break}
+					2		{$tmp2 = "Download"; Break}
+					3		{$tmp2 = "Substitute"; Break}
+					4		{$tmp2 = "Outline"; Break}
+					Default	{$tmp2 = "TrueType could not be determined: $($xelement) "; Break}
 				}
 			}
 			$ReturnStr = "$txt $tmp2"
@@ -31084,12 +31727,12 @@ Function OutputConfigLogPreferences
 					$Pair = $csitem.split('=').trimstart()
 					Switch ($Pair[0])
 					{
-						"Server"					{$LogSQLServerPrincipalName = $Pair[1]; Break}
-						"Data Source"				{$LogSQLServerPrincipalName = $Pair[1]; Break}
-						"Failover Partner"			{$LogSQLServerMirrorName = $Pair[1]; Break}
-						"MultiSubnetFailover"		{$LogSQLServerMirrorName = ""; Break}
-						"Database"					{$LogDatabaseName = $Pair[1]; Break}
-						"Initial Catalog"			{$LogDatabaseName = $Pair[1]; Break}
+						"Server"				{$LogSQLServerPrincipalName = $Pair[1]; Break}
+						"Data Source"			{$LogSQLServerPrincipalName = $Pair[1]; Break}
+						"Failover Partner"		{$LogSQLServerMirrorName = $Pair[1]; Break}
+						"MultiSubnetFailover"	{$LogSQLServerMirrorName = ""; Break}
+						"Database"				{$LogDatabaseName = $Pair[1]; Break}
+						"Initial Catalog"		{$LogDatabaseName = $Pair[1]; Break}
 					}
 				}
 			}
@@ -31621,16 +32264,16 @@ Function GetSQLVersion
 	$SQLEdition = $SQLsrv.EngineEdition
 	Switch ($Major)
 	{
-		8                          {$SQLVer = "SQL Server 2000"; Break}
-		9                          {$SQLVer = "SQL Server 2005"; Break}
-		{10 -and $Minor -eq 0}     {$SQLVer = "SQL Server 2008"} #can't do break here
-		{10 -and $Minor -eq 50}    {$SQLVer = "SQL Server 2008 R2"} #can't do break here #V2.12 fix from 5 to 50
-		11                         {$SQLVer = "SQL Server 2012"; Break}
-		12                         {$SQLVer = "SQL Server 2014"; Break}
-		13                         {$SQLVer = "SQL Server 2016"; Break}
-		14                         {$SQLVer = "SQL Server 2017"; Break}
-		15                         {$SQLVer = "SQL Server 2019"; Break}
-		Default                    {$SQLVer = "Unable to determine SQL Server version. Major: $($Major) Minor: $($Minor) Edition: $($SQLEdition)"; Break}
+		8						{$SQLVer = "SQL Server 2000"; Break}
+		9						{$SQLVer = "SQL Server 2005"; Break}
+		{10 -and $Minor -eq 0}	{$SQLVer = "SQL Server 2008"} #can't do break here
+		{10 -and $Minor -eq 50}	{$SQLVer = "SQL Server 2008 R2"} #can't do break here #V2.12 fix from 5 to 50
+		11						{$SQLVer = "SQL Server 2012"; Break}
+		12						{$SQLVer = "SQL Server 2014"; Break}
+		13						{$SQLVer = "SQL Server 2016"; Break}
+		14						{$SQLVer = "SQL Server 2017"; Break}
+		15						{$SQLVer = "SQL Server 2019"; Break}
+		Default					{$SQLVer = "Unable to determine SQL Server version. Major: $($Major) Minor: $($Minor) Edition: $($SQLEdition)"; Break}
 	}
 
 	Return "$($SQLVer) $($SQLEdition)"
@@ -31728,12 +32371,12 @@ Function OutputDatastores
 			$Pair = $csitem.split('=').trimstart()
 			Switch ($Pair[0])
 			{
-				"Server"					{$ConfigSQLServerPrincipalName = $Pair[1]; Break}
-				"Data Source"				{$ConfigSQLServerPrincipalName = $Pair[1]; Break}
-				"Failover Partner"			{$ConfigSQLServerMirrorName = $Pair[1]; Break}
-				"MultiSubnetFailover"		{$ConfigSQLServerMirrorName = ""; Break}
-				"Database"					{$ConfigDatabaseName = $Pair[1]; Break}
-				"Initial Catalog"			{$ConfigDatabaseName = $Pair[1]; Break}
+				"Server"				{$ConfigSQLServerPrincipalName = $Pair[1]; Break}
+				"Data Source"			{$ConfigSQLServerPrincipalName = $Pair[1]; Break}
+				"Failover Partner"		{$ConfigSQLServerMirrorName = $Pair[1]; Break}
+				"MultiSubnetFailover"	{$ConfigSQLServerMirrorName = ""; Break}
+				"Database"				{$ConfigDatabaseName = $Pair[1]; Break}
+				"Initial Catalog"		{$ConfigDatabaseName = $Pair[1]; Break}
 			}
 		}
 
@@ -31955,12 +32598,12 @@ Function OutputDatastores
 					$Pair = $csitem.split('=').trimstart()
 					Switch ($Pair[0])
 					{
-						"Server"					{$LogSQLServerPrincipalName = $Pair[1]; Break}
-						"Data Source"				{$LogSQLServerPrincipalName = $Pair[1]; Break}
-						"Failover Partner"			{$LogSQLServerMirrorName = $Pair[1]; Break}
-						"MultiSubnetFailover"		{$LogSQLServerMirrorName = ""; Break}
-						"Database"					{$LogDatabaseName = $Pair[1]; Break}
-						"Initial Catalog"			{$LogDatabaseName = $Pair[1]; Break}
+						"Server"				{$LogSQLServerPrincipalName = $Pair[1]; Break}
+						"Data Source"			{$LogSQLServerPrincipalName = $Pair[1]; Break}
+						"Failover Partner"		{$LogSQLServerMirrorName = $Pair[1]; Break}
+						"MultiSubnetFailover"	{$LogSQLServerMirrorName = ""; Break}
+						"Database"				{$LogDatabaseName = $Pair[1]; Break}
+						"Initial Catalog"		{$LogDatabaseName = $Pair[1]; Break}
 					}
 				}
 			}
@@ -32187,12 +32830,12 @@ Function OutputDatastores
 					$Pair = $csitem.split('=').trimstart()
 					Switch ($Pair[0])
 					{
-						"Server"					{$MonitorSQLServerPrincipalName = $Pair[1]; Break}
-						"Data Source"				{$MonitorSQLServerPrincipalName = $Pair[1]; Break}
-						"Failover Partner"			{$MonitorSQLServerMirrorName = $Pair[1]; Break}
-						"MultiSubnetFailover"		{$MonitorSQLServerMirrorName = ""; Break}
-						"Database"					{$MonitorDatabaseName = $Pair[1]; Break}
-						"Initial Catalog"			{$MonitorDatabaseName = $Pair[1]; Break}
+						"Server"				{$MonitorSQLServerPrincipalName = $Pair[1]; Break}
+						"Data Source"			{$MonitorSQLServerPrincipalName = $Pair[1]; Break}
+						"Failover Partner"		{$MonitorSQLServerMirrorName = $Pair[1]; Break}
+						"MultiSubnetFailover"	{$MonitorSQLServerMirrorName = ""; Break}
+						"Database"				{$MonitorDatabaseName = $Pair[1]; Break}
+						"Initial Catalog"		{$MonitorDatabaseName = $Pair[1]; Break}
 					}
 				}
 			}
