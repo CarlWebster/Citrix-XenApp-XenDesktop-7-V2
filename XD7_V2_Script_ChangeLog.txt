@@ -3,6 +3,109 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.44 22-Oct-2021
+#	Added Broker Registry Keys:
+#		HKLM:\Software\Policies\Citrix\DesktopServer\AppProtectionAuthorizationCheckPeriodMin
+#		HKLM:\Software\Policies\Citrix\DesktopServer\AutoTagRuleIntervalsTimeSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\DisconnectOperationTimeOutSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\DynamicSequenceStirIntervalMins
+#		HKLM:\Software\Policies\Citrix\DesktopServer\FirstHeartbeatDistributionWidthSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\LaunchDelayedRetryPeriodSec
+#		HKLM:\Software\Policies\Citrix\DesktopServer\MaxTotalConcurrentMachineCommands
+#		HKLM:\Software\Policies\Citrix\DesktopServer\RoTPublicKeysUpdateMaxDelayHours
+#		HKLM:\Software\Policies\Citrix\DesktopServer\UseLegacyLaunchZoneLogic
+#		HKLM:\Software\Policies\Citrix\DesktopServer\UserDrivenResetDebounceTimeSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\UserDrivenShutDownTimeoutMs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\UserNotify2SigningKeyLifetimeHours
+#		HKLM:\Software\Citrix\DesktopServer\AppProtectionAuthorizationCheckPeriodMin
+#		HKLM:\Software\Citrix\DesktopServer\AutoTagRuleIntervalsTimeSecs
+#		HKLM:\Software\Citrix\DesktopServer\DisconnectOperationTimeOutSecs
+#		HKLM:\Software\Citrix\DesktopServer\DynamicSequenceStirIntervalMins
+#		HKLM:\Software\Citrix\DesktopServer\FirstHeartbeatDistributionWidthSecs
+#		HKLM:\Software\Citrix\DesktopServer\LaunchDelayedRetryPeriodSec
+#		HKLM:\Software\Citrix\DesktopServer\LogoffOperationTimeOutSecs
+#		HKLM:\Software\Citrix\DesktopServer\MaxTotalConcurrentMachineCommands
+#		HKLM:\Software\Citrix\DesktopServer\RoTPublicKeysUpdateMaxDelayHours
+#		HKLM:\Software\Citrix\DesktopServer\UseLegacyLaunchZoneLogic
+#		HKLM:\Software\Citrix\DesktopServer\UserDrivenResetDebounceTimeSecs
+#		HKLM:\Software\Citrix\DesktopServer\UserDrivenShutDownTimeoutMs
+#		HKLM:\Software\Citrix\DesktopServer\UserNotify2SigningKeyLifetimeHours
+#		HKLM:\Software\Policies\Citrix\DesktopServer\AutoscalePowerActionQueuingPeriodSeconds
+#		HKLM:\Software\Policies\Citrix\DesktopServer\BulkPowerActionBusyBufferSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\HclConnectionStateCachePeriodSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\HypervisorConnectionMaxPollFailures
+#		HKLM:\Software\Policies\Citrix\DesktopServer\HypervisorConnectionPollMaxPeriodSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\MaxNotificationThreads
+#		HKLM:\Software\Policies\Citrix\DesktopServer\ParallelDesktopGroupScalingMaxThreads
+#		HKLM:\Software\Policies\Citrix\DesktopServer\SimplePowerActionTimeoutSecs
+#		HKLM:\Software\Citrix\DesktopServer\AutoscalePowerActionQueuingPeriodSeconds
+#		HKLM:\Software\Citrix\DesktopServer\BulkPowerActionBusyBufferSecs
+#		HKLM:\Software\Citrix\DesktopServer\HclConnectionStateCachePeriodSecs
+#		HKLM:\Software\Citrix\DesktopServer\HypervisorConnectionMaxPollFailures
+#		HKLM:\Software\Citrix\DesktopServer\HypervisorConnectionPollMaxPeriodSecs
+#		HKLM:\Software\Citrix\DesktopServer\MaxNotificationThreads
+#		HKLM:\Software\Citrix\DesktopServer\ParallelDesktopGroupScalingMaxThreads
+#		HKLM:\Software\Citrix\DesktopServer\ParallelPowerStateReadMaxThreads
+#		HKLM:\Software\Policies\Citrix\DesktopServer\IdleSessions\AutoSessionDisconnectGracePeriodSecs
+#		HKLM:\Software\Citrix\DesktopServer\IdleSessions\AutoSessionDisconnectGracePeriodSecs
+#		HKLM:\Software\Citrix\DesktopServer\LHC\ConfigSyncIntervalSeconds
+#		HKLM:\Software\Citrix\DesktopServer\LHC\HypervisorConnectionSyncIntervalSeconds
+#		HKLM:\Software\Citrix\DesktopServer\LHC\MissedMessagesLimitBeforeBecomingLeader
+#		HKLM:\Software\Citrix\DesktopServer\LHC\StaRecentActivityTimespanMinutes
+#		HKLM:\Software\Citrix\DesktopServer\LHC\StoreFrontRecentActivityTimespanMinutes
+#		HKLM:\Software\Citrix\DesktopServer\LHC\TimeToWaitForAllPeerOutageStateInfoSeconds
+#		HKLM:\Software\Citrix\Broker\Service\State\LHC\IsElected
+#		HKLM:\Software\Citrix\Broker\Service\State\LHC\IsOnPremStoreFrontPresent
+#		HKLM:\Software\Citrix\Broker\Service\State\LHC\IsStaRequestReceived
+#		HKLM:\Software\Citrix\Broker\Service\State\LHC\LeaderConnectorId
+#		HKLM:\Software\Citrix\Broker\Service\State\LHC\LeaderFqdn
+#		HKLM:\Software\Citrix\Broker\Service\State\LHC\OutageModeThresholdReached
+#		HKLM:\Software\Citrix\Broker\Service\State\LHC\ResourceLocationId
+#		HKLM:\Software\Citrix\Broker\Service\State\LHC\ResourceLocationName
+#		HKLM:\Software\Citrix\Broker\Service\State\LHC\ZoneUid
+#		HKLM:\Software\Policies\Citrix\DesktopServer\Logging\HypervisorSummaryReportIntervalSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\Logging\SlowDBAccessLogThresholdMs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\Logging\SlowSdkDBAccessLogThresholdMs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\Logging\TraceWcfBindings
+#		HKLM:\Software\Citrix\DesktopServer\Logging\HypervisorSummaryReportIntervalSecs
+#		HKLM:\Software\Citrix\DesktopServer\Logging\SlowDBAccessLogThresholdMs
+#		HKLM:\Software\Citrix\DesktopServer\Logging\SlowSdkDBAccessLogThresholdMs
+#		HKLM:\Software\Citrix\DesktopServer\Logging\TraceWcfBindings
+#		HKLM:\Software\Policies\Citrix\DesktopServer\MachineCommandQueues\VdaCommandBufferExpiryTime
+#		HKLM:\Software\Policies\Citrix\DesktopServer\MachineCommandQueues\VdaCommandBufferSizeLimitKB
+#		HKLM:\Software\Citrix\DesktopServer\MachineCommandQueues\VdaCommandBufferExpiryTime
+#		HKLM:\Software\Citrix\DesktopServer\MachineCommandQueues\VdaCommandBufferSizeLimitKB
+#		HKLM:\Software\Policies\Citrix\DesktopServer\NameCache\NameRefreshExponentialBackoffMaximumMins
+#		HKLM:\Software\Policies\Citrix\DesktopServer\NameCache\NameRefreshMaximumPeriodSecs
+#		HKLM:\Software\Citrix\DesktopServer\NameCache\NameRefreshExponentialBackoffMaximumMins
+#		HKLM:\Software\Citrix\DesktopServer\NameCache\NameRefreshMaximumPeriodSecs
+#		HKLM:\Software\Citrix\Broker\Service\State\XmlServiceKeyAuth\RequireXmlServiceKeyForNFuse
+#		HKLM:\Software\Citrix\Broker\Service\State\XmlServiceKeyAuth\RequireXmlServiceKeyForSta
+#		HKLM:\Software\Citrix\Broker\Service\State\XmlServiceKeyAuth\XmlServiceKey1
+#		HKLM:\Software\Citrix\Broker\Service\State\XmlServiceKeyAuth\XmlServiceKey2
+#		HKLM:\Software\Policies\Citrix\DesktopServer\DisableGetPasswordExpiryInfo
+#		HKLM:\Software\Policies\Citrix\DesktopServer\LocalXmlAuthHeaderAllowedDelaySecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\StableServerFarmDataCachePeriodSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\UnstableServerFarmDataCachePeriodSecs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\UseForwardedHeaderForSFAddress
+#		HKLM:\Software\Policies\Citrix\DesktopServer\XmlAuthHeaderTimeoutMs
+#		HKLM:\Software\Policies\Citrix\DesktopServer\XmlUserLookupTimeoutMs
+#		HKLM:\Software\Citrix\DesktopServer\DisableGetPasswordExpiryInfo
+#		HKLM:\Software\Citrix\DesktopServer\LocalXmlAuthHeaderAllowedDelaySecs
+#		HKLM:\Software\Citrix\DesktopServer\StableServerFarmDataCachePeriodSecs
+#		HKLM:\Software\Citrix\DesktopServer\UnstableServerFarmDataCachePeriodSecs
+#		HKLM:\Software\Citrix\DesktopServer\UseForwardedHeaderForSFAddress
+#		HKLM:\Software\Citrix\DesktopServer\XmlAuthHeaderTimeoutMs
+#		HKLM:\Software\Citrix\DesktopServer\XmlUserLookupTimeoutMs
+#	Added CVAD 2109/7.31 to version list
+#	Added User policy
+#		ICA\Audio\Adaptive audio
+#	In Function GetControllerRegistryKeys, put the registry keys in the order supplied by Citrix
+#	In Function GetVDARegistryKeys, sorted the VDA registry key paths in alpha order
+#	Updated Function ProcessScriptSetup to have better error handling
+#	Updated the help text
+#	Updated the ReadMe file
+
 #Version 2.43 29-Jul-2021
 #	Added Computer Policy
 #		ICA\Graphics\Dynamic windows preview
