@@ -1069,7 +1069,7 @@
 	NAME: XD7_Inventory_V2.ps1
 	VERSION: 2.44
 	AUTHOR: Carl Webster
-	LASTEDIT: October 21, 2021
+	LASTEDIT: October 22, 2021
 #>
 
 #endregion
@@ -1269,7 +1269,7 @@ Param(
 
 # This script is based on the 1.20 script
 
-#Version 2.44
+#Version 2.44 22-Oct-2021
 #	Added Broker Registry Keys:
 #		HKLM:\Software\Policies\Citrix\DesktopServer\AppProtectionAuthorizationCheckPeriodMin
 #		HKLM:\Software\Policies\Citrix\DesktopServer\AutoTagRuleIntervalsTimeSecs
@@ -1368,6 +1368,7 @@ Param(
 #		ICA\Audio\Adaptive audio
 #	In Function GetControllerRegistryKeys, put the registry keys in the order supplied by Citrix
 #	In Function GetVDARegistryKeys, sorted the VDA registry key paths in alpha order
+#	Updated Function ProcessScriptSetup to have better error handling
 #	Updated the help text
 #	Updated the ReadMe file
 
@@ -39676,7 +39677,7 @@ Function ProcessScriptSetup
 	{
 		#We're missing Citrix Snapins that we need
 		$ErrorActionPreference = $SaveEAPreference
-		If(Get-Command Get-ConfigSite)
+		If(Get-Command Get-ConfigSite -EA 0)
 		{
 			$XDSite2 = Get-ConfigSite -AdminAddress $AdminAddress -EA 0
 
@@ -39746,7 +39747,33 @@ Script cannot continue
 	If you are running Citrix Cloud, please use:
 	https://carlwebster.com/downloads/download-info/citrix-cloud-citrix-virtual-apps-and-desktops-service/
 	`n`n
-	Script cannot continue
+	Script cannot continue.
+	`n`n
+		"
+				AbortScript
+			}
+			Else
+			{
+				Write-Error "
+	`n`n
+	Missing Citrix PowerShell Snap-ins Detected, check the console above for more information. 
+	`n`n
+	This script is designed for XenApp/XenDesktop 7.8 through CVAD 2006 and should not be run on any other version.
+	`n`n
+	If you are running XA/XD 7.0 through 7.7, please use: 
+	https://carlwebster.com/downloads/download-info/xenappxendesktop-7-x-documentation-script/
+	`n`n
+	If you are running CVAD 2006 and later, please use:
+	https://carlwebster.com/downloads/download-info/citrix-virtual-apps-and-desktops-v3-script/
+	`n`n
+	If you are running Citrix Cloud, please use:
+	https://carlwebster.com/downloads/download-info/citrix-cloud-citrix-virtual-apps-and-desktops-service/
+	`n`n
+	If you are running the script remotely, did you install Studio or the PowerShell snapins on $($env:computername)?
+	`n`n
+	Please see the Prerequisites section in the ReadMe file https://carlwebster.sharefile.com/d-s4b07f1b891548ddb
+	`n`n
+	Script cannot continue.
 	`n`n
 		"
 				AbortScript
@@ -39773,10 +39800,10 @@ Script cannot continue
 	`n`n
 	Please see the Prerequisites section in the ReadMe file https://carlwebster.sharefile.com/d-s4b07f1b891548ddb
 	`n`n
-	Script will now close.
+	Script cannot continue.
 	`n`n
 		"
-			Exit
+			AbortScript
 		}
 	}
 
@@ -39972,13 +39999,22 @@ Script cannot continue
 	Write-Verbose "$(Get-Date -Format G): Loading SQL Server Assembly"
 	[bool]$Script:SQLServerLoaded = $False
 	
+	$SQLLocation = $Null
 	$SQLLocation = ([reflection.assembly]::loadwithpartialname('microsoft.sqlserver.smo')).Location
 	If($null -ne $SQLLocation)
 	{
 		$asm = [System.Reflection.Assembly]::LoadFrom($SQLLocation)
 		If( $null –eq $asm )
 		{
-			Write-Verbose "$(Get-Date -Format G): `tSQL Server Assembly could not be loaded"
+			Write-Warning "
+			`n`n
+	The SQL Server Assembly could not be loaded 
+			`n`n
+	Please see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb). 
+			`n`n
+	No SQL Server details are in the output.
+			`n`n
+			"
 			$Script:SQLServerLoaded = $False
 		}
 		Else
@@ -39989,7 +40025,16 @@ Script cannot continue
 	}
 	Else
 	{
-		Write-Verbose "$(Get-Date -Format G): `tUnable to find the SQL Server Assembly dll"
+		Write-Warning "
+		`n`n
+	Unable to find the SQL Server Assembly dll 
+		`n`n
+	Please see the Prerequisites section in the ReadMe file (https://carlwebster.sharefile.com/d-s4b07f1b891548ddb). 
+		`n`n
+	No SQL Server details are in the output.
+		`n`n
+		"
+		$Script:SQLServerLoaded = $False
 	}
 }
 #endregion

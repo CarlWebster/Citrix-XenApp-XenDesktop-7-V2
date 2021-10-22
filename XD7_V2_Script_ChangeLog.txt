@@ -3,7 +3,7 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
-#Version 2.44
+#Version 2.44 22-Oct-2021
 #	Added Broker Registry Keys:
 #		HKLM:\Software\Policies\Citrix\DesktopServer\AppProtectionAuthorizationCheckPeriodMin
 #		HKLM:\Software\Policies\Citrix\DesktopServer\AutoTagRuleIntervalsTimeSecs
@@ -102,6 +102,7 @@
 #		ICA\Audio\Adaptive audio
 #	In Function GetControllerRegistryKeys, put the registry keys in the order supplied by Citrix
 #	In Function GetVDARegistryKeys, sorted the VDA registry key paths in alpha order
+#	Updated Function ProcessScriptSetup to have better error handling
 #	Updated the help text
 #	Updated the ReadMe file
 
