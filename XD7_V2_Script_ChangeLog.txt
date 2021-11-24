@@ -3,6 +3,37 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.45 24-Nov-2021
+#	Added Function OutputReportFooter
+#	Added Parameter ReportFooter
+#		Outputs a footer section at the end of the report.
+#		Report Footer
+#			Report information:
+#				Created with: <Script Name> - Release Date: <Script Release Date>
+#				Script version: <Script Version>
+#				Started on <Date Time in Local Format>
+#				Elapsed time: nn days, nn hours, nn minutes, nn.nn seconds
+#				Ran from domain <Domain Name> by user <Username>
+#				Ran from the folder <Folder Name>
+#	Fixed a logic error in Function ProcessPolicySummary
+#		Instead of getting both Computer and User policies at one time, get them separately
+#	In Function AbortScript, add test for the winword process and terminate it if it is running
+#	In Functions AbortScript and SaveandCloseDocumentandShutdownWord, add code from Guy Leech to test for the "Id" property before using it
+#	Removed the requirement for the Citrix.GroupPolicy.Commands.psm1 module file (Thanks to Guy Leech for the help)
+#		Added the following functions from the module to the script and cleaned up the Citrix code
+#			CreateDictionary
+#			CreateObject
+#			FilterString
+#			Get-CitrixGroupPolicy
+#			Get-CitrixGroupPolicyConfiguration
+#			Get-CitrixGroupPolicyFilter
+#	Reworked the use of LocalFarmGPO PSDrive to prevent multiple creations and deletions
+#	Updated for CVAD 2109/7.31 and CVAD 2112/7.32
+#	Updated Functions SaveandCloseTextDocument and SaveandCloseHTMLDocument to add a "Report Complete" line
+#	Updated Functions ShowScriptOptions and ProcessScriptEnd to add $ReportFooter
+#	Updated the help text
+#	Updated the ReadMe file
+
 #Version 2.44 22-Oct-2021
 #	Added Broker Registry Keys:
 #		HKLM:\Software\Policies\Citrix\DesktopServer\AppProtectionAuthorizationCheckPeriodMin
