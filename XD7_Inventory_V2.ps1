@@ -991,14 +991,14 @@
 	Sideline for the Cover Page format.
 	Administrator for the User Name.
 	
-	Creates a text file named XAXDV2InventoryScriptErrors_yyyy-MM-dd_HHmm.txt that 
+	Creates a text file named XAXDV2InventoryScriptErrors_yyyyMMddTHHmmssffff.txt that 
 	contains up to the last 250 errors reported by the script.
 	
 	Creates a text file named XAXDV2InventoryScriptInfo_yyyy-MM-dd_HHmm.txt that contains 
 	all the script parameters and other basic information.
 	
 	Creates a text file for transcript logging named 
-	XDV2DocScriptTranscript_yyyy-MM-dd_HHmm.txt.
+	XDV2DocScriptTranscript_yyyyMMddTHHmmssffff.txt.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -CSV
 	
@@ -1087,9 +1087,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.45
+	VERSION: 2.46
 	AUTHOR: Carl Webster
-	LASTEDIT: November 24, 2021
+	LASTEDIT: February 15, 2022
 #>
 
 #endregion
@@ -1293,6 +1293,23 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.46 15-Feb-2022
+#	Changed the date format for the transcript and error log files from yyyy-MM-dd_HHmm format to the FileDateTime format
+#		The format is yyyyMMddTHHmmssffff (case-sensitive, using a 4-digit year, 2-digit month, 2-digit day, 
+#		the letter T as a time separator, 2-digit hour, 2-digit minute, 2-digit second, and 4-digit millisecond). 
+#		For example: 20221225T0840107271.
+#	Fixed the German Table of Contents (Thanks to Rene Bigler)
+#		From 
+#			'de-'	{ 'Automatische Tabelle 2'; Break }
+#		To
+#			'de-'	{ 'Automatisches Verzeichnis 2'; Break }
+#	In Function AbortScript, add test for the winword process and terminate it if it is running
+#		Added stopping the transcript log if the log was enabled and started
+#	In Functions AbortScript and SaveandCloseDocumentandShutdownWord, add code from Guy Leech to test for the "Id" property before using it
+#	Replaced most script Exit calls with AbortScript to stop the transcript log if the log was enabled and started
+#	Updated the help text
+#	Updated the ReadMe file
+#
 #Version 2.45 24-Nov-2021
 #	Added Function OutputReportFooter
 #	Added Parameter ReportFooter
@@ -2410,6 +2427,59 @@ Param(
 #
 #endregion
 
+
+Function AbortScript
+{
+	If($MSWord -or $PDF)
+	{
+		Write-Verbose "$(Get-Date -Format G): System Cleanup"
+		If(Test-Path variable:global:word)
+		{
+			$Script:Word.quit()
+			[System.Runtime.Interopservices.Marshal]::ReleaseComObject($Script:Word) | Out-Null
+			Remove-Variable -Name word -Scope Global 4>$Null
+		}
+	}
+	[gc]::collect() 
+	[gc]::WaitForPendingFinalizers()
+
+	If($MSWord -or $PDF)
+	{
+		#is the winword Process still running? kill it
+
+		#find out our session (usually "1" except on TS/RDC or Citrix)
+		$SessionID = (Get-Process -PID $PID).SessionId
+
+		#Find out if winword running in our session
+		$wordprocess = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) | Select-Object -Property Id 
+		If( $wordprocess -and $wordprocess.Id -gt 0)
+		{
+			Write-Verbose "$(Get-Date -Format G): WinWord Process is still running. Attempting to stop WinWord Process # $($wordprocess.Id)"
+			Stop-Process $wordprocess.Id -EA 0
+		}
+	}
+	
+	Write-Verbose "$(Get-Date -Format G): Script has been aborted"
+	#stop transcript logging
+	If($Log -eq $True) 
+	{
+		If($Script:StartLog -eq $True) 
+		{
+			try 
+			{
+				Stop-Transcript | Out-Null
+				Write-Verbose "$(Get-Date -Format G): $Script:LogPath is ready for use"
+			} 
+			catch 
+			{
+				Write-Verbose "$(Get-Date -Format G): Transcript/log stop failed"
+			}
+		}
+	}
+	$ErrorActionPreference = $SaveEAPreference
+	Exit
+}
+
 #region initial variable testing and setup
 Set-StrictMode -Version Latest
 
@@ -2418,9 +2488,9 @@ $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
 
-$script:MyVersion           = '2.45'
+$script:MyVersion           = '2.46'
 $Script:ScriptName          = "XD7_Inventory_V2.ps1"
-$tmpdate                    = [datetime] "11/24/2021"
+$tmpdate                    = [datetime] "02/15/2022"
 $Script:ReleaseDate         = $tmpdate.ToUniversalTime().ToShortDateString()
 
 If($Null -eq $MSWord)
@@ -2494,7 +2564,7 @@ Else
 	Script cannot continue.
 	`n`n
 	"
-	Exit
+	AbortScript
 }
 
 If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -and [String]::IsNullOrEmpty($To))
@@ -2507,7 +2577,7 @@ If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -an
 	`t`t
 	Script cannot continue.
 	`n`n"
-	Exit
+	AbortScript
 }
 If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -and ![String]::IsNullOrEmpty($To))
 {
@@ -2519,7 +2589,7 @@ If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($From) -an
 	`t`t
 	Script cannot continue.
 	`n`n"
-	Exit
+	AbortScript
 }
 If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($To) -and ![String]::IsNullOrEmpty($From))
 {
@@ -2531,7 +2601,7 @@ If(![String]::IsNullOrEmpty($SmtpServer) -and [String]::IsNullOrEmpty($To) -and 
 	`t`t
 	Script cannot continue.
 	`n`n"
-	Exit
+	AbortScript
 }
 If(![String]::IsNullOrEmpty($From) -and ![String]::IsNullOrEmpty($To) -and [String]::IsNullOrEmpty($SmtpServer))
 {
@@ -2543,7 +2613,7 @@ If(![String]::IsNullOrEmpty($From) -and ![String]::IsNullOrEmpty($To) -and [Stri
 	`t`t
 	Script cannot continue.
 	`n`n"
-	Exit
+	AbortScript
 }
 If(![String]::IsNullOrEmpty($From) -and [String]::IsNullOrEmpty($SmtpServer))
 {
@@ -2555,7 +2625,7 @@ If(![String]::IsNullOrEmpty($From) -and [String]::IsNullOrEmpty($SmtpServer))
 	`t`t
 	Script cannot continue.
 	`n`n"
-	Exit
+	AbortScript
 }
 If(![String]::IsNullOrEmpty($To) -and [String]::IsNullOrEmpty($SmtpServer))
 {
@@ -2567,7 +2637,7 @@ If(![String]::IsNullOrEmpty($To) -and [String]::IsNullOrEmpty($SmtpServer))
 	`t`t
 	Script cannot continue.
 	`n`n"
-	Exit
+	AbortScript
 }
 
 #If the MaxDetails parameter is used, set a bunch of stuff true and some stuff false
@@ -2609,7 +2679,7 @@ If($BrokerRegistryKeys -eq $True)
 		`n
 		Script will exit.
 		`n"
-		Exit
+		AbortScript
 	}
 }
 
@@ -2636,7 +2706,7 @@ If($NoPolicies -and $Section -eq "Policies")
 	`t`t
 	Script cannot continue.
 	`n`n"
-	Exit
+	AbortScript
 }
 
 $ValidSection = $False
@@ -2692,7 +2762,7 @@ If($ValidSection -eq $False)
 	Script cannot continue.
 	`n`n
 	"
-	Exit
+	AbortScript
 }
 
 If($Folder -ne "")
@@ -2717,7 +2787,7 @@ If($Folder -ne "")
 			`n`n
 	Script cannot continue.
 			`n`n"
-			Exit
+			AbortScript
 		}
 	}
 	Else
@@ -2730,7 +2800,7 @@ If($Folder -ne "")
 	Script cannot continue.
 		`n`n
 		"
-		Exit
+		AbortScript
 	}
 }
 
@@ -2753,7 +2823,7 @@ If($Script:pwdpath.EndsWith("\"))
 If($Log) 
 {
 	#start transcript logging
-	$Script:LogPath = "$Script:pwdpath\XDV2DocScriptTranscript_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+	$Script:LogPath = "$Script:pwdpath\XDV2DocScriptTranscript_$(Get-Date -f FileDateTime).txt"
 	
 	try 
 	{
@@ -2771,7 +2841,7 @@ If($Log)
 If($Dev)
 {
 	$Error.Clear()
-	$Script:DevErrorFile = "$Script:pwdpath\XAXDV2InventoryScriptErrors_$(Get-Date -f yyyy-MM-dd_HHmm).txt"
+	$Script:DevErrorFile = "$Script:pwdpath\XAXDV2InventoryScriptErrors_$(Get-Date -f FileDateTime).txt"
 }
 
 If($VDARegistryKeys)
@@ -4212,7 +4282,8 @@ Function SetWordHashTable
 		{
 			'ca-'	{ 'Taula automática 2'; Break }
 			'da-'	{ 'Automatisk tabel 2'; Break }
-			'de-'	{ 'Automatische Tabelle 2'; Break }
+			#'de-'	{ 'Automatische Tabelle 2'; Break }
+			'de-'	{ 'Automatisches Verzeichnis 2'; Break } #changed 15-feb-2022 rene bigler
 			'en-'	{ 'Automatic Table 2'; Break }
 			'es-'	{ 'Tabla automática 2'; Break }
 			'fi-'	{ 'Automaattinen taulukko 2'; Break }
@@ -4569,12 +4640,12 @@ Function CheckWordPrereq
 		If(($MSWord -eq $False) -and ($PDF -eq $True))
 		{
 			Write-Host "`n`n`t`tThis script uses Microsoft Word's SaveAs PDF function, please install Microsoft Word`n`n"
-			Exit
+			AbortScript
 		}
 		Else
 		{
 			Write-Host "`n`n`t`tThis script directly outputs to Microsoft Word, please install Microsoft Word`n`n"
-			Exit
+			AbortScript
 		}
 	}
 
@@ -4587,7 +4658,7 @@ Function CheckWordPrereq
 	{
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Host "`n`n`tPlease close all instances of Microsoft Word before running this report.`n`n"
-		Exit
+		AbortScript
 	}
 }
 
@@ -4696,7 +4767,7 @@ Function SetupWord
 		`n`n
 	Script cannot Continue.
 		`n`n"
-		Exit
+		AbortScript
 	}
 
 	Write-Verbose "$(Get-Date -Format G): Determine Word language value"
@@ -4759,7 +4830,7 @@ Function SetupWord
 	Script cannot Continue.
 		`n`n
 		"
-		Exit
+		AbortScript
 	}
 	Else
 	{
@@ -6455,7 +6526,7 @@ Function CheckExcelPrereq
 	{
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Host "`n`n`t`tFor the Delivery Groups Utilization option, this script directly outputs to Microsoft Excel, `n`t`tplease install Microsoft Excel or do not use the DeliveryGroupsUtilization (DGU) switch`n`n"
-		Exit
+		AbortScript
 	}
 
 	#find out our session (usually "1" except on TS/RDC or Citrix)
@@ -6470,7 +6541,7 @@ Function CheckExcelPrereq
 	{
 		$ErrorActionPreference = $SaveEAPreference
 		Write-Host "`n`n`tPlease close all instances of Microsoft Excel before running this report.`n`n"
-		Exit
+		AbortScript
 	}
 }
 
@@ -6653,37 +6724,6 @@ Function SaveandCloseDocumentandShutdownWord
 	Write-Verbose "$(Get-Date -Format G): Closing Word"
 	$Script:Doc.Close()
 	$Script:Word.Quit()
-	If($PDF)
-	{
-		[int]$cnt = 0
-		While(Test-Path $Script:FileName1)
-		{
-			$cnt++
-			If($cnt -gt 1)
-			{
-				Write-Verbose "$(Get-Date -Format G): Waiting another 10 seconds to allow Word to fully close (try # $($cnt))"
-				Start-Sleep -Seconds 10
-				$Script:Word.Quit()
-				If($cnt -gt 2)
-				{
-					#kill the winword process
-
-					#find out our session (usually "1" except on TS/RDC or Citrix)
-					$SessionID = (Get-Process -PID $PID).SessionId
-					
-					#Find out if winword runsning in our session
-					$wordprocess = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}).Id
-					If($wordprocess -gt 0)
-					{
-						Write-Verbose "$(Get-Date -Format G): Attempting to stop WinWord process # $($wordprocess)"
-						Stop-Process $wordprocess -EA 0
-					}
-				}
-			}
-			Write-Verbose "$(Get-Date -Format G): Attempting to delete $($Script:FileName1) since only $($Script:FileName2) is needed (try # $($cnt))"
-			Remove-Item $Script:FileName1 -EA 0 4>$Null
-		}
-	}
 	Write-Verbose "$(Get-Date -Format G): System Cleanup"
 	[System.Runtime.Interopservices.Marshal]::ReleaseComObject($Script:Word) | Out-Null
 	If(Test-Path variable:global:word)
@@ -6982,42 +7022,6 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date -Format G): Script start       : $($Script:StartTime)"
 	Write-Verbose "$(Get-Date -Format G): "
 	Write-Verbose "$(Get-Date -Format G): "
-}
-
-Function AbortScript
-{
-	If($MSWord -or $PDF)
-	{
-		Write-Verbose "$(Get-Date -Format G): System Cleanup"
-		If(Test-Path variable:global:word)
-		{
-			$Script:Word.quit()
-			[System.Runtime.Interopservices.Marshal]::ReleaseComObject($Script:Word) | Out-Null
-			Remove-Variable -Name word -Scope Global 4>$Null
-		}
-	}
-	[gc]::collect() 
-	[gc]::WaitForPendingFinalizers()
-
-	If($MSWord -or $PDF)
-	{
-		#is the winword Process still running? kill it
-
-		#find out our session (usually "1" except on TS/RDC or Citrix)
-		$SessionID = (Get-Process -PID $PID).SessionId
-
-		#Find out if winword running in our session
-		$wordprocess = ((Get-Process 'WinWord' -ea 0) | Where-Object {$_.SessionId -eq $SessionID}) | Select-Object -Property Id 
-		If( $wordprocess -and $wordprocess.Id -gt 0)
-		{
-			Write-Verbose "$(Get-Date -Format G): WinWord Process is still running. Attempting to stop WinWord Process # $($wordprocess.Id)"
-			Stop-Process $wordprocess.Id -EA 0
-		}
-	}
-	
-	Write-Verbose "$(Get-Date -Format G): Script has been aborted"
-	$ErrorActionPreference = $SaveEAPreference
-	Exit
 }
 
 Function OutputWarning
