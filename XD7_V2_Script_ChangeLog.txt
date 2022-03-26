@@ -3,6 +3,11 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.47 26-Mar-2022
+#	Replaced all Get-WmiObject with Get-CimInstance
+#	Updated for CVAD 2203/7.33 and CVAD 2206/7.34
+#	Updated the Policies setting table to match the V3 and Citrix Cloud scripts
+
 #Version 2.46 15-Feb-2022
 #	Changed the date format for the transcript and error log files from yyyy-MM-dd_HHmm format to the FileDateTime format
 #		The format is yyyyMMddTHHmmssffff (case-sensitive, using a 4-digit year, 2-digit month, 2-digit day, 
