@@ -3,6 +3,11 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.48 26-Apr-2022
+#	Fixed text output for hardware inventory
+#	General code cleanup
+#	In Function OutputNicItem, fixed several issues with DHCP data
+
 #Version 2.47 26-Mar-2022
 #	Replaced all Get-WmiObject with Get-CimInstance
 #	Updated for CVAD 2203/7.33 and CVAD 2206/7.34
