@@ -314,8 +314,8 @@
 .PARAMETER AddDateTime
 	Adds a date timestamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2022 at 6PM is 2022-06-01_1800.
-	Output filename will be ReportName_2022-06-01_1800.docx (or .pdf).
+	June 1, 2022, at 6PM is 2022-06-01_1800.
+	The output filename will be ReportName_2022-06-01_1800.docx (or .pdf).
 	This parameter is disabled by default.
 	This parameter has an alias of ADT.
 .PARAMETER CSV
@@ -508,7 +508,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	The computer running the script for the AdminAddress.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -AdminAddress DDC01
@@ -521,7 +521,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	DDC01 for the AdminAddress.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF
@@ -534,7 +534,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	The computer running the script for the AdminAddress.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -TEXT
@@ -556,7 +556,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -DeliveryGroups
 	
@@ -569,7 +569,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -DeliveryGroupsUtilization
 	
@@ -582,7 +582,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -DeliveryGroups -MachineCatalogs
 	
@@ -596,7 +596,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Applications
 	
@@ -609,7 +609,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Policies
 	
@@ -622,7 +622,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -NoPolicies
 	
@@ -635,7 +635,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -NoADPolicies
 	
@@ -648,7 +648,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Policies -NoADPolicies
 	
@@ -663,7 +663,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Administrators
 	
@@ -677,7 +677,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate 06/01/2022 -EndDate 
 	06/31/2022	
@@ -693,7 +693,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Logging -StartDate "06/01/2022 10:00:00" 
 	-EndDate "06/01/2022 14:00:00"	
@@ -711,7 +711,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hosting
 	
@@ -724,7 +724,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -StoreFront
 	
@@ -737,7 +737,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MachineCatalogs -DeliveryGroups -Applications 
 	-Policies -Hosting -StoreFront	
@@ -758,7 +758,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -MC -DG -Apps -Policies -Hosting
 	
@@ -777,7 +777,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Carl Webster Consulting" 
 	-CoverPage "Mod" -UserName "Carl Webster" -AdminAddress DDC01
@@ -785,7 +785,7 @@
 	Uses:
 		Carl Webster Consulting for the Company Name.
 		Mod for the Cover Page format.
-		Carl Webster for the User Name.
+		Carl Webster for the Username.
 		Controller named DDC01 for the AdminAddress.
 .EXAMPLE
 	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CN "Carl Webster Consulting" -CP "Mod" 
@@ -794,7 +794,7 @@
 	Uses:
 		Carl Webster Consulting for the Company Name (alias CN).
 		Mod for the Cover Page format (alias CP).
-		Carl Webster for the User Name (alias UN).
+		Carl Webster for the Username (alias UN).
 		The computer running the script for the AdminAddress.
 .EXAMPLE
 	PS C:\PSScript .\XD7_Inventory_V2.ps1 -CompanyName "Sherlock Holmes Consulting" 
@@ -804,7 +804,7 @@
 	Uses:
 		Sherlock Holmes Consulting for the Company Name.
 		Exposure for the Cover Page format.
-		Dr. Watson for the User Name.
+		Dr. Watson for the Username.
 		221B Baker Street, London, England for the Company Address.
 		+44 1753 276600 for the Company Fax.
 		+44 1753 276200 for the Company Phone.
@@ -815,7 +815,7 @@
 	Uses:
 		Sherlock Holmes Consulting for the Company Name.
 		Facet for the Cover Page format.
-		Dr. Watson for the User Name.
+		Dr. Watson for the Username.
 		SuperSleuth@SherlockHolmes.com for the Company Email.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -AddDateTime
@@ -828,12 +828,12 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2022 at 6PM is 2022-06-01_1800.
-	Output filename will be XD7SiteName_2022-06-01_1800.docx
+	June 1, 2022, at 6PM is 2022-06-01_1800.
+	The output filename will be XD7SiteName_2022-06-01_1800.docx
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -PDF -AddDateTime
 	
@@ -845,12 +845,12 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 
 	Adds a date time stamp to the end of the file name.
 	The timestamp is in the format of yyyy-MM-dd_HHmm.
-	June 1, 2022 at 6PM is 2022-06-01_1800.
-	Output filename will be XD7SiteName_2022-06-01_1800.pdf
+	June 1, 2022, at 6PM is 2022-06-01_1800.
+	The output filename will be XD7SiteName_2022-06-01_1800.pdf
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Hardware
 	
@@ -862,7 +862,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Folder \\FileServer\ShareName
 	
@@ -874,9 +874,9 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	
-	Output file is saved in the path \\FileServer\ShareName
+	The output file is saved in the path \\FileServer\ShareName
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Section Policies
 	
@@ -888,7 +888,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	Processes only the Policies section of the report.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Section Groups -DG
@@ -901,7 +901,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	Processes only the Delivery Groups section of the report with Delivery Group details.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -Section Groups
@@ -914,7 +914,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	Processes only the Delivery Groups section of the report with no Delivery Group details.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -BrokerRegistryKeys
@@ -929,7 +929,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	Adds the information on over 300 Broker registry keys to the Controllers section.
 .EXAMPLE
 	PS C:\PSScript > .\XD7_Inventory_V2.ps1 -VDARegistryKeys
@@ -942,7 +942,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	Adds the information on VDA registry keys to Appendix A.
 	Forces the MachineCatalogs parameter to $True
 .EXAMPLE
@@ -956,7 +956,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	
 	Set the following parameter values:
 		Administrators      = True
@@ -989,7 +989,7 @@
 
 	Carl Webster for the Company Name.
 	Sideline for the Cover Page format.
-	Administrator for the User Name.
+	Administrator for the Username.
 	
 	Creates a text file named XAXDV2InventoryScriptErrors_yyyyMMddTHHmmssffff.txt that 
 	contains up to the last 250 errors reported by the script.
@@ -1087,9 +1087,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.48
+	VERSION: 2.49
 	AUTHOR: Carl Webster
-	LASTEDIT: April 26, 2022
+	LASTEDIT: Juy 16, 2022
 #>
 
 #endregion
@@ -1293,6 +1293,15 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.49 16-Jul-2022
+#	Fixed bug reported by James Rankin where in Function OutputDatastores I didn't check for SQLServerName,TCPPortNumber
+#		https://support.citrix.com/article/CTX234610/how-to-configure-xendesktop-to-use-custom-sql-port
+#		For example, to to [sic] add custom port to the connection strings, then set the $ServerName variable to "DBServername\Instance,CustomPortNumber".
+#		Also fixed a bug where if unable to connect to the SQL server, that error was not handled and many variables were then not defined
+#	Updated Function GetDBCompatibilityLevel to support SQL Server 2022
+#	Updated the help text
+#	Updated the ReadMe file
+#
 #Version 2.48 26-Apr-2022
 #	Fixed text output for hardware inventory
 #	General code cleanup
@@ -2498,9 +2507,9 @@ $PSDefaultParameterValues = @{"*:Verbose"=$True}
 $SaveEAPreference = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
 
-$script:MyVersion           = '2.48'
+$script:MyVersion           = '2.49'
 $Script:ScriptName          = "XD7_Inventory_V2.ps1"
-$tmpdate                    = [datetime] "04/26/2022"
+$tmpdate                    = [datetime] "07/16/2022"
 $Script:ReleaseDate         = $tmpdate.ToUniversalTime().ToShortDateString()
 
 If($Null -eq $MSWord)
@@ -7054,7 +7063,7 @@ Function ShowScriptOptions
 	Write-Verbose "$(Get-Date -Format G): Title              : $($Script:Title)"
 	Write-Verbose "$(Get-Date -Format G): To                 : $($To)"
 	Write-Verbose "$(Get-Date -Format G): Use SSL            : $($UseSSL)"
-	Write-Verbose "$(Get-Date -Format G): User Name          : $($UserName)"
+	Write-Verbose "$(Get-Date -Format G): Username           : $($UserName)"
 	Write-Verbose "$(Get-Date -Format G): VDA Registry Keys  : $($VDARegistryKeys)"
 	Write-Verbose "$(Get-Date -Format G): XA/XD Version      : $($Script:XDSiteVersion)"
 	Write-Verbose "$(Get-Date -Format G): "
@@ -32717,6 +32726,7 @@ Function GetSQLVersion
 Function GetDBCompatibilityLevel
 {
 	Param([string]$DBCompat, [object]$SQLsrv)
+	#9-Jul-2022 add support for SQL Server 2022
 
 	$Major = $SQLsrv.VersionMajor
 	
@@ -32724,6 +32734,7 @@ Function GetDBCompatibilityLevel
 		https://www.spiria.com/en/blog/web-applications/understanding-sql-server-compatibility-levels
 		
 		Database Compatibility Level	Description
+		160								SQL Server 2022
 		150								SQL Server 2019
 		140								SQL Server 2017
 		130								SQL Server 2016	
@@ -32737,6 +32748,7 @@ Function GetDBCompatibilityLevel
 	$tmp = ""
 	Switch($DBCompat)
 	{
+		"160"			{$tmp = "SQL Server 2022"; Break}
 		"150"			{$tmp = "SQL Server 2019"; Break}
 		"140"			{$tmp = "SQL Server 2017"; Break}
 		"130"			{$tmp = "SQL Server 2016"; Break}
@@ -32759,7 +32771,11 @@ Function GetDBCompatibilityLevel
 	#now do a specific test for Azure SQL
 	#https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql-compatibility-level?view=sql-server-2017
 	
-	If($Major -eq 12 -and (($DBCompat -eq 130 -or $DBCompat -eq "Version130") -or ($DBCompat -eq 140 -or $DBCompat -eq "Version140") -or ($DBCompat -eq 150 -or $DBCompat -eq "Version150")))
+	If($Major -eq 12 -and `
+	(($DBCompat -eq 130 -or $DBCompat -eq "Version130") -or `
+	($DBCompat -eq 140 -or $DBCompat -eq "Version140") -or `
+	($DBCompat -eq 150 -or $DBCompat -eq "Version150") -or `
+	($DBCompat -eq 160 -or $DBCompat -eq "Version160")))
 	{
 		$tmp = "Azure SQL Database"
 	}
@@ -32771,8 +32787,7 @@ Function OutputDatastores
 {
 	#2-Mar-2017 Fix bug reported by P. Ewing
 	#2-Apr-2021 Fix bugs reported M. Foster
-	
-	#V2.11 add additional database details and change from a horizontal table to a vertical table
+	#4-Jul-2022 Fix bug reported by James Rankin
 	
 	#line starts with server=SQLServerName;
 	#only need what is between the = and ;
@@ -32780,7 +32795,7 @@ Function OutputDatastores
 	#24-Jun-2017 add Database Size to the output
 	#25-Jun-2017 add checking if the SQL Server assembly loaded before calculating the database size
 	
-	#V2.15 added get IP address for each SQL Server name
+	#add get IP address for each SQL Server name
 	Write-Verbose "$(Get-Date -Format G): `tRetrieving database connection data"
 	Write-Verbose "$(Get-Date -Format G): `t`tConfiguration database"
 	[string]$ConfigSQLServerPrincipalName = ""
@@ -32794,8 +32809,6 @@ Function OutputDatastores
 	$SQLServerNames = @()
 	
 	$ConfigDBs = Get-ConfigDBConnection @XDParams1
-	
-	#add checking for tcp:// and :nnnn
 
 	If($? -and ($Null -ne $ConfigDBs))
 	{
@@ -32821,6 +32834,12 @@ Function OutputDatastores
 			#add in V2.40 get hardware info for the sql server(s)
 			$SQLServerNames += $ConfigSQLServerPrincipalName.Substring(0,$ConfigSQLServerPrincipalName.IndexOf("\"))
 		}
+		ElseIf($ConfigSQLServerPrincipalName.Contains(",")) #3.35
+		{
+			$ConfigSQLServerPrincipalNameIPAddress = Get-IPAddress $ConfigSQLServerPrincipalName.Substring(0,$ConfigSQLServerPrincipalName.IndexOf(","))
+			#add in V2.40 get hardware info for the sql server(s)
+			$SQLServerNames += $ConfigSQLServerPrincipalName.Substring(0,$ConfigSQLServerPrincipalName.IndexOf(","))
+		}
 		ElseIf($ConfigSQLServerPrincipalName -like "*tcp://*")
 		{
 			#looking for tcp://servername.domain.tld:port
@@ -32844,6 +32863,12 @@ Function OutputDatastores
 				$ConfigSQLServerMirrorNameIPAddress = Get-IPAddress $ConfigSQLServerMirrorName.Substring(0,$ConfigSQLServerMirrorName.IndexOf("\"))
 				#add in V2.40 get hardware info for the sql server(s)
 				$SQLServerNames += $ConfigSQLServerMirrorName.Substring(0,$ConfigSQLServerMirrorName.IndexOf("\"))
+			}
+			ElseIf($ConfigSQLServerMirrorName.Contains(",")) #3.35
+			{
+				$ConfigSQLServerMirrorNameIPAddress = Get-IPAddress $ConfigSQLServerMirrorName.Substring(0,$ConfigSQLServerMirrorName.IndexOf(","))
+				#add in V2.40 get hardware info for the sql server(s)
+				$SQLServerNames += $ConfigSQLServerMirrorName.Substring(0,$ConfigSQLServerMirrorName.IndexOf(","))
 			}
 			ElseIf($ConfigSQLServerMirrorName -like "*tcp://*")
 			{
@@ -32870,136 +32895,180 @@ Function OutputDatastores
 		{
 			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerPrincipalName)")
 			$Configdb = New-Object Microsoft.SqlServer.Management.Smo.Database
-			$Configdb = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
-			[string]$Configdbsize = "Unable to determine" -f $Configdb.size
-			If($Null -ne $Configdb.size)
+			
+			try
 			{
-				[string]$Configdbsize = "{0:F2} MB" -f $Configdb.size
-			}
-			ElseIf($Null -eq $Configdb.size -and $ConfigSQLServerMirrorName -ne "Not Configured")
-			{
-				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerMirrorName)")
-				$Configdb = New-Object Microsoft.SqlServer.Management.Smo.Database
 				$Configdb = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
+
+				[string]$Configdbsize = "Unable to determine" -f $Configdb.size
 				If($Null -ne $Configdb.size)
 				{
 					[string]$Configdbsize = "{0:F2} MB" -f $Configdb.size
 				}
-			}
-			
-			$ConfigDBParent 									= $Configdb.Parent
-			$ConfigDBCollation 									= $Configdb.Collation
-			$ConfigDBSQLVersion 								= GetSQLVersion $SQLsrv
-			$ConfigDBCompatibilityLevel 						= GetDBCompatibilityLevel $Configdb.CompatibilityLevel $SQLsrv
-			$ConfigDBCreateDate 								= $Configdb.CreateDate.ToString()
-
-			If($Configdb.IsReadCommittedSnapshotOn)
-			{
-				$ConfigDBReadCommittedSnapshot = "Enabled"
-			}
-			Else
-			{
-				$ConfigDBReadCommittedSnapshot = "Disabled"
-			}
-
-			$ConfigDBLastBackupDate 	= $Configdb.LastBackupDate.ToString()
-			$ConfigDBLastLogBackupDate 	= $Configdb.LastLogBackupDate.ToString()
-			$ConfigDBRecoveryModel 		= $Configdb.RecoveryModel
-
-			If(![String]::IsNullOrEmpty($Configdb.AvailabilityGroupName))
-			{
-				$ConfigDBAvailabilityGroupName 						= $Configdb.AvailabilityGroupName
-				$ConfigDBAvailabilityDatabaseSynchronizationState 	= $Configdb.AvailabilityDatabaseSynchronizationState
-			}
-			Else
-			{
-				$ConfigDBAvailabilityGroupName 						= "-"
-				$ConfigDBAvailabilityDatabaseSynchronizationState 	= "-"
-			}
-			
-			If($Configdb.IsMirroringEnabled)
-			{
-				$ConfigDBMirroringPartner			= $Configdb.MirroringPartner
-				If($Configdb.MirroringPartner.Contains("\"))
+				ElseIf($Null -eq $Configdb.size -and $ConfigSQLServerMirrorName -ne "Not Configured")
 				{
-					$ConfigDBMirroringPartnerIPAddress = Get-IPAddress $Configdb.MirroringPartner.Substring(0,$Configdb.MirroringPartner.IndexOf("\"))
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Configdb.MirroringPartner.Substring(0,$Configdb.MirroringPartner.IndexOf("\"))
+					$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($ConfigSQLServerMirrorName)")
+					$Configdb = New-Object Microsoft.SqlServer.Management.Smo.Database
+					$Configdb = $SQLsrv.Databases.Item("$($ConfigDatabaseName)")
+					If($Null -ne $Configdb.size)
+					{
+						[string]$Configdbsize = "{0:F2} MB" -f $Configdb.size
+					}
 				}
-				ElseIf($Configdb.MirroringPartner -like "*tcp://*")
+				
+				$ConfigDBParent 									= $Configdb.Parent
+				$ConfigDBCollation 									= $Configdb.Collation
+				$ConfigDBSQLVersion 								= GetSQLVersion $SQLsrv
+				$ConfigDBCompatibilityLevel 						= GetDBCompatibilityLevel $Configdb.CompatibilityLevel $SQLsrv
+				$ConfigDBCreateDate 								= $Configdb.CreateDate.ToString()
+
+				If($Configdb.IsReadCommittedSnapshotOn)
 				{
-					#looking for tcp://servername.domain.tld:port
-					$x = $Configdb.MirroringPartner.LastIndexOf("/") + 1 #to get past the //
-					$y = $Configdb.MirroringPartner.LastIndexOf(":")
-					$len = ($y - $x)
-					$ConfigDBMirroringPartnerIPAddress = Get-IPAddress $Configdb.MirroringPartner.Substring($x, $len)
-					$SQLServerNames += $Configdb.MirroringPartner.Substring($x, $len)
+					$ConfigDBReadCommittedSnapshot = "Enabled"
 				}
 				Else
 				{
-					$ConfigDBMirroringPartnerIPAddress = Get-IPAddress $Configdb.MirroringPartner
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Configdb.MirroringPartner
+					$ConfigDBReadCommittedSnapshot = "Disabled"
 				}
-				$ConfigDBMirroringPartnerInstance	= $Configdb.MirroringPartnerInstance
-				$ConfigDBMirroringSafetyLevel		= $Configdb.MirroringSafetyLevel
-				$ConfigDBMirroringStatus			= $Configdb.MirroringStatus
-				$ConfigDBMirroringWitness			= $Configdb.MirroringWitness
-				If($Configdb.MirroringWitness.Contains("\"))
+
+				$ConfigDBLastBackupDate 	= $Configdb.LastBackupDate.ToString()
+				$ConfigDBLastLogBackupDate 	= $Configdb.LastLogBackupDate.ToString()
+				$ConfigDBRecoveryModel 		= $Configdb.RecoveryModel
+
+				If(![String]::IsNullOrEmpty($Configdb.AvailabilityGroupName))
 				{
-					$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness.Substring(0,$Configdb.MirroringWitness.IndexOf("\"))
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Configdb.MirroringWitness.Substring(0,$Configdb.MirroringWitness.IndexOf("\"))
-				}
-				ElseIf($Configdb.MirroringWitness -like "*tcp://*")
-				{
-					#looking for tcp://servername.domain.tld:port
-					$x = $Configdb.MirroringWitness.LastIndexOf("/") + 1 #to get past the //
-					$y = $Configdb.MirroringWitness.LastIndexOf(":")
-					$len = ($y - $x)
-					$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness.Substring($x, $len)
-					$SQLServerNames += $Configdb.MirroringWitness.Substring($x, $len)
+					$ConfigDBAvailabilityGroupName 						= $Configdb.AvailabilityGroupName
+					$ConfigDBAvailabilityDatabaseSynchronizationState 	= $Configdb.AvailabilityDatabaseSynchronizationState
 				}
 				Else
 				{
-					$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Configdb.MirroringWitness
+					$ConfigDBAvailabilityGroupName 						= "-"
+					$ConfigDBAvailabilityDatabaseSynchronizationState 	= "-"
 				}
-				$ConfigDBMirroringWitnessStatus		= $Configdb.MirroringWitnessStatus
-			}
-			Else
-			{
-				$ConfigDBMirroringPartner			= "-"
-				$ConfigDBMirroringPartnerIPAddress	= "-"
-				$ConfigDBMirroringPartnerInstance	= "-"
-				$ConfigDBMirroringSafetyLevel		= "-"
-				$ConfigDBMirroringStatus			= "-"
-				$ConfigDBMirroringWitness			= "-"
-				$ConfigDBMirroringWitnessIPAddress	= "-"
-				$ConfigDBMirroringWitnessStatus		= "-"
+				
+				If($Configdb.IsMirroringEnabled)
+				{
+					$ConfigDBMirroringPartner			= $Configdb.MirroringPartner
+					If($Configdb.MirroringPartner.Contains("\"))
+					{
+						$ConfigDBMirroringPartnerIPAddress = Get-IPAddress $Configdb.MirroringPartner.Substring(0,$Configdb.MirroringPartner.IndexOf("\"))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Configdb.MirroringPartner.Substring(0,$Configdb.MirroringPartner.IndexOf("\"))
+					}
+					ElseIf($Configdb.MirroringPartner.Contains(",")) #3.35
+					{
+						$ConfigDBMirroringPartnerIPAddress = Get-IPAddress $Configdb.MirroringPartner.Substring(0,$Configdb.MirroringPartner.IndexOf(","))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Configdb.MirroringPartner.Substring(0,$Configdb.MirroringPartner.IndexOf(","))
+					}
+					ElseIf($Configdb.MirroringPartner -like "*tcp://*")
+					{
+						#looking for tcp://servername.domain.tld:port
+						$x = $Configdb.MirroringPartner.LastIndexOf("/") + 1 #to get past the //
+						$y = $Configdb.MirroringPartner.LastIndexOf(":")
+						$len = ($y - $x)
+						$ConfigDBMirroringPartnerIPAddress = Get-IPAddress $Configdb.MirroringPartner.Substring($x, $len)
+						$SQLServerNames += $Configdb.MirroringPartner.Substring($x, $len)
+					}
+					Else
+					{
+						$ConfigDBMirroringPartnerIPAddress = Get-IPAddress $Configdb.MirroringPartner
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Configdb.MirroringPartner
+					}
+					$ConfigDBMirroringPartnerInstance	= $Configdb.MirroringPartnerInstance
+					$ConfigDBMirroringSafetyLevel		= $Configdb.MirroringSafetyLevel
+					$ConfigDBMirroringStatus			= $Configdb.MirroringStatus
+					$ConfigDBMirroringWitness			= $Configdb.MirroringWitness
+					If($Configdb.MirroringWitness.Contains("\"))
+					{
+						$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness.Substring(0,$Configdb.MirroringWitness.IndexOf("\"))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Configdb.MirroringWitness.Substring(0,$Configdb.MirroringWitness.IndexOf("\"))
+					}
+					ElseIf($Configdb.MirroringWitness.Contains(",")) #3.35
+					{
+						$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness.Substring(0,$Configdb.MirroringWitness.IndexOf(","))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Configdb.MirroringWitness.Substring(0,$Configdb.MirroringWitness.IndexOf(","))
+					}
+					ElseIf($Configdb.MirroringWitness -like "*tcp://*")
+					{
+						#looking for tcp://servername.domain.tld:port
+						$x = $Configdb.MirroringWitness.LastIndexOf("/") + 1 #to get past the //
+						$y = $Configdb.MirroringWitness.LastIndexOf(":")
+						$len = ($y - $x)
+						$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness.Substring($x, $len)
+						$SQLServerNames += $Configdb.MirroringWitness.Substring($x, $len)
+					}
+					Else
+					{
+						$ConfigDBMirroringWitnessIPAddress = Get-IPAddress $Configdb.MirroringWitness
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Configdb.MirroringWitness
+					}
+					$ConfigDBMirroringWitnessStatus		= $Configdb.MirroringWitnessStatus
+				}
+				Else
+				{
+					$ConfigDBMirroringPartner			= "-"
+					$ConfigDBMirroringPartnerIPAddress	= "-"
+					$ConfigDBMirroringPartnerInstance	= "-"
+					$ConfigDBMirroringSafetyLevel		= "-"
+					$ConfigDBMirroringStatus			= "-"
+					$ConfigDBMirroringWitness			= "-"
+					$ConfigDBMirroringWitnessIPAddress	= "-"
+					$ConfigDBMirroringWitnessStatus		= "-"
+				}
+				
+				#check for log backup status
+				If($ConfigDBRecoveryModel -eq "Simple")
+				{
+					If($ConfigDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+					{
+						$ConfigDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
+					}
+				}
+				ElseIf($ConfigDBRecoveryModel -eq "Full")
+				{
+					If($ConfigDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+					{
+						$ConfigDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+					}
+				}
+				
+				#check for database backup
+				If($ConfigDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$ConfigDBLastBackupDate = "Database backup not detected"
+				}
 			}
 			
-			#check for log backup status
-			If($ConfigDBRecoveryModel -eq "Simple")
+			catch
 			{
-				If($ConfigDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
-				{
-					$ConfigDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
-				}
-			}
-			ElseIf($ConfigDBRecoveryModel -eq "Full")
-			{
-				If($ConfigDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
-				{
-					$ConfigDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
-				}
-			}
-			
-			#check for database backup
-			If($ConfigDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
-			{
-				$ConfigDBLastBackupDate = "Database backup not detected"
+				$Failure = $Error[0].Exception.Message
+				Write-Warning $Failure
+				$Configdbsize                                     = "Failed to connect to $($ConfigDatabaseName)"
+				$ConfigDBParent 			                      = "Unable to obtain"
+				$ConfigDBCollation 			                      = "Unable to obtain"
+				$ConfigDBSQLVersion 		                      = "Unable to obtain"
+				$ConfigDBCompatibilityLevel                       = "Unable to obtain"
+				$ConfigDBCreateDate 		                      = "Unable to obtain"
+				$ConfigDBReadCommittedSnapshot                    = "Unable to obtain"
+				$ConfigDBLastBackupDate 	                      = "Unable to obtain"
+				$ConfigDBLastLogBackupDate 	                      = "Unable to obtain"
+				$ConfigDBRecoveryModel 	                          = "Unable to obtain"
+				$ConfigDBAvailabilityGroupName 					  = "Unable to obtain"
+				$ConfigDBAvailabilityDatabaseSynchronizationState = "Unable to obtain" 
+				$ConfigDBMirroringPartner			              = "Unable to obtain"
+				$ConfigDBMirroringPartnerIPAddress	              = "Unable to obtain"
+				$ConfigDBMirroringPartnerInstance	              = "Unable to obtain"
+				$ConfigDBMirroringSafetyLevel		              = "Unable to obtain"
+				$ConfigDBMirroringStatus			              = "Unable to obtain"
+				$ConfigDBMirroringWitness			              = "Unable to obtain"
+				$ConfigDBMirroringWitnessIPAddress	              = "Unable to obtain"
+				$ConfigDBMirroringWitnessStatus		              = "Unable to obtain"
+				
 			}
 		}
 	}
@@ -33017,7 +33086,7 @@ Function OutputDatastores
 	[string]$LogDBSQLVersion                    = "Unable to determine"
 	[string]$LogSQLServerPrincipalNameIPAddress = ""
 	[string]$LogSQLServerMirrorNameIPAddress    = ""
-
+	
 	$LogDBs = Get-LogDataStore @XDParams1
 
 	If($? -and ($Null -ne $LogDBs))
@@ -33050,6 +33119,12 @@ Function OutputDatastores
 			#add in V2.40 get hardware info for the sql server(s)
 			$SQLServerNames += $LogSQLServerPrincipalName.Substring(0,$LogSQLServerPrincipalName.IndexOf("\"))
 		}
+		ElseIf($LogSQLServerPrincipalName.Contains(",")) #3.35
+		{
+			$LogSQLServerPrincipalNameIPAddress = Get-IPAddress $LogSQLServerPrincipalName.Substring(0,$LogSQLServerPrincipalName.IndexOf(","))
+			#add in V2.40 get hardware info for the sql server(s)
+			$SQLServerNames += $LogSQLServerPrincipalName.Substring(0,$LogSQLServerPrincipalName.IndexOf(","))
+		}
 		ElseIf($LogSQLServerPrincipalName -like "*tcp://*")
 		{
 			#looking for tcp://servername.domain.tld:port
@@ -33073,6 +33148,12 @@ Function OutputDatastores
 				$LogSQLServerMirrorNameIPAddress = Get-IPAddress $LogSQLServerMirrorName.Substring(0,$LogSQLServerMirrorName.IndexOf("\"))
 				#add in V2.40 get hardware info for the sql server(s)
 				$SQLServerNames += $LogSQLServerMirrorName.Substring(0,$LogSQLServerMirrorName.IndexOf("\"))
+			}
+			ElseIf($LogSQLServerMirrorName.Contains(",")) #3.35
+			{
+				$LogSQLServerMirrorNameIPAddress = Get-IPAddress $LogSQLServerMirrorName.Substring(0,$LogSQLServerMirrorName.IndexOf(","))
+				#add in V2.40 get hardware info for the sql server(s)
+				$SQLServerNames += $LogSQLServerMirrorName.Substring(0,$LogSQLServerMirrorName.IndexOf(","))
 			}
 			ElseIf($LogSQLServerMirrorName -like "*tcp://*")
 			{
@@ -33099,136 +33180,180 @@ Function OutputDatastores
 		{
 			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerPrincipalName)")
 			$Logdb = New-Object Microsoft.SqlServer.Management.Smo.Database
-			$Logdb = $SQLsrv.Databases.Item("$($LogDatabaseName)")
-			[string]$Logdbsize = "Unable to determine" -f $Logdb.size
-			If($Null -ne $Logdb.size)
+			
+			try
 			{
-				[string]$Logdbsize = "{0:F2} MB" -f $Logdb.size
-			}
-			ElseIf($Null -eq $Logdb.size -and $LogSQLServerMirrorName -ne "Not Configured")
-			{
-				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerMirrorName)")
-				$Logdb = New-Object Microsoft.SqlServer.Management.Smo.Database
 				$Logdb = $SQLsrv.Databases.Item("$($LogDatabaseName)")
+
+				[string]$Logdbsize = "Unable to determine" -f $Logdb.size
 				If($Null -ne $Logdb.size)
 				{
 					[string]$Logdbsize = "{0:F2} MB" -f $Logdb.size
 				}
-			}
-
-			$LogDBParent			 = $LogDB.Parent
-			$LogDBCollation			 = $LogDB.Collation
-			$LogDBSQLVersion		 = GetSQLVersion $SQLsrv
-			$LogDBCompatibilityLevel = GetDBCompatibilityLevel $LogDB.CompatibilityLevel $SQLsrv
-			$LogDBCreateDate		 = $LogDB.CreateDate.ToString()
-
-			If($LogDB.IsReadCommittedSnapshotOn)
-			{
-				$LogDBReadCommittedSnapshot = "Enabled"
-			}
-			Else
-			{
-				$LogDBReadCommittedSnapshot = "Disabled"
-			}
-
-			$LogDBLastBackupDate 	= $LogDB.LastBackupDate.ToString()
-			$LogDBLastLogBackupDate	= $LogDB.LastLogBackupDate.ToString()
-			$LogDBRecoveryModel 	= $LogDB.RecoveryModel
-
-			If(![String]::IsNullOrEmpty($LogDB.AvailabilityGroupName))
-			{
-				$LogDBAvailabilityGroupName 					= $LogDB.AvailabilityGroupName
-				$LogDBAvailabilityDatabaseSynchronizationState 	= $LogDB.AvailabilityDatabaseSynchronizationState
-			}
-			Else
-			{
-				$LogDBAvailabilityGroupName 					= "-"
-				$LogDBAvailabilityDatabaseSynchronizationState 	= "-"
-			}
-			
-			If($LogDB.IsMirroringEnabled)
-			{
-				$LogDBMirroringPartner			= $LogDB.MirroringPartner
-				If($Logdb.MirroringPartner.Contains("\"))
+				ElseIf($Null -eq $Logdb.size -and $LogSQLServerMirrorName -ne "Not Configured")
 				{
-					$LogDBMirroringPartnerIPAddress = Get-IPAddress $Logdb.MirroringPartner.Substring(0,$Logdb.MirroringPartner.IndexOf("\"))
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Logdb.MirroringPartner.Substring(0,$Logdb.MirroringPartner.IndexOf("\"))
+					$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($LogSQLServerMirrorName)")
+					$Logdb = New-Object Microsoft.SqlServer.Management.Smo.Database
+					$Logdb = $SQLsrv.Databases.Item("$($LogDatabaseName)")
+					If($Null -ne $Logdb.size)
+					{
+						[string]$Logdbsize = "{0:F2} MB" -f $Logdb.size
+					}
 				}
-				ElseIf($Logdb.MirroringPartner -like "*tcp://*")
+
+				$LogDBParent			 = $LogDB.Parent
+				$LogDBCollation			 = $LogDB.Collation
+				$LogDBSQLVersion		 = GetSQLVersion $SQLsrv
+				$LogDBCompatibilityLevel = GetDBCompatibilityLevel $LogDB.CompatibilityLevel $SQLsrv
+				$LogDBCreateDate		 = $LogDB.CreateDate.ToString()
+
+				If($LogDB.IsReadCommittedSnapshotOn)
 				{
-					#looking for tcp://servername.domain.tld:port
-					$x = $Logdb.MirroringPartner.LastIndexOf("/") + 1 #to get past the //
-					$y = $Logdb.MirroringPartner.LastIndexOf(":")
-					$len = ($y - $x)
-					$LogDBMirroringPartnerIPAddress = Get-IPAddress $Logdb.MirroringPartner.Substring($x, $len)
-					$SQLServerNames += $Logdb.MirroringPartner.Substring($x, $len)
+					$LogDBReadCommittedSnapshot = "Enabled"
 				}
 				Else
 				{
-					$LogDBMirroringPartnerIPAddress = Get-IPAddress $Logdb.MirroringPartner
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Logdb.MirroringPartner
+					$LogDBReadCommittedSnapshot = "Disabled"
 				}
-				$LogDBMirroringPartnerInstance	= $LogDB.MirroringPartnerInstance
-				$LogDBMirroringSafetyLevel		= $LogDB.MirroringSafetyLevel
-				$LogDBMirroringStatus			= $LogDB.MirroringStatus
-				$LogDBMirroringWitness			= $LogDB.MirroringWitness
-				If($Logdb.MirroringWitness.Contains("\"))
+
+				$LogDBLastBackupDate 	= $LogDB.LastBackupDate.ToString()
+				$LogDBLastLogBackupDate	= $LogDB.LastLogBackupDate.ToString()
+				$LogDBRecoveryModel 	= $LogDB.RecoveryModel
+
+				If(![String]::IsNullOrEmpty($LogDB.AvailabilityGroupName))
 				{
-					$LogDBMirroringWitnessIPAddress = Get-IPAddress $Logdb.MirroringWitness.Substring(0,$Logdb.MirroringWitness.IndexOf("\"))
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Logdb.MirroringWitness.Substring(0,$Logdb.MirroringWitness.IndexOf("\"))
-				}
-				ElseIf($Logdb.MirroringWitness -like "*tcp://*")
-				{
-					#looking for tcp://servername.domain.tld:port
-					$x = $Logdb.MirroringWitness.LastIndexOf("/") + 1 #to get past the //
-					$y = $Logdb.MirroringWitness.LastIndexOf(":")
-					$len = ($y - $x)
-					$LogDBMirroringWitnessIPAddress = Get-IPAddress $Logdb.MirroringWitness.Substring($x, $len)
-					$SQLServerNames += $Logdb.MirroringWitness.Substring($x, $len)
+					$LogDBAvailabilityGroupName 					= $LogDB.AvailabilityGroupName
+					$LogDBAvailabilityDatabaseSynchronizationState 	= $LogDB.AvailabilityDatabaseSynchronizationState
 				}
 				Else
 				{
-					$LogDBMirroringWitnessIPAddress = Get-IPAddress $Logdb.MirroringWitness
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Logdb.MirroringWitness
+					$LogDBAvailabilityGroupName 					= "-"
+					$LogDBAvailabilityDatabaseSynchronizationState 	= "-"
 				}
-				$LogDBMirroringWitnessStatus	= $LogDB.MirroringWitnessStatus
-			}
-			Else
-			{
-				$LogDBMirroringPartner			= "-"
-				$LogDBMirroringPartnerIPAddress	= "-"
-				$LogDBMirroringPartnerInstance	= "-"
-				$LogDBMirroringSafetyLevel		= "-"
-				$LogDBMirroringStatus			= "-"
-				$LogDBMirroringWitness			= "-"
-				$LogDBMirroringWitnessIPAddress	= "-"
-				$LogDBMirroringWitnessStatus	= "-"
+				
+				If($LogDB.IsMirroringEnabled)
+				{
+					$LogDBMirroringPartner			= $LogDB.MirroringPartner
+					If($Logdb.MirroringPartner.Contains("\"))
+					{
+						$LogDBMirroringPartnerIPAddress = Get-IPAddress $Logdb.MirroringPartner.Substring(0,$Logdb.MirroringPartner.IndexOf("\"))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Logdb.MirroringPartner.Substring(0,$Logdb.MirroringPartner.IndexOf("\"))
+					}
+					ElseIf($Logdb.MirroringPartner.Contains(",")) #3.35
+					{
+						$LogDBMirroringPartnerIPAddress = Get-IPAddress $Logdb.MirroringPartner.Substring(0,$Logdb.MirroringPartner.IndexOf(","))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Logdb.MirroringPartner.Substring(0,$Logdb.MirroringPartner.IndexOf(","))
+					}
+					ElseIf($Logdb.MirroringPartner -like "*tcp://*")
+					{
+						#looking for tcp://servername.domain.tld:port
+						$x = $Logdb.MirroringPartner.LastIndexOf("/") + 1 #to get past the //
+						$y = $Logdb.MirroringPartner.LastIndexOf(":")
+						$len = ($y - $x)
+						$LogDBMirroringPartnerIPAddress = Get-IPAddress $Logdb.MirroringPartner.Substring($x, $len)
+						$SQLServerNames += $Logdb.MirroringPartner.Substring($x, $len)
+					}
+					Else
+					{
+						$LogDBMirroringPartnerIPAddress = Get-IPAddress $Logdb.MirroringPartner
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Logdb.MirroringPartner
+					}
+					$LogDBMirroringPartnerInstance	= $LogDB.MirroringPartnerInstance
+					$LogDBMirroringSafetyLevel		= $LogDB.MirroringSafetyLevel
+					$LogDBMirroringStatus			= $LogDB.MirroringStatus
+					$LogDBMirroringWitness			= $LogDB.MirroringWitness
+					If($Logdb.MirroringWitness.Contains("\"))
+					{
+						$LogDBMirroringWitnessIPAddress = Get-IPAddress $Logdb.MirroringWitness.Substring(0,$Logdb.MirroringWitness.IndexOf("\"))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Logdb.MirroringWitness.Substring(0,$Logdb.MirroringWitness.IndexOf("\"))
+					}
+					ElseIf($Logdb.MirroringWitness.Contains(",")) #3.35
+					{
+						$LogDBMirroringWitnessIPAddress = Get-IPAddress $Logdb.MirroringWitness.Substring(0,$Logdb.MirroringWitness.IndexOf(","))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Logdb.MirroringWitness.Substring(0,$Logdb.MirroringWitness.IndexOf(","))
+					}
+					ElseIf($Logdb.MirroringWitness -like "*tcp://*")
+					{
+						#looking for tcp://servername.domain.tld:port
+						$x = $Logdb.MirroringWitness.LastIndexOf("/") + 1 #to get past the //
+						$y = $Logdb.MirroringWitness.LastIndexOf(":")
+						$len = ($y - $x)
+						$LogDBMirroringWitnessIPAddress = Get-IPAddress $Logdb.MirroringWitness.Substring($x, $len)
+						$SQLServerNames += $Logdb.MirroringWitness.Substring($x, $len)
+					}
+					Else
+					{
+						$LogDBMirroringWitnessIPAddress = Get-IPAddress $Logdb.MirroringWitness
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Logdb.MirroringWitness
+					}
+					$LogDBMirroringWitnessStatus	= $LogDB.MirroringWitnessStatus
+				}
+				Else
+				{
+					$LogDBMirroringPartner			= "-"
+					$LogDBMirroringPartnerIPAddress	= "-"
+					$LogDBMirroringPartnerInstance	= "-"
+					$LogDBMirroringSafetyLevel		= "-"
+					$LogDBMirroringStatus			= "-"
+					$LogDBMirroringWitness			= "-"
+					$LogDBMirroringWitnessIPAddress	= "-"
+					$LogDBMirroringWitnessStatus	= "-"
+				}
+
+				#check for log backup status
+				If($LogDBRecoveryModel -eq "Simple")
+				{
+					If($LogDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+					{
+						$LogDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
+					}
+				}
+				ElseIf($LogDBRecoveryModel -eq "Full")
+				{
+					If($LogDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+					{
+						$LogDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+					}
+				}
+				
+				#check for database backup
+				If($LogDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$LogDBLastBackupDate = "Database backup not detected"
+				}
 			}
 
-			#check for log backup status
-			If($LogDBRecoveryModel -eq "Simple")
+			catch
 			{
-				If($LogDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
-				{
-					$LogDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
-				}
-			}
-			ElseIf($LogDBRecoveryModel -eq "Full")
-			{
-				If($LogDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
-				{
-					$LogDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
-				}
-			}
-			
-			#check for database backup
-			If($LogDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
-			{
-				$LogDBLastBackupDate = "Database backup not detected"
+				$Failure = $Error[0].Exception.Message
+				Write-Warning $Failure
+				$Logdbsize                                     = "Failed to connect to $($LogDatabaseName)"
+				$LogDBParent 			                       = "Unable to obtain"
+				$LogDBCollation 			                   = "Unable to obtain"
+				$LogDBSQLVersion 		                       = "Unable to obtain"
+				$LogDBCompatibilityLevel                       = "Unable to obtain"
+				$LogDBCreateDate 		                       = "Unable to obtain"
+				$LogDBReadCommittedSnapshot                    = "Unable to obtain"
+				$LogDBLastBackupDate 	                       = "Unable to obtain"
+				$LogDBLastLogBackupDate 	                   = "Unable to obtain"
+				$LogDBRecoveryModel 	                       = "Unable to obtain"
+				$LogDBAvailabilityGroupName 			       = "Unable to obtain"
+				$LogDBAvailabilityDatabaseSynchronizationState = "Unable to obtain" 
+				$LogDBMirroringPartner			               = "Unable to obtain"
+				$LogDBMirroringPartnerIPAddress	               = "Unable to obtain"
+				$LogDBMirroringPartnerInstance	               = "Unable to obtain"
+				$LogDBMirroringSafetyLevel		               = "Unable to obtain"
+				$LogDBMirroringStatus			               = "Unable to obtain"
+				$LogDBMirroringWitness			               = "Unable to obtain"
+				$LogDBMirroringWitnessIPAddress	               = "Unable to obtain"
+				$LogDBMirroringWitnessStatus		           = "Unable to obtain"
+				
 			}
 		}
 	}
@@ -33282,6 +33407,12 @@ Function OutputDatastores
 			#add in V2.40 get hardware info for the sql server(s)
 			$SQLServerNames += $MonitorSQLServerPrincipalName.Substring(0,$MonitorSQLServerPrincipalName.IndexOf("\"))
 		}
+		ElseIf($MonitorSQLServerPrincipalName.Contains(",")) #3.35
+		{
+			$MonitorSQLServerPrincipalNameIPAddress = Get-IPAddress $MonitorSQLServerPrincipalName.Substring(0,$MonitorSQLServerPrincipalName.IndexOf(","))
+			#add in V2.40 get hardware info for the sql server(s)
+			$SQLServerNames += $MonitorSQLServerPrincipalName.Substring(0,$MonitorSQLServerPrincipalName.IndexOf(","))
+		}
 		ElseIf($MonitorSQLServerPrincipalName -like "*tcp://*")
 		{
 			#looking for tcp://servername.domain.tld:port
@@ -33305,6 +33436,12 @@ Function OutputDatastores
 				$MonitorSQLServerMirrorNameIPAddress = Get-IPAddress $MonitorSQLServerMirrorName.Substring(0,$MonitorSQLServerMirrorName.IndexOf("\"))
 				#add in V2.40 get hardware info for the sql server(s)
 				$SQLServerNames += $MonitorSQLServerMirrorName.Substring(0,$MonitorSQLServerMirrorName.IndexOf("\"))
+			}
+			ElseIf($MonitorSQLServerMirrorName.Contains(",")) #3.35
+			{
+				$MonitorSQLServerMirrorNameIPAddress = Get-IPAddress $MonitorSQLServerMirrorName.Substring(0,$MonitorSQLServerMirrorName.IndexOf(","))
+				#add in V2.40 get hardware info for the sql server(s)
+				$SQLServerNames += $MonitorSQLServerMirrorName.Substring(0,$MonitorSQLServerMirrorName.IndexOf(","))
 			}
 			ElseIf($MonitorSQLServerMirrorName -like "*tcp://*")
 			{
@@ -33331,137 +33468,181 @@ Function OutputDatastores
 		{
 			$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerPrincipalName)")
 			$Monitordb = New-Object Microsoft.SqlServer.Management.Smo.Database
-			$Monitordb = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
-			[string]$Monitordbsize = "Unable to determine" -f $Monitordb.size
-			If($Null -ne $Monitordb.size)
+			
+			try
 			{
-				[string]$Monitordbsize = "{0:F2} MB" -f $Monitordb.size
-			}
-			ElseIf($Null -eq $Monitordb.size -and $MonitorSQLServerMirrorName -ne "Not Configured")
-			{
-				$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerMirrorName)")
-				$Monitordb = New-Object Microsoft.SqlServer.Management.Smo.Database
 				$Monitordb = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
+				
+				[string]$Monitordbsize = "Unable to determine" -f $Monitordb.size
 				If($Null -ne $Monitordb.size)
 				{
 					[string]$Monitordbsize = "{0:F2} MB" -f $Monitordb.size
 				}
-			}
-
-			$MonitorDBParent 				= $MonitorDB.Parent
-			$MonitorDBCollation 			= $MonitorDB.Collation
-			$MonitorDBSQLVersion 			= GetSQLVersion $SQLsrv
-			$MonitorDBCompatibilityLevel	= GetDBCompatibilityLevel $MonitorDB.CompatibilityLevel $SQLsrv
-			$MonitorDBCreateDate 			= $MonitorDB.CreateDate.ToString()
-
-			If($MonitorDB.IsReadCommittedSnapshotOn)
-			{
-				$MonitorDBReadCommittedSnapshot = "Enabled"
-			}
-			Else
-			{
-				$MonitorDBReadCommittedSnapshot = "Disabled"
-			}
-
-			$MonitorDBLastBackupDate 	= $MonitorDB.LastBackupDate.ToString()
-			$MonitorDBLastLogBackupDate	= $MonitorDB.LastLogBackupDate.ToString()
-			$MonitorDBRecoveryModel 	= $MonitorDB.RecoveryModel
-
-			If(![String]::IsNullOrEmpty($MonitorDB.AvailabilityGroupName))
-			{
-				$MonitorDBAvailabilityGroupName 					= $MonitorDB.AvailabilityGroupName
-				$MonitorDBAvailabilityDatabaseSynchronizationState 	= $MonitorDB.AvailabilityDatabaseSynchronizationState
-			}
-			Else
-			{
-				$MonitorDBAvailabilityGroupName 					= "-"
-				$MonitorDBAvailabilityDatabaseSynchronizationState 	= "-"
-			}
-			
-			If($MonitorDB.IsMirroringEnabled)
-			{
-				$MonitorDBMirroringPartner			= $MonitorDB.MirroringPartner
-				If($Monitordb.MirroringPartner.Contains("\"))
+				ElseIf($Null -eq $Monitordb.size -and $MonitorSQLServerMirrorName -ne "Not Configured")
 				{
-					$MonitorDBMirroringPartnerIPAddress = Get-IPAddress $Monitordb.MirroringPartner.Substring(0,$Monitordb.MirroringPartner.IndexOf("\"))
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Monitordb.MirroringPartner.Substring(0,$Monitordb.MirroringPartner.IndexOf("\"))
+					$SQLsrv = new-Object Microsoft.SqlServer.Management.Smo.Server("$($MonitorSQLServerMirrorName)")
+					$Monitordb = New-Object Microsoft.SqlServer.Management.Smo.Database
+					$Monitordb = $SQLsrv.Databases.Item("$($MonitorDatabaseName)")
+					If($Null -ne $Monitordb.size)
+					{
+						[string]$Monitordbsize = "{0:F2} MB" -f $Monitordb.size
+					}
 				}
-				ElseIf($Monitordb.MirroringPartner -like "*tcp://*")
+
+				$MonitorDBParent 				= $MonitorDB.Parent
+				$MonitorDBCollation 			= $MonitorDB.Collation
+				$MonitorDBSQLVersion 			= GetSQLVersion $SQLsrv
+				$MonitorDBCompatibilityLevel	= GetDBCompatibilityLevel $MonitorDB.CompatibilityLevel $SQLsrv
+				$MonitorDBCreateDate 			= $MonitorDB.CreateDate.ToString()
+
+				If($MonitorDB.IsReadCommittedSnapshotOn)
 				{
-					#looking for tcp://servername.domain.tld:port
-					$x = $Monitordb.MirroringPartner.LastIndexOf("/") + 1 #to get past the //
-					$y = $Monitordb.MirroringPartner.LastIndexOf(":")
-					$len = ($y - $x)
-					$MonitorDBMirroringPartnerIPAddress = Get-IPAddress $Monitordb.MirroringPartner.Substring($x, $len)
-					$SQLServerNames += $Monitordb.MirroringPartner.Substring($x, $len)
+					$MonitorDBReadCommittedSnapshot = "Enabled"
 				}
 				Else
 				{
-					$MonitorDBMirroringPartnerIPAddress = Get-IPAddress $Monitordb.MirroringPartner
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $Monitordb.MirroringPartner
+					$MonitorDBReadCommittedSnapshot = "Disabled"
 				}
-				$MonitorDBMirroringPartnerInstance	= $MonitorDB.MirroringPartnerInstance
-				$MonitorDBMirroringSafetyLevel		= $MonitorDB.MirroringSafetyLevel
-				$MonitorDBMirroringStatus			= $MonitorDB.MirroringStatus
-				$MonitorDBMirroringWitness			= $MonitorDB.MirroringWitness
-				If($Monitordb.MirroringWitness.Contains("\"))
+
+				$MonitorDBLastBackupDate 	= $MonitorDB.LastBackupDate.ToString()
+				$MonitorDBLastLogBackupDate	= $MonitorDB.LastLogBackupDate.ToString()
+				$MonitorDBRecoveryModel 	= $MonitorDB.RecoveryModel
+
+				If(![String]::IsNullOrEmpty($MonitorDB.AvailabilityGroupName))
 				{
-					$MonitorDBMirroringWitnessIPAddress = Get-IPAddress $MonitorDB.MirroringWitness.Substring(0,$MonitorDB.MirroringWitness.IndexOf("\"))
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $MonitorDB.MirroringWitness.Substring(0,$MonitorDB.MirroringWitness.IndexOf("\"))
-				}
-				ElseIf($Monitordb.MirroringWitness -like "*tcp://*")
-				{
-					#looking for tcp://servername.domain.tld:port
-					$x = $Monitordb.MirroringWitness.LastIndexOf("/") + 1 #to get past the //
-					$y = $Monitordb.MirroringWitness.LastIndexOf(":")
-					$len = ($y - $x)
-					$MonitorDBMirroringWitnessIPAddress = Get-IPAddress $Monitordb.MirroringWitness.Substring($x, $len)
-					$SQLServerNames += $Monitordb.MirroringWitness.Substring($x, $len)
+					$MonitorDBAvailabilityGroupName 					= $MonitorDB.AvailabilityGroupName
+					$MonitorDBAvailabilityDatabaseSynchronizationState 	= $MonitorDB.AvailabilityDatabaseSynchronizationState
 				}
 				Else
 				{
-					$MonitorDBMirroringWitnessIPAddress = Get-IPAddress $MonitorDB.MirroringWitness
-					#add in V2.40 get hardware info for the sql server(s)
-					$SQLServerNames += $MonitorDB.MirroringWitness
+					$MonitorDBAvailabilityGroupName 					= "-"
+					$MonitorDBAvailabilityDatabaseSynchronizationState 	= "-"
 				}
-				$MonitorDBMirroringWitnessStatus	= $MonitorDB.MirroringWitnessStatus
-			}
-			Else
-			{
-				$MonitorDBMirroringPartner			= "-"
-				$MonitorDBMirroringPartnerIPAddress	= "-"
-				$MonitorDBMirroringPartnerInstance	= "-"
-				$MonitorDBMirroringSafetyLevel		= "-"
-				$MonitorDBMirroringStatus			= "-"
-				$MonitorDBMirroringWitness			= "-"
-				$MonitorDBMirroringWitnessIPAddress	= "-"
-				$MonitorDBMirroringWitnessStatus	= "-"
-			}
+				
+				If($MonitorDB.IsMirroringEnabled)
+				{
+					$MonitorDBMirroringPartner			= $MonitorDB.MirroringPartner
+					If($Monitordb.MirroringPartner.Contains("\"))
+					{
+						$MonitorDBMirroringPartnerIPAddress = Get-IPAddress $Monitordb.MirroringPartner.Substring(0,$Monitordb.MirroringPartner.IndexOf("\"))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Monitordb.MirroringPartner.Substring(0,$Monitordb.MirroringPartner.IndexOf("\"))
+					}
+					ElseIf($Monitordb.MirroringPartner.Contains(",")) #3.35
+					{
+						$MonitorDBMirroringPartnerIPAddress = Get-IPAddress $Monitordb.MirroringPartner.Substring(0,$Monitordb.MirroringPartner.IndexOf(","))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Monitordb.MirroringPartner.Substring(0,$Monitordb.MirroringPartner.IndexOf(","))
+					}
+					ElseIf($Monitordb.MirroringPartner -like "*tcp://*")
+					{
+						#looking for tcp://servername.domain.tld:port
+						$x = $Monitordb.MirroringPartner.LastIndexOf("/") + 1 #to get past the //
+						$y = $Monitordb.MirroringPartner.LastIndexOf(":")
+						$len = ($y - $x)
+						$MonitorDBMirroringPartnerIPAddress = Get-IPAddress $Monitordb.MirroringPartner.Substring($x, $len)
+						$SQLServerNames += $Monitordb.MirroringPartner.Substring($x, $len)
+					}
+					Else
+					{
+						$MonitorDBMirroringPartnerIPAddress = Get-IPAddress $Monitordb.MirroringPartner
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $Monitordb.MirroringPartner
+					}
+					$MonitorDBMirroringPartnerInstance	= $MonitorDB.MirroringPartnerInstance
+					$MonitorDBMirroringSafetyLevel		= $MonitorDB.MirroringSafetyLevel
+					$MonitorDBMirroringStatus			= $MonitorDB.MirroringStatus
+					$MonitorDBMirroringWitness			= $MonitorDB.MirroringWitness
+					If($Monitordb.MirroringWitness.Contains("\"))
+					{
+						$MonitorDBMirroringWitnessIPAddress = Get-IPAddress $MonitorDB.MirroringWitness.Substring(0,$MonitorDB.MirroringWitness.IndexOf("\"))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $MonitorDB.MirroringWitness.Substring(0,$MonitorDB.MirroringWitness.IndexOf("\"))
+					}
+					ElseIf($Monitordb.MirroringWitness.Contains(",")) #3.35
+					{
+						$MonitorDBMirroringWitnessIPAddress = Get-IPAddress $MonitorDB.MirroringWitness.Substring(0,$MonitorDB.MirroringWitness.IndexOf(","))
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $MonitorDB.MirroringWitness.Substring(0,$MonitorDB.MirroringWitness.IndexOf(","))
+					}
+					ElseIf($Monitordb.MirroringWitness -like "*tcp://*")
+					{
+						#looking for tcp://servername.domain.tld:port
+						$x = $Monitordb.MirroringWitness.LastIndexOf("/") + 1 #to get past the //
+						$y = $Monitordb.MirroringWitness.LastIndexOf(":")
+						$len = ($y - $x)
+						$MonitorDBMirroringWitnessIPAddress = Get-IPAddress $Monitordb.MirroringWitness.Substring($x, $len)
+						$SQLServerNames += $Monitordb.MirroringWitness.Substring($x, $len)
+					}
+					Else
+					{
+						$MonitorDBMirroringWitnessIPAddress = Get-IPAddress $MonitorDB.MirroringWitness
+						#add in V2.40 get hardware info for the sql server(s)
+						$SQLServerNames += $MonitorDB.MirroringWitness
+					}
+					$MonitorDBMirroringWitnessStatus	= $MonitorDB.MirroringWitnessStatus
+				}
+				Else
+				{
+					$MonitorDBMirroringPartner			= "-"
+					$MonitorDBMirroringPartnerIPAddress	= "-"
+					$MonitorDBMirroringPartnerInstance	= "-"
+					$MonitorDBMirroringSafetyLevel		= "-"
+					$MonitorDBMirroringStatus			= "-"
+					$MonitorDBMirroringWitness			= "-"
+					$MonitorDBMirroringWitnessIPAddress	= "-"
+					$MonitorDBMirroringWitnessStatus	= "-"
+				}
 
-			#check for log backup status
-			If($MonitorDBRecoveryModel -eq "Simple")
-			{
-				If($MonitorDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				#check for log backup status
+				If($MonitorDBRecoveryModel -eq "Simple")
 				{
-					$MonitorDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
+					If($MonitorDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+					{
+						$MonitorDBLastLogBackupDate = "Log backup not needed for Simple Recovery Model"
+					}
 				}
-			}
-			ElseIf($MonitorDBRecoveryModel -eq "Full")
-			{
-				If($MonitorDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+				ElseIf($MonitorDBRecoveryModel -eq "Full")
 				{
-					$MonitorDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+					If($MonitorDBLastLogBackupDate -eq "1/1/0001 12:00:00 AM")
+					{
+						$MonitorDBLastLogBackupDate = "Log backup not detected for Full Recovery Model"
+					}
+				}
+				
+				#check for database backup
+				If($MonitorDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+				{
+					$MonitorDBLastBackupDate = "Database backup not detected"
 				}
 			}
 			
-			#check for database backup
-			If($MonitorDBLastBackupDate -eq "1/1/0001 12:00:00 AM")
+			catch
 			{
-				$MonitorDBLastBackupDate = "Database backup not detected"
+				$Failure = $Error[0].Exception.Message
+				Write-Warning $Failure
+				$Monitordbsize                                     = "Failed to connect to $($MonitorDatabaseName)"
+				$MonitorDBParent 			                       = "Unable to obtain"
+				$MonitorDBCollation 			                   = "Unable to obtain"
+				$MonitorDBSQLVersion 		                       = "Unable to obtain"
+				$MonitorDBCompatibilityLevel                       = "Unable to obtain"
+				$MonitorDBCreateDate 		                       = "Unable to obtain"
+				$MonitorDBReadCommittedSnapshot                    = "Unable to obtain"
+				$MonitorDBLastBackupDate 	                       = "Unable to obtain"
+				$MonitorDBLastLogBackupDate                        = "Unable to obtain"
+				$MonitorDBRecoveryModel 	                       = "Unable to obtain"
+				$MonitorDBAvailabilityGroupName 			       = "Unable to obtain"
+				$MonitorDBAvailabilityDatabaseSynchronizationState = "Unable to obtain" 
+				$MonitorDBMirroringPartner			               = "Unable to obtain"
+				$MonitorDBMirroringPartnerIPAddress	               = "Unable to obtain"
+				$MonitorDBMirroringPartnerInstance	               = "Unable to obtain"
+				$MonitorDBMirroringSafetyLevel		               = "Unable to obtain"
+				$MonitorDBMirroringStatus			               = "Unable to obtain"
+				$MonitorDBMirroringWitness			               = "Unable to obtain"
+				$MonitorDBMirroringWitnessIPAddress	               = "Unable to obtain"
+				$MonitorDBMirroringWitnessStatus		           = "Unable to obtain"
 			}
+
 		}
 		
 		$MonitorConfig = $Null
@@ -33845,7 +34026,7 @@ Function OutputDatastores
 			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 			$Table.Columns.Item(1).Width = 250;
-			$Table.Columns.Item(2).Width = 200;
+			$Table.Columns.Item(2).Width = 250;
 
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -33889,7 +34070,7 @@ Function OutputDatastores
 			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 			$Table.Columns.Item(1).Width = 250;
-			$Table.Columns.Item(2).Width = 200;
+			$Table.Columns.Item(2).Width = 250;
 
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -33933,7 +34114,7 @@ Function OutputDatastores
 			SetWordCellFormat -Collection $Table.Columns.Item(1).Cells -Bold -BackgroundColor $wdColorGray15;
 
 			$Table.Columns.Item(1).Width = 250;
-			$Table.Columns.Item(2).Width = 200;
+			$Table.Columns.Item(2).Width = 250;
 
 			$Table.Rows.SetLeftIndent($Indent0TabStops,$wdAdjustProportional)
 
@@ -34066,9 +34247,8 @@ Function OutputDatastores
 
 			FindWordDocumentEnd
 			$Table = $Null
-			WriteWordLine 0 0 ""
 		}
-		ElseIf($Text)
+		If($Text)
 		{
 			Line 0 "Datastores"
 			Line 0 ""
@@ -34249,7 +34429,7 @@ Function OutputDatastores
 			Line 2 "Summaries`t`t`t: " $MonitorConfig.GroomSummariesRetentionDays
 			Line 0 ""
 		}
-		ElseIf($HTML)
+		If($HTML)
 		{
 			WriteHTMLLine 2 0 "Datastores"
 			
@@ -34281,8 +34461,8 @@ Function OutputDatastores
 			$rowdata += @(,("Server IP Address",($global:htmlsb),$ConfigSQLServerPrincipalNameIPAddress,$htmlwhite))
 			$rowdata += @(,("SQL Server Version",($global:htmlsb),$ConfigDBSQLVersion,$htmlwhite))
 			$msg = ""
-			$columnWidths = @("275","300")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "575"
+			$columnWidths = @("250","275")
+			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "525"
 			WriteHTMLLine 0 0 ""
 			
 			$rowdata = @()
@@ -34313,10 +34493,10 @@ Function OutputDatastores
 			$rowdata += @(,("Server IP Address",($global:htmlsb),$LogSQLServerPrincipalNameIPAddress,$htmlwhite))
 			$rowdata += @(,("SQL Server Version",($global:htmlsb),$LogDBSQLVersion,$htmlwhite))
 			$msg = ""
-			$columnWidths = @("275","300")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "575"
+			$columnWidths = @("250","275")
+			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "525"
 			WriteHTMLLine 0 0 ""
-
+			
 			$rowdata = @()
 			$columnHeaders = @("Datastore",($global:htmlsb),"Monitoring",$htmlwhite)
 			$rowdata += @(,("Database Name",($global:htmlsb),$MonitorDatabaseName,$htmlwhite))
@@ -34345,9 +34525,9 @@ Function OutputDatastores
 			$rowdata += @(,("Server IP Address",($global:htmlsb),$MonitorSQLServerPrincipalNameIPAddress,$htmlwhite))
 			$rowdata += @(,("SQL Server Version",($global:htmlsb),$MonitorDBSQLVersion,$htmlwhite))
 			$msg = ""
-			$columnWidths = @("275","300")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "575"
-
+			$columnWidths = @("250","275")
+			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "525"
+			
 			WriteHTMLLine 3 0 "Monitoring Database Details"
 			$rowdata = @()
 			$columnHeaders = @("Collect Hotfix Data",($global:htmlsb),$MonitorCollectHotfix,$htmlwhite)
@@ -34374,8 +34554,8 @@ Function OutputDatastores
 			$rowdata += @(,('Sync Poll Time Hours',($global:htmlsb),$MonitorConfig.SyncPollTimeHours,$htmlwhite))
 
 			$msg = ""
-			$columnWidths = @("200","50")
-			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "250"
+			$columnWidths = @("250","275")
+			FormatHTMLTable $msg -rowArray $rowdata -columnArray $columnHeaders -fixedWidth $columnWidths -tablewidth "525"
 			
 			WriteHTMLLine 3 0 "Groom Retention Settings in Days"
 			$rowdata = @()
@@ -34429,7 +34609,7 @@ Function OutputDatastores
 			{
 				$rowdata += @(,('Machine Metric Day Summary',($global:htmlsb),$MonitorConfig.GroomMachineMetricDaySummaryDataRetentionDays.ToString(),$htmlwhite))
 			}
-			$rowdata += @(,('Minute',($global:htmlsb),$MonitorConfig.GroomMinuteRetentionDays.ToString(),$htmlwhite))
+			$rowdata += @(,('Minute',($global:htmlsb),$MonitorConfig.GroomMinuteRetentionDays,$htmlwhite))
 			If($MonitorConfig.ContainsKey("GroomNotificationLogRetentionDays"))
 			{
 				$rowdata += @(,('Notification',($global:htmlsb),$MonitorConfig.GroomNotificationLogRetentionDays.ToString(),$htmlwhite))
@@ -40528,7 +40708,7 @@ Function ProcessScriptEnd
 		Out-File -FilePath $SIFile -Append -InputObject "Use SSL            : $($UseSSL)" 4>$Null
 		If($MSWORD -or $PDF)
 		{
-			Out-File -FilePath $SIFile -Append -InputObject "User Name          : $($UserName)" 4>$Null
+			Out-File -FilePath $SIFile -Append -InputObject "Username           : $($UserName)" 4>$Null
 		}
 		Out-File -FilePath $SIFile -Append -InputObject "VDA Registry Keys  : $($VDARegistryKeys)" 4>$Null
 		Out-File -FilePath $SIFile -Append -InputObject "XA/XD Version      : $($Script:XDSiteVersion)" 4>$Null
