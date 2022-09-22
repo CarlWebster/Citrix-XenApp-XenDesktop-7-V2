@@ -3,6 +3,12 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.50 22-Sep-2022
+#	Updated Function ProcessScriptSetup to support multiple Section items
+#	Updated the script to allow the Section parameter to support multiple items
+#	Updated the help text
+#	Updated the ReadMe file
+
 #Version 2.49 16-Jul-2022
 #	Fixed bug reported by James Rankin where in Function OutputDatastores I didn't check for SQLServerName,TCPPortNumber
 #		https://support.citrix.com/article/CTX234610/how-to-configure-xendesktop-to-use-custom-sql-port
