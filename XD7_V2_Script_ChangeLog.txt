@@ -3,6 +3,14 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.51 2-Oct-2022
+#	Added Computer policy
+#		Profile Management\Advanced settings\Maximum number of VHDX disks for storing Outlook OST files
+#		Profile Management\Citrix Virtual Apps Optimization settings\Enable Citrix Virtual Apps Optimization
+#		Profile Management\Citrix Virtual Apps Optimization settings\Path to Citrix Virtual Apps optimization definitions:
+#		Profile Management\File deduplication\Files to exclude from the shared store
+#		Profile Management\File deduplication\Files to include from the shared store
+
 #Version 2.50 22-Sep-2022
 #	Updated Function ProcessScriptSetup to support multiple Section items
 #	Updated the script to allow the Section parameter to support multiple items
