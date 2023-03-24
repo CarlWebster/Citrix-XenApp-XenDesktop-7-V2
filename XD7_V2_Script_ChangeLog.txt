@@ -3,6 +3,23 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.52 24-Mar-2023
+#	In Function OutputDesktopOSMachine:
+#		test if there is a Desktop.DNSName
+#		If not, test Desktop.MachineName
+#		If not, test Desktop.HostedMachineName
+#		If not, use error message "error, there was no name found for the Desktop"
+#	In Function OutputHosting:
+#		for Word output:
+#			if there are no single-session OS or multi-session OS or sessions, output a message and don't waste a page
+#			add a page break after outputting Session data
+#	In Function OutputServerOSMachine:
+#		test if there is a Server.DNSName
+#		If not, test Server.MachineName
+#		If not, test Server.HostedMachineName
+#		If not, use error message "error, there was no name found for the Server"
+#	Updated for CVAD 2206/2209/2212/2303/7.34/7.35/7.36/7.37
+
 #Version 2.51 2-Oct-2022
 #	Added Computer policy
 #		Profile Management\Advanced settings\Maximum number of VHDX disks for storing Outlook OST files
