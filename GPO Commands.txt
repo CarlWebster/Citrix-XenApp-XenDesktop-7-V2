@@ -1,0 +1,11 @@
+add-pssnapin *citrix*
+import-module citrix.grouppolicy.commands
+
+new-psdrive localfarmgpo -psprovider citrixgrouppolicy -root \ -controller ddc2006 -Scope Global
+get-ctxgrouppolicyconfiguration -drive localfarmgpo  "unfiltered" | out-string –width 300 | out-file .\gpo.txt
+
+
+add-pssnapin *citrix*
+import-module citrix.grouppolicy.commands
+New-PSDrive -Name ADGpoDrv -PSProvider CitrixGroupPolicy -Root \ -DomainGpo "All cvad 2006" -Scope Global
+get-ctxgrouppolicyconfiguration -drive adgpodrv "Unfiltered" | out-string –width 300 | out-file .\gpo.txt
