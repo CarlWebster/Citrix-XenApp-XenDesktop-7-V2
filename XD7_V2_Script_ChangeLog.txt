@@ -3,6 +3,10 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.52.001 22-Jul-2025
+#	Added CVAD 2305 (7.38), 2308 (7.39), 2311 (7.40), 2402 (7.41), 2407 (7.42), 2411 (7.43), 2503 (7.44), 2507 (7.45) to the version checks
+#	Nothing else was added or updated
+
 #Version 2.52 24-Mar-2023
 #	In Function OutputDesktopOSMachine:
 #		test if there is a Desktop.DNSName
@@ -591,9 +595,9 @@
 #Version 2.29 17-Dec-2019
 #	Fix Swedish Table of Contents (Thanks to Johan Kallio)
 #		From 
-#			'sv-'	{ 'Automatisk innehållsförteckning2'; Break }
+#			'sv-'	{ 'Automatisk inneh llsf rteckning2'; Break }
 #		To
-#			'sv-'	{ 'Automatisk innehållsförteckn2'; Break }
+#			'sv-'	{ 'Automatisk inneh llsf rteckn2'; Break }
 #	Updated help text
 
 #Version 2.28 25-Sep-2019
@@ -1190,10 +1194,10 @@
 #	Fix numerous typos
 #	Fixed formatting issues with HTML headings output
 #	Fixed French wording for Table of Contents 2 (Thanks to David Rouquier)
-#	Fixed the “No. of machines” for Machine Catalogs so it is now accurate
+#	Fixed the  No. of machines  for Machine Catalogs so it is now accurate
 #	Fixed the Machine Catalog details to match what is shown in Studio
 #	For Machine Catalog details, for PVS provisioned catalogs, add the PVS Server address
-#	For Persistent machines with changes stored on the local disk, added the “VM copy mode”
+#	For Persistent machines with changes stored on the local disk, added the  VM copy mode 
 #	For Personal vDisk catalogs, added PvD size and drive letter
 #	For Random catalog types (SingleSession and MultiSession), added "Temporary memory cache size (MB)" and "Temporary disk cache size (GB)"
 #	Removed unnecessary blank lines in policy value output

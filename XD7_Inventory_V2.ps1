@@ -1096,9 +1096,9 @@
 	This script creates a Word, PDF, plain text, or HTML document.
 .NOTES
 	NAME: XD7_Inventory_V2.ps1
-	VERSION: 2.52
+	VERSION: 2.52.001
 	AUTHOR: Carl Webster
-	LASTEDIT: March 24, 2023
+	LASTEDIT: July 22, 2025
 #>
 
 #endregion
@@ -1302,6 +1302,10 @@ Param(
 
 # This script is based on the 1.20 script
 
+#Version 2.52.001 22-Jul-2025
+#	Added CVAD 2305 (7.38), 2308 (7.39), 2311 (7.40), 2402 (7.41), 2407 (7.42), 2411 (7.43), 2503 (7.44), 2507 (7.45) to the version checks
+#	Nothing else was added or updated
+#
 #Version 2.52 24-Mar-2023
 #	In Function OutputDesktopOSMachine:
 #		test if there is a Desktop.DNSName
@@ -40626,6 +40630,14 @@ Function ProcessScriptSetup
 			$CVADSiteVersionReal = "Unknown"
 			Switch ($CVADSiteVersion)
 			{
+				"7.45"	{$CVADSiteVersionReal = "CVAD 2507"; Break}
+				"7.44"	{$CVADSiteVersionReal = "CVAD 2503"; Break}
+				"7.43"	{$CVADSiteVersionReal = "CVAD 2411"; Break}
+				"7.42"	{$CVADSiteVersionReal = "CVAD 2407"; Break}
+				"7.41"	{$CVADSiteVersionReal = "CVAD 2402"; Break}
+				"7.40"	{$CVADSiteVersionReal = "CVAD 2311"; Break}
+				"7.39"	{$CVADSiteVersionReal = "CVAD 2308"; Break}
+				"7.38"	{$CVADSiteVersionReal = "CVAD 2305"; Break}
 				"7.37"	{$CVADSiteVersionReal = "CVAD 2303"; Break}
 				"7.36"	{$CVADSiteVersionReal = "CVAD 2212"; Break}
 				"7.35"	{$CVADSiteVersionReal = "CVAD 2209"; Break}
@@ -40866,6 +40878,14 @@ Script cannot continue
 	$Script:XDSiteVersionReal = "Unknown"
 	Switch ($Script:XDSiteVersion)
 	{
+		"7.45"	{$Script:XDSiteVersionReal = "CVAD 2507"; Break}
+		"7.44"	{$Script:XDSiteVersionReal = "CVAD 2503"; Break}
+		"7.43"	{$Script:XDSiteVersionReal = "CVAD 2411"; Break}
+		"7.42"	{$Script:XDSiteVersionReal = "CVAD 2407"; Break}
+		"7.41"	{$Script:XDSiteVersionReal = "CVAD 2402"; Break}
+		"7.40"	{$Script:XDSiteVersionReal = "CVAD 2311"; Break}
+		"7.39"	{$Script:XDSiteVersionReal = "CVAD 2308"; Break}
+		"7.38"	{$Script:XDSiteVersionReal = "CVAD 2305"; Break}
 		"7.37"	{$Script:XDSiteVersionReal = "CVAD 2303"; Break}
 		"7.36"	{$Script:XDSiteVersionReal = "CVAD 2212"; Break}
 		"7.35"	{$Script:XDSiteVersionReal = "CVAD 2209"; Break}
