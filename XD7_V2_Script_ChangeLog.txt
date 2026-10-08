@@ -3,6 +3,25 @@
 #http://www.CarlWebster.com
 # Created on October 20, 2013
 
+#Version 2.53 8-Oct-2026
+#	Added CVAD 2511 (7.46), 2603 (7.47), 2607 (7.48) to the version checks
+#
+#	In Function GetComputerWMIInfo,
+#		Thanks to the help from Guy Leech, we fixed a bug where, if run on a localhost 
+#		that is also the Citrix DB and/or license server, the call to Get-CimInstance failed with the 
+#		FQDN of the localhost
+#
+#	In Functions OutputDesktopOSMachine, OutputMachineDetails, and OutputServerOSMachine,
+#		Fixed bugs to prevent an empty machine name and to prevent processing a SID
+#
+#	Add a PDF copy of the ReadMe file so it can be displayed in GitHub
+#
+#	Change Dropbox and CarlWebster.com links to GitHub links
+#
+#	Updated the help text
+#
+#	Updated the ReadMe file
+
 #Version 2.52.001 22-Jul-2025
 #	Added CVAD 2305 (7.38), 2308 (7.39), 2311 (7.40), 2402 (7.41), 2407 (7.42), 2411 (7.43), 2503 (7.44), 2507 (7.45) to the version checks
 #	Nothing else was added or updated
